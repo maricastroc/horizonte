@@ -56,3 +56,6 @@ next-env.d.ts
 # python
 __pycache__/
 *.pyc
+
+/design_handoff_horizonte/
+/CURADORIA.md
