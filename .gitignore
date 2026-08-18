@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# o template não tem segredo e deve ser versionado
+!.env.example
 
 # vercel
 .vercel
@@ -44,3 +46,13 @@ next-env.d.ts
 
 # cache de download da curadoria (regenerável: scripts/fetch-curation.py)
 /.cache
+
+# Assets de mídia: vivem no object storage/CDN, não no Git.
+# Só remova do índice DEPOIS de rodar `npm run media:upload` e de definir
+# NEXT_PUBLIC_MEDIA_BASE_URL na Vercel:
+#   git rm -r --cached public/music
+/public/music
+
+# python
+__pycache__/
+*.pyc

@@ -49,13 +49,10 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   const barRef = useRef<HTMLDivElement>(null);
   const seekRef = useRef<HTMLDivElement>(null);
   const tcRef = useRef<HTMLSpanElement>(null);
-  const dotRef = useRef<HTMLSpanElement>(null);
   const albMarks = useRef<(HTMLElement | null)[]>([]);
   const trkMarks = useRef<(HTMLElement | null)[]>([]);
 
   const album = ALBUMS[snap.alb];
-  const nowAlbum = snap.playAlb >= 0 ? ALBUMS[snap.playAlb] : null;
-  const nowTrack = nowAlbum?.tracks[snap.trk] ?? null;
   const ink = rgba(album.inkA, 1);
 
   const trackCount = album.tracks.length;
@@ -65,7 +62,6 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       bar: barRef.current,
       seek: seekRef.current,
       tc: tcRef.current,
-      dot: dotRef.current,
       albMarks: albMarks.current.slice(0, ALBUMS.length),
       trkMarks: trkMarks.current.slice(0, trackCount),
     });
@@ -82,9 +78,14 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   );
 
   const trackRailOn = snap.scale !== "campo";
+  const railTop = Math.max(238, 56 + ALBUMS.length * 26 + 52);
   const focusStyle = useMemo(
-    () => ({ ["--focus-ink" as string]: ink }) as React.CSSProperties,
-    [ink],
+    () =>
+      ({
+        ["--focus-ink" as string]: ink,
+        ["--rail-top" as string]: `${railTop}px`,
+      }) as React.CSSProperties,
+    [ink, railTop],
   );
 
   return (
@@ -134,6 +135,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           "pointer-events-auto absolute right-8.5 top-14 w-53.5 border-t border-rule",
           "md:max-[1199px]:w-47.5",
           "max-md:left-4 max-md:right-4 max-md:top-24 max-md:w-auto",
+          "backdrop-blur-sm bg-void/35 -mx-2 px-2",
         ].join(" ")}
       >
         <ul>
@@ -174,10 +176,12 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         aria-label={`Faixas de ${album.title}`}
         aria-hidden={!trackRailOn}
         className={[
-          "absolute right-8.5 top-59.5 w-65.5 border-t border-rule",
+          "absolute right-8.5 top-[var(--rail-top)] w-65.5 border-t border-rule",
           "transition-opacity duration-300 ease-out",
-          "md:max-[1199px]:top-66.5 md:max-[1199px]:w-60",
+          "rail-scroll max-h-[calc(100vh-var(--rail-top)-150px)] overflow-y-auto overscroll-contain",
+          "md:max-[1199px]:w-60",
           "max-md:left-4 max-md:right-4 max-md:top-auto max-md:bottom-37.5 max-md:w-auto",
+          "backdrop-blur-sm bg-void/35 -mx-2 px-2",
           trackRailOn ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         ].join(" ")}
       >
@@ -225,25 +229,6 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           "max-md:left-4 max-md:right-4 max-md:bottom-4 max-md:w-auto max-md:gap-3.5",
         ].join(" ")}
       >
-        <div className="flex items-baseline gap-2.5">
-          <span
-            ref={dotRef}
-            aria-hidden
-            className="block h-1.25 w-1.25 -translate-y-px"
-            style={{ background: "#4E4A45" }}
-          />
-          <span className="text-ink-text">
-            {nowTrack
-              ? `${String(snap.trk + 1).padStart(2, "0")} · ${nowTrack.title}`
-              : "Nada em curso"}
-          </span>
-          <span className="truncate text-ink-dim">
-            {nowAlbum
-              ? `${nowAlbum.artist}${snap.mode === "pausa" ? " · pausado" : ""}`
-              : `Coleção · ${ALBUMS.length} corpos`}
-          </span>
-        </div>
-
         <div
           ref={seekRef}
           role="progressbar"

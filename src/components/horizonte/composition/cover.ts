@@ -1,3 +1,4 @@
+import { mediaUrl, needsCors } from "../content/assets";
 import { ALBUMS } from "../data/albums";
 import { COLOR, rgba } from "../tokens";
 
@@ -91,7 +92,9 @@ export function loadCovers(onReady?: (i: number) => void): CoverAsset[] {
     const asset: CoverAsset = { canvas: blank(), loaded: false, version: 0 };
     const img = new Image();
     img.decoding = "async";
-    img.src = album.cover;
+    const url = mediaUrl(album.cover);
+    if (needsCors(url)) img.crossOrigin = "anonymous";
+    img.src = url;
     img.onload = () => {
       treat(asset.canvas, img, i);
       asset.loaded = true;

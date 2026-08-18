@@ -4,12 +4,22 @@ export type AudioSource =
 
 export type ProviderId = "curadoria" | "spotify";
 
+export interface CoverProvenance {
+  license: string;
+  url?: string;
+  source?: string;
+  credit?: string;
+}
+
 export interface License {
   name: string;
   url: string;
   source: string;
   attribution: string;
   redistributable: boolean;
+  cover: CoverProvenance;
+  verifiedAt: string;
+  changes: string[];
 }
 
 export interface Track {

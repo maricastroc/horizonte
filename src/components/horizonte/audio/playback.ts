@@ -1,3 +1,4 @@
+import { mediaUrl, needsCors } from "../content/assets";
 import type { AudioSource } from "../content/types";
 
 export interface Playback {
@@ -30,7 +31,6 @@ export class LocalPlayback implements Playback {
   constructor() {
     this.el = new Audio();
     this.el.preload = "auto";
-    this.el.crossOrigin = "anonymous";
     this.el.addEventListener("ended", () => this.onEnded?.());
     this.el.addEventListener("loadedmetadata", () => this.onMeta?.());
     this.el.addEventListener("durationchange", () => this.onMeta?.());
@@ -40,7 +40,10 @@ export class LocalPlayback implements Playback {
     if (source.kind !== "local") return;
     if (this.src === source.src) return;
     this.src = source.src;
-    this.el.src = source.src;
+    const url = mediaUrl(source.src);
+    if (needsCors(url)) this.el.crossOrigin = "anonymous";
+    else this.el.removeAttribute("crossorigin");
+    this.el.src = url;
     this.el.currentTime = 0;
   }
 

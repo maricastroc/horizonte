@@ -81,6 +81,18 @@ export function drawFront(
   const lk = lockup(W, H, s);
 
   x.save();
+  const scrimTop = lk.ty - lk.tsize * 0.95;
+  const scrimBottom = lk.my + lk.msize * 1.6;
+  const scrimWidth = W * 0.62;
+  const scrimGrad = x.createLinearGradient(0, 0, scrimWidth, 0);
+  scrimGrad.addColorStop(0, "rgba(0,0,0,0.34)");
+  scrimGrad.addColorStop(0.75, "rgba(0,0,0,0.16)");
+  scrimGrad.addColorStop(1, "rgba(0,0,0,0)");
+  x.fillStyle = scrimGrad;
+  x.fillRect(0, scrimTop, scrimWidth, scrimBottom - scrimTop);
+  x.restore();
+
+  x.save();
   x.textBaseline = "alphabetic";
   ls(x, "-0.01em");
   x.font = `italic 400 ${lk.tsize}px ${deps.fonts.bodoni}`;

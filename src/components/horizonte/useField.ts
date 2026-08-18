@@ -92,7 +92,6 @@ export class FieldEngine {
     bar: null,
     seek: null,
     tc: null,
-    dot: null,
     albMarks: [],
     trkMarks: [],
   };
@@ -507,14 +506,20 @@ export class FieldEngine {
 
   skip(dir: number) {
     const s = this.st;
-    const N = ALBUMS[s.alb].tracks.length;
-    const from = s.playAlb === s.alb && s.scale === "faixa" ? s.trk : s.sel;
+    if (s.scale === "campo" && s.playAlb < 0) {
+      s.navT = clamp(Math.round(s.nav) + dir, 0, ALBUMS.length - 1);
+      this.markIntent();
+      return;
+    }
+    const alb = s.playAlb >= 0 && s.scale !== "album" ? s.playAlb : s.alb;
+    const N = ALBUMS[alb].tracks.length;
+    const from = s.playAlb === alb && s.scale === "faixa" ? s.trk : s.sel;
     const next = (from + dir + N) % N;
-    if (s.playAlb === s.alb && (s.mode === "toca" || s.mode === "pausa" || s.mode === "colapso")) {
-      this.fuseTo(s.alb, next);
+    if (s.playAlb === alb && (s.mode === "toca" || s.mode === "pausa" || s.mode === "colapso")) {
+      this.fuseTo(alb, next);
     } else {
       s.sel = next;
-      if (s.scale === "faixa") this.playTrack(s.alb, next);
+      if (s.scale === "faixa") this.playTrack(alb, next);
     }
     this.markIntent();
   }
@@ -862,7 +867,6 @@ export class FieldEngine {
     const L = this.liveNodes;
     const A = ALBUMS[s.playAlb >= 0 ? s.playAlb : s.alb];
     const prog = s.dur ? Math.min(1, s.pos / s.dur) : 0;
-    const playing = s.mode === "toca" || s.mode === "fusao";
 
     if (L.layer) L.layer.style.setProperty("--focus-ink", rgba(ALBUMS[s.alb].inkA, 1));
     if (L.bar) {
@@ -870,12 +874,6 @@ export class FieldEngine {
       L.bar.style.background = rgba(A.inkA, 0.95);
     }
     if (L.tc) L.tc.textContent = `${fmt(s.pos)} / ${fmt(s.dur || 0)}`;
-    if (L.dot) {
-      L.dot.style.background =
-        s.playAlb < 0
-          ? "#4E4A45"
-          : rgba(A.inkA, playing ? 0.6 + 0.4 * Math.abs(Math.sin(s.t * 2.4)) : 0.35);
-    }
     L.albMarks.forEach((mk, i) => {
       if (!mk) return;
       const cur = i === (s.scale === "campo" ? Math.round(s.nav) : s.alb);

@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint src scripts",
+    "typecheck": "tsc --noEmit",
+    "media:upload": "node scripts/upload-media.mjs",
+    "media:check": "node scripts/upload-media.mjs --check",
+    "media:dry": "node scripts/upload-media.mjs --dry-run"
   },
   "dependencies": {
     "@types/three": "^0.185.4",
@@ -20,6 +24,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vercel/blob": "^2.8.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
     "raw-loader": "^4.0.2",

@@ -78,7 +78,6 @@ export interface LiveNodes {
   bar: HTMLElement | null;
   seek: HTMLElement | null;
   tc: HTMLElement | null;
-  dot: HTMLElement | null;
   albMarks: (HTMLElement | null)[];
   trkMarks: (HTMLElement | null)[];
 }
