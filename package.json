@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "media:upload": "node scripts/upload-media.mjs",
     "media:check": "node scripts/upload-media.mjs --check",
-    "media:dry": "node scripts/upload-media.mjs --dry-run"
+    "media:dry": "node scripts/upload-media.mjs --dry-run",
+    "analyze": "python3 scripts/analyze-audio.py --report"
   },
   "dependencies": {
     "@types/three": "^0.185.4",

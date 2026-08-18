@@ -5,6 +5,26 @@ import process from "node:process";
 import { list, put } from "@vercel/blob";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
+
+const ENV_FLAG = process.argv
+  .slice(2)
+  .find((a) => a.startsWith("--env-file="))
+  ?.slice("--env-file=".length);
+
+for (const envFile of ENV_FLAG ? [ENV_FLAG] : [".env.local", ".env"]) {
+  const file = path.resolve(ROOT, envFile);
+  if (existsSync(file)) {
+    try {
+      process.loadEnvFile(file);
+    } catch {
+      //
+    }
+  } else if (ENV_FLAG) {
+    console.error(`\nERRO: não encontrei ${envFile}\n`);
+    process.exit(1);
+  }
+}
+
 const MUSIC = path.join(ROOT, "public", "music");
 const PREFIX = "music";
 const CACHE_MAX_AGE = 60 * 60 * 24 * 365;
@@ -22,7 +42,9 @@ const CONTENT_TYPE = {
   ".png": "image/png",
 };
 
-const args = new Set(process.argv.slice(2));
+const argv = process.argv.slice(2);
+const args = new Set(argv);
+const STORE_FLAG = argv.find((a) => a.startsWith("--store="))?.slice("--store=".length);
 const DRY = args.has("--dry-run");
 const FORCE = args.has("--force");
 const CHECK_ONLY = args.has("--check");
@@ -58,11 +80,11 @@ async function collect() {
   return out;
 }
 
-async function remoteIndex(token) {
+async function remoteIndex(authOptions) {
   const index = new Map();
   let cursor;
   do {
-    const page = await list({ prefix: `${PREFIX}/`, cursor, limit: 1000, token });
+    const page = await list({ prefix: `${PREFIX}/`, cursor, limit: 1000, ...authOptions });
     for (const b of page.blobs) index.set(b.pathname, b);
     cursor = page.hasMore ? page.cursor : undefined;
   } while (cursor);
@@ -82,14 +104,48 @@ async function probe(url) {
   };
 }
 
-async function main() {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token && !DRY) {
+function resolveAuth() {
+  const storeId = (STORE_FLAG ?? process.env.BLOB_STORE_ID ?? "").trim();
+  const oidc = (process.env.VERCEL_OIDC_TOKEN ?? "").trim();
+  const rw = (process.env.BLOB_READ_WRITE_TOKEN ?? "").trim();
+
+  const oidcAuth = oidc && storeId ? { kind: "oidc", storeId, options: { storeId } } : null;
+  const rwAuth = rw ? { kind: "read-write token", options: { token: rw } } : null;
+  if (oidcAuth) return { ...oidcAuth, fallback: rwAuth };
+  if (rwAuth) return rwAuth;
+
+  if (oidc && !storeId) {
     die(
-      "BLOB_READ_WRITE_TOKEN não está definido.\n" +
-        "       Crie um Blob store em vercel.com → Storage → Blob e rode:\n" +
-        "         vercel env pull .env.local     (ou exporte a variável no shell)",
+      "VERCEL_OIDC_TOKEN encontrado, mas falta o id do store.\n" +
+        "       Descubra com:  npx vercel blob list-stores\n" +
+        "       Depois:        echo 'BLOB_STORE_ID=store_...' >> .env.local\n" +
+        "       ou passe:      npm run media:upload -- --store=store_...",
     );
+  }
+  die(
+    "nenhuma credencial do Blob encontrada.\n" +
+      "       Store com OIDC:  vercel link && vercel env pull .env.local\n" +
+      "                        + BLOB_STORE_ID (veja `vercel blob list-stores`)\n" +
+      "       Store legado:    defina BLOB_READ_WRITE_TOKEN",
+  );
+}
+
+async function negotiate(auth) {
+  if (!auth.fallback) return auth;
+  try {
+    await list({ prefix: `${PREFIX}/`, limit: 1, ...auth.options });
+    return auth;
+  } catch (e) {
+    console.log(`OIDC recusado (${e?.message ?? e}); usando o token do store.\n`);
+    return auth.fallback;
+  }
+}
+
+async function main() {
+  let auth = DRY ? { kind: "dry-run", options: {} } : resolveAuth();
+  if (!DRY) {
+    auth = await negotiate(auth);
+    console.log(`autenticação: ${auth.kind}${auth.storeId ? ` · ${auth.storeId}` : ""}\n`);
   }
 
   const files = await collect();
@@ -99,7 +155,7 @@ async function main() {
   const albums = [...new Set(files.map((f) => f.album))];
   console.log(`${files.length} arquivos · ${albums.length} álbuns · ${mb(totalBytes)}\n`);
 
-  const remote = DRY ? new Map() : await remoteIndex(token);
+  const remote = DRY ? new Map() : await remoteIndex(auth.options);
 
   if (CHECK_ONLY) {
     let faltando = 0;
@@ -143,7 +199,7 @@ async function main() {
       allowOverwrite: true,
       contentType: f.contentType,
       cacheControlMaxAge: CACHE_MAX_AGE,
-      token,
+      ...auth.options,
     });
     if (!base) base = new URL(blob.url).origin;
     enviados++;

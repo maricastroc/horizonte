@@ -1,4 +1,4 @@
-import { AUDIO_CURVATURE_CAP } from "../tokens";
+import type { AlbumSignature } from "../content/signature";
 
 export interface Bands {
   bass: number;
@@ -13,27 +13,35 @@ export interface AudioFrame {
   treb: number;
   accent: Bands;
   flux: number;
-  spectrum: Float32Array;
+  centroid: number;
   active: boolean;
 }
-
 const RANGES: [number, number][] = [
   [20, 160],
   [160, 2000],
-  [2000, 12000],
+  [2000, 11000],
 ];
 
 export const FFT_SIZE = 1024;
 export const SMOOTHING = 0.7;
 const BAND_TAU = 0.12;
 const SLOW_TAU = 1.2;
-const PEAK_DECAY = 0.45;
-const PEAK_FLOOR = 0.06;
-export const SPECTRUM_BINS = 32;
+
+const BRIGHT_LO = Math.log2(200);
+const BRIGHT_HI = Math.log2(2600);
 
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 
-export const curvature = (base: number, accent: number, cap = AUDIO_CURVATURE_CAP) =>
+const BYTE_TO_LINEAR = (() => {
+  const t = new Float32Array(256);
+  for (let b = 0; b < 256; b++) {
+    const db = (b / 255) * 70 - 100;
+    t[b] = b === 0 ? 0 : Math.pow(10, db / 20);
+  }
+  return t;
+})();
+
+export const curvature = (base: number, accent: number, cap: number) =>
   base * (1 + clamp(accent, -1, 1) * cap);
 
 const KEYS: (keyof Bands)[] = ["bass", "mid", "treb"];
@@ -47,16 +55,18 @@ export class AudioAnalysis {
     treb: 0,
     accent: { bass: 0, mid: 0, treb: 0 },
     flux: 0,
-    spectrum: new Float32Array(SPECTRUM_BINS),
+    centroid: 0.5,
     active: false,
   };
 
   private freq: Uint8Array<ArrayBuffer>;
   private time: Uint8Array<ArrayBuffer>;
-  private prevSpectrum = new Float32Array(SPECTRUM_BINS);
   private slow: Bands = { bass: 0, mid: 0, treb: 0 };
-  private peak: Bands = { bass: PEAK_FLOOR, mid: PEAK_FLOOR, treb: PEAK_FLOOR };
+  private prev: Bands = { bass: 0, mid: 0, treb: 0 };
   private binRanges: [number, number][];
+  private binHz: Float32Array;
+
+  private ref: AlbumSignature["reference"] | null = null;
 
   constructor(ctx: AudioContext) {
     const analyser = ctx.createAnalyser();
@@ -72,6 +82,19 @@ export class AudioAnalysis {
       Math.max(1, Math.floor((lo / nyquist) * bins)),
       Math.max(2, Math.min(bins - 1, Math.ceil((hi / nyquist) * bins))),
     ]);
+    this.binHz = new Float32Array(bins);
+    for (let b = 0; b < bins; b++) this.binHz[b] = (b / bins) * nyquist;
+  }
+
+  setReference(ref: AlbumSignature["reference"]) {
+    this.ref = ref;
+  }
+
+  private norm(key: keyof Bands, raw: number) {
+    const r = this.ref?.[key];
+    if (!r) return clamp(raw, 0, 1);
+    const [lo, hi] = r;
+    return clamp((raw - lo) / Math.max(1e-4, hi - lo), 0, 1);
   }
 
   private decay(dt: number) {
@@ -95,7 +118,6 @@ export class AudioAnalysis {
     const f = this.frame;
     const kBand = 1 - Math.exp(-dt / BAND_TAU);
     const kSlow = 1 - Math.exp(-dt / SLOW_TAU);
-    const decay = Math.exp(-dt * PEAK_DECAY);
 
     this.analyser.getByteFrequencyData(this.freq);
     this.analyser.getByteTimeDomainData(this.time);
@@ -106,32 +128,41 @@ export class AudioAnalysis {
       sq += v * v;
     }
     const rms = Math.sqrt(sq / this.time.length);
-    f.energy += (clamp(rms * 2.6, 0, 1) - f.energy) * kBand;
+    const rmsRef = this.ref?.rms;
+    const energy = rmsRef
+      ? clamp((rms - rmsRef[0]) / Math.max(1e-5, rmsRef[1] - rmsRef[0]), 0, 1)
+      : clamp(rms * 2.6, 0, 1);
+    f.energy += (energy - f.energy) * kBand;
 
+    let flux = 0;
     KEYS.forEach((key, i) => {
       const [b0, b1] = this.binRanges[i];
       let sum = 0;
       for (let b = b0; b <= b1; b++) sum += this.freq[b];
       const raw = sum / ((b1 - b0 + 1) * 255);
-      this.peak[key] = Math.max(PEAK_FLOOR, this.peak[key] * decay, raw);
-      const norm = clamp(raw / this.peak[key], 0, 1);
-      f[key] += (norm - f[key]) * kBand;
+      const level = this.norm(key, raw);
+
+      flux += Math.max(0, level - this.prev[key]);
+      this.prev[key] = level;
+
+      f[key] += (level - f[key]) * kBand;
       this.slow[key] += (f[key] - this.slow[key]) * kSlow;
       const spread = Math.max(0.12, this.slow[key]);
       f.accent[key] = clamp((f[key] - this.slow[key]) / spread, -1, 1);
     });
+    f.flux += (clamp(flux / 0.18, 0, 1) - f.flux) * kBand;
 
-    const per = Math.floor(this.freq.length / SPECTRUM_BINS);
-    let flux = 0;
-    for (let i = 0; i < SPECTRUM_BINS; i++) {
-      let sum = 0;
-      for (let j = 0; j < per; j++) sum += this.freq[i * per + j];
-      const v = sum / (per * 255);
-      flux += Math.max(0, v - this.prevSpectrum[i]);
-      this.prevSpectrum[i] = v;
-      f.spectrum[i] = v;
+    let num = 0;
+    let den = 0;
+    for (let b = 1; b < this.freq.length; b++) {
+      const m = BYTE_TO_LINEAR[this.freq[b]];
+      num += m * this.binHz[b];
+      den += m;
     }
-    f.flux += (clamp(flux / SPECTRUM_BINS / 0.06, 0, 1) - f.flux) * kBand;
+    const hz = den > 0 ? num / den : 0;
+    const centroid = hz > 0 ? clamp((Math.log2(hz) - BRIGHT_LO) / (BRIGHT_HI - BRIGHT_LO), 0, 1) : 0.5;
+    f.centroid += (centroid - f.centroid) * kBand;
+
     f.active = true;
     return f;
   }

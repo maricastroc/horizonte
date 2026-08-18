@@ -67,6 +67,14 @@ export function albPos(i: number, s: FieldState, L: WorldLayout) {
 export const ringR = (W: number, H: number, s: FieldState, L: WorldLayout) =>
   Math.min(W, H) * (0.42 - s.zoom * 0.115 + s.play * 0.055) * L.ringScale;
 
+export function sectorAt(bounds: number[], t: number): number {
+  const n = bounds.length - 1;
+  for (let k = 0; k < n; k++) {
+    if (t < bounds[k + 1]) return k;
+  }
+  return n - 1;
+}
+
 export function lockup(W: number, H: number, s: FieldState) {
   const p = s.play;
   const z = s.zoom;
@@ -96,8 +104,9 @@ export function hitTest(
   H: number,
   s: FieldState,
   L: WorldLayout,
-  trackCount: (alb: number) => number,
+  bounds: (alb: number) => number[],
   albumCount: number,
+  flatten: number,
 ): Hit {
   const mx = mouseX * W;
   const my = mouseY * H;
@@ -122,15 +131,14 @@ export function hitTest(
   const by = p.y * H;
   const R = ringR(W, H, s, L);
   const dx = mx - bx;
-  const dy = (my - by) / GEO.flatten;
+  const dy = (my - by) / flatten;
   const rr = Math.hypot(dx, dy);
 
   if (rr < R * 0.55) return { kind: "corpo", i: s.alb };
   if (rr > R * 0.62 && rr < R * 1.34) {
     let a = Math.atan2(dy, dx) - s.ringRot;
     a = ((a % 6.2832) + 6.2832) % 6.2832;
-    const N = trackCount(s.alb);
-    return { kind: "faixa", i: Math.floor((a / 6.2832) * N) % N };
+    return { kind: "faixa", i: sectorAt(bounds(s.alb), a / 6.2832) };
   }
   return { kind: "vazio", i: -1 };
 }

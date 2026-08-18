@@ -306,11 +306,27 @@ def force_range(hue, L=None, C=None):
     return tuple(round(min(max(v, 0.0), 1.0), 3) for v in rgb)
 
 
-GOLDEN = 2.399963229728653
+def stable_hue(slug):
+    """
+    Matiz de reserva determinística, derivada do identificador do próprio álbum.
+
+    Antes isto era `GOLDEN * índice + 0.6`, ou seja, dependia da posição do álbum
+    nesta lista — que inclui itens bloqueados e pendentes. Remover um bloqueado
+    recolorava outros discos. O slug é intrínseco ao álbum, então a cor passa a
+    acompanhar a obra, não a contabilidade da curadoria.
+
+    Melhor ainda é `scripts/analyze-audio.py`, que deriva a matiz do balanço
+    espectral do próprio disco e sobrescreve este valor. Esta função é o piso
+    para quando a análise ainda não rodou.
+    """
+    h = 2166136261
+    for ch in slug.encode("utf-8"):          # FNV-1a, 32 bits
+        h = ((h ^ ch) * 16777619) & 0xFFFFFFFF
+    return (h / 0xFFFFFFFF) * 2 * math.pi
 
 
-def extract_inks(img, index):
-    """Duas dominantes da capa; capa quase monocromática usa ângulo determinístico."""
+def extract_inks(img, slug):
+    """Duas dominantes da capa; capa quase monocromática usa matiz determinística."""
     small = img.convert("RGB").resize((160, 160))
     pal = small.quantize(colors=24, method=Image.Quantize.MEDIANCUT)
     table = pal.getpalette()
@@ -322,7 +338,7 @@ def extract_inks(img, index):
             continue
         entries.append(dict(count=count, L=L, C=C, h=h, score=count * (0.06 + C)))
 
-    fallback = GOLDEN * index + 0.6
+    fallback = stable_hue(slug)
     if not entries or max(e["C"] for e in entries) < 0.035:
         return (force_range(fallback, L=0.56, C=0.155),
                 force_range(fallback + 2.2, L=0.56, C=0.145))
@@ -780,7 +796,7 @@ def main():
                                 verifiedAt=entry["verified"], note=entry.get("note")))
             continue
 
-        inkA, inkB = extract_inks(cover_img, i)
+        inkA, inkB = extract_inks(cover_img, entry["slug"])
         changes = ["Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
                    "Capa recortada em quadrado central e reamostrada para 1024 px WebP."]
         album = dict(

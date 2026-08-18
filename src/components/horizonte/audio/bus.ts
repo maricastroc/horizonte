@@ -1,3 +1,4 @@
+import type { AlbumSignature } from "../content/signature";
 import type { AudioSource, Track } from "../content/types";
 import { AudioAnalysis, type AudioFrame } from "./analysis";
 import { LocalPlayback, type Playback } from "./playback";
@@ -30,7 +31,7 @@ export class AudioBus {
     treb: 0,
     accent: { bass: 0, mid: 0, treb: 0 },
     flux: 0,
-    spectrum: new Float32Array(32),
+    centroid: 0.5,
     active: false,
     position: 0,
     duration: 0,
@@ -48,8 +49,16 @@ export class AudioBus {
     if (!Ctor) return null;
     this.ctx = new Ctor();
     this.analysis = new AudioAnalysis(this.ctx);
+    if (this.reference) this.analysis.setReference(this.reference);
     this.analysis.analyser.connect(this.ctx.destination);
     return this.ctx;
+  }
+
+  private reference: AlbumSignature["reference"] | null = null;
+
+  setSignature(sig: AlbumSignature) {
+    this.reference = sig.reference;
+    this.analysis?.setReference(sig.reference);
   }
 
   load(track: Track) {
@@ -108,7 +117,7 @@ export class AudioBus {
       s.treb = frame.treb;
       s.accent = frame.accent;
       s.flux = frame.flux;
-      s.spectrum = frame.spectrum;
+      s.centroid = frame.centroid;
       s.active = frame.active;
     }
     s.position = this.position;

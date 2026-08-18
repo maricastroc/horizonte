@@ -5,6 +5,9 @@ uniform vec4 uM0, uM1;
 uniform vec3 uCur;
 uniform vec3 uWave;
 uniform float uSpin, uBlur, uTime, uFade, uGrain, uDisp, uJet;
+// Dureza do fio de luz rasante: brilho de timbre vira dureza de luz.
+// Constante por álbum (centróide medido), perturbada de leve pelo trecho.
+uniform float uRim;
 uniform vec3 uInk;
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(41.71, 289.13))) * 43758.5453); }
@@ -30,7 +33,7 @@ float rimOf(vec2 p, vec4 m){
   float r = length(d);
   float band = exp(-pow((r - m.w * 1.01) / (m.w * 0.028), 2.0));
   float g = max(0.0, dot(normalize(d), normalize(vec2(-0.70, 0.71))));
-  return band * pow(g, 3.5) * 1.25;
+  return band * pow(g, uRim) * 1.25;
 }
 
 vec3 samp(sampler2D t, vec2 uv, vec2 off, float blur){

@@ -16,6 +16,12 @@ import {
 } from "./composition/layout";
 import { RingBakery } from "./composition/ring";
 import { ALBUMS } from "./data/albums";
+import {
+  fieldConstantsOf,
+  mixConstants,
+  reduceMotion,
+  type FieldConstants,
+} from "./field";
 import { createFieldGL, type FieldGL } from "./fieldMaterial";
 import {
   COMPOSITION_FALLBACK_W,
@@ -35,6 +41,8 @@ import type {
 } from "./types";
 
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
+
+const FIELD: FieldConstants[] = ALBUMS.map((a) => fieldConstantsOf(a.signature));
 const fmt = (n: number) =>
   `${String(Math.floor(Math.max(0, n) / 60)).padStart(2, "0")}:${String(
     Math.floor(Math.max(0, n) % 60),
@@ -116,6 +124,8 @@ export class FieldEngine {
   private slowWindows = 0;
 
   private mouse = { x: 0.55, y: 0.45, tx: 0.55, ty: 0.45, v: 0, down: false, moved: 0, lx: 0 };
+  private pointer = { x: 0.55, y: 0.45 };
+  private C: FieldConstants = FIELD[0];
   private railAlb = -1;
   private railTrk = -1;
   private intent = 0;
@@ -193,6 +203,8 @@ export class FieldEngine {
     const h = window.innerHeight;
     const nx = e.clientX / w;
     const ny = e.clientY / h;
+    this.pointer.x = nx;
+    this.pointer.y = ny;
     this.mouse.v = Math.min(
       1,
       this.mouse.v + Math.hypot(nx - this.mouse.tx, ny - this.mouse.ty) * 9,
@@ -234,6 +246,8 @@ export class FieldEngine {
       this.mouse.ty = e.clientY / window.innerHeight;
       this.mouse.x = this.mouse.tx;
       this.mouse.y = this.mouse.ty;
+      this.pointer.x = this.mouse.tx;
+      this.pointer.y = this.mouse.ty;
     }
   };
 
@@ -332,8 +346,10 @@ export class FieldEngine {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const { dw, dh } = this.gl.resize(w, h);
-    const cw = Math.max(2, Math.min(dw, this.compMaxW));
-    const ch = Math.max(2, Math.round((cw * dh) / dw));
+    const sw = dw > 0 ? dw : 2;
+    const sh = dh > 0 ? dh : 2;
+    const cw = Math.max(2, Math.min(sw, this.compMaxW));
+    const ch = Math.max(2, Math.round((cw * sh) / sw));
     this.cvB.width = cw;
     this.cvB.height = ch;
     this.cvF.width = cw;
@@ -353,15 +369,31 @@ export class FieldEngine {
 
   private hit() {
     return hitTest(
-      this.mouse.x,
-      this.mouse.y,
+      this.pointer.x,
+      this.pointer.y,
       this.W,
       this.H,
       this.st,
       this.L,
-      (a) => ALBUMS[a].tracks.length,
+      (a) => this.rings.bounds(a),
       ALBUMS.length,
+      this.C.flatten,
     );
+  }
+
+  private fieldFor(): FieldConstants {
+    const s = this.st;
+    const n = ALBUMS.length;
+    let c: FieldConstants;
+    if (s.scale === "campo") {
+      const i = clamp(Math.floor(s.nav), 0, n - 1);
+      const j = clamp(i + 1, 0, n - 1);
+      c = mixConstants(FIELD[i], FIELD[j], s.nav - i);
+    } else {
+      c = FIELD[clamp(s.alb, 0, n - 1)];
+    }
+    if (s.mix > 0 && FIELD[s.fuseAlb]) c = mixConstants(c, FIELD[s.fuseAlb], s.mix);
+    return this.reduced ? reduceMotion(c) : c;
   }
 
   private click() {
@@ -461,6 +493,7 @@ export class FieldEngine {
     s.zoomT = 1;
     s.mode = "colapso";
     s.seqT = 0;
+    this.bus.setSignature(ALBUMS[alb].signature);
     this.bus.load(ALBUMS[alb].tracks[trk]);
     void this.bus.play();
     this.markIntent();
@@ -488,6 +521,7 @@ export class FieldEngine {
     this.fuseSwitched = true;
     const track = ALBUMS[s.fuseAlb]?.tracks[s.fuseB];
     if (track) {
+      this.bus.setSignature(ALBUMS[s.fuseAlb].signature);
       this.bus.load(track);
       void this.bus.play();
     }
@@ -579,7 +613,13 @@ export class FieldEngine {
   };
 
   private backDeps(): BackDeps {
-    return { fonts: this.fonts, covers: this.covers, rings: this.rings, parts: this.parts };
+    return {
+      fonts: this.fonts,
+      covers: this.covers,
+      rings: this.rings,
+      parts: this.parts,
+      C: this.C,
+    };
   }
 
   private frontDeps(): FrontDeps {
@@ -590,6 +630,7 @@ export class FieldEngine {
     const s = this.st;
     s.t += dt;
     s.seqT += dt;
+    this.C = this.fieldFor();
 
     const K = this.reduced ? 0.25 : 1;
     const m = this.mouse;
@@ -599,7 +640,7 @@ export class FieldEngine {
     s.curK = this.reduced || this.coarse ? 0 : (0.006 + m.v * 0.02) * K;
 
     s.navT = clamp(s.navT, 0, ALBUMS.length - 1);
-    s.nav += (s.navT - s.nav) * Math.min(1, dt * LERP.nav);
+    s.nav += (s.navT - s.nav) * Math.min(1, dt * this.C.navLerp);
     s.zoom += (s.zoomT - s.zoom) * Math.min(1, dt * LERP.zoom);
     if (s.scale === "campo") s.alb = Math.round(s.nav);
 
@@ -623,10 +664,19 @@ export class FieldEngine {
     s.hoverBody = h.kind === "corpo" ? h.i : this.railAlb >= 0 ? this.railAlb : -1;
     if (s.scale === "album" && s.hover >= 0) s.sel = s.hover;
 
-    const tgt = { m0k: 0.088 * K, m0h: 0.112, spin: 0.06, blur: 0, fade: 1, jet: 0, play: 0 };
+    const C = this.C;
+    const tgt = {
+      m0k: 0.088 * K * C.massScale,
+      m0h: 0.112 * C.horizonScale,
+      spin: 0.06,
+      blur: 0,
+      fade: 1,
+      jet: 0,
+      play: 0,
+    };
     if (s.scale === "album") {
-      tgt.m0k = 0.1 * K;
-      tgt.m0h = 0.096;
+      tgt.m0k = 0.1 * K * C.massScale;
+      tgt.m0h = 0.096 * C.horizonScale;
       tgt.spin = 0.16;
     }
 
@@ -710,11 +760,14 @@ export class FieldEngine {
     const s = this.st;
     const toca = s.mode === "toca";
     const a = this.audioState;
+    const C = this.C;
+    const cap = C.reactionCap;
     tgt.play = toca ? 1 : 0.86;
-    tgt.m0k = curvature(0.075, toca ? a.accent.bass : a.accent.bass * 0.25) * K;
-    tgt.m0h = 0.082;
-    tgt.spin = toca ? curvature(0.42, a.accent.mid * 0.7 + a.flux * 0.3) : 0.06;
-    tgt.jet = toca ? 0.1 + a.bass * 0.22 : 0.02;
+    tgt.m0k =
+      curvature(0.075 * C.massScale, toca ? a.accent.bass : a.accent.bass * 0.25, cap) * K;
+    tgt.m0h = 0.082 * C.horizonScale;
+    tgt.spin = toca ? curvature(0.42, a.accent.mid * 0.7 + a.flux * 0.3, cap) : 0.06;
+    tgt.jet = toca ? 0.06 + a.flux * 0.22 + a.bass * 0.06 : 0.02;
     tgt.blur = toca ? a.bass * 0.12 : 0;
     if (s.scale === "album") tgt.play *= 0.25;
   }
@@ -815,8 +868,11 @@ export class FieldEngine {
     u.uTime.value = s.t;
     u.uFade.value = Math.max(0, s.fade);
     u.uGrain.value = 0.035;
-    u.uDisp.value = 0.014 * (1 + clamp(this.audioState.accent.treb, -1, 1) * 0.35) + s.blur * 0.01;
+    u.uDisp.value =
+      curvature(0.014, this.audioState.accent.treb, this.C.reactionCap * 0.6) + s.blur * 0.01;
     u.uJet.value = s.jet;
+    const dBright = clamp(this.audioState.centroid - A.signature.brightness, -0.5, 0.5);
+    u.uRim.value = this.C.rimHardness * (1 + dBright * this.C.reactionCap);
     (u.uInk.value as THREE.Vector3).set(A.inkA[0], A.inkA[1], A.inkA[2]);
     this.gl.render();
   }

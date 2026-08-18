@@ -1,9 +1,15 @@
-import { ALBUMS } from "../data/albums";
+import { ALBUMS, boundsOf, envelopeOf, sampleEnvelope } from "../data/albums";
 import { RING } from "../tokens";
 import type { CoverAsset } from "./cover";
 import { COVER_SIZE } from "./cover";
 
 const C = RING.buffer / 2;
+
+const GAP_TURN = 0.0075;
+
+const MIN_TURN = 1.4 / 360;
+
+const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 
 function buffer(): HTMLCanvasElement {
   const c = document.createElement("canvas");
@@ -57,22 +63,35 @@ export interface SectorGeometry {
 
 function bakeSectors(
   cover: HTMLCanvasElement,
-  n: number,
+  bounds: number[],
+  env: Float32Array,
+  depth: number,
   sel: number,
   hover: number,
   active: number,
 ): { canvas: HTMLCanvasElement; sectors: SectorGeometry[] } {
   const c = buffer();
   const x = c.getContext("2d")!;
-  const { Rin, Rout, gap, slices: SL, alpha } = RING;
+  const { Rin, Rout, alpha } = RING;
   const th = Rout - Rin;
+  const n = bounds.length - 1;
   const sectors: SectorGeometry[] = [];
+
+  let totalSlices = 0;
+  const slicesOf = (span: number) => clamp(Math.round(span * 620), 8, 96);
+  for (let k = 0; k < n; k++) totalSlices += slicesOf(bounds[k + 1] - bounds[k]);
+  const colW = Math.ceil(COVER_SIZE / Math.max(1, totalSlices)) + 2;
 
   x.save();
   x.translate(C, C);
   for (let k = 0; k < n; k++) {
-    const t0 = k / n + gap / 2;
-    const t1 = (k + 1) / n - gap / 2;
+    const b0 = bounds[k];
+    const b1 = bounds[k + 1];
+    const span = b1 - b0;
+    const g = Math.min(GAP_TURN, Math.max(0, span - MIN_TURN)) / 2;
+    const t0 = b0 + g;
+    const t1 = b1 - g;
+
     const isSel = k === sel;
     const isHov = k === hover;
     const isAct = k === active;
@@ -84,21 +103,26 @@ function bakeSectors(
           ? alpha.hover
           : alpha.normal;
     const inner = isSel || isAct ? Rin - th * 0.16 : Rin;
-    const thick = isSel || isAct ? th * 1.16 : th * 0.82;
-    const arcPx = (2 * Math.PI * inner) / (n * SL);
+    const baseTh = (isSel || isAct ? th * 1.16 : th * 0.82);
     sectors.push({ t0, t1, inner });
 
+    const SL = slicesOf(span);
+    const arcPx = (2 * Math.PI * inner) / Math.max(1, totalSlices);
     for (let i = 0; i < SL; i++) {
       const f = i / SL;
       const t = t0 + (t1 - t0) * f;
+
+      const e = sampleEnvelope(env, b0 + span * f);
+      const thick = baseTh * clamp(1 + depth * (e * 2 - 1), 0.55, 1.2);
+
       x.save();
       x.rotate(t * 6.2832);
       x.globalAlpha = base;
       x.drawImage(
         cover,
-        Math.floor((k / n + (t1 - t0) * f) * COVER_SIZE),
+        Math.floor(t * COVER_SIZE),
         0,
-        Math.ceil(COVER_SIZE / (n * SL)) + 2,
+        colW,
         COVER_SIZE,
         inner,
         -arcPx * 1.7,
@@ -118,6 +142,7 @@ interface SegCacheKey {
   sel: number;
   hover: number;
   active: number;
+  depth: number;
 }
 
 export class RingBakery {
@@ -133,6 +158,7 @@ export class RingBakery {
     this.arcs = covers.map(() => null);
     this.arcVersion = covers.map(() => -1);
   }
+
   arc(i: number): HTMLCanvasElement {
     const cover = this.covers[i];
     if (!this.arcs[i] || this.arcVersion[i] !== cover.version) {
@@ -142,6 +168,11 @@ export class RingBakery {
     return this.arcs[i]!;
   }
 
+  bounds(alb: number): number[] {
+    const album = ALBUMS[alb];
+    return boundsOf(album.signature, album.tracks.length);
+  }
+
   seg(
     alb: number,
     sel: number,
@@ -149,20 +180,37 @@ export class RingBakery {
     active: number,
     progress: number,
     ink: string,
+    depth: number,
   ): HTMLCanvasElement {
     const cover = this.covers[alb];
-    const key: SegCacheKey = { alb, version: cover.version, sel, hover, active };
+    const key: SegCacheKey = {
+      alb,
+      version: cover.version,
+      sel,
+      hover,
+      active,
+      depth: Math.round(depth * 200),
+    };
     const stale =
       !this.segKey ||
       this.segKey.alb !== key.alb ||
       this.segKey.version !== key.version ||
       this.segKey.sel !== key.sel ||
       this.segKey.hover !== key.hover ||
-      this.segKey.active !== key.active;
+      this.segKey.active !== key.active ||
+      this.segKey.depth !== key.depth;
 
     if (stale) {
-      const n = ALBUMS[alb].tracks.length;
-      const baked = bakeSectors(cover.canvas, n, sel, hover, active);
+      const album = ALBUMS[alb];
+      const baked = bakeSectors(
+        cover.canvas,
+        this.bounds(alb),
+        envelopeOf(album.signature),
+        depth,
+        sel,
+        hover,
+        active,
+      );
       this.segSlices = baked.canvas;
       this.segSectors = baked.sectors;
       this.segKey = key;

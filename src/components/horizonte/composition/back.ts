@@ -1,4 +1,5 @@
-import { ALBUMS } from "../data/albums";
+import { ALBUMS, boundsOf } from "../data/albums";
+import { fieldConstantsOf, type FieldConstants } from "../field";
 import { COLOR, GEO, PARTICLES, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
@@ -10,6 +11,7 @@ export interface BackDeps {
   covers: CoverAsset[];
   rings: RingBakery;
   parts: Particle[];
+  C: FieldConstants;
 }
 
 type Ctx = CanvasRenderingContext2D & { letterSpacing?: string };
@@ -40,6 +42,7 @@ function drawRing(
   R: number,
   rot: number,
   alpha: number,
+  flatten: number,
 ) {
   if (alpha <= 0.01) return;
   const sc = ringBufferScale(R);
@@ -47,7 +50,7 @@ function drawRing(
   x.globalCompositeOperation = "lighter";
   x.globalAlpha = alpha;
   x.translate(cx, cy);
-  x.scale(1, GEO.flatten);
+  x.scale(1, flatten);
   x.rotate(rot);
   x.drawImage(buf, -sc / 2, -sc / 2, sc, sc);
   x.restore();
@@ -63,18 +66,20 @@ function trackLabels(
   s: FieldState,
   L: WorldLayout,
   fonts: FontFamilies,
+  flatten: number,
 ) {
   const A = ALBUMS[s.alb];
   const N = A.tracks.length;
+  const bounds = boundsOf(A.signature, N);
   x.save();
   x.textBaseline = "middle";
   ls(x, "0.2em");
   x.font = `500 ${W * 0.0105}px ${fonts.mono}`;
   for (let k = 0; k < N; k++) {
-    const t = (k + 0.5) / N;
+    const t = (bounds[k] + bounds[k + 1]) / 2;
     const a = t * 6.2832 + s.ringRot;
     const px = Math.max(W * 0.055, Math.min(W * 0.62, bx + Math.cos(a) * R * 1.24));
-    const py = by + Math.sin(a) * R * 1.24 * GEO.flatten;
+    const py = by + Math.sin(a) * R * 1.24 * flatten;
     const on = k === s.sel || (s.playAlb === s.alb && k === s.trk);
     if (L.ringLabels === "selecionado" && !on) continue;
     const hidden = Math.cos(a) > 0.3 || (py > H * 0.6 && px < W * 0.46);
@@ -93,8 +98,8 @@ function trackLabels(
     x.strokeStyle = on ? rgba(A.inkA, 1) : COLOR.dust;
     x.lineWidth = 1;
     x.beginPath();
-    x.moveTo(bx + Math.cos(a) * R * 1.08, by + Math.sin(a) * R * 1.08 * GEO.flatten);
-    x.lineTo(bx + Math.cos(a) * R * 1.2, by + Math.sin(a) * R * 1.2 * GEO.flatten);
+    x.moveTo(bx + Math.cos(a) * R * 1.08, by + Math.sin(a) * R * 1.08 * flatten);
+    x.lineTo(bx + Math.cos(a) * R * 1.2, by + Math.sin(a) * R * 1.2 * flatten);
     x.stroke();
   }
   x.restore();
@@ -109,7 +114,7 @@ export function drawBack(
   deps: BackDeps,
 ) {
   const x = ctx as Ctx;
-  const { fonts, covers, rings, parts } = deps;
+  const { fonts, covers, rings, parts, C } = deps;
   const A = ALBUMS[s.alb];
   const inkA = (a: number) => rgba(A.inkA, a);
   const inkB = (a: number) => rgba(A.inkB, a);
@@ -134,7 +139,7 @@ export function drawBack(
     const a = Math.max(0, 0.62 * p.depth * (1 - s.zoom));
     if (a < 0.02) continue;
     const R = M * (0.16 + 0.24 * p.depth) * L.ringScale;
-    drawRing(x, rings.arc(i), p.x * W, p.y * H, R, s.t * 0.04 + i, a);
+    drawRing(x, rings.arc(i), p.x * W, p.y * H, R, s.t * 0.04 + i, a, C.flatten);
 
     x.save();
     const br = M * GEO.neighborR * p.depth;
@@ -154,7 +159,9 @@ export function drawBack(
     ls(x, "-0.035em");
     x.globalAlpha = a * (i === s.hoverBody ? 1 : 0.66);
     x.fillStyle = COLOR.inkText;
-    x.font = `700 ${M * GEO.neighborR * p.depth}px ${fonts.archivo}`;
+
+    const nw = Math.round(fieldConstantsOf(ALBUMS[i].signature).artistWeight);
+    x.font = `${nw} ${M * GEO.neighborR * p.depth}px ${fonts.archivo}`;
     x.fillText(ALBUMS[i].artist, p.x * W, p.y * H + br + M * 0.075 * p.depth);
 
     ls(x, "0.2em");
@@ -171,7 +178,16 @@ export function drawBack(
 
   const R = ringR(W, H, s, L);
   if (s.fadeSel < 0.98) {
-    drawRing(x, rings.arc(s.alb), bx, by, R, s.ringRot, (1 - s.fadeSel) * (1 - s.mix * 0.7) * 0.85);
+    drawRing(
+      x,
+      rings.arc(s.alb),
+      bx,
+      by,
+      R,
+      s.ringRot,
+      (1 - s.fadeSel) * (1 - s.mix * 0.7) * 0.85,
+      C.flatten,
+    );
   }
   if (s.fadeSel > 0.02) {
     const activeTrk =
@@ -179,8 +195,8 @@ export function drawBack(
         ? s.trk
         : -1;
     const prog = s.dur ? Math.min(1, s.pos / s.dur) : 0;
-    const seg = rings.seg(s.alb, s.sel, s.hover, activeTrk, prog, inkA(1));
-    drawRing(x, seg, bx, by, R, s.ringRot, s.fadeSel * (1 - s.mix * 0.6));
+    const seg = rings.seg(s.alb, s.sel, s.hover, activeTrk, prog, inkA(1), C.envelopeDepth);
+    drawRing(x, seg, bx, by, R, s.ringRot, s.fadeSel * (1 - s.mix * 0.6), C.flatten);
 
     if (s.mix > 0) {
       const other = ALBUMS[s.fuseAlb] ? s.fuseAlb : s.alb;
@@ -192,10 +208,11 @@ export function drawBack(
         R * (1.18 - s.mix * 0.18),
         -s.ringRot * 0.7 + 1.1,
         s.mix * 0.8,
+        C.flatten,
       );
     }
 
-    trackLabels(x, bx, by, R, W, H, s, L, fonts);
+    trackLabels(x, bx, by, R, W, H, s, L, fonts, C.flatten);
   }
 
   x.save();
@@ -216,14 +233,15 @@ export function drawBack(
   x.textBaseline = "alphabetic";
   ls(x, "-0.035em");
   let asz = lk.size;
-  x.font = `700 ${asz}px ${fonts.archivo}`;
+  const wgt = Math.round(C.artistWeight);
+  x.font = `${wgt} ${asz}px ${fonts.archivo}`;
   const fit = s.scale === "campo" ? L.fitCampo : L.fitAlbum;
   if (fit > 0) {
     const maxW = W * fit - W * GEO.marginText;
     const mw = x.measureText(A.artist).width;
     if (mw > maxW) {
       asz = Math.max(asz * 0.55, asz * (maxW / mw));
-      x.font = `700 ${asz}px ${fonts.archivo}`;
+      x.font = `${wgt} ${asz}px ${fonts.archivo}`;
     }
   }
   x.globalAlpha = (1 - s.mix) * (0.92 - s.play * 0.25);

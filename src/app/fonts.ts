@@ -2,7 +2,6 @@ import { Archivo, Bodoni_Moda, JetBrains_Mono } from "next/font/google";
 
 export const archivo = Archivo({
   subsets: ["latin"],
-  weight: ["600", "700"],
   variable: "--font-archivo-src",
   display: "block",
 });
