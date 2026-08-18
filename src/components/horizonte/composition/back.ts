@@ -5,11 +5,6 @@ import type { CoverAsset } from "./cover";
 import type { RingBakery } from "./ring";
 import { albPos, lockup, ringBufferScale, ringR, type WorldLayout } from "./layout";
 
-/**
- * Plano de trás. Ordem fixa — os scrims são os últimos, senão o mono da camada
- * de instrumentos fica ilegível sobre a composição.
- */
-
 export interface BackDeps {
   fonts: FontFamilies;
   covers: CoverAsset[];
@@ -37,7 +32,6 @@ export function makeParticles(): Particle[] {
   return parts;
 }
 
-/** Anel assado, achatado e rotacionado — nesta ordem. */
 function drawRing(
   x: Ctx,
   buf: HTMLCanvasElement,

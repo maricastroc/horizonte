@@ -4,13 +4,6 @@ import type { FieldState, FontFamilies } from "../types";
 import type { CoverAsset } from "./cover";
 import { lockup, type WorldLayout } from "./layout";
 
-/**
- * Plano da frente: título da faixa, sub-linha mono e um fragmento esticado da
- * capa. Fundo transparente — o alpha é o que o shader usa para compor, e é o
- * plano amostrado com 34% do offset, o que faz o título passar na frente do
- * corpo enquanto o resto passa atrás.
- */
-
 export interface FrontDeps {
   fonts: FontFamilies;
   covers: CoverAsset[];
@@ -22,7 +15,6 @@ const ls = (x: Ctx, v: string) => {
   if (x.letterSpacing !== undefined) x.letterSpacing = v;
 };
 
-/** O fragmento só depende da capa e do tamanho — assado uma vez, não por frame. */
 class FragmentCache {
   private canvas: HTMLCanvasElement | null = null;
   private key = "";
@@ -63,7 +55,6 @@ class FragmentCache {
 
 const fragment = new FragmentCache();
 
-/** Título mostrado no plano da frente para o estado atual. */
 export function frontTitle(s: FieldState): string {
   const A = ALBUMS[s.alb];
   if (s.scale === "campo") return A.title;

@@ -1,20 +1,11 @@
 import { AUDIO_CURVATURE_CAP } from "./tokens";
 
-/**
- * Áudio real: HTMLAudioElement → AnalyserNode → três bandas.
- *
- * Substitui a simulação por envelope de BPM do protótipo. As bandas alimentam
- * exatamente as mesmas variáveis (`bass` / `mid` / `treb`), e `pos`/`dur` vêm
- * do elemento, não de um contador.
- */
-
 export interface Bands {
   bass: number;
   mid: number;
   treb: number;
 }
 
-/** 20–160 Hz · 160–2k · 2k–12k */
 const RANGES: [number, number][] = [
   [20, 160],
   [160, 2000],
@@ -23,32 +14,22 @@ const RANGES: [number, number][] = [
 
 const FFT_SIZE = 1024;
 const SMOOTHING = 0.7;
-/** suavização das bandas, ~120 ms */
 const BAND_TAU = 0.12;
-/** média lenta usada para extrair o acento (desvio) de cada banda */
 const SLOW_TAU = 1.2;
-/** decaimento do pico adaptativo por segundo */
 const PEAK_DECAY = 0.45;
 const PEAK_FLOOR = 0.06;
 
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 
-/**
- * Teto rígido de curvatura: o áudio nunca move um valor base mais que ±15%.
- * Tipografia "dançando" mata o resultado.
- */
 export const curvature = (base: number, accent: number, cap = AUDIO_CURVATURE_CAP) =>
   base * (1 + clamp(accent, -1, 1) * cap);
 
 export class AudioEngine {
   readonly el: HTMLAudioElement;
-  /** nível 0..1 por banda, suavizado */
   readonly level: Bands = { bass: 0, mid: 0, treb: 0 };
-  /** desvio -1..1 da média lenta — é o que modula a curvatura */
   readonly accent: Bands = { bass: 0, mid: 0, treb: 0 };
 
   onEnded: (() => void) | null = null;
-  /** avisado quando duração/estado do elemento muda */
   onMeta: (() => void) | null = null;
 
   private ctx: AudioContext | null = null;
@@ -69,7 +50,6 @@ export class AudioEngine {
     this.el.addEventListener("durationchange", () => this.onMeta?.());
   }
 
-  /** Criado sob gesto do usuário — política de autoplay dos navegadores. */
   private ensureGraph() {
     if (this.ctx) {
       if (this.ctx.state === "suspended") void this.ctx.resume();
@@ -137,7 +117,6 @@ export class AudioEngine {
     return Number.isFinite(this.el.duration) && this.el.duration > 0 ? this.el.duration : 0;
   }
 
-  /** Lê o analisador e atualiza níveis e acentos. */
   update(dt: number) {
     const kBand = 1 - Math.exp(-dt / BAND_TAU);
     const kSlow = 1 - Math.exp(-dt / SLOW_TAU);

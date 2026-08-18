@@ -8,6 +8,9 @@ const OVERPRINT_A = 0.1;
 const OVERPRINT_B = 0.07;
 const GRAIN_SEED = 20260818;
 const GRAIN_POINTS = 900;
+const EXPOSICAO_ALVO = 0.4;
+const GANHO_MIN = 0.75;
+const GANHO_MAX = 2.4;
 
 export interface CoverAsset {
   canvas: HTMLCanvasElement;
@@ -25,6 +28,21 @@ function blank(): HTMLCanvasElement {
   return c;
 }
 
+function meanLuma(img: HTMLImageElement): number {
+  const N = 48;
+  const probe = document.createElement("canvas");
+  probe.width = N;
+  probe.height = N;
+  const px = probe.getContext("2d", { willReadFrequently: true })!;
+  px.drawImage(img, 0, 0, N, N);
+  const d = px.getImageData(0, 0, N, N).data;
+  let sum = 0;
+  for (let i = 0; i < d.length; i += 4) {
+    sum += (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]) / 255;
+  }
+  return sum / (d.length / 4);
+}
+
 function treat(canvas: HTMLCanvasElement, img: HTMLImageElement, albIdx: number) {
   const S = COVER_SIZE;
   const x = canvas.getContext("2d")!;
@@ -34,8 +52,17 @@ function treat(canvas: HTMLCanvasElement, img: HTMLImageElement, albIdx: number)
   x.fillStyle = COLOR.void2;
   x.fillRect(0, 0, S, S);
 
+  const ganho = Math.min(
+    GANHO_MAX,
+    Math.max(GANHO_MIN, EXPOSICAO_ALVO / Math.max(0.02, meanLuma(img))),
+  );
+
+  const contraste = ganho > 1.6 ? 92 : 100;
+
   x.save();
-  if ("filter" in x) x.filter = `saturate(${DESSATURA * 100}%)`;
+  if ("filter" in x) {
+    x.filter = `saturate(${DESSATURA * 100}%) brightness(${ganho.toFixed(3)}) contrast(${contraste}%)`;
+  }
   x.drawImage(img, 0, 0, S, S);
   x.restore();
 

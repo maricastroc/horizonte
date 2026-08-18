@@ -1,13 +1,5 @@
 import { Archivo, Bodoni_Moda, JetBrains_Mono } from "next/font/google";
 
-/**
- * As três famílias do handoff, self-hospedadas via next/font.
- * `style.fontFamily` é reaproveitado nos canvases de composição — a tipografia
- * monumental é desenhada no canvas, não em DOM.
- *
- * As variáveis terminam em `-src` porque o `@theme` do Tailwind as reexporta
- * como `--font-archivo` / `--font-bodoni` / `--font-mono` em `:root`.
- */
 export const archivo = Archivo({
   subsets: ["latin"],
   weight: ["600", "700"],

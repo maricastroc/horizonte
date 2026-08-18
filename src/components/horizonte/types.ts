@@ -2,7 +2,6 @@ export type Scale = "campo" | "album" | "faixa";
 export type Mode = "parado" | "colapso" | "toca" | "pausa" | "fusao";
 export type Variant = "desktop" | "tablet" | "mobile";
 
-/** Partícula de poeira em órbita elíptica em torno do corpo focado. */
 export interface Particle {
   a: number;
   r: number;
@@ -11,29 +10,18 @@ export interface Particle {
   tw: number;
 }
 
-/**
- * Estado mutável do campo. Um único objeto, mutado pelo `step(dt)` — nunca
- * atravessa o ciclo de render do React.
- */
 export interface FieldState {
   scale: Scale;
   zoom: number;
   zoomT: number;
 
-  /** posição contínua da câmera no campo */
   nav: number;
   navT: number;
-  /** álbum focado */
   alb: number;
-  /** álbum em reprodução (-1 = nenhum) */
   playAlb: number;
-  /** faixa em reprodução */
   trk: number;
-  /** faixa selecionada */
   sel: number;
-  /** faixa sob o ponteiro (anel ou régua) */
   hover: number;
-  /** corpo sob o ponteiro (mundo ou régua) */
   hoverBody: number;
 
   mode: Mode;
@@ -52,7 +40,6 @@ export interface FieldState {
   m1x: number;
   m1y: number;
 
-  /** mistura entre a arte que sai e a que chega, durante a fusão */
   mix: number;
   fuseB: number;
   fuseAlb: number;
@@ -64,7 +51,6 @@ export interface FieldState {
   t: number;
   seqT: number;
   ringRot: number;
-  /** 0 = arco assado da coleção, 1 = anel setorizado */
   fadeSel: number;
 
   bass: number;
@@ -72,7 +58,6 @@ export interface FieldState {
   treb: number;
 }
 
-/** Estado discreto que a camada de instrumentos renderiza (React). */
 export interface Snapshot {
   scale: Scale;
   mode: Mode;
@@ -88,7 +73,6 @@ export interface Snapshot {
   announce: string;
 }
 
-/** Nós atualizados imperativamente a cada frame (fora do React). */
 export interface LiveNodes {
   layer: HTMLElement | null;
   bar: HTMLElement | null;

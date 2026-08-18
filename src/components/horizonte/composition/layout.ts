@@ -4,23 +4,15 @@ import type { FieldState, Variant } from "../types";
 export const variantFor = (w: number): Variant =>
   w < BREAKPOINT.mobile ? "mobile" : w < BREAKPOINT.tablet ? "tablet" : "desktop";
 
-/**
- * Parâmetros de composição por variante. Mobile tem composição própria:
- * um corpo por tela, e a tipografia monumental mantém 0.185W — ela sangra,
- * e isso é desejado.
- */
 export interface WorldLayout {
   variant: Variant;
   anchorCampo: { x: number; y: number };
   anchorAlbum: { x: number; y: number };
   spreadX: number;
   spreadY: number;
-  /** multiplicador sobre R */
   ringScale: number;
-  /** largura máxima do nome do artista, fração de W (0 = não reduzir) */
   fitCampo: number;
   fitAlbum: number;
-  /** rótulos ao redor do anel: 'todos' | 'selecionado' | 'nenhum' */
   ringLabels: "todos" | "selecionado";
 }
 
@@ -62,7 +54,6 @@ const MOBILE: WorldLayout = {
 export const layoutFor = (variant: Variant): WorldLayout =>
   variant === "mobile" ? MOBILE : variant === "tablet" ? TABLET : DESKTOP;
 
-/** Posição de um corpo no campo (fração do viewport) + profundidade. */
 export function albPos(i: number, s: FieldState, L: WorldLayout) {
   const d = i - s.nav;
   const depth = 1 / (1 + Math.abs(d) * 0.8);
@@ -73,15 +64,9 @@ export function albPos(i: number, s: FieldState, L: WorldLayout) {
   return { x, y, depth, d };
 }
 
-/** Raio do anel. */
 export const ringR = (W: number, H: number, s: FieldState, L: WorldLayout) =>
   Math.min(W, H) * (0.42 - s.zoom * 0.115 + s.play * 0.055) * L.ringScale;
 
-/**
- * Lockup tipográfico: UM cálculo. Artista, título e sub-linha derivam de `ay`
- * com offsets proporcionais a `size`. Calcular baselines independentes causa
- * colisão entre camadas quando `p` muda.
- */
 export function lockup(W: number, H: number, s: FieldState) {
   const p = s.play;
   const z = s.zoom;
@@ -93,12 +78,10 @@ export function lockup(W: number, H: number, s: FieldState) {
     ty: ay + size * 0.5,
     tsize: size * 0.53,
     msize: W * 0.011,
-    /** baseline da sub-linha mono */
     my: ay + size * 0.5 + size * 0.24,
   };
 }
 
-/** Escala do buffer de anel (1000px, Rout 475) para o raio do mundo. */
 export const ringBufferScale = (R: number) => R / RING_UNIT;
 
 export interface Hit {
@@ -106,10 +89,6 @@ export interface Hit {
   i: number;
 }
 
-/**
- * Hit-test do anel: converte o ponteiro para o espaço do corpo, desfaz o
- * achatamento, subtrai `ringRot` e mapeia o ângulo em N setores.
- */
 export function hitTest(
   mouseX: number,
   mouseY: number,

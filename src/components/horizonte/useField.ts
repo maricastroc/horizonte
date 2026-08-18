@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { AudioEngine, curvature } from "./audio";
+import { curvature } from "./audio/analysis";
+import { AudioBus, type VisualAudioState } from "./audio/bus";
 import { drawBack, makeParticles, type BackDeps } from "./composition/back";
 import { drawFront, type FrontDeps } from "./composition/front";
 import { loadCovers, type CoverAsset } from "./composition/cover";
@@ -85,8 +86,7 @@ function initialState(): FieldState {
 
 export class FieldEngine {
   readonly st: FieldState = initialState();
-  readonly audio = new AudioEngine();
-  /** Nós que o loop atualiza a cada frame — registrados pela camada de instrumentos. */
+  readonly bus = new AudioBus();
   private liveNodes: LiveNodes = {
     layer: null,
     bar: null,
@@ -114,6 +114,7 @@ export class FieldEngine {
   private fpsFrames = 0;
   private fpsSince = 0;
   private fps = 0;
+  private slowWindows = 0;
 
   private mouse = { x: 0.55, y: 0.45, tx: 0.55, ty: 0.45, v: 0, down: false, moved: 0, lx: 0 };
   private railAlb = -1;
@@ -126,6 +127,7 @@ export class FieldEngine {
   private dragNav = 0;
   private fuseSwitched = false;
   private ariaTick = 0;
+  private audioState: VisualAudioState;
 
   private snap: Snapshot;
   private listeners = new Set<() => void>();
@@ -142,11 +144,12 @@ export class FieldEngine {
     this.rings = new RingBakery(this.covers);
     this.gl = createFieldGL(canvas, this.cvB, this.cvF);
 
+    this.audioState = this.bus.update(0);
     this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.coarse = window.matchMedia("(pointer: coarse)").matches;
     this.snap = this.buildSnapshot(true);
 
-    this.audio.onEnded = () => {
+    this.bus.onEnded = () => {
       const s = this.st;
       if (s.playAlb < 0) return;
       const N = ALBUMS[s.playAlb].tracks.length;
@@ -166,7 +169,7 @@ export class FieldEngine {
   stop() {
     cancelAnimationFrame(this.raf);
     this.unbind();
-    this.audio.dispose();
+    this.bus.dispose();
     this.gl.dispose();
   }
 
@@ -318,7 +321,6 @@ export class FieldEngine {
     this.intent = performance.now();
   }
 
-  /** Leitura de custo para QA — o loop nunca depende disto. */
   get stats() {
     return { fps: Math.round(this.fps), frameCost: +this.frameCost.toFixed(2), W: this.W, H: this.H };
   }
@@ -460,8 +462,8 @@ export class FieldEngine {
     s.zoomT = 1;
     s.mode = "colapso";
     s.seqT = 0;
-    this.audio.load(ALBUMS[alb].tracks[trk].src);
-    void this.audio.play();
+    this.bus.load(ALBUMS[alb].tracks[trk]);
+    void this.bus.play();
     this.markIntent();
   }
 
@@ -487,8 +489,8 @@ export class FieldEngine {
     this.fuseSwitched = true;
     const track = ALBUMS[s.fuseAlb]?.tracks[s.fuseB];
     if (track) {
-      this.audio.load(track.src);
-      void this.audio.play();
+      this.bus.load(track);
+      void this.bus.play();
     }
   }
 
@@ -519,18 +521,17 @@ export class FieldEngine {
 
   transport() {
     const s = this.st;
+    if (s.mode === "fusao") return;
     if (s.playAlb < 0 || s.scale !== "faixa") {
       this.playTrack(s.alb, s.sel);
       return;
     }
-    if (s.mode === "toca") {
+    if (s.mode === "toca" || s.mode === "colapso") {
       s.mode = "pausa";
-      this.audio.pause();
-    } else if (s.mode === "pausa") {
-      s.mode = "toca";
-      void this.audio.play();
+      this.bus.pause();
     } else {
-      this.playTrack(s.alb, s.sel);
+      s.mode = "toca";
+      void this.bus.play();
     }
     this.markIntent();
   }
@@ -538,14 +539,14 @@ export class FieldEngine {
   seekFraction(f: number) {
     const s = this.st;
     if (!s.dur) return;
-    this.audio.seek(clamp(f, 0, 1) * s.dur);
-    s.pos = this.audio.pos;
+    this.bus.seek(clamp(f, 0, 1) * s.dur);
+    s.pos = this.bus.position;
     this.markIntent();
   }
 
   private loop = (now: number) => {
     this.raf = requestAnimationFrame(this.loop);
-    const dt = Math.min(0.05, (now - this.last) / 1000);
+    const dt = Math.min(0.05, Math.max(0, (now - this.last) / 1000));
     this.last = now;
 
     const t0 = performance.now();
@@ -557,14 +558,17 @@ export class FieldEngine {
 
     this.frameCost += (performance.now() - t0 - this.frameCost) * 0.05;
     this.fpsFrames++;
-    if (now - this.fpsSince > 500) {
+    if (now - this.fpsSince > 1000) {
+      const visivel = document.visibilityState === "visible";
       this.fps = (this.fpsFrames * 1000) / (now - this.fpsSince);
+      this.slowWindows = visivel && this.fpsFrames > 10 && this.fps < 52 ? this.slowWindows + 1 : 0;
       this.fpsFrames = 0;
       this.fpsSince = now;
     }
 
-    if (this.frameCost > 13 && this.compMaxW !== COMPOSITION_FALLBACK_W) {
+    if (this.slowWindows >= 3 && this.compMaxW !== COMPOSITION_FALLBACK_W) {
       this.compMaxW = COMPOSITION_FALLBACK_W;
+      this.slowWindows = 0;
       this.resize();
     }
   };
@@ -594,21 +598,19 @@ export class FieldEngine {
     s.zoom += (s.zoomT - s.zoom) * Math.min(1, dt * LERP.zoom);
     if (s.scale === "campo") s.alb = Math.round(s.nav);
 
-    this.audio.update(dt);
-    const bass = this.audio.level.bass;
-    const mid = this.audio.level.mid;
-    const treb = this.audio.level.treb;
-    s.bass = bass;
-    s.mid = mid;
-    s.treb = treb;
+    const a = this.bus.update(dt);
+    this.audioState = a;
+    s.bass = a.bass;
+    s.mid = a.mid;
+    s.treb = a.treb;
 
     if (s.playAlb >= 0) {
-      s.dur = this.audio.dur || ALBUMS[s.playAlb].tracks[s.trk]?.dur || 0;
-      s.pos = Math.min(this.audio.pos, s.dur || this.audio.pos);
+      s.dur = a.duration || ALBUMS[s.playAlb].tracks[s.trk]?.dur || 0;
+      s.pos = Math.min(a.position, s.dur || a.position);
     }
 
     const live = s.mode === "toca" || s.mode === "fusao";
-    const target = live ? 0.55 + bass * 0.45 : s.mode === "pausa" ? 0.22 : 0.3;
+    const target = live ? 0.42 + a.energy * 0.58 : s.mode === "pausa" ? 0.22 : 0.3;
     s.energy += (target - s.energy) * Math.min(1, dt * LERP.energy);
 
     const h = this.hit();
@@ -702,13 +704,13 @@ export class FieldEngine {
   private tocando(tgt: Record<string, number>, K: number) {
     const s = this.st;
     const toca = s.mode === "toca";
-    const a = this.audio;
+    const a = this.audioState;
     tgt.play = toca ? 1 : 0.86;
     tgt.m0k = curvature(0.075, toca ? a.accent.bass : a.accent.bass * 0.25) * K;
     tgt.m0h = 0.082;
-    tgt.spin = toca ? curvature(0.42, a.accent.mid) : 0.06;
-    tgt.jet = toca ? 0.1 + a.level.bass * 0.22 : 0.02;
-    tgt.blur = toca ? a.level.bass * 0.12 : 0;
+    tgt.spin = toca ? curvature(0.42, a.accent.mid * 0.7 + a.flux * 0.3) : 0.06;
+    tgt.jet = toca ? 0.1 + a.bass * 0.22 : 0.02;
+    tgt.blur = toca ? a.bass * 0.12 : 0;
     if (s.scale === "album") tgt.play *= 0.25;
   }
 
@@ -763,7 +765,7 @@ export class FieldEngine {
     s.trk = s.fuseB;
     s.sel = s.fuseB;
     s.alb = s.fuseAlb;
-    s.dur = this.audio.dur || ALBUMS[s.alb].tracks[s.trk].dur;
+    s.dur = this.bus.duration || ALBUMS[s.alb].tracks[s.trk].dur;
     s.pos = 0;
     s.mix = 0;
     s.m1k = 0;
@@ -808,7 +810,7 @@ export class FieldEngine {
     u.uTime.value = s.t;
     u.uFade.value = Math.max(0, s.fade);
     u.uGrain.value = 0.035;
-    u.uDisp.value = 0.014 + s.blur * 0.01;
+    u.uDisp.value = 0.014 * (1 + clamp(this.audioState.accent.treb, -1, 1) * 0.35) + s.blur * 0.01;
     u.uJet.value = s.jet;
     (u.uInk.value as THREE.Vector3).set(A.inkA[0], A.inkA[1], A.inkA[2]);
     this.gl.render();

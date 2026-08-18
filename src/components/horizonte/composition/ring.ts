@@ -3,20 +3,6 @@ import { RING } from "../tokens";
 import type { CoverAsset } from "./cover";
 import { COVER_SIZE } from "./cover";
 
-/**
- * Buffers de anel.
- *
- * Dois tipos: o arco assado da coleção (52–64% da circunferência, com fade nas
- * pontas) e o anel setorizado do álbum (um setor por faixa). Ambos são assados
- * num buffer quadrado de 1000px e só depois achatados e rotacionados na
- * composição — escalar antes de rotacionar produz falhas de cobertura entre
- * fatias.
- *
- * Assar é caro: o arco sai uma vez por álbum, o setorizado só quando a seleção
- * muda. O arco de progresso, que varia a cada frame, é desenhado por cima num
- * segundo buffer.
- */
-
 const C = RING.buffer / 2;
 
 function buffer(): HTMLCanvasElement {
@@ -26,7 +12,6 @@ function buffer(): HTMLCanvasElement {
   return c;
 }
 
-/** Arco assado: usado pelos corpos da coleção e pela arte que sai na fusão. */
 function bakeArc(cover: HTMLCanvasElement, len: number): HTMLCanvasElement {
   const c = buffer();
   const x = c.getContext("2d")!;
@@ -70,7 +55,6 @@ export interface SectorGeometry {
   inner: number;
 }
 
-/** Fatias do anel setorizado, sem o arco de progresso. */
 function bakeSectors(
   cover: HTMLCanvasElement,
   n: number,
@@ -143,13 +127,12 @@ export class RingBakery {
   private segSlices: HTMLCanvasElement | null = null;
   private segSectors: SectorGeometry[] = [];
   private segOut = buffer();
+  private segProgress = -1;
 
   constructor(private covers: CoverAsset[]) {
     this.arcs = covers.map(() => null);
     this.arcVersion = covers.map(() => -1);
   }
-
-  /** Arco assado do álbum `i`. 52–64% da circunferência. */
   arc(i: number): HTMLCanvasElement {
     const cover = this.covers[i];
     if (!this.arcs[i] || this.arcVersion[i] !== cover.version) {
@@ -159,10 +142,6 @@ export class RingBakery {
     return this.arcs[i]!;
   }
 
-  /**
-   * Anel setorizado com o arco de progresso. As fatias são reassadas só quando
-   * álbum/seleção/hover/faixa ativa mudam; o progresso é redesenhado por frame.
-   */
   seg(
     alb: number,
     sel: number,
@@ -188,6 +167,9 @@ export class RingBakery {
       this.segSectors = baked.sectors;
       this.segKey = key;
     }
+
+    if (!stale && Math.abs(progress - this.segProgress) < 0.0008) return this.segOut;
+    this.segProgress = progress;
 
     const x = this.segOut.getContext("2d")!;
     x.clearRect(0, 0, RING.buffer, RING.buffer);

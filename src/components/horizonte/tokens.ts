@@ -1,7 +1,3 @@
-/**
- * Tokens do Horizonte. Valores finais do README — não derivar, não aproximar.
- */
-
 export const COLOR = {
   void: "#07070A",
   void2: "#0A0910",
@@ -9,7 +5,6 @@ export const COLOR = {
   paperHi: "#F4F1EA",
   inkText: "#E8E4DC",
   inkText2: "#CFC9C0",
-  /** hover intermediário das réguas */
   inkHover: "#C9C4BB",
   inkMute: "#8C867E",
   inkDim: "#6E6862",
@@ -17,9 +12,7 @@ export const COLOR = {
   inkGhost: "#3A3631",
   rule: "rgba(232,228,220,.14)",
   rule2: "rgba(232,228,220,.08)",
-  /** Cinza da poeira e dos rótulos inativos do anel. */
   dust: "#CFCAC2",
-  /** Elipse do corpo vizinho. */
   body: "#0B0A0E",
 } as const;
 

@@ -6,14 +6,6 @@ import { COLOR, IDLE_OPACITY, rgba } from "./tokens";
 import type { Scale, Snapshot } from "./types";
 import type { FieldEngine } from "./useField";
 
-/**
- * Camada de instrumentos: DOM, mono, nunca deformada, sempre clicável.
- *
- * Conteúdo experimental, controles estáveis. Nenhuma ação fundamental depende
- * de atalho de teclado nem de legenda de instrução — tudo aqui é um `button`
- * de verdade, com estado exposto por ARIA e foco visível.
- */
-
 const DEFAULT_SNAPSHOT: Snapshot = {
   scale: "campo",
   mode: "parado",
@@ -41,7 +33,6 @@ const LEVELS: { key: Scale; label: string }[] = [
   { key: "faixa", label: "Faixa" },
 ];
 
-/** Linha de régua: 26px no ponteiro fino, 48px no toque. */
 const ROW = "h-[26px] max-md:min-h-[48px] items-center gap-[10px] cursor-pointer " +
   "border-b border-rule-2 w-full text-left transition-colors duration-150";
 
@@ -137,7 +128,6 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         </nav>
       </div>
 
-      {/* Régua de álbuns */}
       <nav
         aria-label="Álbuns"
         className={[
@@ -322,6 +312,15 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             ? `Coleção · ${snap.navAlb + 1}/${ALBUMS.length}`
             : `${album.cat} · ${album.tracks.length} faixas`}
         </span>
+        <a
+          href={album.license.source}
+          target="_blank"
+          rel="noreferrer"
+          title={album.license.attribution}
+          className="cursor-pointer whitespace-nowrap text-ink-faint hover:text-ink-text max-md:py-3.25"
+        >
+          {album.license.name}
+        </a>
       </div>
 
       <p aria-live="polite" className="sr-only">

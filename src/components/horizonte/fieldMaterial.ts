@@ -3,11 +3,6 @@ import frag from "@/shaders/field.frag.glsl";
 import vert from "@/shaders/field.vert.glsl";
 import { DPR_MAX } from "./tokens";
 
-/**
- * Não existe cena 3D. Um triângulo full-screen com o fragment shader do handoff:
- * a "profundidade" toda é simulada no shader e na composição 2D.
- */
-
 export interface FieldUniforms {
   uBack: { value: THREE.Texture | null };
   uFront: { value: THREE.Texture | null };

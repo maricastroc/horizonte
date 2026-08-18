@@ -1,0 +1,91 @@
+import type { AudioSource } from "../content/types";
+
+export interface Playback {
+  readonly kind: AudioSource["kind"];
+  load(source: AudioSource): void;
+  play(): Promise<void>;
+  pause(): void;
+  seek(seconds: number): void;
+  readonly position: number;
+  readonly duration: number;
+  readonly playing: boolean;
+  connect(ctx: AudioContext, node: AudioNode): boolean;
+  dispose(): void;
+  onEnded: (() => void) | null;
+  onMeta: (() => void) | null;
+}
+
+const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
+
+export class LocalPlayback implements Playback {
+  readonly kind = "local" as const;
+  onEnded: (() => void) | null = null;
+  onMeta: (() => void) | null = null;
+
+  private el: HTMLAudioElement;
+  private node: MediaElementAudioSourceNode | null = null;
+  private src = "";
+  private wantPlay = false;
+
+  constructor() {
+    this.el = new Audio();
+    this.el.preload = "auto";
+    this.el.crossOrigin = "anonymous";
+    this.el.addEventListener("ended", () => this.onEnded?.());
+    this.el.addEventListener("loadedmetadata", () => this.onMeta?.());
+    this.el.addEventListener("durationchange", () => this.onMeta?.());
+  }
+
+  load(source: AudioSource) {
+    if (source.kind !== "local") return;
+    if (this.src === source.src) return;
+    this.src = source.src;
+    this.el.src = source.src;
+    this.el.currentTime = 0;
+  }
+
+  async play() {
+    this.wantPlay = true;
+    try {
+      await this.el.play();
+    } catch {
+      this.wantPlay = false;
+    }
+  }
+
+  pause() {
+    this.wantPlay = false;
+    this.el.pause();
+  }
+
+  seek(seconds: number) {
+    if (!Number.isFinite(this.el.duration)) return;
+    this.el.currentTime = clamp(seconds, 0, Math.max(0, this.el.duration - 0.05));
+  }
+
+  get position() {
+    return Number.isFinite(this.el.currentTime) ? this.el.currentTime : 0;
+  }
+
+  get duration() {
+    return Number.isFinite(this.el.duration) && this.el.duration > 0 ? this.el.duration : 0;
+  }
+
+  get playing() {
+    return this.wantPlay && !this.el.paused;
+  }
+
+  connect(ctx: AudioContext, node: AudioNode) {
+    this.node ??= ctx.createMediaElementSource(this.el);
+    this.node.connect(node);
+    return true;
+  }
+
+  dispose() {
+    this.el.pause();
+    this.el.removeAttribute("src");
+    this.el.load();
+    this.node?.disconnect();
+    this.node = null;
+  }
+}
