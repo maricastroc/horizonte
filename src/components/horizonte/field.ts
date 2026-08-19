@@ -1,5 +1,6 @@
-import type { AlbumSignature } from "./content/signature";
-import { lerp } from "./math";
+import type { AlbumSignature, TrackBias } from "./content/signature";
+import { clamp, lerp } from "./math";
+import { LIGHT } from "./tokens";
 
 export interface FieldConstants {
   artistWeight: number;
@@ -25,14 +26,16 @@ export const RANGE = {
 
 export const heftOf = (s: AlbumSignature) => s.loudness * 0.68 + s.duration * 0.32;
 
-export function fieldConstantsOf(sig: AlbumSignature): FieldConstants {
-  const heft = heftOf(sig);
+export function fieldConstantsOf(sig: AlbumSignature, bias?: TrackBias): FieldConstants {
+  const loudness = bias ? clamp(sig.loudness + bias.loudness, 0, 1) : sig.loudness;
+  const dynamics = bias ? clamp(sig.dynamics + bias.dynamics, 0, 1) : sig.dynamics;
+  const heft = loudness * 0.68 + sig.duration * 0.32;
   return {
     artistWeight: Math.round(lerp(RANGE.artistWeight[0], RANGE.artistWeight[1], sig.loudness)),
     massScale: lerp(RANGE.massScale[0], RANGE.massScale[1], heft),
-    horizonScale: lerp(RANGE.horizonScale[0], RANGE.horizonScale[1], sig.loudness),
-    reactionCap: lerp(RANGE.reactionCap[0], RANGE.reactionCap[1], sig.dynamics),
-    envelopeDepth: lerp(RANGE.envelopeDepth[0], RANGE.envelopeDepth[1], sig.dynamics),
+    horizonScale: lerp(RANGE.horizonScale[0], RANGE.horizonScale[1], loudness),
+    reactionCap: lerp(RANGE.reactionCap[0], RANGE.reactionCap[1], dynamics),
+    envelopeDepth: lerp(RANGE.envelopeDepth[0], RANGE.envelopeDepth[1], dynamics),
     flatten: lerp(RANGE.flatten[0], RANGE.flatten[1], sig.brightness),
     rimHardness: lerp(RANGE.rimHardness[0], RANGE.rimHardness[1], sig.brightness),
     navLerp: lerp(RANGE.navLerp[0], RANGE.navLerp[1], sig.duration),
@@ -59,4 +62,13 @@ export function reduceMotion(c: FieldConstants): FieldConstants {
     massScale: 1 + (c.massScale - 1) * 0.25,
     navLerp: RANGE.navLerp[0],
   };
+}
+
+export const lightSweepOf = (progress: number) => (clamp(progress, 0, 1) - 0.5) * LIGHT.arc;
+
+export function lightDirection(sweep: number): [number, number] {
+  const c = Math.cos(sweep);
+  const s = Math.sin(sweep);
+  const [bx, by] = LIGHT.base;
+  return [bx * c - by * s, bx * s + by * c];
 }

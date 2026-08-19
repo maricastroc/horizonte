@@ -1,7 +1,7 @@
 import { ALBUMS, boundsOf } from "../content";
 import type { FieldConstants } from "../field";
 import { isEngaged, progressOf } from "../state";
-import { COLOR, GEO, PARTICLES, rgba } from "../tokens";
+import { COLOR, GEO, PARTICLES, RING, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
 import type { RingBakery } from "./ring";
@@ -136,7 +136,7 @@ export function drawBack(
     const a = Math.max(0, 0.62 * p.depth * (1 - s.zoom));
     if (a < 0.02) continue;
     const R = M * (0.16 + 0.24 * p.depth) * L.ringScale;
-    drawRing(x, rings.arc(i), p.x * W, p.y * H, R, s.t * 0.04 + i, a, C.flatten);
+    drawRing(x, rings.arc(i), p.x * W, p.y * H, R, RING.anchor + i * RING.neighborPhase, a, C.flatten);
 
     x.save();
     const br = M * GEO.neighborR * p.depth;

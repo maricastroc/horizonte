@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { timecode } from "../format";
 import { clamp, lerp } from "../math";
-import { initialState, isEngaged, progressOf } from "../state";
+import { albumProgressOf, initialState, isEngaged, progressOf } from "../state";
 import type { Mode } from "../types";
 
 describe("clamp", () => {
@@ -115,5 +115,37 @@ describe("initialState", () => {
       expect(v, k).toBeDefined();
       if (typeof v === "number") expect(Number.isNaN(v), k).toBe(false);
     }
+  });
+});
+
+describe("albumProgressOf — a posição no disco, não na faixa", () => {
+  const bounds = [0, 0.25, 0.75, 1];
+
+  it("no início de uma faixa cai na fronteira dela", () => {
+    expect(albumProgressOf(bounds, 1, 0)).toBeCloseTo(0.25, 10);
+  });
+
+  it("no fim de uma faixa encosta na fronteira seguinte", () => {
+    expect(albumProgressOf(bounds, 1, 1)).toBeCloseTo(0.75, 10);
+  });
+
+  it("é contínua na emenda entre faixas", () => {
+    expect(albumProgressOf(bounds, 0, 1)).toBeCloseTo(albumProgressOf(bounds, 1, 0), 10);
+    expect(albumProgressOf(bounds, 1, 1)).toBeCloseTo(albumProgressOf(bounds, 2, 0), 10);
+  });
+
+  it("percorre o setor proporcionalmente", () => {
+    expect(albumProgressOf(bounds, 1, 0.5)).toBeCloseTo(0.5, 10);
+  });
+
+  it("satura faixa e progresso fora do intervalo", () => {
+    expect(albumProgressOf(bounds, -5, 0.5)).toBeCloseTo(0.125, 10);
+    expect(albumProgressOf(bounds, 99, 0.5)).toBeCloseTo(0.875, 10);
+    expect(albumProgressOf(bounds, 0, -2)).toBe(0);
+    expect(albumProgressOf(bounds, 2, 9)).toBe(1);
+  });
+
+  it("sem fronteiras devolve zero", () => {
+    expect(albumProgressOf([], 0, 0.5)).toBe(0);
   });
 });

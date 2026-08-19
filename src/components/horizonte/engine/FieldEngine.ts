@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { curvature } from "../audio/analysis";
+import { leadOf } from "../audio/anticipation";
 import { AudioBus, type VisualAudioState } from "../audio/bus";
 import { drawBack, makeParticles, type BackDeps } from "../composition/back";
 import { drawFront, type FrontDeps } from "../composition/front";
@@ -8,20 +9,23 @@ import {
   albPos,
   hitTest,
   layoutFor,
+  ringRotationTarget,
   variantFor,
   type WorldLayout,
 } from "../composition/layout";
 import { RingBakery } from "../composition/ring";
-import { ALBUMS } from "../content";
+import { ALBUMS, NEUTRAL_BIAS, trackBiasOf, type TrackBias } from "../content";
 import {
   fieldConstantsOf,
+  lightDirection,
+  lightSweepOf,
   mixConstants,
   reduceMotion,
   type FieldConstants,
 } from "../field";
 import { createFieldGL, type FieldGL } from "../fieldMaterial";
 import { clamp } from "../math";
-import { initialState, isEngaged, progressOf } from "../state";
+import { albumProgressOf, initialState, isEngaged, progressOf } from "../state";
 import * as T from "./transport";
 import type { AudioEffect, Catalog } from "./transport";
 import type { FrameOut, FrameSink } from "./frame";
@@ -37,7 +41,9 @@ import {
   COMPOSITION_MAX_W,
   IDLE_MS,
   LERP,
+  SECOND_MASS,
   SEQ,
+  TRACK_BIAS,
 } from "../tokens";
 import type {
   FieldState,
@@ -59,6 +65,12 @@ const PAN = {
 } as const;
 
 const CURSOR_GAIN = 9;
+
+function readExperiment(name: string) {
+  const search = (globalThis as { location?: { search?: string } }).location?.search ?? "";
+  if (!search) return false;
+  return (new URLSearchParams(search).get("x") ?? "").split(",").includes(name);
+}
 
 const CATALOG: Catalog = {
   size: ALBUMS.length,
@@ -94,6 +106,11 @@ export class FieldEngine implements InputActions {
 
   private mouse = { x: 0.55, y: 0.45, tx: 0.55, ty: 0.45, v: 0, down: false, moved: 0, lx: 0 };
   private C: FieldConstants = FIELD[0];
+  private bias: TrackBias = { ...NEUTRAL_BIAS };
+  private lightSweep = 0;
+  private m1 = { x: 0, y: 0, k: 0, h: 0, alb: -1, ready: false };
+  readonly experiments = { anticipation: false, anticipationGain: 1 };
+  lead = 0;
   private railAlb = -1;
   private railTrk = -1;
   private intent = 0;
@@ -123,6 +140,7 @@ export class FieldEngine implements InputActions {
     this.gl = createFieldGL(canvas, this.cvB, this.cvF);
 
     this.audioState = this.bus.update(0);
+    this.experiments.anticipation = readExperiment("anticipate");
     this.reduced = prefersReducedMotion();
     this.coarse = hasCoarsePointer();
     this.snap = this.buildSnapshot(true);
@@ -273,7 +291,8 @@ export class FieldEngine implements InputActions {
       const j = clamp(i + 1, 0, n - 1);
       c = mixConstants(FIELD[i], FIELD[j], s.nav - i);
     } else {
-      c = FIELD[clamp(s.alb, 0, n - 1)];
+      const alb = clamp(s.alb, 0, n - 1);
+      c = fieldConstantsOf(ALBUMS[alb].signature, this.bias);
     }
     if (s.mix > 0 && FIELD[s.fuseAlb]) c = mixConstants(c, FIELD[s.fuseAlb], s.mix);
     return this.reduced ? reduceMotion(c) : c;
@@ -414,6 +433,8 @@ export class FieldEngine implements InputActions {
     const s = this.st;
     s.t += dt;
     s.seqT += dt;
+    if (s.segueT < SEQ.segue.total) s.segueT += dt;
+    this.trackBias(dt);
     this.C = this.fieldFor();
 
     const K = this.reduced ? 0.25 : 1;
@@ -445,6 +466,7 @@ export class FieldEngine implements InputActions {
     s.hover = h.kind === "track" ? h.i : this.railTrk >= 0 ? this.railTrk : -1;
     s.hoverBody = h.kind === "body" ? h.i : this.railAlb >= 0 ? this.railAlb : -1;
     if (s.scale === "album" && s.hover >= 0) s.sel = s.hover;
+    this.secondMass(dt);
 
     const C = this.C;
     const tgt = {
@@ -466,6 +488,18 @@ export class FieldEngine implements InputActions {
     if (isEngaged(s.mode)) this.playing(tgt, K);
     if (s.mode === "fusion") this.fusion(tgt, K);
 
+    if (s.segueT < SEQ.segue.total) {
+      const e = s.segueT / SEQ.segue.total;
+      tgt.m0h *= 1 - Math.sin(e * Math.PI) * SEQ.segue.depth * K;
+    }
+
+    this.anticipation(dt);
+    if (this.lead !== 0) {
+      const amp = C.reactionCap * this.experiments.anticipationGain;
+      tgt.m0h *= 1 - this.lead * amp;
+      tgt.fade *= 1 + this.lead * amp * 0.4;
+    }
+
     if (this.reduced) tgt.blur = 0;
 
     if (s.waveR >= 0) {
@@ -476,7 +510,8 @@ export class FieldEngine implements InputActions {
       s.waveA = 0;
     }
 
-    s.ringRot += dt * (0.05 + s.energy * 0.14) * (s.mode === "playing" ? 1.6 : 1);
+    this.ringRotation(dt);
+    this.lightAngle(dt);
     s.fadeSel += ((s.scale === "collection" ? 0 : 1) - s.fadeSel) * Math.min(1, dt * 4);
 
     const k = Math.min(1, dt * LERP.field);
@@ -495,6 +530,83 @@ export class FieldEngine implements InputActions {
       else q.r += (0.16 + q.z * 0.62 - q.r) * dt * 1.2;
       if (s.mode === "paused") q.r -= dt * 0.012;
     }
+  }
+
+  private trackBias(dt: number) {
+    const s = this.st;
+    const album = ALBUMS[clamp(s.alb, 0, ALBUMS.length - 1)];
+    const onAir = s.playAlb >= 0 && s.playAlb === s.alb && s.scale !== "collection";
+    const target = onAir
+      ? (trackBiasOf(album.signature, album.tracks.length)[s.trk] ?? NEUTRAL_BIAS)
+      : NEUTRAL_BIAS;
+    const k = Math.min(1, dt * TRACK_BIAS.lerp);
+    this.bias.loudness += (target.loudness - this.bias.loudness) * k;
+    this.bias.dynamics += (target.dynamics - this.bias.dynamics) * k;
+  }
+
+  private ringRotation(dt: number) {
+    const s = this.st;
+    const onAir = s.playAlb >= 0 && s.playAlb === s.alb;
+    const target = ringRotationTarget(this.rings.bounds(s.alb), s.trk, progressOf(s), onAir);
+    const raw = target - s.ringRot;
+    const d = (((raw + Math.PI) % 6.2832) + 6.2832) % 6.2832 - Math.PI;
+    s.ringRot += d * Math.min(1, dt * LERP.ringRot);
+  }
+
+  private anticipation(dt: number) {
+    const s = this.st;
+    const onAir = this.experiments.anticipation && s.playAlb >= 0 && s.playAlb === s.alb;
+    let target = 0;
+    if (onAir) {
+      const sig = ALBUMS[s.playAlb].signature;
+      const pos = albumProgressOf(this.rings.bounds(s.playAlb), s.trk, progressOf(s));
+      target = leadOf(sig, pos, sig.measured.durationS);
+    }
+    this.lead += (target - this.lead) * Math.min(1, dt * LERP.lead);
+  }
+
+  private secondMass(dt: number) {
+    const s = this.st;
+    if (s.scale !== "collection" || s.mode === "fusion") {
+      this.m1.ready = false;
+      return;
+    }
+
+    const n = ALBUMS.length;
+    const focused = clamp(Math.round(s.nav), 0, n - 1);
+    const pointed = s.hoverBody >= 0 && s.hoverBody !== focused ? s.hoverBody : -1;
+    const dir = s.nav - Math.round(s.nav) >= 0 ? 1 : -1;
+    const at = pointed >= 0 ? pointed : focused + dir;
+
+    const p = albPos(at, s, this.L);
+    const C = FIELD[clamp(at, 0, n - 1)];
+    const gain = pointed >= 0 && !this.reduced ? SECOND_MASS.pointGain : 1;
+    const k = SECOND_MASS.k * C.massScale * gain;
+    const h = SECOND_MASS.h * C.horizonScale;
+
+    const m = this.m1;
+    if (!m.ready || m.alb !== at) m.alb = at;
+    if (!m.ready) {
+      m.x = p.x;
+      m.y = p.y;
+      m.k = k;
+      m.h = h;
+      m.ready = true;
+      return;
+    }
+
+    const e = Math.min(1, dt * SECOND_MASS.lerp);
+    m.x += (p.x - m.x) * e;
+    m.y += (p.y - m.y) * e;
+    m.k += (k - m.k) * e;
+    m.h += (h - m.h) * e;
+  }
+
+  private lightAngle(dt: number) {
+    const s = this.st;
+    const onAir = s.playAlb >= 0 && s.playAlb === s.alb && s.mode !== "stopped";
+    const target = onAir ? lightSweepOf(progressOf(s)) : 0;
+    this.lightSweep += (target - this.lightSweep) * Math.min(1, dt * LERP.light);
   }
 
   private collapse(tgt: Record<string, number>, K: number) {
@@ -616,13 +728,11 @@ export class FieldEngine implements InputActions {
     let m1y = my + s.m1y;
     let m1k = s.m1k;
     let m1h = s.m1h;
-    if (s.scale === "collection" && s.mode !== "fusion") {
-      const dir = s.nav - Math.round(s.nav) >= 0 ? 1 : -1;
-      const nb = albPos(Math.round(s.nav) + dir, s, this.L);
-      m1x = (nb.x - 0.5) * aspect;
-      m1y = 0.5 - nb.y;
-      m1k = 0.03;
-      m1h = 0.052;
+    if (s.scale === "collection" && s.mode !== "fusion" && this.m1.ready) {
+      m1x = (this.m1.x - 0.5) * aspect;
+      m1y = 0.5 - this.m1.y;
+      m1k = this.m1.k;
+      m1h = this.m1.h;
     }
 
     const A = ALBUMS[s.alb];
@@ -640,6 +750,8 @@ export class FieldEngine implements InputActions {
     u.uJet.value = s.jet;
     const dBright = clamp(this.audioState.centroid - A.signature.brightness, -0.5, 0.5);
     u.uRim.value = this.C.rimHardness * (1 + dBright * this.C.reactionCap);
+    const light = lightDirection(this.lightSweep);
+    u.uLight.value.set(light[0], light[1]);
     (u.uInk.value as THREE.Vector3).set(A.inkA[0], A.inkA[1], A.inkA[2]);
     this.gl.render();
   }

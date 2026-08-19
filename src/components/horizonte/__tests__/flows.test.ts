@@ -87,19 +87,21 @@ describe("fluxo: da coleção até a faixa soando", () => {
 });
 
 describe("fluxo: emenda entre faixas", () => {
-  it("o fim natural funde na próxima e troca o arquivo", () => {
+  it("o fim natural emenda na próxima e troca o arquivo, sem cerimônia", () => {
     world();
     engine.playTrack(0, 0);
     run(3);
     const before = currentSource();
 
     (player() as unknown as { el: FakeAudio }).el.emit("ended");
-    expect(engine.st.mode).toBe("fusion");
+    expect(engine.st.mode).toBe("playing");
+    expect(engine.st.trk).toBe(1);
+    expect(currentSource()).not.toBe(before);
 
     run(3);
-    expect(engine.st.trk).toBe(1);
     expect(engine.st.mode).toBe("playing");
-    expect(currentSource()).not.toBe(before);
+    expect(engine.st.mix).toBe(0);
+    expect(engine.st.waveR).toBe(-1);
   });
 
   it("depois da última faixa, volta para a primeira", () => {

@@ -6,10 +6,14 @@ import {
   RANGE,
   fieldConstantsOf,
   heftOf,
+  lightDirection,
+  lightSweepOf,
   mixConstants,
   reduceMotion,
   type FieldConstants,
 } from "../field";
+import { trackBiasOf } from "../content/signature";
+import { LIGHT } from "../tokens";
 import { signature } from "./fixtures";
 
 const CONTRACT = {
@@ -219,5 +223,94 @@ describe("mixConstants", () => {
   it("satura fora de [0,1] em vez de extrapolar", () => {
     expect(mixConstants(a, b, -3)).toEqual(a);
     expect(mixConstants(a, b, 9)).toEqual(b);
+  });
+});
+
+describe("viés de faixa nas constantes (P11)", () => {
+  const sig = signature(0.5, 0.5, 0.5, 0.5);
+
+  it("sem viés, o resultado é idêntico ao do álbum", () => {
+    expect(fieldConstantsOf(sig, { loudness: 0, dynamics: 0 })).toEqual(fieldConstantsOf(sig));
+  });
+
+  it("a faixa move massa, horizonte, teto de reação e envelope", () => {
+    const base = fieldConstantsOf(sig);
+    const forte = fieldConstantsOf(sig, { loudness: 0.2, dynamics: 0.2 });
+    expect(forte.massScale).toBeGreaterThan(base.massScale);
+    expect(forte.horizonScale).toBeGreaterThan(base.horizonScale);
+    expect(forte.reactionCap).toBeGreaterThan(base.reactionCap);
+    expect(forte.envelopeDepth).toBeGreaterThan(base.envelopeDepth);
+  });
+
+  it("a faixa não move a tipografia, a luz nem a inércia do álbum", () => {
+    const base = fieldConstantsOf(sig);
+    const outra = fieldConstantsOf(sig, { loudness: -0.25, dynamics: 0.25 });
+    expect(outra.artistWeight).toBe(base.artistWeight);
+    expect(outra.flatten).toBe(base.flatten);
+    expect(outra.rimHardness).toBe(base.rimHardness);
+    expect(outra.navLerp).toBe(base.navLerp);
+  });
+
+  it("nenhuma faixa do acervo escapa dos guardrails do álbum", () => {
+    for (const album of CURATION) {
+      const s = SIGNATURES[album.id];
+      for (const bias of trackBiasOf(s, album.tracks.length)) {
+        const c = fieldConstantsOf(s, bias);
+        expect(c.massScale, album.id).toBeGreaterThanOrEqual(RANGE.massScale[0]);
+        expect(c.massScale, album.id).toBeLessThanOrEqual(RANGE.massScale[1]);
+        expect(c.horizonScale, album.id).toBeGreaterThanOrEqual(RANGE.horizonScale[0]);
+        expect(c.horizonScale, album.id).toBeLessThanOrEqual(RANGE.horizonScale[1]);
+        expect(c.reactionCap, album.id).toBeGreaterThanOrEqual(RANGE.reactionCap[0]);
+        expect(c.reactionCap, album.id).toBeLessThanOrEqual(RANGE.reactionCap[1]);
+        expect(c.envelopeDepth, album.id).toBeLessThanOrEqual(RANGE.envelopeDepth[1]);
+      }
+    }
+  });
+
+  it("o peso do artista é o mesmo em todas as faixas de um disco", () => {
+    for (const album of CURATION) {
+      const s = SIGNATURES[album.id];
+      const pesos = trackBiasOf(s, album.tracks.length).map(
+        (bias) => fieldConstantsOf(s, bias).artistWeight,
+      );
+      expect(new Set(pesos).size, album.id).toBe(1);
+    }
+  });
+
+  it("reduceMotion continua zerando o teto de reação da faixa", () => {
+    const c = reduceMotion(fieldConstantsOf(signature(0.9, 0.9, 0.5, 0.5), { loudness: 0.2, dynamics: 0.25 }));
+    expect(c.reactionCap).toBe(0);
+  });
+});
+
+describe("a luz atravessa a faixa (P12)", () => {
+  it("a varredura é simétrica em torno do meio da faixa", () => {
+    expect(lightSweepOf(0.5)).toBe(0);
+    expect(lightSweepOf(0)).toBeCloseTo(-LIGHT.arc / 2, 10);
+    expect(lightSweepOf(1)).toBeCloseTo(LIGHT.arc / 2, 10);
+  });
+
+  it("é monotônica e satura fora da faixa", () => {
+    expect(lightSweepOf(0.25)).toBeLessThan(lightSweepOf(0.75));
+    expect(lightSweepOf(-4)).toBe(lightSweepOf(0));
+    expect(lightSweepOf(9)).toBe(lightSweepOf(1));
+  });
+
+  it("a direção gira sem mudar de módulo", () => {
+    const base = Math.hypot(...lightDirection(0));
+    for (const p of [0, 0.25, 0.5, 0.75, 1]) {
+      expect(Math.hypot(...lightDirection(lightSweepOf(p)))).toBeCloseTo(base, 10);
+    }
+  });
+
+  it("no meio da faixa a luz está na direção histórica do handoff", () => {
+    const [x, y] = lightDirection(lightSweepOf(0.5));
+    expect(x).toBeCloseTo(LIGHT.base[0], 10);
+    expect(y).toBeCloseTo(LIGHT.base[1], 10);
+  });
+
+  it("o arco total percorrido é o declarado", () => {
+    const ang = (p: number) => Math.atan2(...(lightDirection(lightSweepOf(p)).reverse() as [number, number]));
+    expect(ang(1) - ang(0)).toBeCloseTo(LIGHT.arc, 6);
   });
 });

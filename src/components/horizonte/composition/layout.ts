@@ -1,4 +1,5 @@
-import { BREAKPOINT, GEO, RING_UNIT } from "../tokens";
+import { BREAKPOINT, GEO, RING, RING_UNIT } from "../tokens";
+import { albumProgressOf } from "../state";
 import type { FieldState, Variant } from "../types";
 
 export const variantFor = (w: number): Variant =>
@@ -91,6 +92,15 @@ export function lockup(W: number, H: number, s: FieldState) {
 }
 
 export const ringBufferScale = (R: number) => R / RING_UNIT;
+
+export function ringRotationTarget(
+  bounds: number[],
+  trk: number,
+  trackProgress: number,
+  onAir: boolean,
+) {
+  return RING.anchor - 6.2832 * (onAir ? albumProgressOf(bounds, trk, trackProgress) : 0);
+}
 
 export interface Hit {
   kind: "body" | "track" | "empty";

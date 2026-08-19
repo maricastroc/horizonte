@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GEO, RING_UNIT } from "../tokens";
+import { GEO, RING, RING_UNIT } from "../tokens";
 import {
   albPos,
   hitTest,
@@ -7,6 +7,7 @@ import {
   lockup,
   ringBufferScale,
   ringR,
+  ringRotationTarget,
   sectorAt,
   variantFor,
 } from "../composition/layout";
@@ -214,5 +215,44 @@ describe("hitTest — scale álbum", () => {
     expect(
       hitTest(center.x, center.y - 120 / H, W, H, s, DESKTOP, () => UNIFORM, 3, flatten).kind,
     ).toBe("track");
+  });
+});
+
+describe("ringRotationTarget — o anel é o relógio do disco (P13)", () => {
+  const bounds = [0, 0.25, 0.75, 1];
+
+  it("parado, todo disco mostra a mesma orientação canônica", () => {
+    expect(ringRotationTarget(bounds, 0, 0, false)).toBe(RING.anchor);
+    expect(ringRotationTarget(bounds, 2, 0.9, false)).toBe(RING.anchor);
+  });
+
+  it("tocando, fecha exatamente uma volta ao longo do álbum", () => {
+    const inicio = ringRotationTarget(bounds, 0, 0, true);
+    const fim = ringRotationTarget(bounds, 2, 1, true);
+    expect(inicio - fim).toBeCloseTo(6.2832, 6);
+  });
+
+  it("o ponto que toca fica sempre na âncora", () => {
+    for (const [trk, p] of [[0, 0], [0, 0.5], [1, 0.3], [2, 0.8]] as const) {
+      const rot = ringRotationTarget(bounds, trk, p, true);
+      const setor = bounds[trk] + (bounds[trk + 1] - bounds[trk]) * p;
+      expect(setor * 6.2832 + rot).toBeCloseTo(RING.anchor, 10);
+    }
+  });
+
+  it("atravessa a emenda entre faixas sem salto", () => {
+    expect(ringRotationTarget(bounds, 0, 1, true)).toBeCloseTo(
+      ringRotationTarget(bounds, 1, 0, true),
+      10,
+    );
+  });
+
+  it("é monotônica ao longo do disco", () => {
+    let anterior = Infinity;
+    for (const [trk, p] of [[0, 0], [0, 0.9], [1, 0.2], [1, 0.9], [2, 0.5]] as const) {
+      const rot = ringRotationTarget(bounds, trk, p, true);
+      expect(rot).toBeLessThan(anterior);
+      anterior = rot;
+    }
   });
 });

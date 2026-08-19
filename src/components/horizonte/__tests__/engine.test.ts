@@ -29,9 +29,17 @@ vi.mock("../fieldMaterial", async (importarReal) => {
 import { ALBUMS } from "../content";
 import { FieldEngine } from "../engine/FieldEngine";
 import { albPos, layoutFor } from "../composition/layout";
-import { fieldConstantsOf } from "../field";
-import { IDLE_MS, PARTICLES, COMPOSITION_FALLBACK_W, COMPOSITION_MAX_W } from "../tokens";
-import { engineHarness, type EngineHarness } from "./fakes";
+import { fieldConstantsOf, reduceMotion } from "../field";
+import {
+  IDLE_MS,
+  PARTICLES,
+  COMPOSITION_FALLBACK_W,
+  COMPOSITION_MAX_W,
+  RING,
+  SECOND_MASS,
+} from "../tokens";
+import { trackBiasOf } from "../content/signature";
+import { engineHarness, type EngineHarness, type FakeAudio } from "./fakes";
 
 const FONTS = { archivo: "A", bodoni: "B", mono: "M" };
 
@@ -367,14 +375,19 @@ describe("contrato de uniformes", () => {
     }
   });
 
-  it("na coleção a segunda massa aponta para o disco vizinho", () => {
+  it("na coleção a segunda massa aponta para o vizinho, com o peso dele", () => {
     engine.st.navT = 2;
     run(2);
     env.advance();
 
+    const s = engine.st;
+    const dir = s.nav - Math.round(s.nav) >= 0 ? 1 : -1;
+    const vizinho = Math.max(0, Math.min(ALBUMS.length - 1, Math.round(s.nav) + dir));
+    const c = fieldConstantsOf(ALBUMS[vizinho].signature);
+
     const m1 = u().uM1.value as unknown as { z: number; w: number };
-    expect(m1.z).toBeCloseTo(0.03, 6);
-    expect(m1.w).toBeCloseTo(0.052, 6);
+    expect(m1.z).toBeCloseTo(SECOND_MASS.k * c.massScale, 4);
+    expect(m1.w).toBeCloseTo(SECOND_MASS.h * c.horizonScale, 4);
   });
 
   it("o tempo do shader acompanha o relógio do world", () => {
@@ -416,5 +429,273 @@ describe("janela", () => {
     engine.resize();
     env.advance();
     expect(engine.getSnapshot().variant).toBe("desktop");
+  });
+});
+
+describe("o anel parado é a forma do disco (P13)", () => {
+  it("sem nada tocando, a rotação não se acumula", () => {
+    engine.enterAlbum(3);
+    run(4);
+    const early = engine.st.ringRot;
+    run(20);
+    expect(Math.abs(engine.st.ringRot - early)).toBeLessThan(0.001);
+  });
+
+  it("repousa na orientação canônica", () => {
+    engine.enterAlbum(3);
+    run(6);
+    expect(engine.st.ringRot).toBeCloseTo(RING.anchor, 3);
+  });
+
+  it("entrar duas vezes no mesmo disco mostra o mesmo anel", () => {
+    engine.enterAlbum(3);
+    run(6);
+    const first = engine.st.ringRot;
+    engine.goScale("collection");
+    run(3);
+    engine.enterAlbum(3);
+    run(6);
+    expect(engine.st.ringRot).toBeCloseTo(first, 6);
+  });
+
+  it("tocando, o anel gira no sentido do disco", () => {
+    engine.playTrack(0, 1);
+    run(4);
+    const early = engine.st.ringRot;
+    run(6);
+    expect(engine.st.ringRot).toBeLessThan(early);
+  });
+});
+
+describe("identidade por faixa no campo (P11)", () => {
+  const heavy = (alb: number) => {
+    const bias = trackBiasOf(ALBUMS[alb].signature, ALBUMS[alb].tracks.length);
+    let best = 0;
+    bias.forEach((b, i) => {
+      if (b.loudness > bias[best].loudness) best = i;
+    });
+    return best;
+  };
+
+  it("a faixa em curso desloca a massa do mundo", () => {
+    const alb = 0;
+    const alta = heavy(alb);
+    const baixa = trackBiasOf(ALBUMS[alb].signature, ALBUMS[alb].tracks.length)
+      .reduce((acc, b, i, all) => (b.loudness < all[acc].loudness ? i : acc), 0);
+
+    engine.playTrack(alb, alta);
+    run(6);
+    const forte = engine.st.m0k;
+
+    engine.playTrack(alb, baixa);
+    run(6);
+    expect(engine.st.m0k).toBeLessThan(forte);
+  });
+
+  it("na coleção o disco volta às constantes do álbum, seja qual for a faixa", () => {
+    const alb = 0;
+    const bias = trackBiasOf(ALBUMS[alb].signature, ALBUMS[alb].tracks.length);
+    const alta = heavy(alb);
+    const baixa = bias.reduce((acc, b, i, all) => (b.loudness < all[acc].loudness ? i : acc), 0);
+
+    engine.playTrack(alb, alta);
+    run(6);
+    engine.goScale("collection");
+    run(8);
+    const comFaixaAlta = engine.st.m0k;
+
+    engine.playTrack(alb, baixa);
+    run(6);
+    engine.goScale("collection");
+    run(8);
+
+    expect(engine.st.m0k).toBeCloseTo(comFaixaAlta, 6);
+  });
+});
+
+describe("a luz atravessa a faixa (P12)", () => {
+  const uniforms = () =>
+    (engine as unknown as { gl: { uniforms: Record<string, { value: never }> } }).gl.uniforms;
+  const light = () => uniforms().uLight.value as unknown as { x: number; y: number };
+  const element = () =>
+    (engine as unknown as { bus: { current: { el: FakeAudio } | null } }).bus.current!.el;
+
+  it("parada, a luz fica na direção base", () => {
+    run(2);
+    env.advance();
+    expect(light().x).toBeCloseTo(-0.7, 3);
+    expect(light().y).toBeCloseTo(0.71, 3);
+  });
+
+  it("a direção varre conforme a faixa avança", () => {
+    engine.playTrack(0, 0);
+    run(4);
+    env.advance();
+    const start = { ...light() };
+
+    element().currentTime = ALBUMS[0].tracks[0].dur * 0.95;
+    run(4);
+    env.advance();
+    const end = light();
+
+    expect(Math.hypot(end.x - start.x, end.y - start.y)).toBeGreaterThan(0.05);
+    expect(Math.hypot(end.x, end.y)).toBeCloseTo(Math.hypot(start.x, start.y), 6);
+  });
+});
+
+describe("experimento: o campo antecipa (desligado por padrão)", () => {
+  it("nasce desligado", () => {
+    expect(engine.experiments.anticipation).toBe(false);
+  });
+
+  it("desligado, o sinal de antecipação fica em zero mesmo tocando", () => {
+    engine.playTrack(0, 1);
+    run(8);
+    expect(engine.lead).toBe(0);
+  });
+
+  it("desligado, o mundo é idêntico ao de antes do experimento", () => {
+    engine.playTrack(0, 1);
+    run(8);
+    const semExperimento = { m0h: engine.st.m0h, fade: engine.st.fade };
+
+    engine.experiments.anticipation = true;
+    run(8);
+    engine.experiments.anticipation = false;
+    run(8);
+
+    expect(engine.st.m0h).toBeCloseTo(semExperimento.m0h, 6);
+    expect(engine.st.fade).toBeCloseTo(semExperimento.fade, 6);
+  });
+
+  it("ligado, o horizonte se desloca dentro do teto de reação do disco", () => {
+    engine.experiments.anticipation = true;
+    engine.playTrack(0, 1);
+    run(10);
+
+    const c = fieldConstantsOf(ALBUMS[0].signature);
+    expect(Math.abs(engine.lead)).toBeLessThanOrEqual(1);
+    const desvio = Math.abs(engine.lead) * c.reactionCap;
+    expect(desvio).toBeLessThanOrEqual(c.reactionCap + 1e-9);
+  });
+
+  it("reduced-motion zera a amplitude do experimento", () => {
+    on({ reduced: true });
+    engine.experiments.anticipation = true;
+    engine.playTrack(0, 1);
+    run(8);
+
+    const c = reduceMotion(fieldConstantsOf(ALBUMS[0].signature));
+    expect(c.reactionCap).toBe(0);
+  });
+});
+
+describe("apontar tem peso (P14)", () => {
+  const u2 = () =>
+    (engine as unknown as { gl: { uniforms: Record<string, { value: never }> } }).gl.uniforms;
+  const m1 = () => u2().uM1.value as unknown as { x: number; y: number; z: number; w: number };
+  const aspect = () => {
+    const res = u2().uRes.value as unknown as { x: number; y: number };
+    return res.x / res.y;
+  };
+
+  const posDe = (alb: number) => albPos(alb, engine.st, layoutFor("desktop"));
+
+  const soltar = () => {
+    engine.setRailAlb(-1);
+    engine.teleportTo(0.95, 0.95);
+    run(3);
+    env.advance();
+  };
+
+  const apontarCorpo = (alb: number) => {
+    const p = posDe(alb);
+    engine.teleportTo(p.x, p.y);
+    run(3);
+    env.advance();
+  };
+
+  const apontarRegua = (alb: number) => {
+    engine.teleportTo(0.95, 0.95);
+    engine.setRailAlb(alb);
+    run(3);
+    env.advance();
+  };
+
+  beforeEach(() => {
+    engine.st.navT = 0;
+    run(2);
+    soltar();
+  });
+
+  it("apontar um corpo leva a segunda massa até ele", () => {
+    apontarCorpo(1);
+    const p = posDe(1);
+    expect(m1().x).toBeCloseTo((p.x - 0.5) * aspect(), 2);
+    expect(m1().y).toBeCloseTo(0.5 - p.y, 2);
+  });
+
+  it("o peso que se sente é o do disco apontado, não um valor fixo", () => {
+    apontarRegua(7);
+    const pesado = m1().z;
+    apontarRegua(1);
+    const leve = m1().z;
+
+    const c7 = fieldConstantsOf(ALBUMS[7].signature);
+    const c1 = fieldConstantsOf(ALBUMS[1].signature);
+    expect(c7.massScale).toBeGreaterThan(c1.massScale);
+    expect(pesado).toBeGreaterThan(leve);
+    expect(pesado / leve).toBeCloseTo(c7.massScale / c1.massScale, 2);
+  });
+
+  it("apontar pesa mais que o vizinho passivo", () => {
+    const passivo = m1().z;
+    apontarRegua(1);
+    expect(m1().z).toBeGreaterThan(passivo);
+    expect(m1().z / passivo).toBeCloseTo(SECOND_MASS.pointGain, 1);
+  });
+
+  it("apontar o disco em foco não cria uma segunda lente sobre ele", () => {
+    const antes = { ...m1() };
+    apontarRegua(0);
+    expect(m1().x).toBeCloseTo(antes.x, 3);
+    expect(m1().z).toBeCloseTo(antes.z, 4);
+  });
+
+  it("o horizonte do corpo apontado é o dele, sem ganho", () => {
+    apontarRegua(7);
+    const c = fieldConstantsOf(ALBUMS[7].signature);
+    expect(m1().w).toBeCloseTo(SECOND_MASS.h * c.horizonScale, 4);
+  });
+
+  it("a massa chega com inércia, não teleporta", () => {
+    const partida = m1().x;
+    engine.teleportTo(0.95, 0.95);
+    engine.setRailAlb(4);
+    env.advance();
+    const umQuadro = m1().x;
+    run(3);
+    const chegada = m1().x;
+
+    expect(Math.abs(chegada - partida)).toBeGreaterThan(0.01);
+    expect(Math.abs(umQuadro - partida)).toBeLessThan(Math.abs(chegada - partida));
+  });
+
+  it("fora da coleção, apontar não mexe na segunda massa", () => {
+    engine.enterAlbum(2);
+    run(3);
+    const antes = { ...m1() };
+    apontarRegua(6);
+    expect(m1().z).toBeCloseTo(antes.z, 6);
+    expect(m1().w).toBeCloseTo(antes.w, 6);
+  });
+
+  it("reduced-motion mantém o peso do disco mas tira o ganho de apontar", () => {
+    on({ reduced: true });
+    engine.st.navT = 0;
+    run(2);
+    apontarRegua(7);
+    const c = fieldConstantsOf(ALBUMS[7].signature);
+    expect(m1().z).toBeCloseTo(SECOND_MASS.k * c.massScale, 4);
   });
 });

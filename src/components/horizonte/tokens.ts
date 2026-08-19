@@ -43,6 +43,8 @@ export const RING = {
   slices: 44,
   arcSlices: 280,
   alpha: { normal: 0.42, hover: 0.8, selected: 0.92, playing: 1 },
+  anchor: -1.9,
+  neighborPhase: 0.7,
 } as const;
 
 export const RING_UNIT = RING.Rout / RING.buffer;
@@ -51,8 +53,18 @@ export const SEQ = {
   collapse: { total: 2.25, ramp: 1.1, valleyEnd: 1.3 },
   valley: { fade: 0.03 },
   fusion: { total: 1.6, wave: 0.9 },
+  segue: { total: 0.6, depth: 0.045 },
   reduced: 0.3,
 } as const;
+
+export const LIGHT = {
+  base: [-0.7, 0.71],
+  arc: 1,
+} as const;
+
+export const TRACK_BIAS = { blend: 0.55, cap: 0.25, lerp: 1.2 } as const;
+
+export const SECOND_MASS = { k: 0.03, h: 0.052, pointGain: 1.9, lerp: 3.5 } as const;
 
 export const LERP = {
   nav: 5.5,
@@ -62,6 +74,9 @@ export const LERP = {
   fade: 14,
   mouse: 5.2,
   energy: 4,
+  ringRot: 2.6,
+  light: 2.2,
+  lead: 1.6,
 } as const;
 
 export const IDLE_MS = 2600;

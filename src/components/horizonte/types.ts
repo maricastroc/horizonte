@@ -43,6 +43,7 @@ export interface FieldState {
   mix: number;
   fuseB: number;
   fuseAlb: number;
+  fuseFrom: number;
   fuseLoaded: boolean;
   waveR: number;
   waveA: number;
@@ -51,6 +52,7 @@ export interface FieldState {
 
   t: number;
   seqT: number;
+  segueT: number;
   ringRot: number;
   fadeSel: number;
 

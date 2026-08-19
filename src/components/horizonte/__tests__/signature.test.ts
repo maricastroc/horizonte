@@ -7,6 +7,7 @@ import {
   boundsOf,
   envelopeOf,
   sampleEnvelope,
+  trackBiasOf,
 } from "../content/signature";
 import { encodeEnvelope, signature } from "./fixtures";
 
@@ -111,5 +112,64 @@ describe("sampleEnvelope", () => {
     expect(sampleEnvelope(env, -5)).toBeCloseTo(env[0], 6);
     expect(sampleEnvelope(env, 5)).toBeCloseTo(env[ENVELOPE_N - 1], 6);
     expect(Number.isNaN(sampleEnvelope(env, 5))).toBe(false);
+  });
+});
+
+describe("trackBiasOf — a faixa desloca o disco (P11)", () => {
+  const spread = (values: number[]) => Math.max(...values) - Math.min(...values);
+
+  it("sem envelope medido, nenhuma faixa se desloca", () => {
+    const bias = trackBiasOf(NEUTRAL_SIGNATURE, 4);
+    expect(bias).toHaveLength(4);
+    for (const b of bias) {
+      expect(b.loudness).toBe(0);
+      expect(b.dynamics).toBe(0);
+    }
+  });
+
+  it("devolve um viés por faixa e é determinístico", () => {
+    const sig = SIGNATURES["tristan-lohengrin-le-manoir"];
+    const n = CURATION[0].tracks.length;
+    const a = trackBiasOf(sig, n);
+    const b = trackBiasOf(sig, n);
+    expect(a).toHaveLength(n);
+    expect(b).toEqual(a);
+  });
+
+  it("nenhum viés do acervo passa do teto de ±0,25", () => {
+    for (const album of CURATION) {
+      for (const b of trackBiasOf(SIGNATURES[album.id], album.tracks.length)) {
+        expect(Math.abs(b.loudness), album.id).toBeLessThanOrEqual(0.25);
+        expect(Math.abs(b.dynamics), album.id).toBeLessThanOrEqual(0.25);
+      }
+    }
+  });
+
+  it("o álbum continua sendo a âncora: o viés médio por duração é zero", () => {
+    for (const album of CURATION) {
+      const n = album.tracks.length;
+      const sig = SIGNATURES[album.id];
+      const bounds = boundsOf(sig, n);
+      const bias = trackBiasOf(sig, n);
+      let mean = 0;
+      for (let k = 0; k < n; k++) mean += bias[k].loudness * (bounds[k + 1] - bounds[k]);
+      expect(Math.abs(mean), album.id).toBeLessThan(0.02);
+    }
+  });
+
+  it("disco heterogêneo se espalha mais que disco coeso", () => {
+    const manoir = trackBiasOf(SIGNATURES["tristan-lohengrin-le-manoir"], 11);
+    const impromptu = trackBiasOf(SIGNATURES["darin-wilson-impromptu"], 5);
+    expect(spread(manoir.map((b) => b.loudness))).toBeGreaterThan(
+      spread(impromptu.map((b) => b.loudness)),
+    );
+  });
+
+  it("dentro de um disco, as faixas não são todas iguais", () => {
+    for (const album of CURATION) {
+      const bias = trackBiasOf(SIGNATURES[album.id], album.tracks.length);
+      if (album.tracks.length < 2) continue;
+      expect(spread(bias.map((b) => b.loudness)), album.id).toBeGreaterThan(0.01);
+    }
   });
 });

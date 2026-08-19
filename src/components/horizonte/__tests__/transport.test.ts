@@ -346,21 +346,54 @@ describe("seekFraction", () => {
 });
 
 describe("fim natural da faixa", () => {
-  it("emenda na próxima por fusão", () => {
+  it("emenda na próxima sem cerimônia de fusão", () => {
     const s = playing({ playAlb: 1, trk: 0 });
+    expect(T.trackEnded(s, catalog)).toEqual([{ kind: "load", alb: 1, trk: 1 }]);
+    expect(s).toMatchObject({ mode: "playing", trk: 1, sel: 1, pos: 0, segueT: 0 });
+    expect(s.dur).toBe(catalog.trackDuration(1, 1));
+  });
+
+  it("a emenda não desloca a escala nem o álbum em foco", () => {
+    const s = playing({ playAlb: 1, trk: 0, alb: 2, scale: "album", sel: 1 });
     T.trackEnded(s, catalog);
-    expect(s).toMatchObject({ mode: "fusion", fuseAlb: 1, fuseB: 1 });
+    expect(s).toMatchObject({ scale: "album", alb: 2, sel: 1, trk: 1 });
   });
 
   it("volta ao começo do disco depois da última", () => {
     const s = playing({ playAlb: 1, trk: 2 });
     T.trackEnded(s, catalog);
-    expect(s.fuseB).toBe(0);
+    expect(s.trk).toBe(0);
   });
 
   it("sem disco em curso, não há emenda", () => {
     const s = state();
     expect(T.trackEnded(s, catalog)).toEqual([]);
     expect(s.mode).toBe("stopped");
+  });
+
+  it("durante uma fusão, o fim da faixa não atropela a cerimônia", () => {
+    const s = playing({ playAlb: 1, trk: 0 });
+    T.fuseTo(s, 1, 2);
+    expect(T.trackEnded(s, catalog)).toEqual([]);
+    expect(s).toMatchObject({ mode: "fusion", fuseB: 2, trk: 0 });
+  });
+});
+
+describe("a fusão não sequestra o álbum em foco", () => {
+  it("navegar durante a fusão mantém o álbum escolhido pelo usuário", () => {
+    const s = playing({ alb: 1, trk: 0 });
+    T.fuseTo(s, 1, 1);
+    T.enterAlbum(s, catalog, 2);
+    T.endFusion(s, catalog, 0);
+
+    expect(s).toMatchObject({ alb: 2, scale: "album", playAlb: 1, trk: 1 });
+  });
+
+  it("sem navegar, o alvo continua sendo promovido", () => {
+    const s = playing({ alb: 1, trk: 0 });
+    T.fuseTo(s, 2, 3);
+    T.endFusion(s, catalog, 0);
+
+    expect(s).toMatchObject({ alb: 2, sel: 3, playAlb: 2, trk: 3, scale: "track" });
   });
 });

@@ -1,3 +1,5 @@
+import { clamp } from "./math";
+import { SEQ } from "./tokens";
 import type { FieldState, Mode } from "./types";
 
 export function initialState(): FieldState {
@@ -30,6 +32,7 @@ export function initialState(): FieldState {
     mix: 0,
     fuseB: 0,
     fuseAlb: 0,
+    fuseFrom: 0,
     fuseLoaded: false,
     waveR: -1,
     waveA: 0,
@@ -37,6 +40,7 @@ export function initialState(): FieldState {
     curK: 0,
     t: 0,
     seqT: 0,
+    segueT: SEQ.segue.total,
     ringRot: 0,
     fadeSel: 0,
     treb: 0,
@@ -47,3 +51,10 @@ export const progressOf = (s: Pick<FieldState, "pos" | "dur">) =>
   s.dur ? Math.min(1, s.pos / s.dur) : 0;
 
 export const isEngaged = (mode: Mode) => mode === "playing" || mode === "paused";
+
+export function albumProgressOf(bounds: number[], trk: number, trackProgress: number) {
+  const last = bounds.length - 2;
+  if (last < 0) return 0;
+  const k = clamp(Math.round(trk), 0, last);
+  return bounds[k] + (bounds[k + 1] - bounds[k]) * clamp(trackProgress, 0, 1);
+}

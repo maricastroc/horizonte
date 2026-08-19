@@ -8,6 +8,9 @@ uniform float uSpin, uBlur, uTime, uFade, uGrain, uDisp, uJet;
 // Dureza do fio de luz rasante: brilho de timbre vira dureza de luz.
 // Constante por álbum (centróide medido), perturbada de leve pelo trecho.
 uniform float uRim;
+// Direção da luz rasante. Varre um arco ao longo da faixa: a posição do
+// playhead vira a hora do dia, e a duração vira a velocidade da varredura.
+uniform vec2 uLight;
 uniform vec3 uInk;
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(41.71, 289.13))) * 43758.5453); }
@@ -32,7 +35,7 @@ float rimOf(vec2 p, vec4 m){
   vec2 d = p - m.xy;
   float r = length(d);
   float band = exp(-pow((r - m.w * 1.01) / (m.w * 0.028), 2.0));
-  float g = max(0.0, dot(normalize(d), normalize(vec2(-0.70, 0.71))));
+  float g = max(0.0, dot(normalize(d), normalize(uLight)));
   return band * pow(g, uRim) * 1.25;
 }
 

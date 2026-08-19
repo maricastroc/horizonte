@@ -18,6 +18,13 @@ export const ALBUMS: CuratedAlbumWithSignature[] = CURATION.map((album) => {
 });
 
 export { CURATION, SIGNATURES };
-export { NEUTRAL_SIGNATURE, envelopeOf, sampleEnvelope, boundsOf } from "./signature";
-export type { AlbumSignature } from "./signature";
+export {
+  NEUTRAL_BIAS,
+  NEUTRAL_SIGNATURE,
+  boundsOf,
+  envelopeOf,
+  sampleEnvelope,
+  trackBiasOf,
+} from "./signature";
+export type { AlbumSignature, TrackBias } from "./signature";
 export type { Album, Track, AudioSource, License, ProviderId, Ink } from "./types";

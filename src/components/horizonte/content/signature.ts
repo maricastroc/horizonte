@@ -55,8 +55,16 @@ export const NEUTRAL_SIGNATURE: AlbumSignature = {
   },
 };
 
+export interface TrackBias {
+  loudness: number;
+  dynamics: number;
+}
+
+export const NEUTRAL_BIAS: TrackBias = { loudness: 0, dynamics: 0 };
+
 const envelopeCache = new WeakMap<AlbumSignature, Float32Array>();
 const boundsCache = new WeakMap<AlbumSignature, Map<number, number[]>>();
+const biasCache = new WeakMap<AlbumSignature, Map<number, TrackBias[]>>();
 
 export function envelopeOf(sig: AlbumSignature): Float32Array {
   const hit = envelopeCache.get(sig);
@@ -110,4 +118,63 @@ export function boundsOf(sig: AlbumSignature, trackCount: number): number[] {
   for (let k = 1; k <= trackCount; k++) bounds[k] /= total;
   porContagem.set(trackCount, bounds);
   return bounds;
+}
+
+const BIAS_BLEND = 0.55;
+const BIAS_CAP = 0.25;
+
+const clampBias = (v: number) => (v < -BIAS_CAP ? -BIAS_CAP : v > BIAS_CAP ? BIAS_CAP : v);
+
+function rankAt(sorted: number[], q: number): number {
+  const i = Math.round(q * (sorted.length - 1));
+  return sorted[i < 0 ? 0 : i >= sorted.length ? sorted.length - 1 : i];
+}
+
+export function trackBiasOf(sig: AlbumSignature, trackCount: number): TrackBias[] {
+  if (trackCount <= 0) return [];
+
+  let byCount = biasCache.get(sig);
+  if (!byCount) {
+    byCount = new Map();
+    biasCache.set(sig, byCount);
+  }
+  const hit = byCount.get(trackCount);
+  if (hit) return hit;
+
+  const env = envelopeOf(sig);
+  const bounds = boundsOf(sig, trackCount);
+  const levels = new Array<number>(trackCount);
+  const spreads = new Array<number>(trackCount);
+  let refLevel = 0;
+  let refSpread = 0;
+
+  for (let k = 0; k < trackCount; k++) {
+    const i0 = Math.min(ENVELOPE_N - 1, Math.floor(bounds[k] * (ENVELOPE_N - 1)));
+    const i1 = Math.max(i0, Math.floor(bounds[k + 1] * (ENVELOPE_N - 1)));
+    const slice: number[] = [];
+    for (let i = i0; i <= i1; i++) slice.push(env[i]);
+
+    let sum = 0;
+    for (const v of slice) sum += v;
+    const level = sum / slice.length;
+    slice.sort((a, b) => a - b);
+    const spread = rankAt(slice, 0.95) - rankAt(slice, 0.05);
+
+    levels[k] = level;
+    spreads[k] = spread;
+    const weight = bounds[k + 1] - bounds[k];
+    refLevel += level * weight;
+    refSpread += spread * weight;
+  }
+
+  const bias = new Array<TrackBias>(trackCount);
+  for (let k = 0; k < trackCount; k++) {
+    bias[k] = {
+      loudness: clampBias((levels[k] - refLevel) * BIAS_BLEND),
+      dynamics: clampBias((spreads[k] - refSpread) * BIAS_BLEND),
+    };
+  }
+
+  byCount.set(trackCount, bias);
+  return bias;
 }

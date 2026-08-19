@@ -19,6 +19,7 @@ export interface FieldUniforms {
   uDisp: { value: number };
   uJet: { value: number };
   uRim: { value: number };
+  uLight: { value: THREE.Vector2 };
   uInk: { value: THREE.Vector3 };
   [key: string]: THREE.IUniform;
 }
@@ -40,6 +41,7 @@ export function createFieldUniforms(): FieldUniforms {
     uDisp: { value: 0.014 },
     uJet: { value: 0 },
     uRim: { value: 3.5 },
+    uLight: { value: new THREE.Vector2(-0.7, 0.71) },
     uInk: { value: new THREE.Vector3(1, 1, 1) },
   };
 }

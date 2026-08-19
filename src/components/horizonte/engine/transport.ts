@@ -45,6 +45,7 @@ export function fuseTo(s: FieldState, alb: number, trk: number): AudioEffect[] {
   if (s.mode === "fusion") return [];
   s.fuseB = trk;
   s.fuseAlb = alb;
+  s.fuseFrom = s.alb;
   s.mode = "fusion";
   s.seqT = 0;
   s.mix = 0;
@@ -64,20 +65,23 @@ export function commitFusion(s: FieldState, cat: Catalog): AudioEffect[] {
 }
 
 export function endFusion(s: FieldState, cat: Catalog, loadedDuration: number): AudioEffect[] {
+  const held = s.alb === s.fuseFrom;
   s.playAlb = s.fuseAlb;
   s.trk = s.fuseB;
-  s.sel = s.fuseB;
-  s.alb = s.fuseAlb;
-  s.dur = loadedDuration || cat.trackDuration(s.alb, s.trk);
+  s.dur = loadedDuration || cat.trackDuration(s.fuseAlb, s.fuseB);
   s.pos = 0;
   s.mix = 0;
   s.m1k = 0;
   s.m1h = 0;
   s.waveR = -1;
   s.mode = "playing";
-  if (s.scale !== "album") {
-    s.scale = "track";
-    s.zoomT = 1;
+  if (held) {
+    s.alb = s.fuseAlb;
+    s.sel = s.fuseB;
+    if (s.scale !== "album") {
+      s.scale = "track";
+      s.zoomT = 1;
+    }
   }
   return [];
 }
@@ -166,6 +170,14 @@ export function seekFraction(s: FieldState, f: number): AudioEffect[] {
 
 export function trackEnded(s: FieldState, cat: Catalog): AudioEffect[] {
   if (s.playAlb < 0) return [];
-  const n = cat.trackCount(s.playAlb);
-  return fuseTo(s, s.playAlb, (s.trk + 1) % n);
+  if (s.mode === "fusion") return [];
+  const alb = s.playAlb;
+  const next = (s.trk + 1) % cat.trackCount(alb);
+  s.trk = next;
+  s.dur = cat.trackDuration(alb, next);
+  s.pos = 0;
+  s.segueT = 0;
+  s.mode = "playing";
+  if (s.alb === alb) s.sel = next;
+  return [{ kind: "load", alb, trk: next }];
 }
