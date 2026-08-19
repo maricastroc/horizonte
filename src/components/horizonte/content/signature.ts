@@ -55,10 +55,11 @@ export const NEUTRAL_SIGNATURE: AlbumSignature = {
   },
 };
 
-const cache = new WeakMap<AlbumSignature, Float32Array>();
+const envelopeCache = new WeakMap<AlbumSignature, Float32Array>();
+const boundsCache = new WeakMap<AlbumSignature, Map<number, number[]>>();
 
 export function envelopeOf(sig: AlbumSignature): Float32Array {
-  const hit = cache.get(sig);
+  const hit = envelopeCache.get(sig);
   if (hit) return hit;
 
   const out = new Float32Array(ENVELOPE_N);
@@ -70,7 +71,7 @@ export function envelopeOf(sig: AlbumSignature): Float32Array {
     for (let i = 0; i < n; i++) out[i] = bin.charCodeAt(i) / 255;
     for (let i = n; i < ENVELOPE_N; i++) out[i] = out[n - 1] ?? 0.5;
   }
-  cache.set(sig, out);
+  envelopeCache.set(sig, out);
   return out;
 }
 
@@ -84,10 +85,19 @@ export function sampleEnvelope(env: Float32Array, t: number): number {
 }
 
 export function boundsOf(sig: AlbumSignature, trackCount: number): number[] {
+  let porContagem = boundsCache.get(sig);
+  if (!porContagem) {
+    porContagem = new Map();
+    boundsCache.set(sig, porContagem);
+  }
+  const hit = porContagem.get(trackCount);
+  if (hit) return hit;
+
   const bounds = new Array<number>(trackCount + 1);
   const spans = sig.spans;
   if (spans.length !== trackCount) {
     for (let k = 0; k <= trackCount; k++) bounds[k] = k / trackCount;
+    porContagem.set(trackCount, bounds);
     return bounds;
   }
   let acc = 0;
@@ -98,5 +108,6 @@ export function boundsOf(sig: AlbumSignature, trackCount: number): number[] {
   }
   const total = bounds[trackCount] || 1;
   for (let k = 1; k <= trackCount; k++) bounds[k] /= total;
+  porContagem.set(trackCount, bounds);
   return bounds;
 }

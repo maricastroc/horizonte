@@ -1,19 +1,14 @@
-import { ALBUMS } from "../data/albums";
+import { ALBUMS } from "../content";
 import { COLOR, GEO } from "../tokens";
 import type { FieldState, FontFamilies } from "../types";
 import type { CoverAsset } from "./cover";
+import { ls, type Ctx } from "./ctx";
 import { lockup, type WorldLayout } from "./layout";
 
 export interface FrontDeps {
   fonts: FontFamilies;
   covers: CoverAsset[];
 }
-
-type Ctx = CanvasRenderingContext2D & { letterSpacing?: string };
-
-const ls = (x: Ctx, v: string) => {
-  if (x.letterSpacing !== undefined) x.letterSpacing = v;
-};
 
 class FragmentCache {
   private canvas: HTMLCanvasElement | null = null;

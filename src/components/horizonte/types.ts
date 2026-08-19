@@ -53,8 +53,6 @@ export interface FieldState {
   ringRot: number;
   fadeSel: number;
 
-  bass: number;
-  mid: number;
   treb: number;
 }
 

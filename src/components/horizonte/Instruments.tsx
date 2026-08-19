@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
-import { ALBUMS } from "./data/albums";
+import { ALBUMS } from "./content";
+import { timecode } from "./format";
 import { COLOR, IDLE_OPACITY, rgba } from "./tokens";
 import type { Scale, Snapshot } from "./types";
-import type { FieldEngine } from "./useField";
+import type { FieldEngine } from "./engine/FieldEngine";
 
 const DEFAULT_SNAPSHOT: Snapshot = {
   scale: "campo",
@@ -23,9 +24,6 @@ const DEFAULT_SNAPSHOT: Snapshot = {
 
 const noop = () => () => {};
 const getDefault = () => DEFAULT_SNAPSHOT;
-
-const fmt = (n: number) =>
-  `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(Math.floor(n % 60)).padStart(2, "0")}`;
 
 const LEVELS: { key: Scale; label: string }[] = [
   { key: "campo", label: "Coleção" },
@@ -208,7 +206,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
                 >
                   <span>{String(i + 1).padStart(2, "0")}</span>
                   <span className="truncate">{t.title}</span>
-                  <span className="text-right text-ink-faint">{fmt(t.dur)}</span>
+                  <span className="text-right text-ink-faint">{timecode(t.dur)}</span>
                   <span
                     ref={(el) => {
                       trkMarks.current[i] = el;

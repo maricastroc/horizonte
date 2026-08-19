@@ -6,7 +6,6 @@ import { LocalPlayback, type Playback } from "./playback";
 export interface VisualAudioState extends AudioFrame {
   position: number;
   duration: number;
-  progress: number;
   playing: boolean;
 }
 
@@ -17,7 +16,6 @@ function playbackFor(source: AudioSource): Playback | null {
 
 export class AudioBus {
   onEnded: (() => void) | null = null;
-  onMeta: (() => void) | null = null;
 
   private ctx: AudioContext | null = null;
   private analysis: AudioAnalysis | null = null;
@@ -32,10 +30,8 @@ export class AudioBus {
     accent: { bass: 0, mid: 0, treb: 0 },
     flux: 0,
     centroid: 0.5,
-    active: false,
     position: 0,
     duration: 0,
-    progress: 0,
     playing: false,
   };
 
@@ -68,7 +64,6 @@ export class AudioBus {
       const made = playbackFor(source);
       if (!made) return;
       made.onEnded = () => this.onEnded?.();
-      made.onMeta = () => this.onMeta?.();
       this.players.set(source.kind, made);
       player = made;
     }
@@ -118,11 +113,9 @@ export class AudioBus {
       s.accent = frame.accent;
       s.flux = frame.flux;
       s.centroid = frame.centroid;
-      s.active = frame.active;
     }
     s.position = this.position;
     s.duration = this.duration;
-    s.progress = s.duration ? Math.min(1, s.position / s.duration) : 0;
     s.playing = playing;
     return s;
   }

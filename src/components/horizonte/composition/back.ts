@@ -1,24 +1,21 @@
-import { ALBUMS, boundsOf } from "../data/albums";
-import { fieldConstantsOf, type FieldConstants } from "../field";
+import { ALBUMS, boundsOf } from "../content";
+import type { FieldConstants } from "../field";
+import { isEngaged, progressOf } from "../state";
 import { COLOR, GEO, PARTICLES, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
 import type { RingBakery } from "./ring";
+import { ls, type Ctx } from "./ctx";
 import { albPos, lockup, ringBufferScale, ringR, type WorldLayout } from "./layout";
 
 export interface BackDeps {
   fonts: FontFamilies;
   covers: CoverAsset[];
   rings: RingBakery;
+  weights: number[];
   parts: Particle[];
   C: FieldConstants;
 }
-
-type Ctx = CanvasRenderingContext2D & { letterSpacing?: string };
-
-const ls = (x: Ctx, v: string) => {
-  if (x.letterSpacing !== undefined) x.letterSpacing = v;
-};
 
 export function makeParticles(): Particle[] {
   const parts: Particle[] = [];
@@ -114,7 +111,7 @@ export function drawBack(
   deps: BackDeps,
 ) {
   const x = ctx as Ctx;
-  const { fonts, covers, rings, parts, C } = deps;
+  const { fonts, covers, rings, weights, parts, C } = deps;
   const A = ALBUMS[s.alb];
   const inkA = (a: number) => rgba(A.inkA, a);
   const inkB = (a: number) => rgba(A.inkB, a);
@@ -160,7 +157,7 @@ export function drawBack(
     x.globalAlpha = a * (i === s.hoverBody ? 1 : 0.66);
     x.fillStyle = COLOR.inkText;
 
-    const nw = Math.round(fieldConstantsOf(ALBUMS[i].signature).artistWeight);
+    const nw = weights[i];
     x.font = `${nw} ${M * GEO.neighborR * p.depth}px ${fonts.archivo}`;
     x.fillText(ALBUMS[i].artist, p.x * W, p.y * H + br + M * 0.075 * p.depth);
 
@@ -191,10 +188,10 @@ export function drawBack(
   }
   if (s.fadeSel > 0.02) {
     const activeTrk =
-      s.playAlb === s.alb && (s.mode === "toca" || s.mode === "pausa" || s.mode === "fusao")
+      s.playAlb === s.alb && (isEngaged(s.mode) || s.mode === "fusao")
         ? s.trk
         : -1;
-    const prog = s.dur ? Math.min(1, s.pos / s.dur) : 0;
+    const prog = progressOf(s);
     const seg = rings.seg(s.alb, s.sel, s.hover, activeTrk, prog, inkA(1), C.envelopeDepth);
     drawRing(x, seg, bx, by, R, s.ringRot, s.fadeSel * (1 - s.mix * 0.6), C.flatten);
 
@@ -271,7 +268,7 @@ export function drawBack(
     x.fillRect(0, H - bandH, W, bandH);
     x.restore();
 
-    const prog = s.dur ? Math.min(1, s.pos / s.dur) : 0;
+    const prog = progressOf(s);
     x.fillStyle = inkA(0.85 * s.play);
     x.fillRect(0, H - 2, W * prog, 2);
   }

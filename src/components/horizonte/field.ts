@@ -1,6 +1,5 @@
 import type { AlbumSignature } from "./content/signature";
-
-const lerp = (a: number, b: number, t: number) => a + (b - a) * (t < 0 ? 0 : t > 1 ? 1 : t);
+import { lerp } from "./math";
 
 export interface FieldConstants {
   artistWeight: number;

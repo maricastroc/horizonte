@@ -1,4 +1,5 @@
 import type { AlbumSignature } from "../content/signature";
+import { clamp } from "../math";
 
 export interface Bands {
   bass: number;
@@ -14,7 +15,6 @@ export interface AudioFrame {
   accent: Bands;
   flux: number;
   centroid: number;
-  active: boolean;
 }
 const RANGES: [number, number][] = [
   [20, 160],
@@ -29,8 +29,6 @@ const SLOW_TAU = 1.2;
 
 const BRIGHT_LO = Math.log2(200);
 const BRIGHT_HI = Math.log2(2600);
-
-const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 
 const BYTE_TO_LINEAR = (() => {
   const t = new Float32Array(256);
@@ -56,7 +54,6 @@ export class AudioAnalysis {
     accent: { bass: 0, mid: 0, treb: 0 },
     flux: 0,
     centroid: 0.5,
-    active: false,
   };
 
   private freq: Uint8Array<ArrayBuffer>;
@@ -106,7 +103,6 @@ export class AudioAnalysis {
       f.accent[key] += (0 - f.accent[key]) * k;
     });
     f.flux += (0 - f.flux) * k;
-    f.active = false;
   }
 
   update(dt: number, live: boolean) {
@@ -163,7 +159,6 @@ export class AudioAnalysis {
     const centroid = hz > 0 ? clamp((Math.log2(hz) - BRIGHT_LO) / (BRIGHT_HI - BRIGHT_LO), 0, 1) : 0.5;
     f.centroid += (centroid - f.centroid) * kBand;
 
-    f.active = true;
     return f;
   }
 }

@@ -7,7 +7,6 @@ export const COLOR = {
   inkText2: "#CFC9C0",
   inkHover: "#C9C4BB",
   inkMute: "#8C867E",
-  inkDim: "#6E6862",
   inkFaint: "#5A554F",
   inkGhost: "#3A3631",
   rule: "rgba(232,228,220,.14)",
@@ -74,7 +73,5 @@ export const COMPOSITION_MAX_W = 1760;
 export const COMPOSITION_FALLBACK_W = 1440;
 
 export const PARTICLES = 240;
-
-export const AUDIO_CURVATURE_CAP = 0.15;
 
 export const BREAKPOINT = { mobile: 768, tablet: 1200 } as const;

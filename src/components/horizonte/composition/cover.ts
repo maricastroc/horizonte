@@ -1,5 +1,5 @@
 import { mediaUrl, needsCors } from "../content/assets";
-import { ALBUMS } from "../data/albums";
+import { ALBUMS } from "../content";
 import { COLOR, rgba } from "../tokens";
 
 export const COVER_SIZE = 512;

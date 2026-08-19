@@ -55,12 +55,7 @@ function fullScreenTriangle(): THREE.BufferGeometry {
 }
 
 export interface FieldGL {
-  renderer: THREE.WebGLRenderer;
-  scene: THREE.Scene;
-  camera: THREE.OrthographicCamera;
   uniforms: FieldUniforms;
-  back: THREE.CanvasTexture;
-  front: THREE.CanvasTexture;
   render: () => void;
   resize: (w: number, h: number) => { dw: number; dh: number };
   dispose: () => void;
@@ -118,12 +113,7 @@ export function createFieldGL(
   const size = new THREE.Vector2();
 
   return {
-    renderer,
-    scene,
-    camera,
     uniforms,
-    back,
-    front,
     render: () => {
       back.needsUpdate = true;
       front.needsUpdate = true;

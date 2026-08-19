@@ -1,5 +1,6 @@
 import { mediaUrl, needsCors } from "../content/assets";
 import type { AudioSource } from "../content/types";
+import { clamp } from "../math";
 
 export interface Playback {
   readonly kind: AudioSource["kind"];
@@ -13,15 +14,11 @@ export interface Playback {
   connect(ctx: AudioContext, node: AudioNode): boolean;
   dispose(): void;
   onEnded: (() => void) | null;
-  onMeta: (() => void) | null;
 }
-
-const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 
 export class LocalPlayback implements Playback {
   readonly kind = "local" as const;
   onEnded: (() => void) | null = null;
-  onMeta: (() => void) | null = null;
 
   private el: HTMLAudioElement;
   private node: MediaElementAudioSourceNode | null = null;
@@ -32,8 +29,6 @@ export class LocalPlayback implements Playback {
     this.el = new Audio();
     this.el.preload = "auto";
     this.el.addEventListener("ended", () => this.onEnded?.());
-    this.el.addEventListener("loadedmetadata", () => this.onMeta?.());
-    this.el.addEventListener("durationchange", () => this.onMeta?.());
   }
 
   load(source: AudioSource) {

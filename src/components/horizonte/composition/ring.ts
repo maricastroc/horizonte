@@ -1,4 +1,5 @@
-import { ALBUMS, boundsOf, envelopeOf, sampleEnvelope } from "../data/albums";
+import { ALBUMS, boundsOf, envelopeOf, sampleEnvelope } from "../content";
+import { clamp } from "../math";
 import { RING } from "../tokens";
 import type { CoverAsset } from "./cover";
 import { COVER_SIZE } from "./cover";
@@ -8,8 +9,6 @@ const C = RING.buffer / 2;
 const GAP_TURN = 0.0075;
 
 const MIN_TURN = 1.4 / 360;
-
-const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 
 function buffer(): HTMLCanvasElement {
   const c = document.createElement("canvas");
