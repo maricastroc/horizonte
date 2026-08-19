@@ -1,5 +1,6 @@
 import { mediaUrl, needsCors } from "../content/assets";
 import { ALBUMS } from "../content";
+import type { Album } from "../content/types";
 import { COLOR, rgba } from "../tokens";
 
 export const COVER_SIZE = 512;
@@ -44,10 +45,9 @@ function meanLuma(img: HTMLImageElement): number {
   return sum / (d.length / 4);
 }
 
-function treat(canvas: HTMLCanvasElement, img: HTMLImageElement, albIdx: number) {
+function treat(canvas: HTMLCanvasElement, img: HTMLImageElement, A: Album) {
   const S = COVER_SIZE;
   const x = canvas.getContext("2d")!;
-  const A = ALBUMS[albIdx];
 
   x.clearRect(0, 0, S, S);
   x.fillStyle = COLOR.void2;
@@ -87,25 +87,27 @@ function treat(canvas: HTMLCanvasElement, img: HTMLImageElement, albIdx: number)
   x.restore();
 }
 
+export function makeCover(album: Album, onReady?: () => void): CoverAsset {
+  const asset: CoverAsset = { canvas: blank(), loaded: false, version: 0 };
+  const img = new Image();
+  img.decoding = "async";
+  const url = mediaUrl(album.cover);
+  if (needsCors(url)) img.crossOrigin = "anonymous";
+  img.src = url;
+  img.onload = () => {
+    treat(asset.canvas, img, album);
+    asset.loaded = true;
+    asset.version++;
+    onReady?.();
+  };
+  img.onerror = () => {
+    asset.loaded = true;
+    asset.version++;
+    onReady?.();
+  };
+  return asset;
+}
+
 export function loadCovers(onReady?: (i: number) => void): CoverAsset[] {
-  return ALBUMS.map((album, i) => {
-    const asset: CoverAsset = { canvas: blank(), loaded: false, version: 0 };
-    const img = new Image();
-    img.decoding = "async";
-    const url = mediaUrl(album.cover);
-    if (needsCors(url)) img.crossOrigin = "anonymous";
-    img.src = url;
-    img.onload = () => {
-      treat(asset.canvas, img, i);
-      asset.loaded = true;
-      asset.version++;
-      onReady?.(i);
-    };
-    img.onerror = () => {
-      asset.loaded = true;
-      asset.version++;
-      onReady?.(i);
-    };
-    return asset;
-  });
+  return ALBUMS.map((album, i) => makeCover(album, () => onReady?.(i)));
 }

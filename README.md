@@ -52,7 +52,8 @@
 | **🎛️ Instruments Layer**      | Controls live in a separate DOM layer that is mono, never deformed, always clickable, and auto-fades to 32% after 2.6s of stillness. No action depends on a keyboard shortcut. |
 | **🔊 Real Audio Analysis**    | `HTMLAudioElement` → `AnalyserNode` → three bands feeding the field, with a hard ±15% ceiling on curvature so the typography accents the music instead of dancing to it. |
 | **🧬 Per-Album Physics**      | Each album's loudness, dynamics, brightness and length are measured offline and become the constants of its world — playback only perturbs them.                      |
-| **⚖️ Licensed Curation**      | Seven real albums under CC BY 4.0, each verified at the source by a pipeline that aborts on any license mismatch, with attribution surfaced in the UI.                 |
+| **📀 Bring Your Own Record**  | Drop your own files and the same DSP runs **in the browser**, in a worker, producing the same `AlbumSignature` the curated catalogue gets. Nothing is uploaded — no backend, no CDN, no API. |
+| **⚖️ Licensed Curation**      | Ten real albums under CC BY 4.0, each verified at the source by a pipeline that aborts on any license mismatch, with attribution surfaced in the UI.                 |
 | **♿ Accessible By Design**   | Real `button` / `ul` / `li`, `aria-current`, `aria-pressed`, `role="progressbar"`, `aria-live`, visible keyboard focus, and a full `prefers-reduced-motion` path.       |
 
 <br/>
@@ -97,6 +98,7 @@
 | **Typography**    | Archivo, Bodoni Moda, JetBrains Mono — self-hosted via `next/font`         |
 | **Media Storage** | Vercel Blob (public CDN, HTTP Range, immutable cache)                      |
 | **Offline Tools** | Python 3 + NumPy + Pillow (curation, audio analysis), `afconvert`          |
+| **In-Browser DSP**| Web Worker, `OfflineAudioContext`, hand-written real FFT (no dependencies) |
 | **Tooling**       | ESLint, TypeScript strict mode                                            |
 
 <br/>
@@ -114,8 +116,9 @@ Navigation is a change of physical scale rather than a change of screen. Collect
 - **The field engine:** The flagship piece. See the [dedicated section](#-the-field-engine) below — a single draw call per frame, two texture uploads, and a state machine that treats collapse and fusion as physical events rather than transitions.
 - **Sensory signatures:** Each album's audio is analysed once, offline, into loudness / dynamics / brightness / duration descriptors that become that album's field constants — see the [dedicated section](#-the-sensory-signature).
 - **Decoupled audio pipeline:** `audio source → playback → analysis → visual state → Horizonte`. The scene never touches an `<audio>` element or an `AnalyserNode`; it reads a plain `VisualAudioState` (energy, three bands, accent, spectral flux, spectrum, progress). `AudioSource` is a discriminated union and `Playback` is an interface, so another provider can be added without touching the shader, the composition or the state machine.
-- **Verified curation:** Seven albums from real artists, all **CC BY 4.0**, each verified at the source before download. The pipeline aborts if the declared licence doesn't match, if the download disappears, or if durations don't line up with the catalogue metadata. Three candidates were rejected on inspection — one was CC BY-**ND** (no transcoding allowed), one was a paid pack under a proprietary licence, one had no CC licence at all. Provenance, attribution, cover licensing and the exact modifications applied to each work are documented in [`CURADORIA.md`](CURADORIA.md).
+- **Verified curation:** Ten albums from real artists, all **CC BY 4.0**, each verified at the source before download. The pipeline aborts if the declared licence doesn't match, if the download disappears, or if durations don't line up with the catalogue metadata. Three candidates were rejected on inspection — one was CC BY-**ND** (no transcoding allowed), one was a paid pack under a proprietary licence, one had no CC licence at all. Provenance, attribution, cover licensing and the exact modifications applied to each work are documented in [`CURADORIA.md`](CURADORIA.md).
 - **Cover unification:** Real covers arrive with wildly different exposure and palette. Each one is desaturated ~8%, overprinted with the album ink, given a shared grain, and exposure-equalised so a dark ambient sleeve still reads in the `lighter`-composited ring. The two inks are extracted from the artwork and forced into `oklch(L .50–.62, C .13–.18)` — a narrow band that keeps the collection coherent.
+- **Bring your own record:** The same analysis that runs offline for the curated catalogue also runs **client-side**, in a Web Worker, over files the listener drops in. `analyze-audio.py` was ported to TypeScript and verified against it: fed identical PCM, the two produce **byte-identical envelopes on all ten albums**. End to end from the real `.m4a` files, the derived field constants land within **0.55% of each constant's range**. Files never leave the device — no upload, no backend, no external API. The full architecture, the parity measurements and the limitations are in [`docs/ingestao-local.md`](docs/ingestao-local.md).
 - **Media on a CDN:** Audio and covers live in Vercel Blob under deterministic pathnames that mirror the catalogue (`/music/<album>/<track>.m4a`), served with HTTP Range (for seeking), permissive CORS (so the analyser isn't silenced and covers don't taint the canvas) and a one-year immutable cache. URL resolution is centralised in a single module; no absolute URL is hardcoded in a component.
 - **Reduced motion:** With `prefers-reduced-motion`, curvature drops to 25%, radial blur and cursor parallax are disabled, and the collapse and fusion are reduced to 300ms fades — **the state changes remain**, so nothing becomes unreachable.
 - **Responsive compositions:** Desktop, tablet (rails collapse into a single column, ring labels reduced to the selected track) and mobile (one body per screen, drag becomes pagination, 48px touch targets).
@@ -168,6 +171,8 @@ The result is the split the whole project rests on: **identity is measured and c
 
 The full mapping, with the calibrated numbers and the seven albums compared, is in [`docs/mapa-sensorial.md`](docs/mapa-sensorial.md).
 
+The signature has **two producers and one contract**: `analyze-audio.py` measures the curated catalogue once, at curation time; `src/components/horizonte/ingest/` measures a listener's own record in the browser, during the session. Past `AlbumSignature`, the engine never asks where a record came from.
+
 <br/>
 
 ## 🛠️ Engineering challenges
@@ -203,6 +208,16 @@ The only variable needed to run the app is `NEXT_PUBLIC_MEDIA_BASE_URL`, pointin
 ```bash
 npm run dev
 ```
+
+> Run the tests:
+
+```bash
+npm test
+```
+
+The parity tests between the in-browser analysis and the offline pipeline need the
+WAV cache that `analyze-audio.py` leaves in `.cache/analysis`; without it they skip
+themselves. In development, `/aferir` runs the same comparison in the browser.
 
 > Type-check and lint:
 

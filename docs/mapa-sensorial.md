@@ -2,9 +2,16 @@
 
 > **A música define as constantes do mundo; a reprodução só as perturba.**
 
-Este é o contrato entre a análise offline e o motor. A implementação está em
+Este é o contrato entre a análise e o motor. A implementação está em
 `src/components/horizonte/field.ts` (constantes), `audio/analysis.ts`
 (perturbação) e `composition/ring.ts` (geometria).
+
+**Dois produtores, um contrato.** A `AlbumSignature` que alimenta tudo abaixo tem
+duas origens possíveis: `scripts/analyze-audio.py`, que mede o acervo curado uma
+vez na curadoria, e `src/components/horizonte/ingest/`, que mede no navegador o
+disco que o usuário traz. Os dois medem a mesma coisa do mesmo jeito — o segundo
+é um porte do primeiro, verificado byte a byte — e o motor não pergunta de onde
+veio. Ver [`ingestao-local.md`](ingestao-local.md).
 
 ## Como os números foram calibrados
 
@@ -266,6 +273,24 @@ fusão continua exatamente como era — o que mudou foi **quando** ela acontece
 (ver "emenda contra cerimônia"), não como. A camada mono nunca reage: é o
 contraste entre um mundo que responde e uma régua que não responde que impede o
 produto de virar visualizer.
+
+## O envelope publicado não é reprodutível byte a byte
+
+Descoberto ao portar a análise para o navegador. O `envelope` de 512 pontos é uma
+decimação por amostragem pontual da curva de RMS de 200 ms — 44× em *e-world* —
+**sem filtro anti-aliasing**. Quais amostras caem nos 512 pontos depende do
+alinhamento exato do PCM.
+
+Alimentando o mesmo arquivo deslocado de **uma amostra** (45 µs), o envelope de
+*e-world* muda com correlação 0,9708 e desvio máximo de 92 de 255. O envelope
+bruto, antes da decimação, mantém correlação acima de 0,999 sob o mesmo
+deslocamento: a medição é estável, a representação não.
+
+Não foi corrigido de propósito — filtrar antes de decimar mudaria a assinatura
+dos dez discos e o acervo atual é a referência calibrada do produto. A
+consequência sensorial é pequena: entre dois decodificadores, as constantes do
+campo ficam dentro de 0,55% do range, e o viés por faixa (P11) dentro de 0,072
+no pior disco. Registrado em `__tests__/ingest-envelope.test.ts`.
 
 ## Regenerar
 

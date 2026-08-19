@@ -158,6 +158,18 @@ export class RingBakery {
     this.arcVersion = covers.map(() => -1);
   }
 
+  sync() {
+    while (this.arcs.length > this.covers.length) {
+      this.arcs.pop();
+      this.arcVersion.pop();
+    }
+    while (this.arcs.length < this.covers.length) {
+      this.arcs.push(null);
+      this.arcVersion.push(-1);
+    }
+    this.segKey = null;
+  }
+
   arc(i: number): HTMLCanvasElement {
     const cover = this.covers[i];
     if (!this.arcs[i] || this.arcVersion[i] !== cover.version) {

@@ -1,8 +1,9 @@
 export type AudioSource =
   | { kind: "local"; src: string; mime?: string }
+  | { kind: "file"; url: string; name: string }
   | { kind: "spotify"; uri: string };
 
-export type ProviderId = "curated" | "spotify";
+export type ProviderId = "curated" | "local" | "spotify";
 
 export interface CoverProvenance {
   license: string;

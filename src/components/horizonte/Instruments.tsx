@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import Ceremony from "./Ceremony";
 import { ALBUMS } from "./content";
+import { ACCEPT } from "./ingest/formats";
+import { useIngest } from "./ingest/useIngest";
 import { timecode } from "./format";
 import { COLOR, IDLE_OPACITY, rgba } from "./tokens";
 import type { Scale, Snapshot } from "./types";
@@ -51,6 +54,9 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     getDefault,
   );
 
+  const { status, dragging, ingest, cancel } = useIngest(engine);
+  const fileRef = useRef<HTMLInputElement>(null);
+
   const barRef = useRef<HTMLDivElement>(null);
   const seekRef = useRef<HTMLDivElement>(null);
   const tcRef = useRef<HTMLSpanElement>(null);
@@ -82,6 +88,17 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
 
   const intent = useCallback(() => engine?.markIntent(), [engine]);
 
+  const pick = useCallback(() => fileRef.current?.click(), []);
+
+  const onPicked = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const picked = [...(e.target.files ?? [])];
+      e.target.value = "";
+      void ingest(picked);
+    },
+    [ingest],
+  );
+
   const onSeek = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const r = e.currentTarget.getBoundingClientRect();
@@ -91,7 +108,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   );
 
   const trackRailOn = snap.scale !== "collection";
-  const railTop = Math.max(238, 56 + ALBUMS.length * 26 + 52);
+  const railTop = Math.max(238, 56 + (ALBUMS.length + 1) * 26 + 52);
   const focusStyle = useMemo(
     () =>
       ({
@@ -190,7 +207,32 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               </li>
             );
           })}
+          <li>
+            <button
+              type="button"
+              tabIndex={albumRailOn ? 0 : -1}
+              onClick={pick}
+              onPointerEnter={() => engine?.setRailAlb(-1)}
+              className={`grid grid-cols-[1fr_46px_7px] text-ink-faint hover:text-ink-text ${ROW}`}
+            >
+              <span className="truncate">
+                {dragging ? "Solte para medir" : "Trazer um disco"}
+              </span>
+              <span className="text-right text-ink-ghost">{dragging ? "" : "+"}</span>
+              <span aria-hidden className={MARK} style={{ background: COLOR.inkGhost }} />
+            </button>
+          </li>
         </ul>
+        <input
+          ref={fileRef}
+          type="file"
+          multiple
+          accept={ACCEPT}
+          tabIndex={-1}
+          aria-hidden
+          onChange={onPicked}
+          className="sr-only"
+        />
       </nav>
 
       <nav
@@ -213,7 +255,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             const isSel = i === snap.sel;
             const isHov = i === snap.hoverTrk;
             return (
-              <li key={t.title}>
+              <li key={t.id}>
                 <button
                   type="button"
                   tabIndex={trackRailOn ? 0 : -1}
@@ -318,16 +360,27 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             ? `Coleção · ${snap.navAlb + 1}/${ALBUMS.length}`
             : `${album.cat} · ${album.tracks.length} faixas`}
         </span>
-        <a
-          href={album.license.source}
-          target="_blank"
-          rel="noreferrer"
-          title={album.license.attribution}
-          className="cursor-pointer whitespace-nowrap text-ink-faint hover:text-ink-text compact:py-3.5"
-        >
-          {album.license.name}
-        </a>
+        {album.license.source ? (
+          <a
+            href={album.license.source}
+            target="_blank"
+            rel="noreferrer"
+            title={album.license.attribution}
+            className="cursor-pointer whitespace-nowrap text-ink-faint hover:text-ink-text compact:py-3.5"
+          >
+            {album.license.name}
+          </a>
+        ) : (
+          <span
+            title={album.license.attribution}
+            className="whitespace-nowrap text-ink-faint compact:py-3.5"
+          >
+            {album.license.name}
+          </span>
+        )}
       </div>
+
+      {status && <Ceremony status={status} onCancel={cancel} />}
 
       <p aria-live="polite" className="sr-only">
         {snap.announce}

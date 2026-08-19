@@ -99,10 +99,13 @@ export function drawFront(
   x.font = `500 ${lk.msize}px ${deps.fonts.mono}`;
   ls(x, "0.22em");
   x.fillStyle = COLOR.inkText2;
-  const sub =
+  const sub = (
     s.scale === "collection"
-      ? `${A.year} · ${A.tracks.length} FAIXAS · ${A.cat}`
-      : `${A.artist} · ${A.title} · ${A.year}`;
+      ? [A.year, `${A.tracks.length} FAIXAS`, A.cat]
+      : [A.artist, A.title, A.year]
+  )
+    .filter(Boolean)
+    .join(" · ");
   x.fillText(sub, W * 0.034, lk.my);
   x.restore();
 

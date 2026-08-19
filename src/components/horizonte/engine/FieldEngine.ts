@@ -4,7 +4,7 @@ import { leadOf } from "../audio/anticipation";
 import { AudioBus, type VisualAudioState } from "../audio/bus";
 import { drawBack, makeParticles, type BackDeps } from "../composition/back";
 import { drawFront, type FrontDeps } from "../composition/front";
-import { loadCovers, type CoverAsset } from "../composition/cover";
+import { loadCovers, makeCover, type CoverAsset } from "../composition/cover";
 import {
   albPos,
   hitTest,
@@ -14,7 +14,7 @@ import {
   type WorldLayout,
 } from "../composition/layout";
 import { RingBakery } from "../composition/ring";
-import { ALBUMS, NEUTRAL_BIAS, trackBiasOf, type TrackBias } from "../content";
+import { ALBUMS, NEUTRAL_BIAS, onCatalogChange, trackBiasOf, type TrackBias } from "../content";
 import {
   fieldConstantsOf,
   lightDirection,
@@ -53,10 +53,6 @@ import type {
   Snapshot,
 } from "../types";
 
-const FIELD: FieldConstants[] = ALBUMS.map((a) => fieldConstantsOf(a.signature));
-
-const WEIGHTS: number[] = FIELD.map((c) => Math.round(c.artistWeight));
-
 const PAN = {
   mobileWidth: 0.72,
   desktopWidth: 0.46,
@@ -73,7 +69,9 @@ function readExperiment(name: string) {
 }
 
 const CATALOG: Catalog = {
-  size: ALBUMS.length,
+  get size() {
+    return ALBUMS.length;
+  },
   trackCount: (alb) => ALBUMS[alb].tracks.length,
   trackDuration: (alb, trk) => ALBUMS[alb].tracks[trk].dur,
   hasTrack: (alb, trk) => !!ALBUMS[alb]?.tracks[trk],
@@ -92,6 +90,9 @@ export class FieldEngine implements InputActions {
   private ctxF: CanvasRenderingContext2D;
   private covers: CoverAsset[];
   private rings: RingBakery;
+  private FIELD: FieldConstants[] = [];
+  private WEIGHTS: number[] = [];
+  private unsubscribeCatalog: (() => void) | null = null;
   private parts: Particle[] = makeParticles();
   private L: WorldLayout = layoutFor("desktop");
 
@@ -105,7 +106,7 @@ export class FieldEngine implements InputActions {
   private slowWindows = 0;
 
   private mouse = { x: 0.55, y: 0.45, tx: 0.55, ty: 0.45, v: 0, down: false, moved: 0, lx: 0 };
-  private C: FieldConstants = FIELD[0];
+  private C: FieldConstants;
   private bias: TrackBias = { ...NEUTRAL_BIAS };
   private lightSweep = 0;
   private m1 = { x: 0, y: 0, k: 0, h: 0, alb: -1, ready: false };
@@ -138,6 +139,9 @@ export class FieldEngine implements InputActions {
     this.covers = loadCovers();
     this.rings = new RingBakery(this.covers);
     this.gl = createFieldGL(canvas, this.cvB, this.cvF);
+    this.syncCatalog(-1);
+    this.C = this.FIELD[0];
+    this.unsubscribeCatalog = onCatalogChange((i) => this.syncCatalog(i));
 
     this.audioState = this.bus.update(0);
     this.experiments.anticipation = readExperiment("anticipate");
@@ -150,6 +154,20 @@ export class FieldEngine implements InputActions {
     this.resize();
   }
 
+  private syncCatalog(added: number) {
+    if (added < 0) {
+      this.covers.length = 0;
+      this.covers.push(...loadCovers());
+    } else {
+      for (let i = this.covers.length; i < ALBUMS.length; i++) {
+        this.covers.push(makeCover(ALBUMS[i]));
+      }
+    }
+    this.FIELD = ALBUMS.map((a) => fieldConstantsOf(a.signature));
+    this.WEIGHTS = this.FIELD.map((c) => Math.round(c.artistWeight));
+    this.rings.sync();
+  }
+
   start() {
     this.last = performance.now();
     this.intent = performance.now();
@@ -159,6 +177,8 @@ export class FieldEngine implements InputActions {
 
   stop() {
     cancelAnimationFrame(this.raf);
+    this.unsubscribeCatalog?.();
+    this.unsubscribeCatalog = null;
     this.unbind?.();
     this.unbind = null;
     this.bus.dispose();
@@ -289,12 +309,12 @@ export class FieldEngine implements InputActions {
     if (s.scale === "collection") {
       const i = clamp(Math.floor(s.nav), 0, n - 1);
       const j = clamp(i + 1, 0, n - 1);
-      c = mixConstants(FIELD[i], FIELD[j], s.nav - i);
+      c = mixConstants(this.FIELD[i], this.FIELD[j], s.nav - i);
     } else {
       const alb = clamp(s.alb, 0, n - 1);
       c = fieldConstantsOf(ALBUMS[alb].signature, this.bias);
     }
-    if (s.mix > 0 && FIELD[s.fuseAlb]) c = mixConstants(c, FIELD[s.fuseAlb], s.mix);
+    if (s.mix > 0 && this.FIELD[s.fuseAlb]) c = mixConstants(c, this.FIELD[s.fuseAlb], s.mix);
     return this.reduced ? reduceMotion(c) : c;
   }
 
@@ -419,7 +439,7 @@ export class FieldEngine implements InputActions {
       fonts: this.fonts,
       covers: this.covers,
       rings: this.rings,
-      weights: WEIGHTS,
+      weights: this.WEIGHTS,
       parts: this.parts,
       C: this.C,
     };
@@ -579,7 +599,7 @@ export class FieldEngine implements InputActions {
     const at = pointed >= 0 ? pointed : focused + dir;
 
     const p = albPos(at, s, this.L);
-    const C = FIELD[clamp(at, 0, n - 1)];
+    const C = this.FIELD[clamp(at, 0, n - 1)];
     const gain = pointed >= 0 && !this.reduced ? SECOND_MASS.pointGain : 1;
     const k = SECOND_MASS.k * C.massScale * gain;
     const h = SECOND_MASS.h * C.horizonScale;

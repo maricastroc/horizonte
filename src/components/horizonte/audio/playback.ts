@@ -16,13 +16,19 @@ export interface Playback {
   onEnded: (() => void) | null;
 }
 
-export class LocalPlayback implements Playback {
-  readonly kind = "local" as const;
+interface Resolved {
+  key: string;
+  url: string;
+  cors: boolean;
+}
+
+abstract class ElementPlayback implements Playback {
+  abstract readonly kind: AudioSource["kind"];
   onEnded: (() => void) | null = null;
 
-  private el: HTMLAudioElement;
+  protected el: HTMLAudioElement;
   private node: MediaElementAudioSourceNode | null = null;
-  private src = "";
+  private key = "";
   private wantPlay = false;
 
   constructor() {
@@ -31,14 +37,16 @@ export class LocalPlayback implements Playback {
     this.el.addEventListener("ended", () => this.onEnded?.());
   }
 
+  protected abstract resolve(source: AudioSource): Resolved | null;
+
   load(source: AudioSource) {
-    if (source.kind !== "local") return;
-    if (this.src === source.src) return;
-    this.src = source.src;
-    const url = mediaUrl(source.src);
-    if (needsCors(url)) this.el.crossOrigin = "anonymous";
+    const resolved = this.resolve(source);
+    if (!resolved) return;
+    if (this.key === resolved.key) return;
+    this.key = resolved.key;
+    if (resolved.cors) this.el.crossOrigin = "anonymous";
     else this.el.removeAttribute("crossorigin");
-    this.el.src = url;
+    this.el.src = resolved.url;
     this.el.currentTime = 0;
   }
 
@@ -85,5 +93,24 @@ export class LocalPlayback implements Playback {
     this.el.load();
     this.node?.disconnect();
     this.node = null;
+  }
+}
+
+export class LocalPlayback extends ElementPlayback {
+  readonly kind = "local" as const;
+
+  protected resolve(source: AudioSource): Resolved | null {
+    if (source.kind !== "local") return null;
+    const url = mediaUrl(source.src);
+    return { key: source.src, url, cors: needsCors(url) };
+  }
+}
+
+export class FilePlayback extends ElementPlayback {
+  readonly kind = "file" as const;
+
+  protected resolve(source: AudioSource): Resolved | null {
+    if (source.kind !== "file") return null;
+    return { key: source.url, url: source.url, cors: false };
   }
 }

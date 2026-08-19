@@ -96,9 +96,17 @@ describe("régua de álbuns", () => {
     mount();
     const rail = screen.getByRole("navigation", { name: "Álbuns" });
     const items = within(rail).getAllByRole("button");
-    expect(items).toHaveLength(ALBUMS.length);
+    expect(items).toHaveLength(ALBUMS.length + 1);
     expect(within(rail).getByText(ALBUMS[0].artist)).toBeDefined();
     expect(within(rail).getByText(ALBUMS[0].cat)).toBeDefined();
+  });
+
+  it("fecha a régua com a entrada de disco local, sem virar gerenciador de arquivos", () => {
+    mount();
+    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+    const items = within(rail).getAllByRole("button");
+    expect(items[items.length - 1].textContent).toContain("Trazer um disco");
+    expect(within(rail).queryByText(/upload|arquivo|enviar/i)).toBeNull();
   });
 
   it("marca o disco em foco para tecnologia assistiva", () => {

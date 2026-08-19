@@ -1,6 +1,9 @@
 const BASE = (process.env.NEXT_PUBLIC_MEDIA_BASE_URL ?? "").trim().replace(/\/+$/, "");
 
-const isAbsolute = (p: string) => /^(https?:)?\/\//i.test(p) || p.startsWith("data:");
+const isRemote = (p: string) => /^(https?:)?\/\//i.test(p);
+
+const isAbsolute = (p: string) =>
+  isRemote(p) || p.startsWith("data:") || p.startsWith("blob:");
 
 export function mediaUrl(path: string): string {
   if (!path) return path;
@@ -9,4 +12,4 @@ export function mediaUrl(path: string): string {
   return BASE ? `${BASE}${rel}` : rel;
 }
 
-export const needsCors = (url: string) => isAbsolute(url);
+export const needsCors = (url: string) => isAbsolute(url) && !url.startsWith("blob:");

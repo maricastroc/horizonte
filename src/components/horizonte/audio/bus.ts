@@ -1,7 +1,7 @@
 import type { AlbumSignature } from "../content/signature";
 import type { AudioSource, Track } from "../content/types";
 import { AudioAnalysis, type AudioFrame } from "./analysis";
-import { LocalPlayback, type Playback } from "./playback";
+import { FilePlayback, LocalPlayback, type Playback } from "./playback";
 
 export interface VisualAudioState extends AudioFrame {
   position: number;
@@ -11,6 +11,7 @@ export interface VisualAudioState extends AudioFrame {
 
 function playbackFor(source: AudioSource): Playback | null {
   if (source.kind === "local") return new LocalPlayback();
+  if (source.kind === "file") return new FilePlayback();
   return null;
 }
 
