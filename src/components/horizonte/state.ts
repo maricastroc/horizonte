@@ -30,6 +30,7 @@ export function initialState(): FieldState {
     mix: 0,
     fuseB: 0,
     fuseAlb: 0,
+    fuseLoaded: false,
     waveR: -1,
     waveA: 0,
     energy: 0.3,

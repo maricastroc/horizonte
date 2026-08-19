@@ -22,6 +22,8 @@ import {
 import { createFieldGL, type FieldGL } from "../fieldMaterial";
 import { clamp } from "../math";
 import { initialState, isEngaged, progressOf } from "../state";
+import * as T from "./transport";
+import type { AudioEffect, Catalog } from "./transport";
 import type { FrameOut, FrameSink } from "./frame";
 import {
   bindInput,
@@ -58,6 +60,13 @@ const PAN = {
 
 const CURSOR_GAIN = 9;
 
+const CATALOG: Catalog = {
+  size: ALBUMS.length,
+  trackCount: (alb) => ALBUMS[alb].tracks.length,
+  trackDuration: (alb, trk) => ALBUMS[alb].tracks[trk].dur,
+  hasTrack: (alb, trk) => !!ALBUMS[alb]?.tracks[trk],
+};
+
 export class FieldEngine implements InputActions {
   readonly st: FieldState = initialState();
   readonly bus = new AudioBus();
@@ -93,7 +102,6 @@ export class FieldEngine implements InputActions {
   private reduced = false;
   private coarse = false;
   private dragNav = 0;
-  private fuseSwitched = false;
   private audioState: VisualAudioState;
 
   private snap: Snapshot;
@@ -119,12 +127,7 @@ export class FieldEngine implements InputActions {
     this.coarse = hasCoarsePointer();
     this.snap = this.buildSnapshot(true);
 
-    this.bus.onEnded = () => {
-      const s = this.st;
-      if (s.playAlb < 0) return;
-      const N = ALBUMS[s.playAlb].tracks.length;
-      this.fuseTo(s.playAlb, (s.trk + 1) % N);
-    };
+    this.bus.onEnded = () => this.run(T.trackEnded(this.st, CATALOG));
 
     this.resize();
   }
@@ -295,171 +298,71 @@ export class FieldEngine implements InputActions {
     this.back();
   }
 
+  private apply(efeitos: AudioEffect[]) {
+    for (const e of efeitos) {
+      if (e.kind === "load") {
+        const album = ALBUMS[e.alb];
+        this.bus.setSignature(album.signature);
+        this.bus.load(album.tracks[e.trk]);
+        void this.bus.play();
+      } else if (e.kind === "play") {
+        void this.bus.play();
+      } else if (e.kind === "pause") {
+        this.bus.pause();
+      } else {
+        this.bus.seek(e.seconds);
+      }
+    }
+  }
+
+  private run(efeitos: AudioEffect[]) {
+    this.apply(efeitos);
+    this.markIntent();
+  }
+
   primary() {
-    const s = this.st;
-    if (s.scale === "campo") {
-      this.enterAlbum(Math.round(s.nav));
-      return;
-    }
-    if (s.scale === "album") {
-      this.playTrack(s.alb, s.sel);
-      return;
-    }
-    this.transport();
+    this.run(T.primary(this.st, CATALOG));
   }
 
   back() {
-    const s = this.st;
-    if (s.scale === "faixa") {
-      s.scale = "album";
-      s.zoomT = 1;
-    } else if (s.scale === "album") {
-      s.scale = "campo";
-      s.zoomT = 0;
-      s.hover = -1;
-    }
-    this.markIntent();
+    this.run(T.back(this.st));
   }
 
   goScale(level: Scale) {
-    const s = this.st;
-    if (level === "campo") {
-      s.scale = "campo";
-      s.zoomT = 0;
-      s.hover = -1;
-    } else if (level === "album") {
-      if (s.scale === "campo") this.enterAlbum(Math.round(s.nav));
-      else {
-        s.scale = "album";
-        s.zoomT = 1;
-      }
-    } else if (s.playAlb >= 0) {
-      s.alb = s.playAlb;
-      s.scale = "faixa";
-      s.zoomT = 1;
-    } else {
-      this.playTrack(s.alb, s.sel);
-    }
-    this.markIntent();
+    this.run(T.goScale(this.st, CATALOG, level));
   }
 
   enterAlbum(i: number) {
-    const s = this.st;
-    s.alb = clamp(Math.round(i), 0, ALBUMS.length - 1);
-    s.navT = s.alb;
-    s.scale = "album";
-    s.zoomT = 1;
-    s.sel = s.playAlb === s.alb ? s.trk : 0;
-    this.markIntent();
+    this.run(T.enterAlbum(this.st, CATALOG, i));
   }
 
   playTrack(alb: number, trk: number) {
-    const s = this.st;
-    if (s.scale === "faixa" && s.playAlb === alb && s.trk === trk) {
-      this.transport();
-      return;
-    }
-    if (s.playAlb >= 0 && isEngaged(s.mode) && s.scale === "faixa") {
-      this.fuseTo(alb, trk);
-      return;
-    }
-    s.playAlb = alb;
-    s.alb = alb;
-    s.trk = trk;
-    s.sel = trk;
-    s.dur = ALBUMS[alb].tracks[trk].dur;
-    s.pos = 0;
-    s.scale = "faixa";
-    s.zoomT = 1;
-    s.mode = "colapso";
-    s.seqT = 0;
-    this.bus.setSignature(ALBUMS[alb].signature);
-    this.bus.load(ALBUMS[alb].tracks[trk]);
-    void this.bus.play();
-    this.markIntent();
+    this.run(T.playTrack(this.st, CATALOG, alb, trk));
   }
 
   fuseTo(alb: number, trk: number) {
-    const s = this.st;
-    if (s.mode === "fusao") return;
-    s.fuseB = trk;
-    s.fuseAlb = alb;
-    s.mode = "fusao";
-    s.seqT = 0;
-    s.mix = 0;
-    this.fuseSwitched = false;
-    s.m1x = Math.cos(-0.7) * 1.5;
-    s.m1y = Math.sin(-0.7) * 1.5;
-    s.m1k = 0.03;
-    s.m1h = 0.055;
-    this.markIntent();
+    this.run(T.fuseTo(this.st, alb, trk));
   }
 
   private commitFusion() {
-    const s = this.st;
-    if (this.fuseSwitched) return;
-    this.fuseSwitched = true;
-    const track = ALBUMS[s.fuseAlb]?.tracks[s.fuseB];
-    if (track) {
-      this.bus.setSignature(ALBUMS[s.fuseAlb].signature);
-      this.bus.load(track);
-      void this.bus.play();
-    }
+    this.apply(T.commitFusion(this.st, CATALOG));
   }
 
   stepSel(dir: number) {
-    const s = this.st;
-    if (s.scale === "campo") return;
-    const N = ALBUMS[s.alb].tracks.length;
-    s.sel = (s.sel + dir + N) % N;
-    if (s.scale === "faixa" && isEngaged(s.mode)) {
-      this.fuseTo(s.alb, s.sel);
-    }
-    this.markIntent();
+    this.run(T.stepSel(this.st, CATALOG, dir));
   }
 
   skip(dir: number) {
-    const s = this.st;
-    if (s.scale === "campo" && s.playAlb < 0) {
-      s.navT = clamp(Math.round(s.nav) + dir, 0, ALBUMS.length - 1);
-      this.markIntent();
-      return;
-    }
-    const alb = s.playAlb >= 0 && s.scale !== "album" ? s.playAlb : s.alb;
-    const N = ALBUMS[alb].tracks.length;
-    const from = s.playAlb === alb && s.scale === "faixa" ? s.trk : s.sel;
-    const next = (from + dir + N) % N;
-    if (s.playAlb === alb && (isEngaged(s.mode) || s.mode === "colapso")) {
-      this.fuseTo(alb, next);
-    } else {
-      s.sel = next;
-      if (s.scale === "faixa") this.playTrack(alb, next);
-    }
-    this.markIntent();
+    this.run(T.skip(this.st, CATALOG, dir));
   }
 
   transport() {
-    const s = this.st;
-    if (s.mode === "fusao") return;
-    if (s.playAlb < 0 || s.scale !== "faixa") {
-      this.playTrack(s.alb, s.sel);
-      return;
-    }
-    if (s.mode === "toca" || s.mode === "colapso") {
-      s.mode = "pausa";
-      this.bus.pause();
-    } else {
-      s.mode = "toca";
-      void this.bus.play();
-    }
-    this.markIntent();
+    this.run(T.transport(this.st, CATALOG));
   }
 
   seekFraction(f: number) {
-    const s = this.st;
-    if (!s.dur) return;
-    this.bus.seek(clamp(f, 0, 1) * s.dur);
-    s.pos = this.bus.position;
+    this.apply(T.seekFraction(this.st, f));
+    this.st.pos = this.bus.position;
     this.markIntent();
   }
 
@@ -697,22 +600,7 @@ export class FieldEngine implements InputActions {
   }
 
   private endFusion() {
-    const s = this.st;
-    s.playAlb = s.fuseAlb;
-    s.trk = s.fuseB;
-    s.sel = s.fuseB;
-    s.alb = s.fuseAlb;
-    s.dur = this.bus.duration || ALBUMS[s.alb].tracks[s.trk].dur;
-    s.pos = 0;
-    s.mix = 0;
-    s.m1k = 0;
-    s.m1h = 0;
-    s.waveR = -1;
-    s.mode = "toca";
-    if (s.scale !== "album") {
-      s.scale = "faixa";
-      s.zoomT = 1;
-    }
+    T.endFusion(this.st, CATALOG, this.bus.duration);
   }
 
   private render() {

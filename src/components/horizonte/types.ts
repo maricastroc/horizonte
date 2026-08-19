@@ -43,6 +43,7 @@ export interface FieldState {
   mix: number;
   fuseB: number;
   fuseAlb: number;
+  fuseLoaded: boolean;
   waveR: number;
   waveA: number;
   energy: number;
