@@ -886,7 +886,7 @@ def main():
         changes = ["Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
                    "Capa recortada em quadrado central e reamostrada para 1024 px WebP."]
         album = dict(
-            id=entry["slug"], provider="curadoria", artist=entry["artist"], title=entry["title"],
+            id=entry["slug"], provider="curated", artist=entry["artist"], title=entry["title"],
             year=entry["year"], cat=entry["cat"], cover=f"/music/{entry['slug']}/cover.webp",
             inkA=list(inkA), inkB=list(inkB),
             tracks=[dict(id=f"{entry['slug']}/{t['base']}", title=t["title"], dur=t["dur"],

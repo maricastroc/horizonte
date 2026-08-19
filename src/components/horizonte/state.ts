@@ -2,7 +2,7 @@ import type { FieldState, Mode } from "./types";
 
 export function initialState(): FieldState {
   return {
-    scale: "campo",
+    scale: "collection",
     zoom: 0,
     zoomT: 0,
     nav: 0,
@@ -13,7 +13,7 @@ export function initialState(): FieldState {
     sel: 0,
     hover: -1,
     hoverBody: -1,
-    mode: "parado",
+    mode: "stopped",
     play: 0,
     pos: 0,
     dur: 0,
@@ -46,4 +46,4 @@ export function initialState(): FieldState {
 export const progressOf = (s: Pick<FieldState, "pos" | "dur">) =>
   s.dur ? Math.min(1, s.pos / s.dur) : 0;
 
-export const isEngaged = (mode: Mode) => mode === "toca" || mode === "pausa";
+export const isEngaged = (mode: Mode) => mode === "playing" || mode === "paused";

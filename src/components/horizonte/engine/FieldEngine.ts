@@ -52,10 +52,10 @@ const FIELD: FieldConstants[] = ALBUMS.map((a) => fieldConstantsOf(a.signature))
 const WEIGHTS: number[] = FIELD.map((c) => Math.round(c.artistWeight));
 
 const PAN = {
-  larguraMobile: 0.72,
-  larguraDesktop: 0.46,
-  limiarPagina: 0.25,
-  roda: 0.0016,
+  mobileWidth: 0.72,
+  desktopWidth: 0.46,
+  pageThreshold: 0.25,
+  wheel: 0.0016,
 } as const;
 
 const CURSOR_GAIN = 9;
@@ -186,12 +186,12 @@ export class FieldEngine implements InputActions {
 
   panBy(stepPx: number, totalPx: number, viewportW: number) {
     const s = this.st;
-    if (s.scale !== "campo") return;
+    if (s.scale !== "collection") return;
     if (this.L.variant === "mobile") {
-      const total = totalPx / (viewportW * PAN.larguraMobile);
+      const total = totalPx / (viewportW * PAN.mobileWidth);
       s.navT = clamp(this.dragNav - total, this.dragNav - 1, this.dragNav + 1);
     } else {
-      s.navT -= stepPx / (viewportW * PAN.larguraDesktop);
+      s.navT -= stepPx / (viewportW * PAN.desktopWidth);
     }
   }
 
@@ -201,23 +201,23 @@ export class FieldEngine implements InputActions {
       this.click();
       return;
     }
-    if (s.scale !== "campo") return;
+    if (s.scale !== "collection") return;
     const d = s.navT - this.dragNav;
     s.navT =
       this.L.variant === "mobile"
-        ? this.dragNav + (Math.abs(d) > PAN.limiarPagina ? Math.sign(d) : 0)
+        ? this.dragNav + (Math.abs(d) > PAN.pageThreshold ? Math.sign(d) : 0)
         : Math.round(s.navT);
   }
 
   wheelBy(deltaY: number, deltaX: number) {
     const s = this.st;
-    if (s.scale === "campo") s.navT += deltaY * PAN.roda + deltaX * PAN.roda;
+    if (s.scale === "collection") s.navT += deltaY * PAN.wheel + deltaX * PAN.wheel;
     else this.stepSel(deltaY > 0 ? 1 : -1);
   }
 
   stepFocus(dir: number) {
     const s = this.st;
-    if (s.scale === "campo") s.navT += dir;
+    if (s.scale === "collection") s.navT += dir;
     else this.stepSel(dir);
   }
 
@@ -268,7 +268,7 @@ export class FieldEngine implements InputActions {
     const s = this.st;
     const n = ALBUMS.length;
     let c: FieldConstants;
-    if (s.scale === "campo") {
+    if (s.scale === "collection") {
       const i = clamp(Math.floor(s.nav), 0, n - 1);
       const j = clamp(i + 1, 0, n - 1);
       c = mixConstants(FIELD[i], FIELD[j], s.nav - i);
@@ -282,16 +282,16 @@ export class FieldEngine implements InputActions {
   private click() {
     const s = this.st;
     const h = this.hit();
-    if (s.scale === "campo") {
-      if (h.kind === "corpo") this.enterAlbum(h.i);
+    if (s.scale === "collection") {
+      if (h.kind === "body") this.enterAlbum(h.i);
       return;
     }
-    if (h.kind === "faixa") {
+    if (h.kind === "track") {
       this.playTrack(s.alb, h.i);
       return;
     }
-    if (h.kind === "corpo") {
-      if (s.scale === "faixa") this.transport();
+    if (h.kind === "body") {
+      if (s.scale === "track") this.transport();
       else this.playTrack(s.alb, s.sel);
       return;
     }
@@ -381,9 +381,9 @@ export class FieldEngine implements InputActions {
     this.frameCost += (performance.now() - t0 - this.frameCost) * 0.05;
     this.fpsFrames++;
     if (now - this.fpsSince > 1000) {
-      const visivel = document.visibilityState === "visible";
+      const visible = document.visibilityState === "visible";
       this.fps = (this.fpsFrames * 1000) / (now - this.fpsSince);
-      this.slowWindows = visivel && this.fpsFrames > 10 && this.fps < 52 ? this.slowWindows + 1 : 0;
+      this.slowWindows = visible && this.fpsFrames > 10 && this.fps < 52 ? this.slowWindows + 1 : 0;
       this.fpsFrames = 0;
       this.fpsSince = now;
     }
@@ -426,7 +426,7 @@ export class FieldEngine implements InputActions {
     s.navT = clamp(s.navT, 0, ALBUMS.length - 1);
     s.nav += (s.navT - s.nav) * Math.min(1, dt * this.C.navLerp);
     s.zoom += (s.zoomT - s.zoom) * Math.min(1, dt * LERP.zoom);
-    if (s.scale === "campo") s.alb = Math.round(s.nav);
+    if (s.scale === "collection") s.alb = Math.round(s.nav);
 
     const a = this.bus.update(dt);
     this.audioState = a;
@@ -437,13 +437,13 @@ export class FieldEngine implements InputActions {
       s.pos = Math.min(a.position, s.dur || a.position);
     }
 
-    const live = s.mode === "toca" || s.mode === "fusao";
-    const target = live ? 0.42 + a.energy * 0.58 : s.mode === "pausa" ? 0.22 : 0.3;
+    const live = s.mode === "playing" || s.mode === "fusion";
+    const target = live ? 0.42 + a.energy * 0.58 : s.mode === "paused" ? 0.22 : 0.3;
     s.energy += (target - s.energy) * Math.min(1, dt * LERP.energy);
 
     const h = this.hit();
-    s.hover = h.kind === "faixa" ? h.i : this.railTrk >= 0 ? this.railTrk : -1;
-    s.hoverBody = h.kind === "corpo" ? h.i : this.railAlb >= 0 ? this.railAlb : -1;
+    s.hover = h.kind === "track" ? h.i : this.railTrk >= 0 ? this.railTrk : -1;
+    s.hoverBody = h.kind === "body" ? h.i : this.railAlb >= 0 ? this.railAlb : -1;
     if (s.scale === "album" && s.hover >= 0) s.sel = s.hover;
 
     const C = this.C;
@@ -462,9 +462,9 @@ export class FieldEngine implements InputActions {
       tgt.spin = 0.16;
     }
 
-    if (s.mode === "colapso") this.colapso(tgt, K);
-    if (isEngaged(s.mode)) this.tocando(tgt, K);
-    if (s.mode === "fusao") this.fusao(tgt, K);
+    if (s.mode === "collapse") this.collapse(tgt, K);
+    if (isEngaged(s.mode)) this.playing(tgt, K);
+    if (s.mode === "fusion") this.fusion(tgt, K);
 
     if (this.reduced) tgt.blur = 0;
 
@@ -476,10 +476,10 @@ export class FieldEngine implements InputActions {
       s.waveA = 0;
     }
 
-    s.ringRot += dt * (0.05 + s.energy * 0.14) * (s.mode === "toca" ? 1.6 : 1);
-    s.fadeSel += ((s.scale === "campo" ? 0 : 1) - s.fadeSel) * Math.min(1, dt * 4);
+    s.ringRot += dt * (0.05 + s.energy * 0.14) * (s.mode === "playing" ? 1.6 : 1);
+    s.fadeSel += ((s.scale === "collection" ? 0 : 1) - s.fadeSel) * Math.min(1, dt * 4);
 
-    const k = Math.min(1, dt * LERP.campo);
+    const k = Math.min(1, dt * LERP.field);
     s.m0k += (tgt.m0k - s.m0k) * k;
     s.m0h += (tgt.m0h - s.m0h) * k;
     s.spin += (tgt.spin - s.spin) * k;
@@ -488,44 +488,44 @@ export class FieldEngine implements InputActions {
     s.jet += (tgt.jet - s.jet) * k;
     s.play += (tgt.play - s.play) * Math.min(1, dt * LERP.play);
 
-    const pull = s.mode === "colapso" && s.seqT < SEQ.colapso.valeFim;
+    const pull = s.mode === "collapse" && s.seqT < SEQ.collapse.valleyEnd;
     for (const q of this.parts) {
-      q.a += dt * q.s * (0.25 + s.energy * 0.9) * (s.mode === "toca" ? 1.5 : 1);
+      q.a += dt * q.s * (0.25 + s.energy * 0.9) * (s.mode === "playing" ? 1.5 : 1);
       if (pull) q.r *= 1 - dt * 1.5;
       else q.r += (0.16 + q.z * 0.62 - q.r) * dt * 1.2;
-      if (s.mode === "pausa") q.r -= dt * 0.012;
+      if (s.mode === "paused") q.r -= dt * 0.012;
     }
   }
 
-  private colapso(tgt: Record<string, number>, K: number) {
+  private collapse(tgt: Record<string, number>, K: number) {
     const s = this.st;
     const p = s.seqT;
 
     if (this.reduced) {
-      const e = Math.min(1, p / SEQ.reduzido);
+      const e = Math.min(1, p / SEQ.reduced);
       tgt.fade = 0.45 + 0.55 * Math.abs(e * 2 - 1);
       tgt.m0k = 0.075 * K;
       tgt.m0h = 0.082;
       tgt.play = e;
-      if (p >= SEQ.reduzido) s.mode = "toca";
+      if (p >= SEQ.reduced) s.mode = "playing";
       return;
     }
 
-    if (p < SEQ.colapso.rampa) {
-      const e = p / SEQ.colapso.rampa;
+    if (p < SEQ.collapse.ramp) {
+      const e = p / SEQ.collapse.ramp;
       tgt.m0k = 0.055 + e * e * 0.3;
       tgt.m0h = 0.112 + e * 0.03;
       tgt.spin = 0.06 + e * 2.3;
       tgt.blur = e * 1.5;
       tgt.fade = 1 - Math.pow(e, 2.6);
-    } else if (p < SEQ.colapso.valeFim) {
+    } else if (p < SEQ.collapse.valleyEnd) {
       tgt.m0k = 0.36;
       tgt.m0h = 0.1;
       tgt.spin = 2.4;
       tgt.blur = 1.5;
-      tgt.fade = SEQ.vale.fade;
-    } else if (p < SEQ.colapso.total) {
-      const e = (p - SEQ.colapso.valeFim) / 0.95;
+      tgt.fade = SEQ.valley.fade;
+    } else if (p < SEQ.collapse.total) {
+      const e = (p - SEQ.collapse.valleyEnd) / 0.95;
       tgt.m0k = 0.36 - e * 0.28;
       tgt.m0h = 0.1 - e * 0.02;
       tgt.spin = 2.4 - e * 2.1;
@@ -534,43 +534,43 @@ export class FieldEngine implements InputActions {
       tgt.jet = Math.sin(Math.min(1, e * 1.5) * Math.PI) * 1.1;
       tgt.play = e;
     } else {
-      s.mode = "toca";
+      s.mode = "playing";
     }
   }
 
-  private tocando(tgt: Record<string, number>, K: number) {
+  private playing(tgt: Record<string, number>, K: number) {
     const s = this.st;
-    const toca = s.mode === "toca";
+    const isPlaying = s.mode === "playing";
     const a = this.audioState;
     const C = this.C;
     const cap = C.reactionCap;
-    tgt.play = toca ? 1 : 0.86;
+    tgt.play = isPlaying ? 1 : 0.86;
     tgt.m0k =
-      curvature(0.075 * C.massScale, toca ? a.accent.bass : a.accent.bass * 0.25, cap) * K;
+      curvature(0.075 * C.massScale, isPlaying ? a.accent.bass : a.accent.bass * 0.25, cap) * K;
     tgt.m0h = 0.082 * C.horizonScale;
-    tgt.spin = toca ? curvature(0.42, a.accent.mid * 0.7 + a.flux * 0.3, cap) : 0.06;
-    tgt.jet = toca ? 0.06 + a.flux * 0.22 + a.bass * 0.06 : 0.02;
-    tgt.blur = toca ? a.bass * 0.12 : 0;
+    tgt.spin = isPlaying ? curvature(0.42, a.accent.mid * 0.7 + a.flux * 0.3, cap) : 0.06;
+    tgt.jet = isPlaying ? 0.06 + a.flux * 0.22 + a.bass * 0.06 : 0.02;
+    tgt.blur = isPlaying ? a.bass * 0.12 : 0;
     if (s.scale === "album") tgt.play *= 0.25;
   }
 
-  private fusao(tgt: Record<string, number>, K: number) {
+  private fusion(tgt: Record<string, number>, K: number) {
     const s = this.st;
     const p = s.seqT;
     tgt.play = 1;
 
     if (this.reduced) {
-      const e = Math.min(1, p / SEQ.reduzido);
+      const e = Math.min(1, p / SEQ.reduced);
       s.mix = e;
       tgt.m0k = 0.075 * K;
       tgt.fade = 0.5 + 0.5 * Math.abs(e * 2 - 1);
       this.commitFusion();
-      if (p >= SEQ.reduzido) this.endFusion();
+      if (p >= SEQ.reduced) this.endFusion();
       return;
     }
 
-    if (p < SEQ.fusao.onda) {
-      const e = p / SEQ.fusao.onda;
+    if (p < SEQ.fusion.wave) {
+      const e = p / SEQ.fusion.wave;
       const ee = e * e;
       const ang = -0.7 + ee * 5.4;
       const rad = 1.5 * (1 - ee) + 0.02;
@@ -583,8 +583,8 @@ export class FieldEngine implements InputActions {
       tgt.spin = 0.42 + ee * 0.9;
       tgt.blur = ee * 0.4;
       tgt.jet = 0.1;
-    } else if (p < SEQ.fusao.total) {
-      const e = (p - SEQ.fusao.onda) / 0.7;
+    } else if (p < SEQ.fusion.total) {
+      const e = (p - SEQ.fusion.wave) / 0.7;
       if (s.waveR < 0) s.waveR = 0.02;
       this.commitFusion();
       s.m1k *= 0.72;
@@ -616,7 +616,7 @@ export class FieldEngine implements InputActions {
     let m1y = my + s.m1y;
     let m1k = s.m1k;
     let m1h = s.m1h;
-    if (s.scale === "campo" && s.mode !== "fusao") {
+    if (s.scale === "collection" && s.mode !== "fusion") {
       const dir = s.nav - Math.round(s.nav) >= 0 ? 1 : -1;
       const nb = albPos(Math.round(s.nav) + dir, s, this.L);
       m1x = (nb.x - 0.5) * aspect;

@@ -188,7 +188,7 @@ export function drawBack(
   }
   if (s.fadeSel > 0.02) {
     const activeTrk =
-      s.playAlb === s.alb && (isEngaged(s.mode) || s.mode === "fusao")
+      s.playAlb === s.alb && (isEngaged(s.mode) || s.mode === "fusion")
         ? s.trk
         : -1;
     const prog = progressOf(s);
@@ -218,7 +218,7 @@ export function drawBack(
     const rr = q.r * M * 0.9;
     const px = bx + Math.cos(q.a) * rr * 1.25;
     const py = by + Math.sin(q.a) * rr * 0.72;
-    const tw = s.mode === "toca" ? 0.62 + 0.38 * Math.sin(q.tw + s.t * 5 + s.treb * 5) : 0.6;
+    const tw = s.mode === "playing" ? 0.62 + 0.38 * Math.sin(q.tw + s.t * 5 + s.treb * 5) : 0.6;
     x.globalAlpha = (0.02 + q.z * 0.13) * tw * (0.5 + s.energy * 0.7);
     x.fillStyle = q.z > 0.6 ? inkA(1) : COLOR.dust;
     x.fillRect(px, py, 1.1, 1.1);
@@ -232,7 +232,7 @@ export function drawBack(
   let asz = lk.size;
   const wgt = Math.round(C.artistWeight);
   x.font = `${wgt} ${asz}px ${fonts.archivo}`;
-  const fit = s.scale === "campo" ? L.fitCampo : L.fitAlbum;
+  const fit = s.scale === "collection" ? L.fitCollection : L.fitAlbum;
   if (fit > 0) {
     const maxW = W * fit - W * GEO.marginText;
     const mw = x.measureText(A.artist).width;

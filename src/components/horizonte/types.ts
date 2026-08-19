@@ -1,5 +1,5 @@
-export type Scale = "campo" | "album" | "faixa";
-export type Mode = "parado" | "colapso" | "toca" | "pausa" | "fusao";
+export type Scale = "collection" | "album" | "track";
+export type Mode = "stopped" | "collapse" | "playing" | "paused" | "fusion";
 export type Variant = "desktop" | "tablet" | "mobile";
 
 export interface Particle {

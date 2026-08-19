@@ -6,24 +6,24 @@ export const variantFor = (w: number): Variant =>
 
 export interface WorldLayout {
   variant: Variant;
-  anchorCampo: { x: number; y: number };
+  anchorCollection: { x: number; y: number };
   anchorAlbum: { x: number; y: number };
   spreadX: number;
   spreadY: number;
   ringScale: number;
-  fitCampo: number;
+  fitCollection: number;
   fitAlbum: number;
   ringLabels: "todos" | "selecionado";
 }
 
 const DESKTOP: WorldLayout = {
   variant: "desktop",
-  anchorCampo: GEO.anchorCampo,
+  anchorCollection: GEO.anchorCollection,
   anchorAlbum: GEO.anchorAlbum,
   spreadX: GEO.spreadX,
   spreadY: GEO.spreadY,
   ringScale: 1,
-  fitCampo: 0.9,
+  fitCollection: 0.9,
   fitAlbum: 0.52,
   ringLabels: "todos",
 };
@@ -31,22 +31,22 @@ const DESKTOP: WorldLayout = {
 const TABLET: WorldLayout = {
   ...DESKTOP,
   variant: "tablet",
-  anchorCampo: { x: 0.56, y: 0.4 },
+  anchorCollection: { x: 0.56, y: 0.4 },
   anchorAlbum: { x: 0.5, y: 0.4 },
   ringScale: 0.86,
-  fitCampo: 0.92,
+  fitCollection: 0.92,
   fitAlbum: 0.62,
   ringLabels: "selecionado",
 };
 
 const MOBILE: WorldLayout = {
   variant: "mobile",
-  anchorCampo: { x: 0.5, y: 0.34 },
+  anchorCollection: { x: 0.5, y: 0.34 },
   anchorAlbum: { x: 0.5, y: 0.33 },
   spreadX: 1.02,
   spreadY: 0.03,
   ringScale: 0.7,
-  fitCampo: 0,
+  fitCollection: 0,
   fitAlbum: 0,
   ringLabels: "selecionado",
 };
@@ -57,8 +57,8 @@ export const layoutFor = (variant: Variant): WorldLayout =>
 export function albPos(i: number, s: FieldState, L: WorldLayout) {
   const d = i - s.nav;
   const depth = 1 / (1 + Math.abs(d) * 0.8);
-  const zx = L.anchorCampo.x + (L.anchorAlbum.x - L.anchorCampo.x) * s.zoom;
-  const zy = L.anchorCampo.y + (L.anchorAlbum.y - L.anchorCampo.y) * s.zoom;
+  const zx = L.anchorCollection.x + (L.anchorAlbum.x - L.anchorCollection.x) * s.zoom;
+  const zy = L.anchorCollection.y + (L.anchorAlbum.y - L.anchorCollection.y) * s.zoom;
   const x = zx + d * L.spreadX * (1 - s.zoom * 0.6);
   const y = zy + Math.sin(d * 1.15) * L.spreadY * (1 - s.zoom);
   return { x, y, depth, d };
@@ -93,7 +93,7 @@ export function lockup(W: number, H: number, s: FieldState) {
 export const ringBufferScale = (R: number) => R / RING_UNIT;
 
 export interface Hit {
-  kind: "corpo" | "faixa" | "vazio";
+  kind: "body" | "track" | "empty";
   i: number;
 }
 
@@ -111,7 +111,7 @@ export function hitTest(
   const mx = mouseX * W;
   const my = mouseY * H;
 
-  if (s.scale === "campo") {
+  if (s.scale === "collection") {
     let best = -1;
     let bd = Infinity;
     for (let i = 0; i < albumCount; i++) {
@@ -123,7 +123,7 @@ export function hitTest(
         best = i;
       }
     }
-    return { kind: best >= 0 ? "corpo" : "vazio", i: best };
+    return { kind: best >= 0 ? "body" : "empty", i: best };
   }
 
   const p = albPos(s.alb, s, L);
@@ -134,11 +134,11 @@ export function hitTest(
   const dy = (my - by) / flatten;
   const rr = Math.hypot(dx, dy);
 
-  if (rr < R * 0.55) return { kind: "corpo", i: s.alb };
+  if (rr < R * 0.55) return { kind: "body", i: s.alb };
   if (rr > R * 0.62 && rr < R * 1.34) {
     let a = Math.atan2(dy, dx) - s.ringRot;
     a = ((a % 6.2832) + 6.2832) % 6.2832;
-    return { kind: "faixa", i: sectorAt(bounds(s.alb), a / 6.2832) };
+    return { kind: "track", i: sectorAt(bounds(s.alb), a / 6.2832) };
   }
-  return { kind: "vazio", i: -1 };
+  return { kind: "empty", i: -1 };
 }

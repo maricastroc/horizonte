@@ -18,7 +18,7 @@ export interface BlockedAlbum {
 export const CURATION: CuratedAlbum[] = [
   {
     id: "tristan-lohengrin-le-manoir",
-    provider: "curadoria",
+    provider: "curated",
     artist: "Tristan Lohengrin",
     title: "Le Manoir",
     year: "2019",
@@ -160,7 +160,7 @@ export const CURATION: CuratedAlbum[] = [
   },
   {
     id: "jono-terbakar-lebar",
-    provider: "curadoria",
+    provider: "curated",
     artist: "Jono Terbakar",
     title: "lebar",
     year: "2023",
@@ -280,7 +280,7 @@ export const CURATION: CuratedAlbum[] = [
   },
   {
     id: "le-morte-dabby-0p",
-    provider: "curadoria",
+    provider: "curated",
     artist: "Le Morte d'Abby",
     title: "0p",
     year: "2022",
@@ -380,7 +380,7 @@ export const CURATION: CuratedAlbum[] = [
   },
   {
     id: "mark-wilson-x-dark-thoughts",
-    provider: "curadoria",
+    provider: "curated",
     artist: "Mark Wilson X",
     title: "Dark Thoughts",
     year: "2023",
@@ -512,7 +512,7 @@ export const CURATION: CuratedAlbum[] = [
   },
   {
     id: "darin-wilson-impromptu",
-    provider: "curadoria",
+    provider: "curated",
     artist: "Darin Wilson",
     title: "Impromptu",
     year: "2012",
@@ -593,7 +593,7 @@ export const CURATION: CuratedAlbum[] = [
   },
   {
     id: "zero-project-e-world",
-    provider: "curadoria",
+    provider: "curated",
     artist: "zero-project",
     title: "e-world",
     year: "2011",
@@ -783,7 +783,7 @@ export const CURATION: CuratedAlbum[] = [
   },
   {
     id: "tale-twist-wry-way",
-    provider: "curadoria",
+    provider: "curated",
     artist: "Tale Twist",
     title: "Wry Way",
     year: "2016",
@@ -894,7 +894,7 @@ export const CURATION: CuratedAlbum[] = [
   },
   {
     id: "madison-kenny-all-systems-go",
-    provider: "curadoria",
+    provider: "curated",
     artist: "Madison Kenny",
     title: "All Systems Go",
     year: "2006",
@@ -965,7 +965,7 @@ export const CURATION: CuratedAlbum[] = [
   },
   {
     id: "meho-mkultra",
-    provider: "curadoria",
+    provider: "curated",
     artist: "Meho",
     title: "MKUltra",
     year: "2015",
@@ -1056,7 +1056,7 @@ export const CURATION: CuratedAlbum[] = [
   },
   {
     id: "mescaline-sessions-jajce",
-    provider: "curadoria",
+    provider: "curated",
     artist: "Mescaline Sessions",
     title: "Jajce Sessions",
     year: "2014",

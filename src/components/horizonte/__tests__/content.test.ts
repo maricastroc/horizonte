@@ -39,37 +39,37 @@ describe("mediaUrl com base remota", () => {
     vi.resetModules();
   });
 
-  const comBase = async (base: string) => {
+  const withBase = async (base: string) => {
     vi.stubEnv("NEXT_PUBLIC_MEDIA_BASE_URL", base);
     vi.resetModules();
     return (await import("../content/assets")).mediaUrl;
   };
 
   it("prefixa os caminhos locais", async () => {
-    const url = await comBase("https://blob.exemplo");
+    const url = await withBase("https://blob.exemplo");
     expect(url("/music/a/01.m4a")).toBe("https://blob.exemplo/music/a/01.m4a");
   });
 
   it("tolera barra sobrando na base", async () => {
-    const url = await comBase("https://blob.exemplo///");
+    const url = await withBase("https://blob.exemplo///");
     expect(url("/music/a/01.m4a")).toBe("https://blob.exemplo/music/a/01.m4a");
   });
 
   it("não prefixa o que já é absoluto", async () => {
-    const url = await comBase("https://blob.exemplo");
+    const url = await withBase("https://blob.exemplo");
     expect(url("https://outro.exemplo/a.m4a")).toBe("https://outro.exemplo/a.m4a");
   });
 });
 
 describe("integridade do acervo", () => {
-  it("todo álbum curado tem assinatura medida", () => {
+  it("todo álbum curado tem signature medida", () => {
     const sem = CURATION.filter((a) => !SIGNATURES[a.id]).map((a) => a.id);
     expect(sem).toEqual([]);
   });
 
-  it("nenhum álbum caiu na assinatura neutra", () => {
-    const neutros = ALBUMS.filter((a) => a.signature === NEUTRAL_SIGNATURE).map((a) => a.id);
-    expect(neutros).toEqual([]);
+  it("nenhum álbum caiu na signature neutra", () => {
+    const neutral = ALBUMS.filter((a) => a.signature === NEUTRAL_SIGNATURE).map((a) => a.id);
+    expect(neutral).toEqual([]);
   });
 
   it("os identificadores são únicos", () => {
@@ -82,19 +82,19 @@ describe("integridade do acervo", () => {
     expect(new Set(cats).size).toBe(cats.length);
   });
 
-  it("as tintas são RGB normalizado", () => {
+  it("as inks são RGB normalizado", () => {
     for (const a of ALBUMS) {
-      for (const tinta of [a.inkA, a.inkB]) {
-        expect(tinta, a.id).toHaveLength(3);
-        for (const canal of tinta) {
-          expect(canal, a.id).toBeGreaterThanOrEqual(0);
-          expect(canal, a.id).toBeLessThanOrEqual(1);
+      for (const ink of [a.inkA, a.inkB]) {
+        expect(ink, a.id).toHaveLength(3);
+        for (const channel of ink) {
+          expect(channel, a.id).toBeGreaterThanOrEqual(0);
+          expect(channel, a.id).toBeLessThanOrEqual(1);
         }
       }
     }
   });
 
-  it("a assinatura sobrepõe a tinta da curadoria quando a mediu", () => {
+  it("a signature sobrepõe a ink da curadoria quando a mediu", () => {
     for (const a of ALBUMS) {
       if (a.signature.inkA) expect(a.inkA, a.id).toEqual(a.signature.inkA);
       if (a.signature.inkB) expect(a.inkB, a.id).toEqual(a.signature.inkB);

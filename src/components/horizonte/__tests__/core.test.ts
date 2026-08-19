@@ -80,21 +80,21 @@ describe("progressOf", () => {
 
 describe("isEngaged", () => {
   it("é verdadeiro com faixa carregada sob o transporte", () => {
-    expect(isEngaged("toca")).toBe(true);
-    expect(isEngaged("pausa")).toBe(true);
+    expect(isEngaged("playing")).toBe(true);
+    expect(isEngaged("paused")).toBe(true);
   });
 
   it("é falso nos modos sem faixa estabelecida", () => {
-    const outros: Mode[] = ["parado", "colapso", "fusao"];
-    for (const m of outros) expect(isEngaged(m)).toBe(false);
+    const others: Mode[] = ["stopped", "collapse", "fusion"];
+    for (const m of others) expect(isEngaged(m)).toBe(false);
   });
 });
 
 describe("initialState", () => {
   it("abre na coleção, sem nada tocando", () => {
     const s = initialState();
-    expect(s.scale).toBe("campo");
-    expect(s.mode).toBe("parado");
+    expect(s.scale).toBe("collection");
+    expect(s.mode).toBe("stopped");
     expect(s.playAlb).toBe(-1);
     expect(s.hover).toBe(-1);
     expect(s.hoverBody).toBe(-1);

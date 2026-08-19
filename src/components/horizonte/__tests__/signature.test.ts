@@ -40,7 +40,7 @@ describe("boundsOf — ângulo é tempo (P9)", () => {
     expect(b).toEqual([0, 0.25, 0.5, 0.75, 1]);
   });
 
-  it("cai em setores uniformes sem assinatura medida", () => {
+  it("cai em setores uniformes sem signature medida", () => {
     expect(boundsOf(NEUTRAL_SIGNATURE, 2)).toEqual([0, 0.5, 1]);
   });
 
@@ -70,12 +70,12 @@ describe("envelopeOf — forma é dinâmica no tempo (P10)", () => {
     expect(env[ENVELOPE_N - 1]).toBeCloseTo(200 / 255, 6);
   });
 
-  it("sem envelope medido, entrega um anel de espessura constante", () => {
+  it("sem envelope medido, entrega um ring de espessura constante", () => {
     const env = envelopeOf(NEUTRAL_SIGNATURE);
     expect([...env].every((v) => v === 0.5)).toBe(true);
   });
 
-  it("memoiza por assinatura", () => {
+  it("memoiza por signature", () => {
     const sig = signature(0.5, 0.5, 0.5, 0.5, [], encodeEnvelope([1, 2, 3]));
     expect(envelopeOf(sig)).toBe(envelopeOf(sig));
   });
@@ -103,8 +103,8 @@ describe("sampleEnvelope", () => {
   });
 
   it("interpola linearmente entre duas amostras", () => {
-    const meio = 0.5 / (ENVELOPE_N - 1);
-    expect(sampleEnvelope(env, meio)).toBeCloseTo(0.5, 6);
+    const middle = 0.5 / (ENVELOPE_N - 1);
+    expect(sampleEnvelope(env, middle)).toBeCloseTo(0.5, 6);
   });
 
   it("satura fora de [0,1] em vez de sair do buffer", () => {

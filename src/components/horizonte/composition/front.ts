@@ -52,12 +52,12 @@ const fragment = new FragmentCache();
 
 export function frontTitle(s: FieldState): string {
   const A = ALBUMS[s.alb];
-  if (s.scale === "campo") return A.title;
+  if (s.scale === "collection") return A.title;
   if (s.mix > 0.5) {
     const B = ALBUMS[s.fuseAlb] ?? A;
     return B.tracks[s.fuseB]?.title ?? A.title;
   }
-  const idx = s.scale === "faixa" && s.mode !== "colapso" ? s.trk : s.sel;
+  const idx = s.scale === "track" && s.mode !== "collapse" ? s.trk : s.sel;
   return A.tracks[idx]?.title ?? A.title;
 }
 
@@ -100,7 +100,7 @@ export function drawFront(
   ls(x, "0.22em");
   x.fillStyle = COLOR.inkText2;
   const sub =
-    s.scale === "campo"
+    s.scale === "collection"
       ? `${A.year} · ${A.tracks.length} FAIXAS · ${A.cat}`
       : `${A.artist} · ${A.title} · ${A.year}`;
   x.fillText(sub, W * 0.034, lk.my);

@@ -1,251 +1,251 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { bindInput, type InputActions } from "../engine/input";
-import { gravador, janelaFalsa, type JanelaFalsa } from "./fakes";
+import { recorder, fakeWindow, type FakeWindow } from "./fakes";
 
 const W = 1000;
 const H = 800;
 
-let janela: JanelaFalsa;
-let rec: ReturnType<typeof gravador>;
-let desligar: () => void;
-let daUi = false;
+let win: FakeWindow;
+let rec: ReturnType<typeof recorder>;
+let off: () => void;
+let fromUi = false;
 
-function ligar(opcoes: Parameters<typeof janelaFalsa>[0] = {}) {
-  janela = janelaFalsa({ innerWidth: W, innerHeight: H, ...opcoes });
-  rec = gravador();
-  desligar = bindInput(rec.acoes as unknown as InputActions, {
-    isUiTarget: () => daUi,
+function on(options: Parameters<typeof fakeWindow>[0] = {}) {
+  win = fakeWindow({ innerWidth: W, innerHeight: H, ...options });
+  rec = recorder();
+  off = bindInput(rec.actions as unknown as InputActions, {
+    isUiTarget: () => fromUi,
   });
 }
 
-const mover = (x: number, y: number) => janela.dispatch("pointermove", { clientX: x, clientY: y });
-const descer = (x: number, y: number, pointerType = "mouse") =>
-  janela.dispatch("pointerdown", { clientX: x, clientY: y, pointerType });
-const subir = (x: number, y: number) => janela.dispatch("pointerup", { clientX: x, clientY: y });
+const move = (x: number, y: number) => win.dispatch("pointermove", { clientX: x, clientY: y });
+const down = (x: number, y: number, pointerType = "mouse") =>
+  win.dispatch("pointerdown", { clientX: x, clientY: y, pointerType });
+const up = (x: number, y: number) => win.dispatch("pointerup", { clientX: x, clientY: y });
 
 beforeEach(() => {
-  daUi = false;
-  ligar();
+  fromUi = false;
+  on();
 });
 
 afterEach(() => {
-  desligar();
-  janela.restaurar();
+  off();
+  win.restore();
 });
 
 describe("ciclo de vida das escutas", () => {
   it("registra todas as escutas de uma vez", () => {
-    expect(janela.registrados()).toBe(8);
+    expect(win.registered()).toBe(8);
   });
 
   it("desliga tudo o que ligou", () => {
-    desligar();
-    expect(janela.registrados()).toBe(0);
+    off();
+    expect(win.registered()).toBe(0);
   });
 
   it("desligar duas vezes não quebra", () => {
-    desligar();
-    expect(() => desligar()).not.toThrow();
+    off();
+    expect(() => off()).not.toThrow();
   });
 });
 
 describe("cursor", () => {
   it("normaliza a posição pela janela", () => {
-    mover(500, 400);
-    expect(rec.ultima("pointTo")?.args).toEqual([0.5, 0.5]);
+    move(500, 400);
+    expect(rec.last("pointTo")?.args).toEqual([0.5, 0.5]);
   });
 
-  it("segue o cursor mesmo sobre a camada de instrumentos", () => {
-    daUi = true;
-    mover(250, 200);
-    expect(rec.ultima("pointTo")?.args).toEqual([0.25, 0.25]);
+  it("segue o cursor mesmo sobre a camada de instruments", () => {
+    fromUi = true;
+    move(250, 200);
+    expect(rec.last("pointTo")?.args).toEqual([0.25, 0.25]);
   });
 
   it("um toque nasce onde o dedo encostou, sem trajeto", () => {
-    descer(500, 400, "touch");
-    expect(rec.ultima("teleportTo")?.args).toEqual([0.5, 0.5]);
+    down(500, 400, "touch");
+    expect(rec.last("teleportTo")?.args).toEqual([0.5, 0.5]);
   });
 
   it("o mouse não teleporta: ele chega andando", () => {
-    descer(500, 400, "mouse");
-    expect(rec.contar("teleportTo")).toBe(0);
+    down(500, 400, "mouse");
+    expect(rec.count("teleportTo")).toBe(0);
   });
 });
 
 describe("arraste", () => {
   it("não arrasta sem o ponteiro pressionado", () => {
-    mover(500, 400);
-    mover(300, 400);
-    expect(rec.contar("panBy")).toBe(0);
+    move(500, 400);
+    move(300, 400);
+    expect(rec.count("panBy")).toBe(0);
   });
 
   it("informa o passo, o total e a largura da janela", () => {
-    descer(800, 400);
-    mover(700, 400);
-    expect(rec.ultima("panBy")?.args).toEqual([-100, -100, W]);
-    mover(650, 400);
-    expect(rec.ultima("panBy")?.args).toEqual([-50, -150, W]);
+    down(800, 400);
+    move(700, 400);
+    expect(rec.last("panBy")?.args).toEqual([-100, -100, W]);
+    move(650, 400);
+    expect(rec.last("panBy")?.args).toEqual([-50, -150, W]);
   });
 
   it("abre o arraste antes de qualquer passo", () => {
-    descer(800, 400);
-    expect(rec.nomesChamados()).toContain("beginPan");
-    expect(rec.contar("panBy")).toBe(0);
+    down(800, 400);
+    expect(rec.calledNames()).toContain("beginPan");
+    expect(rec.count("panBy")).toBe(0);
   });
 
   it("um toque parado é toque, não arraste", () => {
-    descer(500, 400);
-    mover(503, 400);
-    subir(503, 400);
-    expect(rec.ultima("endPan")?.args).toEqual([true]);
+    down(500, 400);
+    move(503, 400);
+    up(503, 400);
+    expect(rec.last("endPan")?.args).toEqual([true]);
   });
 
   it("passar do limiar vira arraste", () => {
-    descer(500, 400);
-    mover(492, 400);
-    subir(492, 400);
-    expect(rec.ultima("endPan")?.args).toEqual([false]);
+    down(500, 400);
+    move(492, 400);
+    up(492, 400);
+    expect(rec.last("endPan")?.args).toEqual([false]);
   });
 
   it("vai e volta ainda é arraste: a distância é acumulada em módulo", () => {
-    descer(500, 400);
-    mover(495, 400);
-    mover(500, 400);
-    subir(500, 400);
-    expect(rec.ultima("endPan")?.args).toEqual([false]);
+    down(500, 400);
+    move(495, 400);
+    move(500, 400);
+    up(500, 400);
+    expect(rec.last("endPan")?.args).toEqual([false]);
   });
 
   it("pointercancel encerra como pointerup", () => {
-    descer(500, 400);
-    janela.dispatch("pointercancel", { clientX: 500, clientY: 400 });
-    expect(rec.ultima("endPan")?.args).toEqual([true]);
+    down(500, 400);
+    win.dispatch("pointercancel", { clientX: 500, clientY: 400 });
+    expect(rec.last("endPan")?.args).toEqual([true]);
   });
 
   it("soltar sem ter pressionado não encerra nada", () => {
-    subir(500, 400);
-    expect(rec.contar("endPan")).toBe(0);
+    up(500, 400);
+    expect(rec.count("endPan")).toBe(0);
   });
 
   it("um segundo soltar não encerra de novo", () => {
-    descer(500, 400);
-    subir(500, 400);
-    rec.limpar();
-    subir(500, 400);
-    expect(rec.contar("endPan")).toBe(0);
+    down(500, 400);
+    up(500, 400);
+    rec.clear();
+    up(500, 400);
+    expect(rec.count("endPan")).toBe(0);
   });
 });
 
-describe("camada de instrumentos", () => {
+describe("camada de instruments", () => {
   it("não começa arraste a partir de um controle", () => {
-    daUi = true;
-    descer(800, 400);
-    mover(600, 400);
-    expect(rec.contar("beginPan")).toBe(0);
-    expect(rec.contar("panBy")).toBe(0);
+    fromUi = true;
+    down(800, 400);
+    move(600, 400);
+    expect(rec.count("beginPan")).toBe(0);
+    expect(rec.count("panBy")).toBe(0);
   });
 
   it("soltar sobre um controle abandona o arraste sem encerrá-lo", () => {
-    descer(800, 400);
-    mover(600, 400);
-    daUi = true;
-    subir(600, 400);
-    expect(rec.contar("endPan")).toBe(0);
+    down(800, 400);
+    move(600, 400);
+    fromUi = true;
+    up(600, 400);
+    expect(rec.count("endPan")).toBe(0);
   });
 
   it("ignora a roda sobre um controle, sem bloquear a rolagem dele", () => {
-    daUi = true;
-    let barrou = false;
-    janela.dispatch("wheel", { deltaY: 100, deltaX: 0, preventDefault: () => (barrou = true) });
-    expect(rec.contar("wheelBy")).toBe(0);
-    expect(barrou).toBe(false);
+    fromUi = true;
+    let blocked = false;
+    win.dispatch("wheel", { deltaY: 100, deltaX: 0, preventDefault: () => (blocked = true) });
+    expect(rec.count("wheelBy")).toBe(0);
+    expect(blocked).toBe(false);
   });
 });
 
 describe("roda", () => {
   it("repassa os dois eixos e bloqueia a rolagem da página", () => {
-    let barrou = false;
-    janela.dispatch("wheel", { deltaY: 120, deltaX: -30, preventDefault: () => (barrou = true) });
-    expect(rec.ultima("wheelBy")?.args).toEqual([120, -30]);
-    expect(barrou).toBe(true);
+    let blocked = false;
+    win.dispatch("wheel", { deltaY: 120, deltaX: -30, preventDefault: () => (blocked = true) });
+    expect(rec.last("wheelBy")?.args).toEqual([120, -30]);
+    expect(blocked).toBe(true);
   });
 });
 
 describe("teclado", () => {
-  const tecla = (init: Record<string, unknown>) => {
-    let barrou = false;
-    janela.dispatch("keydown", { key: "", code: "", preventDefault: () => (barrou = true), ...init });
-    return () => barrou;
+  const key = (init: Record<string, unknown>) => {
+    let blocked = false;
+    win.dispatch("keydown", { key: "", code: "", preventDefault: () => (blocked = true), ...init });
+    return () => blocked;
   };
 
   it("Espaço e Enter acionam a ação principal", () => {
-    tecla({ code: "Space" });
-    tecla({ key: "Enter" });
-    expect(rec.contar("primary")).toBe(2);
+    key({ code: "Space" });
+    key({ key: "Enter" });
+    expect(rec.count("primary")).toBe(2);
   });
 
-  it("Escape volta uma escala", () => {
-    tecla({ key: "Escape" });
-    expect(rec.contar("back")).toBe(1);
+  it("Escape volta uma scale", () => {
+    key({ key: "Escape" });
+    expect(rec.count("back")).toBe(1);
   });
 
-  it("Escape volta mesmo com o foco dentro dos instrumentos", () => {
-    daUi = true;
-    tecla({ key: "Escape" });
-    expect(rec.contar("back")).toBe(1);
+  it("Escape volta mesmo com o foco dentro dos instruments", () => {
+    fromUi = true;
+    key({ key: "Escape" });
+    expect(rec.count("back")).toBe(1);
   });
 
   it("as setas movem o foco um passo", () => {
-    tecla({ key: "ArrowRight" });
-    tecla({ key: "ArrowDown" });
-    expect(rec.chamadas.filter((c) => c.nome === "stepFocus").map((c) => c.args)).toEqual([[1], [1]]);
-    rec.limpar();
-    tecla({ key: "ArrowLeft" });
-    tecla({ key: "ArrowUp" });
-    expect(rec.chamadas.filter((c) => c.nome === "stepFocus").map((c) => c.args)).toEqual([[-1], [-1]]);
+    key({ key: "ArrowRight" });
+    key({ key: "ArrowDown" });
+    expect(rec.calls.filter((c) => c.label === "stepFocus").map((c) => c.args)).toEqual([[1], [1]]);
+    rec.clear();
+    key({ key: "ArrowLeft" });
+    key({ key: "ArrowUp" });
+    expect(rec.calls.filter((c) => c.label === "stepFocus").map((c) => c.args)).toEqual([[-1], [-1]]);
   });
 
   it("deixa as setas e o Espaço para o controle quando o foco está nele", () => {
-    daUi = true;
-    tecla({ key: "ArrowRight" });
-    tecla({ code: "Space" });
-    expect(rec.contar("stepFocus")).toBe(0);
-    expect(rec.contar("primary")).toBe(0);
+    fromUi = true;
+    key({ key: "ArrowRight" });
+    key({ code: "Space" });
+    expect(rec.count("stepFocus")).toBe(0);
+    expect(rec.count("primary")).toBe(0);
   });
 
-  it("não sequestra teclas que não são do mundo", () => {
-    const barrou = tecla({ key: "Tab" });
-    expect(barrou()).toBe(false);
-    expect(rec.nomesChamados().filter((n) => n !== "markIntent")).toEqual([]);
+  it("não sequestra teclas que não são do world", () => {
+    const blocked = key({ key: "Tab" });
+    expect(blocked()).toBe(false);
+    expect(rec.calledNames().filter((n) => n !== "markIntent")).toEqual([]);
   });
 });
 
 describe("intenção e ambiente", () => {
   it("qualquer gesto conta como presença do usuário", () => {
-    mover(1, 1);
-    expect(rec.contar("markIntent")).toBe(1);
-    descer(1, 1);
-    expect(rec.contar("markIntent")).toBe(2);
-    janela.dispatch("wheel", { deltaY: 1, deltaX: 0 });
-    expect(rec.contar("markIntent")).toBe(3);
-    janela.dispatch("keydown", { key: "Tab", code: "Tab" });
-    expect(rec.contar("markIntent")).toBe(4);
+    move(1, 1);
+    expect(rec.count("markIntent")).toBe(1);
+    down(1, 1);
+    expect(rec.count("markIntent")).toBe(2);
+    win.dispatch("wheel", { deltaY: 1, deltaX: 0 });
+    expect(rec.count("markIntent")).toBe(3);
+    win.dispatch("keydown", { key: "Tab", code: "Tab" });
+    expect(rec.count("markIntent")).toBe(4);
   });
 
   it("marca presença mesmo em evento que nasce num controle", () => {
-    daUi = true;
-    descer(1, 1);
-    expect(rec.contar("markIntent")).toBe(1);
+    fromUi = true;
+    down(1, 1);
+    expect(rec.count("markIntent")).toBe(1);
   });
 
   it("repassa o redimensionamento da janela", () => {
-    janela.dispatch("resize");
-    expect(rec.contar("resize")).toBe(1);
+    win.dispatch("resize");
+    expect(rec.count("resize")).toBe(1);
   });
 
-  it("acompanha a preferência de movimento reduzido nos dois sentidos", () => {
-    janela.mudarMovimento(true);
-    expect(rec.ultima("setReducedMotion")?.args).toEqual([true]);
-    janela.mudarMovimento(false);
-    expect(rec.ultima("setReducedMotion")?.args).toEqual([false]);
+  it("acompanha a preferência de movimento reduced nos dois sentidos", () => {
+    win.setMotion(true);
+    expect(rec.last("setReducedMotion")?.args).toEqual([true]);
+    win.setMotion(false);
+    expect(rec.last("setReducedMotion")?.args).toEqual([false]);
   });
 });

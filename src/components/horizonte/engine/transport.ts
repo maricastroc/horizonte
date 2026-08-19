@@ -25,8 +25,8 @@ export function enterAlbum(s: FieldState, cat: Catalog, i: number): AudioEffect[
 }
 
 export function playTrack(s: FieldState, cat: Catalog, alb: number, trk: number): AudioEffect[] {
-  if (s.scale === "faixa" && s.playAlb === alb && s.trk === trk) return transport(s, cat);
-  if (s.playAlb >= 0 && isEngaged(s.mode) && s.scale === "faixa") return fuseTo(s, alb, trk);
+  if (s.scale === "track" && s.playAlb === alb && s.trk === trk) return transport(s, cat);
+  if (s.playAlb >= 0 && isEngaged(s.mode) && s.scale === "track") return fuseTo(s, alb, trk);
 
   s.playAlb = alb;
   s.alb = alb;
@@ -34,18 +34,18 @@ export function playTrack(s: FieldState, cat: Catalog, alb: number, trk: number)
   s.sel = trk;
   s.dur = cat.trackDuration(alb, trk);
   s.pos = 0;
-  s.scale = "faixa";
+  s.scale = "track";
   s.zoomT = 1;
-  s.mode = "colapso";
+  s.mode = "collapse";
   s.seqT = 0;
   return [{ kind: "load", alb, trk }];
 }
 
 export function fuseTo(s: FieldState, alb: number, trk: number): AudioEffect[] {
-  if (s.mode === "fusao") return [];
+  if (s.mode === "fusion") return [];
   s.fuseB = trk;
   s.fuseAlb = alb;
-  s.mode = "fusao";
+  s.mode = "fusion";
   s.seqT = 0;
   s.mix = 0;
   s.fuseLoaded = false;
@@ -74,31 +74,31 @@ export function endFusion(s: FieldState, cat: Catalog, loadedDuration: number): 
   s.m1k = 0;
   s.m1h = 0;
   s.waveR = -1;
-  s.mode = "toca";
+  s.mode = "playing";
   if (s.scale !== "album") {
-    s.scale = "faixa";
+    s.scale = "track";
     s.zoomT = 1;
   }
   return [];
 }
 
 export function transport(s: FieldState, cat: Catalog): AudioEffect[] {
-  if (s.mode === "fusao") return [];
-  if (s.playAlb < 0 || s.scale !== "faixa") return playTrack(s, cat, s.alb, s.sel);
-  if (s.mode === "toca" || s.mode === "colapso") {
-    s.mode = "pausa";
+  if (s.mode === "fusion") return [];
+  if (s.playAlb < 0 || s.scale !== "track") return playTrack(s, cat, s.alb, s.sel);
+  if (s.mode === "playing" || s.mode === "collapse") {
+    s.mode = "paused";
     return [{ kind: "pause" }];
   }
-  s.mode = "toca";
+  s.mode = "playing";
   return [{ kind: "play" }];
 }
 
 export function back(s: FieldState): AudioEffect[] {
-  if (s.scale === "faixa") {
+  if (s.scale === "track") {
     s.scale = "album";
     s.zoomT = 1;
   } else if (s.scale === "album") {
-    s.scale = "campo";
+    s.scale = "collection";
     s.zoomT = 0;
     s.hover = -1;
   }
@@ -106,21 +106,21 @@ export function back(s: FieldState): AudioEffect[] {
 }
 
 export function goScale(s: FieldState, cat: Catalog, level: Scale): AudioEffect[] {
-  if (level === "campo") {
-    s.scale = "campo";
+  if (level === "collection") {
+    s.scale = "collection";
     s.zoomT = 0;
     s.hover = -1;
     return [];
   }
   if (level === "album") {
-    if (s.scale === "campo") return enterAlbum(s, cat, Math.round(s.nav));
+    if (s.scale === "collection") return enterAlbum(s, cat, Math.round(s.nav));
     s.scale = "album";
     s.zoomT = 1;
     return [];
   }
   if (s.playAlb >= 0) {
     s.alb = s.playAlb;
-    s.scale = "faixa";
+    s.scale = "track";
     s.zoomT = 1;
     return [];
   }
@@ -128,34 +128,34 @@ export function goScale(s: FieldState, cat: Catalog, level: Scale): AudioEffect[
 }
 
 export function primary(s: FieldState, cat: Catalog): AudioEffect[] {
-  if (s.scale === "campo") return enterAlbum(s, cat, Math.round(s.nav));
+  if (s.scale === "collection") return enterAlbum(s, cat, Math.round(s.nav));
   if (s.scale === "album") return playTrack(s, cat, s.alb, s.sel);
   return transport(s, cat);
 }
 
 export function stepSel(s: FieldState, cat: Catalog, dir: number): AudioEffect[] {
-  if (s.scale === "campo") return [];
+  if (s.scale === "collection") return [];
   const n = cat.trackCount(s.alb);
   s.sel = (s.sel + dir + n) % n;
-  if (s.scale === "faixa" && isEngaged(s.mode)) return fuseTo(s, s.alb, s.sel);
+  if (s.scale === "track" && isEngaged(s.mode)) return fuseTo(s, s.alb, s.sel);
   return [];
 }
 
 export function skip(s: FieldState, cat: Catalog, dir: number): AudioEffect[] {
-  if (s.scale === "campo" && s.playAlb < 0) {
+  if (s.scale === "collection" && s.playAlb < 0) {
     s.navT = clamp(Math.round(s.nav) + dir, 0, cat.size - 1);
     return [];
   }
   const alb = s.playAlb >= 0 && s.scale !== "album" ? s.playAlb : s.alb;
   const n = cat.trackCount(alb);
-  const from = s.playAlb === alb && s.scale === "faixa" ? s.trk : s.sel;
+  const from = s.playAlb === alb && s.scale === "track" ? s.trk : s.sel;
   const next = (from + dir + n) % n;
 
-  if (s.playAlb === alb && (isEngaged(s.mode) || s.mode === "colapso")) {
+  if (s.playAlb === alb && (isEngaged(s.mode) || s.mode === "collapse")) {
     return fuseTo(s, alb, next);
   }
   s.sel = next;
-  if (s.scale === "faixa") return playTrack(s, cat, alb, next);
+  if (s.scale === "track") return playTrack(s, cat, alb, next);
   return [];
 }
 

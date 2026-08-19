@@ -23,7 +23,7 @@ export const rgba = (v: Rgb, a: number) =>
 export const GEO = {
   marginText: 0.028,
   marginTitle: 0.032,
-  anchorCampo: { x: 0.615, y: 0.425 },
+  anchorCollection: { x: 0.615, y: 0.425 },
   anchorAlbum: { x: 0.6, y: 0.44 },
   flatten: 0.62,
   spreadX: 0.285,
@@ -48,17 +48,17 @@ export const RING = {
 export const RING_UNIT = RING.Rout / RING.buffer;
 
 export const SEQ = {
-  colapso: { total: 2.25, rampa: 1.1, valeFim: 1.3 },
-  vale: { fade: 0.03 },
-  fusao: { total: 1.6, onda: 0.9 },
-  reduzido: 0.3,
+  collapse: { total: 2.25, ramp: 1.1, valleyEnd: 1.3 },
+  valley: { fade: 0.03 },
+  fusion: { total: 1.6, wave: 0.9 },
+  reduced: 0.3,
 } as const;
 
 export const LERP = {
   nav: 5.5,
   zoom: 4.2,
   play: 3.4,
-  campo: 9,
+  field: 9,
   fade: 14,
   mouse: 5.2,
   energy: 4,

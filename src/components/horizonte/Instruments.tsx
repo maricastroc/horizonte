@@ -8,8 +8,8 @@ import type { Scale, Snapshot } from "./types";
 import type { FieldEngine } from "./engine/FieldEngine";
 
 const DEFAULT_SNAPSHOT: Snapshot = {
-  scale: "campo",
-  mode: "parado",
+  scale: "collection",
+  mode: "stopped",
   alb: 0,
   navAlb: 0,
   sel: 0,
@@ -26,9 +26,9 @@ const noop = () => () => {};
 const getDefault = () => DEFAULT_SNAPSHOT;
 
 const LEVELS: { key: Scale; label: string }[] = [
-  { key: "campo", label: "Coleção" },
+  { key: "collection", label: "Coleção" },
   { key: "album", label: "Álbum" },
-  { key: "faixa", label: "Faixa" },
+  { key: "track", label: "Faixa" },
 ];
 
 const ROW = "h-[26px] max-md:min-h-[48px] items-center gap-[10px] cursor-pointer " +
@@ -40,8 +40,8 @@ const MARK_ON = "block justify-self-end w-[7px] h-[7px]";
 const ARIA_MS = 1000;
 
 export const isInstrumentsTarget = (e: Event) => {
-  const alvo = e.target as HTMLElement | null;
-  return !!alvo?.closest?.("[data-instruments]");
+  const target = e.target as HTMLElement | null;
+  return !!target?.closest?.("[data-instruments]");
 };
 
 export default function Instruments({ engine }: { engine: FieldEngine | null }) {
@@ -58,7 +58,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   const album = ALBUMS[snap.alb];
   const ink = rgba(album.inkA, 1);
   const barInk = rgba(ALBUMS[snap.playAlb >= 0 ? snap.playAlb : snap.alb].inkA, 0.95);
-  const focoAlb = snap.scale === "campo" ? snap.navAlb : snap.alb;
+  const focusAlb = snap.scale === "collection" ? snap.navAlb : snap.alb;
 
   useEffect(() => {
     if (!engine) return;
@@ -90,7 +90,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     [engine],
   );
 
-  const trackRailOn = snap.scale !== "campo";
+  const trackRailOn = snap.scale !== "collection";
   const railTop = Math.max(238, 56 + ALBUMS.length * 26 + 52);
   const focusStyle = useMemo(
     () =>
@@ -152,7 +152,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       >
         <ul>
           {ALBUMS.map((a, i) => {
-            const isCur = i === focoAlb;
+            const isCur = i === focusAlb;
             const isHov = i === snap.hoverAlb;
             return (
               <li key={a.cat}>
@@ -269,13 +269,13 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           </button>
           <button
             type="button"
-            aria-pressed={snap.mode === "toca"}
+            aria-pressed={snap.mode === "playing"}
             onClick={() => engine?.transport()}
             className="flex-none cursor-pointer whitespace-nowrap tracking-[.22em] text-ink-text hover:text-white max-md:py-3.25"
           >
-            {snap.mode === "toca"
+            {snap.mode === "playing"
               ? "❙❙ Pausar"
-              : snap.playAlb >= 0 && snap.scale === "faixa"
+              : snap.playAlb >= 0 && snap.scale === "track"
                 ? "▸ Retomar"
                 : "▸ Tocar"}
           </button>
@@ -296,18 +296,18 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         <button
           type="button"
           onClick={() => engine?.back()}
-          tabIndex={snap.scale === "campo" ? -1 : 0}
-          aria-hidden={snap.scale === "campo"}
+          tabIndex={snap.scale === "collection" ? -1 : 0}
+          aria-hidden={snap.scale === "collection"}
           className={[
             "cursor-pointer whitespace-nowrap transition-opacity duration-250 hover:text-ink-text",
             "max-md:py-3.25",
-            snap.scale === "campo" ? "pointer-events-none opacity-0" : "opacity-100",
+            snap.scale === "collection" ? "pointer-events-none opacity-0" : "opacity-100",
           ].join(" ")}
         >
           ◂ Voltar
         </button>
         <span className="whitespace-nowrap text-ink-faint max-md:hidden">
-          {snap.scale === "campo"
+          {snap.scale === "collection"
             ? `Coleção · ${snap.navAlb + 1}/${ALBUMS.length}`
             : `${album.cat} · ${album.tracks.length} faixas`}
         </span>
