@@ -61,7 +61,7 @@ MIN_DB, MAX_DB = -100.0, -30.0
 # ------------------------------------------------------- âncoras de normalização
 # Absolutas e fixas: definem o que conta como "silencioso/alto", "comprimido/
 # dinâmico", "escuro/brilhante" e "curto/longo" para *qualquer* disco, não só
-# para os sete atuais. Calibradas com folga em volta do acervo medido para que
+# para os dez atuais. Calibradas com folga em volta do acervo medido para que
 # um álbum novo caia dentro sem reescalar os existentes.
 ANCHOR = {
     "loudness": (-32.0, -12.0),      # dB RMS médio

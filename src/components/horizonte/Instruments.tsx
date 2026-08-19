@@ -35,6 +35,14 @@ const ROW = "h-[26px] max-md:min-h-[48px] items-center gap-[10px] cursor-pointer
   "border-b border-rule-2 w-full text-left transition-colors duration-150";
 
 const MARK = "block justify-self-end w-[5px] h-[5px]";
+const MARK_ON = "block justify-self-end w-[7px] h-[7px]";
+
+const ARIA_MS = 1000;
+
+export const isInstrumentsTarget = (e: Event) => {
+  const alvo = e.target as HTMLElement | null;
+  return !!alvo?.closest?.("[data-instruments]");
+};
 
 export default function Instruments({ engine }: { engine: FieldEngine | null }) {
   const snap = useSyncExternalStore(
@@ -43,27 +51,34 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     getDefault,
   );
 
-  const layerRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const seekRef = useRef<HTMLDivElement>(null);
   const tcRef = useRef<HTMLSpanElement>(null);
-  const albMarks = useRef<(HTMLElement | null)[]>([]);
-  const trkMarks = useRef<(HTMLElement | null)[]>([]);
 
   const album = ALBUMS[snap.alb];
   const ink = rgba(album.inkA, 1);
+  const barInk = rgba(ALBUMS[snap.playAlb >= 0 ? snap.playAlb : snap.alb].inkA, 0.95);
+  const focoAlb = snap.scale === "campo" ? snap.navAlb : snap.alb;
 
-  const trackCount = album.tracks.length;
   useEffect(() => {
-    engine?.registerNodes({
-      layer: layerRef.current,
-      bar: barRef.current,
-      seek: seekRef.current,
-      tc: tcRef.current,
-      albMarks: albMarks.current.slice(0, ALBUMS.length),
-      trkMarks: trkMarks.current.slice(0, trackCount),
+    if (!engine) return;
+    const bar = barRef.current;
+    const tc = tcRef.current;
+    const seek = seekRef.current;
+    let ariaAt = 0;
+
+    return engine.onFrame(({ progress, position, duration }) => {
+      if (bar) bar.style.width = `${progress * 100}%`;
+      if (tc) tc.textContent = `${timecode(position)} / ${timecode(duration)}`;
+
+      const agora = performance.now();
+      if (seek && agora - ariaAt > ARIA_MS) {
+        ariaAt = agora;
+        seek.setAttribute("aria-valuenow", String(Math.round(progress * 100)));
+        seek.setAttribute("aria-valuetext", `${timecode(position)} de ${timecode(duration)}`);
+      }
     });
-  }, [engine, trackCount, snap.alb]);
+  }, [engine]);
 
   const intent = useCallback(() => engine?.markIntent(), [engine]);
 
@@ -88,7 +103,6 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
 
   return (
     <div
-      ref={layerRef}
       data-instruments=""
       style={focusStyle}
       onPointerMove={intent}
@@ -138,7 +152,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       >
         <ul>
           {ALBUMS.map((a, i) => {
-            const isCur = i === (snap.scale === "campo" ? snap.navAlb : snap.alb);
+            const isCur = i === focoAlb;
             const isHov = i === snap.hoverAlb;
             return (
               <li key={a.cat}>
@@ -156,12 +170,15 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
                   <span className="truncate">{a.artist}</span>
                   <span className="text-right text-ink-faint">{a.cat}</span>
                   <span
-                    ref={(el) => {
-                      albMarks.current[i] = el;
-                    }}
                     aria-hidden
                     className={MARK}
-                    style={{ background: COLOR.inkGhost }}
+                    style={{
+                      background: isCur
+                        ? rgba(a.inkA, 1)
+                        : i === snap.playAlb
+                          ? rgba(a.inkA, 0.5)
+                          : COLOR.inkGhost,
+                    }}
                   />
                 </button>
               </li>
@@ -208,12 +225,11 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
                   <span className="truncate">{t.title}</span>
                   <span className="text-right text-ink-faint">{timecode(t.dur)}</span>
                   <span
-                    ref={(el) => {
-                      trkMarks.current[i] = el;
-                    }}
                     aria-hidden
-                    className={MARK}
-                    style={{ background: COLOR.inkGhost }}
+                    className={isPlay || isSel ? MARK_ON : MARK}
+                    style={{
+                      background: isPlay ? ink : isSel ? COLOR.inkText : COLOR.inkGhost,
+                    }}
                   />
                 </button>
               </li>
@@ -239,7 +255,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           className="flex h-2.25 cursor-pointer items-center max-md:h-5"
         >
           <div className="h-px w-full bg-[rgba(232,228,220,.16)]">
-            <div ref={barRef} className="h-px w-0" style={{ background: ink }} />
+            <div ref={barRef} className="h-px w-0" style={{ background: barInk }} />
           </div>
         </div>
 

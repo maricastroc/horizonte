@@ -28,6 +28,16 @@ const CONTRATO = {
     envelope: 0.144, achatamento: 0.642, rim: 4.34, nav: 5.44,
     setores: [7, 37.6, 77.1],
   },
+  "mark-wilson-x-dark-thoughts": {
+    peso: 679, lente: 1.02, horizonte: 1.03, teto: 0.123,
+    envelope: 0.207, achatamento: 0.623, rim: 3.88, nav: 5.82,
+    setores: [10, 22.6, 49.9],
+  },
+  "darin-wilson-impromptu": {
+    peso: 678, lente: 1.01, horizonte: 1.03, teto: 0.11,
+    envelope: 0.188, achatamento: 0.636, rim: 4.19, nav: 5.89,
+    setores: [5, 61.6, 81.9],
+  },
   "zero-project-e-world": {
     peso: 704, lente: 1.09, horizonte: 1.04, teto: 0.109,
     envelope: 0.187, achatamento: 0.654, rim: 4.62, nav: 4.68,
@@ -37,6 +47,11 @@ const CONTRATO = {
     peso: 712, lente: 1.04, horizonte: 1.04, teto: 0.066,
     envelope: 0.124, achatamento: 0.653, rim: 4.59, nav: 5.79,
     setores: [8, 30.0, 63.4],
+  },
+  "madison-kenny-all-systems-go": {
+    peso: 748, lente: 1.05, horizonte: 1.06, teto: 0.053,
+    envelope: 0.104, achatamento: 0.67, rim: 5.0, nav: 6.17,
+    setores: [4, 78.9, 98.4],
   },
   "meho-mkultra": {
     peso: 678, lente: 1.06, horizonte: 1.03, teto: 0.096,
@@ -53,11 +68,12 @@ const CONTRATO = {
 const round = (v: number, casas: number) => Number(v.toFixed(casas));
 
 describe("assinatura → constantes do álbum", () => {
-  it("a coleção curada é exatamente a documentada", () => {
-    expect(CURATION.map((a) => a.id)).toEqual(Object.keys(CONTRATO));
+  it("todo álbum do acervo tem contrato publicado no mapa sensorial", () => {
+    const semContrato = CURATION.filter((a) => !(a.id in CONTRATO)).map((a) => a.id);
+    expect(semContrato).toEqual([]);
   });
 
-  for (const album of CURATION) {
+  for (const album of CURATION.filter((a) => a.id in CONTRATO)) {
     const esperado = CONTRATO[album.id as keyof typeof CONTRATO];
 
     it(`${album.title} deriva as constantes publicadas`, () => {
@@ -114,6 +130,16 @@ describe("guardrails do mapa sensorial", () => {
     (Object.keys(RANGE) as (keyof typeof RANGE)[]).forEach(dentroDoRange);
   });
 
+  it("só All Systems Go satura contra uma âncora, e por 0,2 Hz", () => {
+    const saturados = CURATION.flatMap((album) => {
+      const sig = SIGNATURES[album.id];
+      return (["loudness", "dynamics", "brightness", "duration"] as const)
+        .filter((k) => sig[k] === 0 || sig[k] === 1)
+        .map((k) => `${album.id}.${k}`);
+    });
+    expect(saturados).toEqual(["madison-kenny-all-systems-go.brightness"]);
+  });
+
   it("prefers-reduced-motion zera a perturbação ao vivo (P4)", () => {
     for (const c of derivadas) {
       const r = reduceMotion(c);
@@ -152,7 +178,6 @@ describe("fieldConstantsOf", () => {
     expect(max.reactionCap).toBeCloseTo(RANGE.reactionCap[1], 10);
     expect(min.flatten).toBeCloseTo(RANGE.flatten[0], 10);
     expect(max.flatten).toBeCloseTo(RANGE.flatten[1], 10);
-    // navLerp é o único range invertido: disco longo navega mais devagar (P8).
     expect(min.navLerp).toBeCloseTo(RANGE.navLerp[0], 10);
     expect(max.navLerp).toBeCloseTo(RANGE.navLerp[1], 10);
     expect(max.navLerp).toBeLessThan(min.navLerp);

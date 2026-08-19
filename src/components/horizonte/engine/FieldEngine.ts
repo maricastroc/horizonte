@@ -20,22 +20,26 @@ import {
   type FieldConstants,
 } from "../field";
 import { createFieldGL, type FieldGL } from "../fieldMaterial";
-import { timecode } from "../format";
 import { clamp } from "../math";
 import { initialState, isEngaged, progressOf } from "../state";
+import type { FrameOut, FrameSink } from "./frame";
 import {
-  COLOR,
+  bindInput,
+  hasCoarsePointer,
+  prefersReducedMotion,
+  type InputActions,
+  type InputOptions,
+} from "./input";
+import {
   COMPOSITION_FALLBACK_W,
   COMPOSITION_MAX_W,
   IDLE_MS,
   LERP,
   SEQ,
-  rgba,
 } from "../tokens";
 import type {
   FieldState,
   FontFamilies,
-  LiveNodes,
   Particle,
   Scale,
   Snapshot,
@@ -45,17 +49,20 @@ const FIELD: FieldConstants[] = ALBUMS.map((a) => fieldConstantsOf(a.signature))
 
 const WEIGHTS: number[] = FIELD.map((c) => Math.round(c.artistWeight));
 
-export class FieldEngine {
+const PAN = {
+  larguraMobile: 0.72,
+  larguraDesktop: 0.46,
+  limiarPagina: 0.25,
+  roda: 0.0016,
+} as const;
+
+const CURSOR_GAIN = 9;
+
+export class FieldEngine implements InputActions {
   readonly st: FieldState = initialState();
   readonly bus = new AudioBus();
-  private liveNodes: LiveNodes = {
-    layer: null,
-    bar: null,
-    seek: null,
-    tc: null,
-    albMarks: [],
-    trkMarks: [],
-  };
+  private readonly frame: FrameOut = { progress: 0, position: 0, duration: 0 };
+  private frameSink: FrameSink | null = null;
 
   private gl: FieldGL;
   private cvB: HTMLCanvasElement;
@@ -77,7 +84,6 @@ export class FieldEngine {
   private slowWindows = 0;
 
   private mouse = { x: 0.55, y: 0.45, tx: 0.55, ty: 0.45, v: 0, down: false, moved: 0, lx: 0 };
-  private pointer = { x: 0.55, y: 0.45 };
   private C: FieldConstants = FIELD[0];
   private railAlb = -1;
   private railTrk = -1;
@@ -88,15 +94,17 @@ export class FieldEngine {
   private coarse = false;
   private dragNav = 0;
   private fuseSwitched = false;
-  private ariaTick = 0;
   private audioState: VisualAudioState;
 
   private snap: Snapshot;
   private listeners = new Set<() => void>();
 
+  private unbind: (() => void) | null = null;
+
   constructor(
     canvas: HTMLCanvasElement,
     private fonts: FontFamilies,
+    private input: InputOptions,
   ) {
     this.cvB = document.createElement("canvas");
     this.ctxB = this.cvB.getContext("2d", { alpha: false })!;
@@ -107,8 +115,8 @@ export class FieldEngine {
     this.gl = createFieldGL(canvas, this.cvB, this.cvF);
 
     this.audioState = this.bus.update(0);
-    this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    this.coarse = window.matchMedia("(pointer: coarse)").matches;
+    this.reduced = prefersReducedMotion();
+    this.coarse = hasCoarsePointer();
     this.snap = this.buildSnapshot(true);
 
     this.bus.onEnded = () => {
@@ -124,13 +132,14 @@ export class FieldEngine {
   start() {
     this.last = performance.now();
     this.intent = performance.now();
-    this.bind();
+    this.unbind = bindInput(this, this.input);
     this.raf = requestAnimationFrame(this.loop);
   }
 
   stop() {
     cancelAnimationFrame(this.raf);
-    this.unbind();
+    this.unbind?.();
+    this.unbind = null;
     this.bus.dispose();
     this.gl.dispose();
   }
@@ -144,154 +153,76 @@ export class FieldEngine {
 
   getSnapshot = () => this.snap;
 
-  private onResize = () => this.resize();
-
-  private onMotionPref = (e: MediaQueryListEvent) => {
-    this.reduced = e.matches;
+  onFrame = (sink: FrameSink) => {
+    this.frameSink = sink;
+    return () => {
+      if (this.frameSink === sink) this.frameSink = null;
+    };
   };
 
-  private onMove = (e: PointerEvent) => {
-    this.markIntent();
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const nx = e.clientX / w;
-    const ny = e.clientY / h;
-    this.pointer.x = nx;
-    this.pointer.y = ny;
-    this.mouse.v = Math.min(
-      1,
-      this.mouse.v + Math.hypot(nx - this.mouse.tx, ny - this.mouse.ty) * 9,
-    );
-    if (this.mouse.down) {
-      const dx = e.clientX - this.mouse.lx;
-      this.mouse.moved += Math.abs(dx);
-      if (this.st.scale === "campo") {
-        if (this.L.variant === "mobile") {
-          const total = (e.clientX - this.dragStartX) / (w * 0.72);
-          this.st.navT = clamp(this.dragNav - total, this.dragNav - 1, this.dragNav + 1);
-        } else {
-          this.st.navT -= dx / (w * 0.46);
-        }
-      }
-    }
-    this.mouse.lx = e.clientX;
-    this.mouse.tx = nx;
-    this.mouse.ty = ny;
-  };
-
-  private dragStartX = 0;
-
-  private inInstruments(e: Event) {
-    const t = e.target as HTMLElement | null;
-    return !!t?.closest?.("[data-instruments]");
+  setReducedMotion(reduced: boolean) {
+    this.reduced = reduced;
   }
 
-  private onDown = (e: PointerEvent) => {
-    this.markIntent();
-    if (this.inInstruments(e)) return;
-    this.mouse.down = true;
-    this.mouse.moved = 0;
-    this.mouse.lx = e.clientX;
-    this.dragStartX = e.clientX;
+  pointTo(nx: number, ny: number) {
+    const m = this.mouse;
+    m.v = Math.min(1, m.v + Math.hypot(nx - m.tx, ny - m.ty) * CURSOR_GAIN);
+    m.tx = nx;
+    m.ty = ny;
+  }
+
+  teleportTo(nx: number, ny: number) {
+    const m = this.mouse;
+    m.tx = m.x = nx;
+    m.ty = m.y = ny;
+  }
+
+  beginPan() {
     this.dragNav = this.st.navT;
-    if (e.pointerType !== "mouse") {
-      this.mouse.tx = e.clientX / window.innerWidth;
-      this.mouse.ty = e.clientY / window.innerHeight;
-      this.mouse.x = this.mouse.tx;
-      this.mouse.y = this.mouse.ty;
-      this.pointer.x = this.mouse.tx;
-      this.pointer.y = this.mouse.ty;
-    }
-  };
-
-  private onUp = (e: PointerEvent) => {
-    const wasDown = this.mouse.down;
-    this.mouse.down = false;
-    if (!wasDown || this.inInstruments(e)) return;
-    if (this.mouse.moved < 7) this.click();
-    else if (this.st.scale === "campo") {
-      const d = this.st.navT - this.dragNav;
-      this.st.navT =
-        this.L.variant === "mobile"
-          ? this.dragNav + (Math.abs(d) > 0.25 ? Math.sign(d) : 0)
-          : Math.round(this.st.navT);
-    }
-  };
-
-  private onWheel = (e: WheelEvent) => {
-    if (this.inInstruments(e)) return;
-    e.preventDefault();
-    this.markIntent();
-    const s = this.st;
-    if (s.scale === "campo") s.navT += e.deltaY * 0.0016 + e.deltaX * 0.0016;
-    else this.stepSel(e.deltaY > 0 ? 1 : -1);
-  };
-
-  private onKey = (e: KeyboardEvent) => {
-    this.markIntent();
-    const el = e.target as HTMLElement | null;
-    const onControl = !!el?.closest?.("[data-instruments]");
-    const s = this.st;
-
-    if (e.code === "Space" || e.key === "Enter") {
-      if (onControl) return;
-      e.preventDefault();
-      this.primary();
-      return;
-    }
-    if (e.key === "Escape") {
-      e.preventDefault();
-      this.back();
-      return;
-    }
-    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-      if (onControl) return;
-      e.preventDefault();
-      if (s.scale === "campo") s.navT += 1;
-      else this.stepSel(1);
-    }
-    if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-      if (onControl) return;
-      e.preventDefault();
-      if (s.scale === "campo") s.navT -= 1;
-      else this.stepSel(-1);
-    }
-  };
-
-  private motionQuery: MediaQueryList | null = null;
-
-  private bind() {
-    window.addEventListener("resize", this.onResize);
-    window.addEventListener("pointermove", this.onMove, { passive: true });
-    window.addEventListener("pointerdown", this.onDown);
-    window.addEventListener("pointerup", this.onUp);
-    window.addEventListener("pointercancel", this.onUp);
-    window.addEventListener("wheel", this.onWheel, { passive: false });
-    window.addEventListener("keydown", this.onKey);
-    this.motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    this.motionQuery.addEventListener("change", this.onMotionPref);
   }
 
-  private unbind() {
-    window.removeEventListener("resize", this.onResize);
-    window.removeEventListener("pointermove", this.onMove);
-    window.removeEventListener("pointerdown", this.onDown);
-    window.removeEventListener("pointerup", this.onUp);
-    window.removeEventListener("pointercancel", this.onUp);
-    window.removeEventListener("wheel", this.onWheel);
-    window.removeEventListener("keydown", this.onKey);
-    this.motionQuery?.removeEventListener("change", this.onMotionPref);
+  panBy(stepPx: number, totalPx: number, viewportW: number) {
+    const s = this.st;
+    if (s.scale !== "campo") return;
+    if (this.L.variant === "mobile") {
+      const total = totalPx / (viewportW * PAN.larguraMobile);
+      s.navT = clamp(this.dragNav - total, this.dragNav - 1, this.dragNav + 1);
+    } else {
+      s.navT -= stepPx / (viewportW * PAN.larguraDesktop);
+    }
+  }
+
+  endPan(tap: boolean) {
+    const s = this.st;
+    if (tap) {
+      this.click();
+      return;
+    }
+    if (s.scale !== "campo") return;
+    const d = s.navT - this.dragNav;
+    s.navT =
+      this.L.variant === "mobile"
+        ? this.dragNav + (Math.abs(d) > PAN.limiarPagina ? Math.sign(d) : 0)
+        : Math.round(s.navT);
+  }
+
+  wheelBy(deltaY: number, deltaX: number) {
+    const s = this.st;
+    if (s.scale === "campo") s.navT += deltaY * PAN.roda + deltaX * PAN.roda;
+    else this.stepSel(deltaY > 0 ? 1 : -1);
+  }
+
+  stepFocus(dir: number) {
+    const s = this.st;
+    if (s.scale === "campo") s.navT += dir;
+    else this.stepSel(dir);
   }
 
   markIntent() {
     this.intent = performance.now();
   }
 
-  registerNodes(nodes: Partial<LiveNodes>) {
-    this.liveNodes = { ...this.liveNodes, ...nodes };
-  }
-
-  private resize() {
+  resize() {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const { dw, dh } = this.gl.resize(w, h);
@@ -318,8 +249,8 @@ export class FieldEngine {
 
   private hit() {
     return hitTest(
-      this.pointer.x,
-      this.pointer.y,
+      this.mouse.tx,
+      this.mouse.ty,
       this.W,
       this.H,
       this.st,
@@ -542,7 +473,7 @@ export class FieldEngine {
     drawBack(this.ctxB, this.W, this.H, this.st, this.L, this.backDeps());
     drawFront(this.ctxF, this.W, this.H, this.st, this.L, this.frontDeps());
     this.render();
-    this.updateInstruments(now);
+    this.publish();
 
     this.frameCost += (performance.now() - t0 - this.frameCost) * 0.05;
     this.fpsFrames++;
@@ -866,43 +797,13 @@ export class FieldEngine {
     return same ? prev : next;
   }
 
-  private updateInstruments(now: number) {
+  private publish() {
     const s = this.st;
-    const L = this.liveNodes;
-    const A = ALBUMS[s.playAlb >= 0 ? s.playAlb : s.alb];
-    const prog = progressOf(s);
-
-    if (L.layer) L.layer.style.setProperty("--focus-ink", rgba(ALBUMS[s.alb].inkA, 1));
-    if (L.bar) {
-      L.bar.style.width = `${prog * 100}%`;
-      L.bar.style.background = rgba(A.inkA, 0.95);
-    }
-    if (L.tc) L.tc.textContent = `${timecode(s.pos)} / ${timecode(s.dur || 0)}`;
-    L.albMarks.forEach((mk, i) => {
-      if (!mk) return;
-      const cur = i === (s.scale === "campo" ? Math.round(s.nav) : s.alb);
-      mk.style.background = cur
-        ? rgba(ALBUMS[i].inkA, 1)
-        : i === s.playAlb
-          ? rgba(ALBUMS[i].inkA, 0.5)
-          : COLOR.inkGhost;
-    });
-    const cur = ALBUMS[s.alb];
-    L.trkMarks.forEach((mk, i) => {
-      if (!mk) return;
-      const isPlay = s.playAlb === s.alb && i === s.trk;
-      const isSel = i === s.sel;
-      mk.style.background = isPlay ? rgba(cur.inkA, 1) : isSel ? COLOR.inkText : COLOR.inkGhost;
-      const size = isSel || isPlay ? "7px" : "5px";
-      mk.style.width = size;
-      mk.style.height = size;
-    });
-
-    if (L.seek && now - this.ariaTick > 1000) {
-      this.ariaTick = now;
-      L.seek.setAttribute("aria-valuenow", String(Math.round(prog * 100)));
-      L.seek.setAttribute("aria-valuetext", `${timecode(s.pos)} de ${timecode(s.dur || 0)}`);
-    }
+    const f = this.frame;
+    f.progress = progressOf(s);
+    f.position = s.pos;
+    f.duration = s.dur || 0;
+    this.frameSink?.(f);
 
     const next = this.buildSnapshot();
     if (next !== this.snap) {

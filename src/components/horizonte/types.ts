@@ -71,15 +71,6 @@ export interface Snapshot {
   announce: string;
 }
 
-export interface LiveNodes {
-  layer: HTMLElement | null;
-  bar: HTMLElement | null;
-  seek: HTMLElement | null;
-  tc: HTMLElement | null;
-  albMarks: (HTMLElement | null)[];
-  trkMarks: (HTMLElement | null)[];
-}
-
 export interface FontFamilies {
   archivo: string;
   bodoni: string;
