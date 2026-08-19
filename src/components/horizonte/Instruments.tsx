@@ -31,7 +31,7 @@ const LEVELS: { key: Scale; label: string }[] = [
   { key: "track", label: "Faixa" },
 ];
 
-const ROW = "h-[26px] max-md:min-h-[48px] items-center gap-[10px] cursor-pointer " +
+const ROW = "h-[26px] compact:min-h-[48px] items-center gap-[10px] cursor-pointer " +
   "border-b border-rule-2 w-full text-left transition-colors duration-150";
 
 const MARK = "block justify-self-end w-[5px] h-[5px]";
@@ -101,13 +101,15 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     [ink, railTop],
   );
 
+  const albumRailOn = !(trackRailOn && snap.variant === "mobile");
+
   return (
     <div
       data-instruments=""
       style={focusStyle}
       onPointerMove={intent}
       className={[
-        "pointer-events-none absolute inset-0 cursor-default select-none",
+        "pointer-events-none absolute cursor-default select-none instruments-safe",
         "font-mono text-[10.5px] uppercase tracking-[.2em] text-ink-mute",
         "transition-opacity duration-350 ease-out",
       ].join(" ")}
@@ -115,7 +117,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     >
       <style>{`[data-instruments][data-idle]{opacity:${IDLE_OPACITY}}[data-instruments]{opacity:1}`}</style>
 
-      <div className="pointer-events-auto absolute left-8.5 top-7.5 flex flex-col gap-3 max-md:left-4 max-md:top-4.5">
+      <div className="pointer-events-auto absolute left-8.5 top-7.5 flex flex-col gap-3 compact:left-4 compact:top-4.5">
         <h1 className="text-ink-text">Horizonte</h1>
         <nav aria-label="Escala">
           <ol className="flex items-center gap-2.5">
@@ -130,7 +132,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
                     style={{ color }}
                     aria-current={i === cur ? "step" : undefined}
                     onClick={() => engine?.goScale(lvl.key)}
-                    className="cursor-pointer py-0.75 hover:text-ink-text max-md:py-2.5"
+                    className="cursor-pointer py-0.75 hover:text-ink-text compact:py-3.5"
                   >
                     {lvl.label}
                   </button>
@@ -143,11 +145,14 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
 
       <nav
         aria-label="Álbuns"
+        aria-hidden={!albumRailOn}
         className={[
-          "pointer-events-auto absolute right-8.5 top-14 w-53.5 border-t border-rule",
-          "md:max-[1199px]:w-47.5",
-          "max-md:left-4 max-md:right-4 max-md:top-24 max-md:w-auto",
+          "absolute right-8.5 top-14 w-53.5 border-t border-rule",
+          "transition-opacity duration-300 ease-out",
+          "tablet:w-47.5",
+          "compact:left-4 compact:right-4 compact:top-24 compact:w-auto",
           "backdrop-blur-sm bg-void/35 -mx-2 px-2",
+          albumRailOn ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         ].join(" ")}
       >
         <ul>
@@ -158,6 +163,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               <li key={a.cat}>
                 <button
                   type="button"
+                  tabIndex={albumRailOn ? 0 : -1}
                   aria-current={isCur ? "true" : undefined}
                   style={{ color: isCur ? COLOR.inkText : isHov ? COLOR.inkHover : undefined }}
                   onPointerEnter={() => engine?.setRailAlb(i)}
@@ -193,9 +199,10 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         className={[
           "absolute right-8.5 top-[var(--rail-top)] w-65.5 border-t border-rule",
           "transition-opacity duration-300 ease-out",
-          "rail-scroll max-h-[calc(100vh-var(--rail-top)-150px)] overflow-y-auto overscroll-contain",
-          "md:max-[1199px]:w-60",
-          "max-md:left-4 max-md:right-4 max-md:top-auto max-md:bottom-37.5 max-md:w-auto",
+          "rail-scroll overflow-y-auto overscroll-contain",
+          "max-h-[calc(100dvh-var(--rail-top)-150px)] compact:max-h-[min(calc(100dvh-260px),45dvh)]",
+          "tablet:w-60",
+          "compact:left-4 compact:right-4 compact:top-auto compact:bottom-37.5 compact:w-auto",
           "backdrop-blur-sm bg-void/35 -mx-2 px-2",
           trackRailOn ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         ].join(" ")}
@@ -240,7 +247,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       <div
         className={[
           "pointer-events-auto absolute bottom-6.5 left-8.5 flex w-150 flex-col gap-2.75",
-          "max-md:left-4 max-md:right-4 max-md:bottom-4 max-md:w-auto max-md:gap-3.5",
+          "compact:left-4 compact:right-4 compact:bottom-4 compact:w-auto compact:gap-3.5",
         ].join(" ")}
       >
         <div
@@ -252,18 +259,18 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           aria-valuenow={0}
           title="Buscar na faixa"
           onClick={onSeek}
-          className="flex h-2.25 cursor-pointer items-center max-md:h-5"
+          className="flex h-2.25 cursor-pointer items-center compact:h-11"
         >
           <div className="h-px w-full bg-[rgba(232,228,220,.16)]">
             <div ref={barRef} className="h-px w-0" style={{ background: barInk }} />
           </div>
         </div>
 
-        <div className="flex items-center gap-5 max-md:gap-4.5">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 compact:gap-x-4.5 compact:gap-y-2">
           <button
             type="button"
             onClick={() => engine?.skip(-1)}
-            className="flex-none cursor-pointer whitespace-nowrap hover:text-ink-text max-md:py-3.25"
+            className="flex-none cursor-pointer whitespace-nowrap hover:text-ink-text compact:py-3.5"
           >
             ◂◂ Anterior
           </button>
@@ -271,7 +278,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             type="button"
             aria-pressed={snap.mode === "playing"}
             onClick={() => engine?.transport()}
-            className="flex-none cursor-pointer whitespace-nowrap tracking-[.22em] text-ink-text hover:text-white max-md:py-3.25"
+            className="flex-none cursor-pointer whitespace-nowrap tracking-[.22em] text-ink-text hover:text-white compact:py-3.5"
           >
             {snap.mode === "playing"
               ? "❙❙ Pausar"
@@ -282,7 +289,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           <button
             type="button"
             onClick={() => engine?.skip(1)}
-            className="flex-none cursor-pointer whitespace-nowrap hover:text-ink-text max-md:py-3.25"
+            className="flex-none cursor-pointer whitespace-nowrap hover:text-ink-text compact:py-3.5"
           >
             Próxima ▸▸
           </button>
@@ -292,7 +299,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         </div>
       </div>
 
-      <div className="pointer-events-auto absolute bottom-6.5 right-8.5 flex items-center gap-3.5 max-md:bottom-auto max-md:right-4 max-md:top-4.5">
+      <div className="pointer-events-auto absolute bottom-6.5 right-8.5 flex items-center gap-3.5 compact:bottom-auto compact:right-4 compact:top-4.5">
         <button
           type="button"
           onClick={() => engine?.back()}
@@ -300,13 +307,13 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           aria-hidden={snap.scale === "collection"}
           className={[
             "cursor-pointer whitespace-nowrap transition-opacity duration-250 hover:text-ink-text",
-            "max-md:py-3.25",
+            "compact:py-3.5",
             snap.scale === "collection" ? "pointer-events-none opacity-0" : "opacity-100",
           ].join(" ")}
         >
           ◂ Voltar
         </button>
-        <span className="whitespace-nowrap text-ink-faint max-md:hidden">
+        <span className="whitespace-nowrap text-ink-faint compact:hidden">
           {snap.scale === "collection"
             ? `Coleção · ${snap.navAlb + 1}/${ALBUMS.length}`
             : `${album.cat} · ${album.tracks.length} faixas`}
@@ -316,7 +323,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           target="_blank"
           rel="noreferrer"
           title={album.license.attribution}
-          className="cursor-pointer whitespace-nowrap text-ink-faint hover:text-ink-text max-md:py-3.25"
+          className="cursor-pointer whitespace-nowrap text-ink-faint hover:text-ink-text compact:py-3.5"
         >
           {album.license.name}
         </a>

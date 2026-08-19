@@ -2,8 +2,12 @@ import { BREAKPOINT, GEO, RING, RING_UNIT } from "../tokens";
 import { albumProgressOf } from "../state";
 import type { FieldState, Variant } from "../types";
 
-export const variantFor = (w: number): Variant =>
-  w < BREAKPOINT.mobile ? "mobile" : w < BREAKPOINT.tablet ? "tablet" : "desktop";
+export const variantFor = (w: number, h = Number.POSITIVE_INFINITY): Variant =>
+  w < BREAKPOINT.mobile || h < BREAKPOINT.short
+    ? "mobile"
+    : w < BREAKPOINT.tablet
+      ? "tablet"
+      : "desktop";
 
 export interface WorldLayout {
   variant: Variant;

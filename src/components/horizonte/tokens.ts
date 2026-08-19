@@ -89,4 +89,4 @@ export const COMPOSITION_FALLBACK_W = 1440;
 
 export const PARTICLES = 240;
 
-export const BREAKPOINT = { mobile: 768, tablet: 1200 } as const;
+export const BREAKPOINT = { mobile: 768, tablet: 1200, short: 520 } as const;

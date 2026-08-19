@@ -36,6 +36,22 @@ describe("variantFor", () => {
     expect(layoutFor("mobile").spreadX).toBeGreaterThan(1);
     expect(layoutFor("mobile").ringLabels).toBe("selecionado");
   });
+
+  it("tela baixa usa a composição compacta, por mais larga que seja", () => {
+    expect(variantFor(844, 390)).toBe("mobile");
+    expect(variantFor(1400, 480)).toBe("mobile");
+  });
+
+  it("acima do piso de altura, a largura volta a decidir", () => {
+    expect(variantFor(844, 520)).toBe("tablet");
+    expect(variantFor(1400, 520)).toBe("desktop");
+    expect(variantFor(700, 900)).toBe("mobile");
+  });
+
+  it("sem altura informada, nada muda", () => {
+    expect(variantFor(768)).toBe("tablet");
+    expect(variantFor(1200)).toBe("desktop");
+  });
 });
 
 describe("albPos", () => {

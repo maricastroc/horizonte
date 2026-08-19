@@ -377,3 +377,58 @@ describe("fronteira com o world", () => {
     expect(isInstrumentsTarget({ target: outside } as unknown as Event)).toBe(false);
   });
 });
+
+describe("composição compacta — as duas réguas não disputam espaço", () => {
+  const regua = (label: string) =>
+    document.querySelector(`nav[aria-label^="${label}"]`) as HTMLElement;
+
+  it("no celular, abrir um álbum recolhe a régua de discos", () => {
+    mount({ variant: "mobile", scale: "album", alb: 0 });
+    const albuns = regua("Álbuns");
+    expect(albuns.getAttribute("aria-hidden")).toBe("true");
+    expect(albuns.className).toContain("pointer-events-none");
+    for (const b of within(albuns).getAllByRole("button", { hidden: true })) {
+      expect(b.tabIndex).toBe(-1);
+    }
+  });
+
+  it("no celular, na coleção a régua de discos continua ativa", () => {
+    mount({ variant: "mobile", scale: "collection" });
+    const albuns = regua("Álbuns");
+    expect(albuns.getAttribute("aria-hidden")).toBe("false");
+    expect(albuns.className).toContain("pointer-events-auto");
+    expect(within(albuns).getAllByRole("button")[0].tabIndex).toBe(0);
+  });
+
+  it("no desktop as duas convivem, como sempre", () => {
+    mount({ variant: "desktop", scale: "album", alb: 0 });
+    const albuns = regua("Álbuns");
+    expect(albuns.getAttribute("aria-hidden")).toBe("false");
+    expect(albuns.className).toContain("pointer-events-auto");
+    expect(regua("Faixas").className).toContain("pointer-events-auto");
+  });
+});
+
+describe("composição compacta — bordas do aparelho e alvos de toque", () => {
+  it("a camada de instrumentos respeita as safe areas do aparelho", () => {
+    mount();
+    const camada = document.querySelector("[data-instruments]") as HTMLElement;
+    expect(camada.className).toContain("instruments-safe");
+    expect(camada.className, "inset-0 sobrescreveria os recuos de safe-area").not.toContain(
+      "inset-0",
+    );
+  });
+
+  it("a régua de faixas mede altura pela viewport dinâmica, não por 100vh", () => {
+    mount({ scale: "album" });
+    const faixas = document.querySelector('nav[aria-label^="Faixas"]') as HTMLElement;
+    expect(faixas.className).toContain("100dvh");
+    expect(faixas.className).not.toContain("100vh-");
+  });
+
+  it("a linha de transporte quebra em vez de cortar o timecode", () => {
+    mount();
+    const tc = screen.getByText(/00:00 \/ 00:00/);
+    expect(tc.parentElement?.className).toContain("flex-wrap");
+  });
+});

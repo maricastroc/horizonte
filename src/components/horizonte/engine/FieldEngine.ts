@@ -257,7 +257,7 @@ export class FieldEngine implements InputActions {
     this.cvF.height = ch;
     this.W = cw;
     this.H = ch;
-    this.L = layoutFor(variantFor(w));
+    this.L = layoutFor(variantFor(w, h));
   }
 
   setRailAlb(i: number) {
