@@ -53,6 +53,8 @@ DUR_TOLERANCE = 5.0
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0 Safari/537.36"
 
 CC_BY = dict(name="CC BY 4.0", url=CC_BY_4_ALT)
+CC_BY_SA_4 = "https://creativecommons.org/licenses/by-sa/4.0/"
+CC_BY_SA = dict(name="CC BY-SA 4.0", url=CC_BY_SA_4)
 
 
 def tl(pairs):
@@ -146,6 +148,80 @@ CURATION = [
                    ("Part 4", 195), ("Part 5", 240), ("Part 6", 167)]),
     ),
     dict(
+        kind="manual", cat="H—011", slug="darin-wilson-impromptu",
+        artist="Darin Wilson", title="Impromptu", year="2012",
+        label="Darin Wilson (auto-publicado)",
+        verify_url="https://darinwilson.bandcamp.com/album/impromptu",
+        expect_license_url=CC_BY_SA_4, license=CC_BY_SA, verified="2026-08-18",
+        cover=dict(license="Não declarada", source="https://darinwilson.bandcamp.com/album/impromptu"),
+        note=("Não é o álbum originalmente aguardado (Meanderings, H—007, ainda pendente): os "
+              "arquivos fornecidos correspondem a Impromptu, cinco standards de jazz em piano solo. "
+              "Licença é CC BY-SA 4.0 (Attribution-ShareAlike), não CC BY 4.0 — a obrigação extra de "
+              "compartilhar a adaptação (o áudio recodificado) sob a mesma BY-SA se aplica a este "
+              "álbum e é diferente do resto da coleção."),
+        tracks=tl([("One For Bill", 282), ("Blue Monk", 364), ("Spring Is Here", 370),
+                   ("Solar", 278), ("Blue In Green", 331)]),
+    ),
+    dict(
+        kind="manual", cat="H—012", slug="dark-antey-deep-russian-depression",
+        artist="Dark Antey", title="Deep Russian Depression", year="2025",
+        label="Dark Antey (auto-publicado)",
+        verify_url="https://darkantey.bandcamp.com/album/deep-russian-depression",
+        expect_license_text="Creative Commons Attribution 4.0 International (CC BY 4.0)",
+        license=CC_BY, verified="2026-08-18",
+        cover=dict(license="Não declarada", source="https://darkantey.bandcamp.com/album/deep-russian-depression"),
+        note=("A licença está declarada apenas em texto livre na descrição do álbum — o campo "
+              "estruturado de licença do Bandcamp para este item mostra “all rights reserved”, sem "
+              "selo/link para creativecommons.org. A declaração do autor é inequívoca (nomeia CC BY "
+              "4.0 por extenso, permite uso comercial, dá a frase de crédito exata: “Music by Dark "
+              "Antey”), mas não há o selo estruturado que os demais álbuns têm — registrado aqui para "
+              "auditoria futura. Download gratuito sem preço mínimo, mas via fluxo humano do Bandcamp "
+              "(possível exigência de e-mail); arquivos precisam ser colocados manualmente."),
+        tracks=tl([("Deep Russian Depression", 178), ("Где я спешил, взбираясь к небесам", 197),
+                   ("Прогулка по ночному небу", 88), ("Один в пустой комнате", 147),
+                   ("Разбитые воспоминания", 198), ("Метафизический сон во тьме", 221),
+                   ("И гнев небесного творца", 110), ("Беспокойные сны (Instrumental)", 85),
+                   ("Звездный в небе невод", 138), ("Deep Russian Depression (Instrumental)", 178),
+                   ("Беспокойные сны", 85)]),
+    ),
+    dict(
+        kind="blocked", cat="H—014", slug="apophysia-from-the-universe-to-the-past",
+        artist="ApophysiA", title="From The Universe To The Past", year="2019",
+        verify_url="https://apophysia.bandcamp.com/album/from-the-universe-to-the-past",
+        reason=("Licença contraditória na própria página, mesmo padrão que já excluiu WIDDER: o selo "
+                "estruturado do Bandcamp aponta para creativecommons.org/licenses/by-nc-nd/4.0 "
+                "(NonCommercial-NoDerivatives) enquanto o texto do artista afirma “is licensed under a "
+                "Creative Commons Attribution 4.0 International License” (CC BY puro, sem NC nem ND). "
+                "Duas licenças incompatíveis declaradas no mesmo lançamento; escolher uma seria "
+                "presumir. Verificado a pedido do usuário como possível substituto; rejeitado antes de "
+                "qualquer download."),
+        verified="2026-08-18",
+    ),
+    dict(
+        kind="blocked", cat="H—015", slug="apophysia-compilations-and-other-stories",
+        artist="ApophysiA", title="Compilations and other Stories", year="2018",
+        verify_url="https://apophysia.bandcamp.com/album/compilations-and-other-stories",
+        reason=("CC BY-NC-ND 4.0 — selo estruturado do Bandcamp, sem nenhuma declaração textual do "
+                "artista que a contradiga ou abrande (ao contrário de From The Universe To The Past, "
+                "H—014, que ao menos tinha um texto conflitante). NoDerivatives proíbe a recodificação "
+                "que este projeto sempre faz; NonCommercial é uma segunda restrição incompatível. "
+                "Verificado a pedido do usuário como possível substituto; rejeitado antes de qualquer "
+                "download."),
+        verified="2026-08-18",
+    ),
+    dict(
+        kind="blocked", cat="H—013", slug="stellardrone-on-a-beam-of-light",
+        artist="Stellardrone", title="On A Beam Of Light", year="2009",
+        verify_url="https://archive.org/details/OnABeamOfLight",
+        reason=("Licença confirmada em archive.org (mirror com metadados estruturados do lançamento "
+                "original no Jamendo): CC BY-NC-ND 3.0. A cláusula NoDerivatives proíbe a adaptação "
+                "que este projeto sempre faz (recodificar para AAC) — mesmo motivo que já havia "
+                "excluído tranz023Holocaos. NonCommercial adiciona uma segunda restrição incompatível "
+                "com um projeto que pode vir a ser comercial. Verificado a pedido do usuário como "
+                "possível substituto; rejeitado pela mesma regra aplicada a todo o resto da curadoria."),
+        verified="2026-08-18",
+    ),
+    dict(
         kind="blocked", cat="H—008", slug="ivan-duch-sand",
         artist="Ivan Duch", title="Sand", year="2021",
         verify_url="https://ivanduch.com/albums/sand/",
@@ -200,6 +276,16 @@ CURATION = [
         license=CC_BY, verified="2026-08-18",
         cover=dict(license="CC BY 4.0 (mesma do item no Internet Archive)",
                    source="https://archive.org/details/tranz060TaleTwist-WryWay"),
+    ),
+    dict(
+        kind="archive", cat="H—016", slug="madison-kenny-all-systems-go",
+        identifier="MadKen001A",
+        verify_url="https://archive.org/details/MadKen001A", artist="Madison Kenny", title="All Systems Go",
+        year="2006", label="Madison Kenny (auto-publicado)", original_cat="MadKen001A",
+        cover_file="01 Front Cover color adjusted.jpg", strip=None,
+        license=CC_BY, verified="2026-08-18",
+        cover=dict(license="CC BY 4.0 (mesma do item no Internet Archive)",
+                   source="https://archive.org/details/MadKen001A"),
     ),
     dict(
         kind="archive", cat="H—R02", slug="meho-mkultra",

@@ -286,8 +286,8 @@ export const CURATION: CuratedAlbum[] = [
     year: "2022",
     cat: "H—003",
     cover: "/music/le-morte-dabby-0p/cover.webp",
-    inkA: [0.562, 0.337, 0.721],
-    inkB: [0.701, 0.474, 0.0],
+    inkA: [0.231, 0.443, 0.807],
+    inkB: [0.731, 0.296, 0.268],
     tracks: [
       {
         id: "le-morte-dabby-0p/01-0pvi",
@@ -377,6 +377,219 @@ export const CURATION: CuratedAlbum[] = [
       ]
     },
     label: "Le Morte d'Abby (auto-publicado)"
+  },
+  {
+    id: "mark-wilson-x-dark-thoughts",
+    provider: "curadoria",
+    artist: "Mark Wilson X",
+    title: "Dark Thoughts",
+    year: "2023",
+    cat: "H—004",
+    cover: "/music/mark-wilson-x-dark-thoughts/cover.webp",
+    inkA: [0.627, 0.252, 0.207],
+    inkB: [0.011, 0.465, 0.709],
+    tracks: [
+      {
+        id: "mark-wilson-x-dark-thoughts/01-ritual",
+        title: "Ritual",
+        dur: 216.96,
+        source: {
+          kind: "local",
+          src: "/music/mark-wilson-x-dark-thoughts/01-ritual.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "mark-wilson-x-dark-thoughts/02-the-stranger",
+        title: "The Stranger",
+        dur: 208.89,
+        source: {
+          kind: "local",
+          src: "/music/mark-wilson-x-dark-thoughts/02-the-stranger.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "mark-wilson-x-dark-thoughts/03-the-killer-awoke",
+        title: "The Killer Awoke",
+        dur: 183.96,
+        source: {
+          kind: "local",
+          src: "/music/mark-wilson-x-dark-thoughts/03-the-killer-awoke.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "mark-wilson-x-dark-thoughts/04-terror-drome",
+        title: "Terror Drome",
+        dur: 173.45,
+        source: {
+          kind: "local",
+          src: "/music/mark-wilson-x-dark-thoughts/04-terror-drome.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "mark-wilson-x-dark-thoughts/05-something-not-right-part-one",
+        title: "Something Not Right Part One",
+        dur: 131.96,
+        source: {
+          kind: "local",
+          src: "/music/mark-wilson-x-dark-thoughts/05-something-not-right-part-one.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "mark-wilson-x-dark-thoughts/06-something-not-right-part-two",
+        title: "Something Not Right Part Two",
+        dur: 127.0,
+        source: {
+          kind: "local",
+          src: "/music/mark-wilson-x-dark-thoughts/06-something-not-right-part-two.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "mark-wilson-x-dark-thoughts/07-a-killer-in-me",
+        title: "A Killer In Me",
+        dur: 249.6,
+        source: {
+          kind: "local",
+          src: "/music/mark-wilson-x-dark-thoughts/07-a-killer-in-me.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "mark-wilson-x-dark-thoughts/08-alienscape",
+        title: "Alienscape",
+        dur: 214.8,
+        source: {
+          kind: "local",
+          src: "/music/mark-wilson-x-dark-thoughts/08-alienscape.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "mark-wilson-x-dark-thoughts/09-doppler-piano",
+        title: "Doppler Piano",
+        dur: 113.14,
+        source: {
+          kind: "local",
+          src: "/music/mark-wilson-x-dark-thoughts/09-doppler-piano.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "mark-wilson-x-dark-thoughts/10-ruminations",
+        title: "Ruminations",
+        dur: 180.0,
+        source: {
+          kind: "local",
+          src: "/music/mark-wilson-x-dark-thoughts/10-ruminations.m4a",
+          mime: "audio/mp4"
+        }
+      }
+    ],
+    license: {
+      name: "CC BY 4.0",
+      url: "https://creativecommons.org/licenses/by/4.0/",
+      source: "https://freemusicarchive.org/music/mark-wilson-x/dark-thoughts/",
+      attribution: "Mark Wilson X — Dark Thoughts (Mark Wilson X (auto-publicado), 2023). Licenciado sob CC BY 4.0.",
+      redistributable: true,
+      cover: {
+        license: "Unsplash License",
+        credit: "Foto de Riccardo Pelati (Unsplash)",
+        source: "https://markwilsonx.bandcamp.com/album/dark-thoughts-cc-by"
+      },
+      verifiedAt: "2026-08-18",
+      changes: [
+        "Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
+        "Capa recortada em quadrado central e reamostrada para 1024 px WebP."
+      ]
+    },
+    label: "Mark Wilson X (auto-publicado)",
+    note: "Crédito exigido pelo autor: “[TÍTULO] © 2023 by Mark Wilson X is licensed under CC BY 4.0”."
+  },
+  {
+    id: "darin-wilson-impromptu",
+    provider: "curadoria",
+    artist: "Darin Wilson",
+    title: "Impromptu",
+    year: "2012",
+    cat: "H—011",
+    cover: "/music/darin-wilson-impromptu/cover.webp",
+    inkA: [0.667, 0.205, 0.156],
+    inkB: [0.098, 0.619, 0.43],
+    tracks: [
+      {
+        id: "darin-wilson-impromptu/01-one-for-bill",
+        title: "One For Bill",
+        dur: 282.65,
+        source: {
+          kind: "local",
+          src: "/music/darin-wilson-impromptu/01-one-for-bill.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "darin-wilson-impromptu/02-blue-monk",
+        title: "Blue Monk",
+        dur: 364.07,
+        source: {
+          kind: "local",
+          src: "/music/darin-wilson-impromptu/02-blue-monk.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "darin-wilson-impromptu/03-spring-is-here",
+        title: "Spring Is Here",
+        dur: 370.04,
+        source: {
+          kind: "local",
+          src: "/music/darin-wilson-impromptu/03-spring-is-here.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "darin-wilson-impromptu/04-solar",
+        title: "Solar",
+        dur: 278.51,
+        source: {
+          kind: "local",
+          src: "/music/darin-wilson-impromptu/04-solar.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "darin-wilson-impromptu/05-blue-in-green",
+        title: "Blue In Green",
+        dur: 331.27,
+        source: {
+          kind: "local",
+          src: "/music/darin-wilson-impromptu/05-blue-in-green.m4a",
+          mime: "audio/mp4"
+        }
+      }
+    ],
+    license: {
+      name: "CC BY-SA 4.0",
+      url: "https://creativecommons.org/licenses/by-sa/4.0/",
+      source: "https://darinwilson.bandcamp.com/album/impromptu",
+      attribution: "Darin Wilson — Impromptu (Darin Wilson (auto-publicado), 2012). Licenciado sob CC BY-SA 4.0.",
+      redistributable: true,
+      cover: {
+        license: "Não declarada",
+        source: "https://darinwilson.bandcamp.com/album/impromptu"
+      },
+      verifiedAt: "2026-08-18",
+      changes: [
+        "Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
+        "Capa recortada em quadrado central e reamostrada para 1024 px WebP."
+      ]
+    },
+    label: "Darin Wilson (auto-publicado)",
+    note: "Não é o álbum originalmente aguardado (Meanderings, H—007, ainda pendente): os arquivos fornecidos correspondem a Impromptu, cinco standards de jazz em piano solo. Licença é CC BY-SA 4.0 (Attribution-ShareAlike), não CC BY 4.0 — a obrigação extra de compartilhar a adaptação (o áudio recodificado) sob a mesma BY-SA se aplica a este álbum e é diferente do resto da coleção."
   },
   {
     id: "zero-project-e-world",
@@ -680,6 +893,77 @@ export const CURATION: CuratedAlbum[] = [
     label: "Tranzmitter Netlabel"
   },
   {
+    id: "madison-kenny-all-systems-go",
+    provider: "curadoria",
+    artist: "Madison Kenny",
+    title: "All Systems Go",
+    year: "2006",
+    cat: "H—016",
+    cover: "/music/madison-kenny-all-systems-go/cover.webp",
+    inkA: [0.745, 0.34, 0.733],
+    inkB: [0.529, 0.524, 0.0],
+    tracks: [
+      {
+        id: "madison-kenny-all-systems-go/01-nancy-holiday",
+        title: "Nancy Holiday",
+        dur: 248.05,
+        source: {
+          kind: "local",
+          src: "/music/madison-kenny-all-systems-go/01-nancy-holiday.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "madison-kenny-all-systems-go/02-the-let-out",
+        title: "The Let Out",
+        dur: 239.73,
+        source: {
+          kind: "local",
+          src: "/music/madison-kenny-all-systems-go/02-the-let-out.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "madison-kenny-all-systems-go/03-false-disguise-we-re-not-that-bad",
+        title: "False Disguise (We're not That Bad)",
+        dur: 262.52,
+        source: {
+          kind: "local",
+          src: "/music/madison-kenny-all-systems-go/03-false-disguise-we-re-not-that-bad.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "madison-kenny-all-systems-go/04-all-systems-go",
+        title: "All Systems Go",
+        dur: 210.59,
+        source: {
+          kind: "local",
+          src: "/music/madison-kenny-all-systems-go/04-all-systems-go.m4a",
+          mime: "audio/mp4"
+        }
+      }
+    ],
+    license: {
+      name: "CC BY 4.0",
+      url: "https://creativecommons.org/licenses/by/4.0/",
+      source: "https://archive.org/details/MadKen001A",
+      attribution: "Madison Kenny — All Systems Go (Madison Kenny (auto-publicado), 2006). Licenciado sob CC BY 4.0.",
+      redistributable: true,
+      cover: {
+        license: "CC BY 4.0 (mesma do item no Internet Archive)",
+        source: "https://archive.org/details/MadKen001A"
+      },
+      verifiedAt: "2026-08-18",
+      changes: [
+        "Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
+        "Capa recortada em quadrado central e reamostrada para 1024 px WebP."
+      ]
+    },
+    originalCat: "MadKen001A",
+    label: "Madison Kenny (auto-publicado)"
+  },
+  {
     id: "meho-mkultra",
     provider: "curadoria",
     artist: "Meho",
@@ -687,8 +971,8 @@ export const CURATION: CuratedAlbum[] = [
     year: "2015",
     cat: "H—R02",
     cover: "/music/meho-mkultra/cover.webp",
-    inkA: [0.552, 0.531, 0.0],
-    inkB: [0.0, 0.5, 0.736],
+    inkA: [0.0, 0.545, 0.316],
+    inkB: [0.411, 0.401, 0.777],
     tracks: [
       {
         id: "meho-mkultra/01-hypnosis",
@@ -778,8 +1062,8 @@ export const CURATION: CuratedAlbum[] = [
     year: "2014",
     cat: "H—R03",
     cover: "/music/mescaline-sessions-jajce/cover.webp",
-    inkA: [0.0, 0.48, 0.751],
-    inkB: [0.724, 0.287, 0.376],
+    inkA: [0.738, 0.302, 0.11],
+    inkB: [0.0, 0.569, 0.375],
     tracks: [
       {
         id: "mescaline-sessions-jajce/01-session-17",
@@ -858,6 +1142,30 @@ export const BLOCKED: BlockedAlbum[] = [
     title: "Background Music For Video Essays About Video Games",
     source: "https://noctiliagrah.bandcamp.com/",
     reason: "Sem licença Creative Commons verificável. O subdomínio noctiliagrah.bandcamp.com não existe (o Bandcamp o oferece para cadastro). A única declaração encontrada é um termo próprio, “free to use in noncommercial works, with credit”, que não é CC e é incompatível com hospedar o arquivo num projeto potencialmente comercial.",
+    verifiedAt: "2026-08-18"
+  },
+  {
+    cat: "H—014",
+    artist: "ApophysiA",
+    title: "From The Universe To The Past",
+    source: "https://apophysia.bandcamp.com/album/from-the-universe-to-the-past",
+    reason: "Licença contraditória na própria página, mesmo padrão que já excluiu WIDDER: o selo estruturado do Bandcamp aponta para creativecommons.org/licenses/by-nc-nd/4.0 (NonCommercial-NoDerivatives) enquanto o texto do artista afirma “is licensed under a Creative Commons Attribution 4.0 International License” (CC BY puro, sem NC nem ND). Duas licenças incompatíveis declaradas no mesmo lançamento; escolher uma seria presumir. Verificado a pedido do usuário como possível substituto; rejeitado antes de qualquer download.",
+    verifiedAt: "2026-08-18"
+  },
+  {
+    cat: "H—015",
+    artist: "ApophysiA",
+    title: "Compilations and other Stories",
+    source: "https://apophysia.bandcamp.com/album/compilations-and-other-stories",
+    reason: "CC BY-NC-ND 4.0 — selo estruturado do Bandcamp, sem nenhuma declaração textual do artista que a contradiga ou abrande (ao contrário de From The Universe To The Past, H—014, que ao menos tinha um texto conflitante). NoDerivatives proíbe a recodificação que este projeto sempre faz; NonCommercial é uma segunda restrição incompatível. Verificado a pedido do usuário como possível substituto; rejeitado antes de qualquer download.",
+    verifiedAt: "2026-08-18"
+  },
+  {
+    cat: "H—013",
+    artist: "Stellardrone",
+    title: "On A Beam Of Light",
+    source: "https://archive.org/details/OnABeamOfLight",
+    reason: "Licença confirmada em archive.org (mirror com metadados estruturados do lançamento original no Jamendo): CC BY-NC-ND 3.0. A cláusula NoDerivatives proíbe a adaptação que este projeto sempre faz (recodificar para AAC) — mesmo motivo que já havia excluído tranz023Holocaos. NonCommercial adiciona uma segunda restrição incompatível com um projeto que pode vir a ser comercial. Verificado a pedido do usuário como possível substituto; rejeitado pela mesma regra aplicada a todo o resto da curadoria.",
     verifiedAt: "2026-08-18"
   },
   {
