@@ -59,6 +59,8 @@ export interface FieldState {
   treb: number;
 }
 
+export type Fault = "source" | "blocked";
+
 export interface Snapshot {
   scale: Scale;
   mode: Mode;
@@ -72,7 +74,10 @@ export interface Snapshot {
   idle: boolean;
   variant: Variant;
   announce: string;
+  fault: Fault | null;
 }
+
+export type Reach = "none" | "enter" | "leave";
 
 export interface FontFamilies {
   archivo: string;

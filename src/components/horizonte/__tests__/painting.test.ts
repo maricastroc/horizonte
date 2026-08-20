@@ -163,10 +163,28 @@ describe("pintura de fundo", () => {
     for (const f of fromSource.slice(-2)) expect(f.startsWith(`${targetWeight} `)).toBe(true);
   });
 
-  it("no mobile o ajuste de largura é dispensado", () => {
-    expect(layoutFor("mobile").fitCollection).toBe(0);
+  it("no mobile o nome também é ajustado à largura, senão sai da tela", () => {
+    expect(layoutFor("mobile").fitCollection).toBeGreaterThan(0);
+    expect(layoutFor("mobile").fitAlbum).toBeGreaterThan(0);
     const reg = paintContext(100_000);
     expect(() => drawBack(reg.ctx, 400, 900, state(), layoutFor("mobile"), backDeps())).not.toThrow();
+  });
+
+  it("no mobile um nome largo demais encolhe, como no desktop", () => {
+    const L = layoutFor("mobile");
+    const s = state({ alb: 0 });
+
+    const short = paintContext(10);
+    drawBack(short.ctx, 750, 1300, s, L, backDeps());
+    const long = paintContext(100_000);
+    drawBack(long.ctx, 750, 1300, s, L, backDeps());
+
+    const size = (reg: ReturnType<typeof paintContext>) => {
+      const f = reg.sources.filter((x) => x.includes("Archivo")).pop() ?? "";
+      return Number(f.match(/(\d+(?:\.\d+)?)px/)?.[1] ?? 0);
+    };
+    expect(size(long)).toBeLessThan(size(short));
+    expect(size(long)).toBeGreaterThan(0);
   });
 
   it("mede o texto uma vez por quadro quando o ajuste está ligado", () => {

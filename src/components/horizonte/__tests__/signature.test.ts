@@ -8,6 +8,7 @@ import {
   envelopeOf,
   sampleEnvelope,
   trackBiasOf,
+  type AlbumSignature,
 } from "../content/signature";
 import { encodeEnvelope, signature } from "./fixtures";
 
@@ -170,6 +171,76 @@ describe("trackBiasOf — a faixa desloca o disco (P11)", () => {
       const bias = trackBiasOf(SIGNATURES[album.id], album.tracks.length);
       if (album.tracks.length < 2) continue;
       expect(spread(bias.map((b) => b.loudness)), album.id).toBeGreaterThan(0.01);
+    }
+  });
+});
+
+describe("brilho por faixa — a luz respira dentro do disco (P16)", () => {
+  const comBrilho = (tb: number[] | undefined, spans: number[]) => {
+    const s = signature(0.5, 0.5, 0.5, 0.5, spans, encodeEnvelope([0, 128, 255, 128]));
+    return { ...s, trackBrightness: tb };
+  };
+  const iguais = (n: number) => new Array(n).fill(1 / n);
+
+  it("sem brilho por faixa publicado, a luz não se move", () => {
+    const s = comBrilho(undefined, iguais(4));
+    for (const b of trackBiasOf(s, 4)) expect(b.brightness).toBe(0);
+  });
+
+  it("um array de tamanho errado é ignorado em vez de desalinhar as faixas", () => {
+    const s = comBrilho([0.1, 0.9], iguais(4));
+    for (const b of trackBiasOf(s, 4)) expect(b.brightness).toBe(0);
+  });
+
+  it("faixas timbricamente iguais não produzem movimento nenhum", () => {
+    const s = comBrilho([0.6, 0.6, 0.6, 0.6], iguais(4));
+    for (const b of trackBiasOf(s, 4)) expect(Math.abs(b.brightness)).toBeLessThan(1e-9);
+  });
+
+  it("um espalhamento menor que o ruído de medição é abafado pelo portão", () => {
+    const estreito = comBrilho([0.60, 0.61, 0.60, 0.61], iguais(4));
+    const largo = comBrilho([0.30, 0.95, 0.35, 0.90], iguais(4));
+    const amp = (s: AlbumSignature) => {
+      const v = trackBiasOf(s, 4).map((b) => b.brightness);
+      return Math.max(...v) - Math.min(...v);
+    };
+    expect(amp(estreito)).toBeLessThan(0.02);
+    expect(amp(largo)).toBeGreaterThan(0.15);
+  });
+
+  it("o álbum continua sendo a âncora: o viés médio por duração é ~zero", () => {
+    const spans = [0.4, 0.3, 0.2, 0.1];
+    const s = comBrilho([0.2, 0.5, 0.7, 0.9], spans);
+    const bias = trackBiasOf(s, 4);
+    const media = bias.reduce((a, b, i) => a + b.brightness * spans[i], 0);
+    expect(Math.abs(media)).toBeLessThan(0.02);
+  });
+
+  it("nenhuma faixa passa do teto declarado", () => {
+    const s = comBrilho([0, 1, 0, 1], iguais(4));
+    for (const b of trackBiasOf(s, 4)) expect(Math.abs(b.brightness)).toBeLessThanOrEqual(0.12);
+  });
+
+  it("no acervo, discos heterogêneos movem a luz e o disco uniforme não", () => {
+    const amp = (slug: string) => {
+      const s = SIGNATURES[slug];
+      const n = CURATION.find((a) => a.id === slug)!.tracks.length;
+      const v = trackBiasOf(s, n).map((b) => b.brightness);
+      return Math.max(...v) - Math.min(...v);
+    };
+    expect(amp("madison-kenny-all-systems-go")).toBeLessThan(0.02);
+    expect(amp("le-morte-dabby-0p")).toBeGreaterThan(0.1);
+  });
+
+  it("todo álbum do acervo publica um brilho por faixa alinhado com as faixas", () => {
+    for (const album of CURATION) {
+      const s = SIGNATURES[album.id];
+      expect(s.trackBrightness, album.id).toBeDefined();
+      expect(s.trackBrightness!.length, album.id).toBe(album.tracks.length);
+      for (const b of s.trackBrightness!) {
+        expect(b, album.id).toBeGreaterThanOrEqual(0);
+        expect(b, album.id).toBeLessThanOrEqual(1);
+      }
     }
   });
 });

@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { curvature } from "../audio/analysis";
 import { leadOf } from "../audio/anticipation";
 import { AudioBus, type VisualAudioState } from "../audio/bus";
+import type { PlaybackFault } from "../audio/playback";
 import { drawBack, makeParticles, type BackDeps } from "../composition/back";
 import { drawFront, type FrontDeps } from "../composition/front";
 import { loadCovers, makeCover, type CoverAsset } from "../composition/cover";
@@ -11,6 +12,7 @@ import {
   layoutFor,
   ringRotationTarget,
   variantFor,
+  type Hit,
   type WorldLayout,
 } from "../composition/layout";
 import { RingBakery } from "../composition/ring";
@@ -41,6 +43,7 @@ import {
   COMPOSITION_MAX_W,
   IDLE_MS,
   LERP,
+  INTAKE,
   SECOND_MASS,
   SEQ,
   TRACK_BIAS,
@@ -49,6 +52,7 @@ import type {
   FieldState,
   FontFamilies,
   Particle,
+  Reach,
   Scale,
   Snapshot,
 } from "../types";
@@ -114,7 +118,12 @@ export class FieldEngine implements InputActions {
   lead = 0;
   private railAlb = -1;
   private railTrk = -1;
+  private intake = false;
   private intent = 0;
+  private faultKind: PlaybackFault | null = null;
+  reach: Reach = "none";
+  private reachAmp = 0;
+  private onUi = false;
   private raf = 0;
   private last = 0;
   private reduced = false;
@@ -150,8 +159,34 @@ export class FieldEngine implements InputActions {
     this.snap = this.buildSnapshot(true);
 
     this.bus.onEnded = () => this.run(T.trackEnded(this.st, CATALOG));
+    this.bus.onFault = (fault) => this.raiseFault(fault);
 
     this.resize();
+  }
+
+  private raiseFault(fault: PlaybackFault) {
+    const s = this.st;
+    this.faultKind = fault;
+    if (s.mode === "collapse" || s.mode === "playing") s.mode = "paused";
+    this.markIntent();
+  }
+
+  setVolume(value: number) {
+    this.bus.setVolume(value);
+    this.markIntent();
+  }
+
+  setMuted(muted: boolean) {
+    this.bus.setMuted(muted);
+    this.markIntent();
+  }
+
+  get volume() {
+    return this.bus.volume;
+  }
+
+  get muted() {
+    return this.bus.muted;
   }
 
   private syncCatalog(added: number) {
@@ -194,6 +229,10 @@ export class FieldEngine implements InputActions {
 
   getSnapshot = () => this.snap;
 
+  get frameOut(): Readonly<FrameOut> {
+    return this.frame;
+  }
+
   onFrame = (sink: FrameSink) => {
     this.frameSink = sink;
     return () => {
@@ -205,11 +244,12 @@ export class FieldEngine implements InputActions {
     this.reduced = reduced;
   }
 
-  pointTo(nx: number, ny: number) {
+  pointTo(nx: number, ny: number, onUi = false) {
     const m = this.mouse;
     m.v = Math.min(1, m.v + Math.hypot(nx - m.tx, ny - m.ty) * CURSOR_GAIN);
     m.tx = nx;
     m.ty = ny;
+    this.onUi = onUi;
   }
 
   teleportTo(nx: number, ny: number) {
@@ -288,6 +328,10 @@ export class FieldEngine implements InputActions {
     this.railTrk = i;
   }
 
+  setIntake(on: boolean) {
+    this.intake = on;
+  }
+
   private hit() {
     return hitTest(
       this.mouse.tx,
@@ -339,6 +383,7 @@ export class FieldEngine implements InputActions {
 
   private apply(efeitos: AudioEffect[]) {
     for (const e of efeitos) {
+      if (e.kind === "load" || e.kind === "play") this.faultKind = null;
       if (e.kind === "load") {
         const album = ALBUMS[e.alb];
         this.bus.setSignature(album.signature);
@@ -487,12 +532,13 @@ export class FieldEngine implements InputActions {
     s.hoverBody = h.kind === "body" ? h.i : this.railAlb >= 0 ? this.railAlb : -1;
     if (s.scale === "album" && s.hover >= 0) s.sel = s.hover;
     this.secondMass(dt);
+    this.reachOf(h, dt);
 
     const C = this.C;
     const tgt = {
       m0k: 0.088 * K * C.massScale,
       m0h: 0.112 * C.horizonScale,
-      spin: 0.06,
+      spin: 0.06 * C.swirl,
       blur: 0,
       fade: 1,
       jet: 0,
@@ -501,7 +547,7 @@ export class FieldEngine implements InputActions {
     if (s.scale === "album") {
       tgt.m0k = 0.1 * K * C.massScale;
       tgt.m0h = 0.096 * C.horizonScale;
-      tgt.spin = 0.16;
+      tgt.spin = 0.16 * C.swirl;
     }
 
     if (s.mode === "collapse") this.collapse(tgt, K);
@@ -552,6 +598,19 @@ export class FieldEngine implements InputActions {
     }
   }
 
+  private reachOf(h: Hit, dt: number) {
+    const s = this.st;
+    let next: Reach = "none";
+    const ceremony = s.mode === "collapse" || s.mode === "fusion";
+    if (!this.onUi && !this.coarse && !ceremony) {
+      if (h.kind === "body" || h.kind === "track") next = "enter";
+      else if (s.scale !== "collection") next = "leave";
+    }
+    this.reach = next;
+    const target = next === "enter" ? 1 : next === "leave" ? -1 : 0;
+    this.reachAmp += (target - this.reachAmp) * Math.min(1, dt * LERP.reach);
+  }
+
   private trackBias(dt: number) {
     const s = this.st;
     const album = ALBUMS[clamp(s.alb, 0, ALBUMS.length - 1)];
@@ -562,6 +621,7 @@ export class FieldEngine implements InputActions {
     const k = Math.min(1, dt * TRACK_BIAS.lerp);
     this.bias.loudness += (target.loudness - this.bias.loudness) * k;
     this.bias.dynamics += (target.dynamics - this.bias.dynamics) * k;
+    this.bias.brightness += (target.brightness - this.bias.brightness) * k;
   }
 
   private ringRotation(dt: number) {
@@ -596,13 +656,21 @@ export class FieldEngine implements InputActions {
     const focused = clamp(Math.round(s.nav), 0, n - 1);
     const pointed = s.hoverBody >= 0 && s.hoverBody !== focused ? s.hoverBody : -1;
     const dir = s.nav - Math.round(s.nav) >= 0 ? 1 : -1;
-    const at = pointed >= 0 ? pointed : focused + dir;
+    // Apontar a entrada de ingestão não move a segunda massa de lugar — o slot
+    // seguinte ao último disco fica a dez corpos daqui e não se veria. O que
+    // muda é o que aquele lugar *é*: o poço perde força e abre a boca, e o
+    // espaço ao lado do disco em foco deixa de puxar. Um lugar, não um corpo.
+    const at = pointed >= 0 && !this.intake ? pointed : focused + dir;
 
     const p = albPos(at, s, this.L);
     const C = this.FIELD[clamp(at, 0, n - 1)];
-    const gain = pointed >= 0 && !this.reduced ? SECOND_MASS.pointGain : 1;
-    const k = SECOND_MASS.k * C.massScale * gain;
-    const h = SECOND_MASS.h * C.horizonScale;
+    const gain = pointed >= 0 && !this.intake && !this.reduced ? SECOND_MASS.pointGain : 1;
+    const k = this.intake
+      ? SECOND_MASS.k * INTAKE.mass
+      : SECOND_MASS.k * C.massScale * gain;
+    const h = this.intake
+      ? SECOND_MASS.h * INTAKE.horizon
+      : SECOND_MASS.h * C.horizonScale;
 
     const m = this.m1;
     if (!m.ready || m.alb !== at) m.alb = at;
@@ -680,7 +748,9 @@ export class FieldEngine implements InputActions {
     tgt.m0k =
       curvature(0.075 * C.massScale, isPlaying ? a.accent.bass : a.accent.bass * 0.25, cap) * K;
     tgt.m0h = 0.082 * C.horizonScale;
-    tgt.spin = isPlaying ? curvature(0.42, a.accent.mid * 0.7 + a.flux * 0.3, cap) : 0.06;
+    tgt.spin = isPlaying
+      ? curvature(0.42 * C.swirl, a.accent.mid * 0.7 + a.flux * 0.3, cap)
+      : 0.06 * C.swirl;
     tgt.jet = isPlaying ? 0.06 + a.flux * 0.22 + a.bass * 0.06 : 0.02;
     tgt.blur = isPlaying ? a.bass * 0.12 : 0;
     if (s.scale === "album") tgt.play *= 0.25;
@@ -768,6 +838,7 @@ export class FieldEngine implements InputActions {
     u.uDisp.value =
       curvature(0.014, this.audioState.accent.treb, this.C.reactionCap * 0.6) + s.blur * 0.01;
     u.uJet.value = s.jet;
+    u.uReach.value = this.reachAmp;
     const dBright = clamp(this.audioState.centroid - A.signature.brightness, -0.5, 0.5);
     u.uRim.value = this.C.rimHardness * (1 + dBright * this.C.reactionCap);
     const light = lightDirection(this.lightSweep);
@@ -792,6 +863,7 @@ export class FieldEngine implements InputActions {
       hoverAlb: s.hoverBody,
       idle,
       variant: this.L.variant,
+      fault: this.faultKind,
       announce:
         s.playAlb >= 0
           ? `${String(s.trk + 1).padStart(2, "0")} · ${
@@ -813,6 +885,7 @@ export class FieldEngine implements InputActions {
       prev.hoverAlb === next.hoverAlb &&
       prev.idle === next.idle &&
       prev.variant === next.variant &&
+      prev.fault === next.fault &&
       prev.announce === next.announce;
     return same ? prev : next;
   }

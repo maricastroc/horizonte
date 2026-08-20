@@ -2,7 +2,7 @@ export interface InputActions {
   markIntent(): void;
   resize(): void;
   setReducedMotion(reduced: boolean): void;
-  pointTo(nx: number, ny: number): void;
+  pointTo(nx: number, ny: number, onUi: boolean): void;
   teleportTo(nx: number, ny: number): void;
   beginPan(): void;
   panBy(stepPx: number, totalPx: number, viewportW: number): void;
@@ -38,7 +38,7 @@ export function bindInput(actions: InputActions, { isUiTarget }: InputOptions): 
   const onMove = (e: PointerEvent) => {
     actions.markIntent();
     const w = window.innerWidth;
-    actions.pointTo(e.clientX / w, e.clientY / window.innerHeight);
+    actions.pointTo(e.clientX / w, e.clientY / window.innerHeight, isUiTarget(e));
     if (down) {
       const step = e.clientX - lastX;
       moved += Math.abs(step);

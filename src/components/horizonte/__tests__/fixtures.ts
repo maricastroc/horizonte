@@ -14,18 +14,21 @@ export function signature(
   duration: number,
   spans: number[] = [],
   envelope = "",
+  pulse = 0.4,
 ): AlbumSignature {
   return {
     loudness,
     dynamics,
     brightness,
     duration,
+    pulse,
     measured: {
       loudnessDb: -22,
       dynamicsDb: 24,
       brightnessHz: 720,
       rolloffHz: 1600,
       bassRatio: 0.5,
+      pulse: 0.35,
       durationS: 2400,
     },
     spans,

@@ -51,8 +51,8 @@ const MOBILE: WorldLayout = {
   spreadX: 1.02,
   spreadY: 0.03,
   ringScale: 0.7,
-  fitCollection: 0,
-  fitAlbum: 0,
+  fitCollection: 0.86,
+  fitAlbum: 0.86,
   ringLabels: "selecionado",
 };
 

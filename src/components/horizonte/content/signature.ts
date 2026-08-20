@@ -5,6 +5,7 @@ export interface AlbumSignature {
   dynamics: number;
   brightness: number;
   duration: number;
+  pulse: number;
 
   measured: {
     loudnessDb: number;
@@ -12,10 +13,13 @@ export interface AlbumSignature {
     brightnessHz: number;
     rolloffHz: number;
     bassRatio: number;
+    pulse: number;
     durationS: number;
   };
 
   spans: number[];
+
+  trackBrightness?: number[];
 
   envelope: string;
 
@@ -37,12 +41,14 @@ export const NEUTRAL_SIGNATURE: AlbumSignature = {
   dynamics: 0.5,
   brightness: 0.5,
   duration: 0.5,
+  pulse: 0.5,
   measured: {
     loudnessDb: -22,
     dynamicsDb: 24,
     brightnessHz: 720,
     rolloffHz: 1600,
     bassRatio: 0.5,
+    pulse: 0.4,
     durationS: 2400,
   },
   spans: [],
@@ -58,9 +64,10 @@ export const NEUTRAL_SIGNATURE: AlbumSignature = {
 export interface TrackBias {
   loudness: number;
   dynamics: number;
+  brightness: number;
 }
 
-export const NEUTRAL_BIAS: TrackBias = { loudness: 0, dynamics: 0 };
+export const NEUTRAL_BIAS: TrackBias = { loudness: 0, dynamics: 0, brightness: 0 };
 
 const envelopeCache = new WeakMap<AlbumSignature, Float32Array>();
 const boundsCache = new WeakMap<AlbumSignature, Map<number, number[]>>();
@@ -123,11 +130,37 @@ export function boundsOf(sig: AlbumSignature, trackCount: number): number[] {
 const BIAS_BLEND = 0.55;
 const BIAS_CAP = 0.25;
 
+const BRIGHT_CAP = 0.12;
+const BRIGHT_KNEE = 0.12;
+
 const clampBias = (v: number) => (v < -BIAS_CAP ? -BIAS_CAP : v > BIAS_CAP ? BIAS_CAP : v);
 
 function rankAt(sorted: number[], q: number): number {
   const i = Math.round(q * (sorted.length - 1));
   return sorted[i < 0 ? 0 : i >= sorted.length ? sorted.length - 1 : i];
+}
+
+function brightnessBias(
+  sig: AlbumSignature,
+  bounds: number[],
+  trackCount: number,
+): number[] {
+  const out = new Array<number>(trackCount).fill(0);
+  const tb = sig.trackBrightness;
+  if (!tb || tb.length !== trackCount) return out;
+
+  let ref = 0;
+  for (let k = 0; k < trackCount; k++) ref += tb[k] * (bounds[k + 1] - bounds[k]);
+
+  const sorted = tb.slice().sort((a, b) => a - b);
+  const spread = rankAt(sorted, 0.9) - rankAt(sorted, 0.1);
+  const gate = Math.min(1, spread / BRIGHT_KNEE);
+
+  for (let k = 0; k < trackCount; k++) {
+    const d = (tb[k] - ref) * gate;
+    out[k] = d < -BRIGHT_CAP ? -BRIGHT_CAP : d > BRIGHT_CAP ? BRIGHT_CAP : d;
+  }
+  return out;
 }
 
 export function trackBiasOf(sig: AlbumSignature, trackCount: number): TrackBias[] {
@@ -167,11 +200,14 @@ export function trackBiasOf(sig: AlbumSignature, trackCount: number): TrackBias[
     refSpread += spread * weight;
   }
 
+  const bright = brightnessBias(sig, bounds, trackCount);
+
   const bias = new Array<TrackBias>(trackCount);
   for (let k = 0; k < trackCount; k++) {
     bias[k] = {
       loudness: clampBias((levels[k] - refLevel) * BIAS_BLEND),
       dynamics: clampBias((spreads[k] - refSpread) * BIAS_BLEND),
+      brightness: bright[k],
     };
   }
 

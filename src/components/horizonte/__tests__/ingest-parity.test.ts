@@ -101,6 +101,7 @@ describe.skipIf(!has)("paridade browser ↔ pipeline offline", () => {
             `bright ${(rel(got.brightnessHz, want.measured.brightnessHz) * 100).toFixed(4)}%`,
             `roll ${(rel(got.rolloffHz, want.measured.rolloffHz) * 100).toFixed(4)}%`,
             `bass ${(rel(got.bassRatio, want.measured.bassRatio) * 100).toFixed(4)}%`,
+            `pulse ${(rel(got.pulse, want.measured.pulse) * 100).toFixed(4)}%`,
             `dur ${(rel(got.durationS, want.measured.durationS) * 100).toFixed(4)}%`,
             `r ${r.toFixed(6)}`,
             `maxΔb ${maxByte.toFixed(0)}`,
@@ -112,6 +113,7 @@ describe.skipIf(!has)("paridade browser ↔ pipeline offline", () => {
         expect(rel(got.brightnessHz, want.measured.brightnessHz)).toBeLessThan(0.01);
         expect(rel(got.rolloffHz, want.measured.rolloffHz)).toBeLessThan(0.01);
         expect(rel(got.bassRatio, want.measured.bassRatio)).toBeLessThan(0.01);
+        expect(rel(got.pulse, want.measured.pulse)).toBeLessThan(0.02);
         expect(rel(got.durationS, want.measured.durationS)).toBeLessThan(0.01);
         expect(r).toBeGreaterThan(0.98);
 
@@ -122,6 +124,12 @@ describe.skipIf(!has)("paridade browser ↔ pipeline offline", () => {
         expect(norm(got.dynamicsDb, "dynamics")).toBeCloseTo(want.dynamics, 2);
         expect(norm(got.brightnessHz, "brightness", true)).toBeCloseTo(want.brightness, 2);
         expect(norm(got.durationS, "duration")).toBeCloseTo(want.duration, 2);
+        expect(norm(got.pulse, "pulse")).toBeCloseTo(want.pulse, 2);
+
+        expect(got.trackBrightnessHz.length).toBe(want.trackBrightness?.length);
+        got.trackBrightnessHz.forEach((hz, i) => {
+          expect(norm(hz, "brightness", true)).toBeCloseTo(want.trackBrightness![i], 3);
+        });
 
         if (process.env.PARITY_REPORT) {
           fs.appendFileSync(process.env.PARITY_REPORT, `${rows[rows.length - 1]}\n`);

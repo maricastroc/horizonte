@@ -20,22 +20,22 @@ Todos os ranges vêm das medições reais dos dez álbuns, feitas por
 **âncoras fixas e absolutas** — nunca contra os outros álbuns da coleção, para
 que acrescentar um disco não mude a assinatura de nenhum outro.
 
-| Álbum | Volume dB | Dinâmica dB | Brilho Hz | Duração min | L | D | B | T |
-| --- | --: | --: | --: | --: | --: | --: | --: | --: |
-| Tristan Lohengrin · Le Manoir | −28,6 | 17,8 | 980 | 22,1 | 0,17 | 0,24 | 0,62 | 0,09 |
-| Jono Terbakar · lebar | −23,9 | 33,8 | 713 | 27,3 | 0,41 | 0,91 | 0,50 | 0,16 |
-| Le Morte d'Abby · 0p | −16,0 | 16,8 | 1278 | 45,2 | 0,80 | 0,20 | 0,72 | 0,40 |
-| Mark Wilson X · Dark Thoughts | −19,4 | 23,6 | 788 | 30,0 | 0,63 | 0,48 | 0,53 | 0,20 |
-| Darin Wilson · Impromptu | −19,4 | 21,6 | 1090 | 27,1 | 0,63 | 0,40 | 0,66 | 0,16 |
-| zero-project · e-world | −17,5 | 21,4 | 1726 | 74,9 | 0,72 | 0,39 | 0,84 | 0,80 |
-| Tale Twist · Wry Way | −17,0 | 14,6 | 1669 | 31,2 | 0,75 | 0,11 | 0,83 | 0,22 |
-| Madison Kenny · All Systems Go | −14,4 | 12,4 | 2600 | 16,0 | 0,88 | 0,02 | 1,00 | 0,01 |
-| Meho · MKUltra | −19,4 | 19,4 | 324 | 65,7 | 0,63 | 0,31 | 0,19 | 0,68 |
-| Mescaline Sessions · Jajce | −20,5 | 18,2 | 424 | 33,4 | 0,57 | 0,26 | 0,29 | 0,25 |
+| Álbum | Volume dB | Dinâmica dB | Brilho Hz | Duração min | Pulso | L | D | B | T | P |
+| --- | --: | --: | --: | --: | --: | --: | --: | --: | --: | --: |
+| Tristan Lohengrin · Le Manoir | −28,6 | 17,8 | 980 | 22,1 | 0,216 | 0,17 | 0,24 | 0,62 | 0,09 | 0,17 |
+| Jono Terbakar · lebar | −23,9 | 33,8 | 713 | 27,3 | 0,122 | 0,41 | 0,91 | 0,50 | 0,16 | 0,05 |
+| Le Morte d'Abby · 0p | −16,0 | 16,8 | 1278 | 45,2 | 0,695 | 0,80 | 0,20 | 0,72 | 0,40 | 0,77 |
+| Mark Wilson X · Dark Thoughts | −19,4 | 23,6 | 788 | 30,0 | 0,368 | 0,63 | 0,48 | 0,53 | 0,20 | 0,36 |
+| Darin Wilson · Impromptu | −19,4 | 21,6 | 1090 | 27,1 | 0,229 | 0,63 | 0,40 | 0,66 | 0,16 | 0,19 |
+| zero-project · e-world | −17,5 | 21,4 | 1726 | 74,9 | 0,739 | 0,72 | 0,39 | 0,84 | 0,80 | 0,82 |
+| Tale Twist · Wry Way | −17,0 | 14,6 | 1669 | 31,2 | 0,391 | 0,75 | 0,11 | 0,83 | 0,22 | 0,39 |
+| Madison Kenny · All Systems Go | −14,4 | 12,4 | 2600 | 16,0 | 0,255 | 0,88 | 0,02 | 1,00 | 0,01 | 0,22 |
+| Meho · MKUltra | −19,4 | 19,4 | 324 | 65,7 | 0,173 | 0,63 | 0,31 | 0,19 | 0,68 | 0,12 |
+| Mescaline Sessions · Jajce | −20,5 | 18,2 | 424 | 33,4 | 0,190 | 0,57 | 0,26 | 0,29 | 0,25 | 0,14 |
 
 Âncoras: volume −32…−12 dB · dinâmica 12…36 dB · brilho 200…2600 Hz (log2) ·
-duração 15…90 min. Os normalizados cobrem 0,01–1,00, então os ranges abaixo são
-percorridos de verdade pelo acervo — não são teóricos.
+duração 15…90 min · pulso 0,08…0,88. Os normalizados cobrem 0,01–1,00, então os
+ranges abaixo são percorridos de verdade pelo acervo — não são teóricos.
 
 Uma única medição encosta numa âncora: o centróide de *All Systems Go* é 2600,2 Hz
 contra um teto de 2600 Hz. O corte descarta 0,2 Hz — o normalizado seria 1,00003
@@ -60,6 +60,40 @@ diferenciação real em nove álbuns para ganhar 0,00003 num.
 | P9 | Duração da faixa | Ângulo do setor no anel | proporcional | Ângulo = tempo. O setor que se aponta *é* quanto tempo se vai ouvir. | Setor mínimo de 1,4° para continuar clicável. |
 | P10 | Envelope (RMS 200 ms) | Espessura radial ao longo do setor | ver P5 | Forma = dinâmica no tempo. É a impressão digital do disco. | Indexado pelas mesmas fronteiras de P9, para que geometria e intensidade falem do mesmo instante. |
 
+## Identidade — a grade do tempo
+
+| # | Característica | Propriedade física | Range | Justificativa perceptiva | Guardrail |
+| --- | --- | --- | --- | --- | --- |
+| P15 | **Pulso** — periodicidade do ataque | Componente tangencial da lente (`uSpin`) | ×0,62 → ×1,55 sobre a base de cada escala | Um disco com grade de tempo **torce** o espaço à volta do corpo; um disco sem pulso puxa em linha reta. Periodicidade é ciclo, e o único canal do campo que é literalmente um ciclo é o giro. | O giro é **forma, não movimento**: `uSpin` inclina o campo de deslocamento, não anima nada. Multiplica só as bases de repouso (0,06), de álbum (0,16) e de reprodução (0,42) — as cerimônias de colapso e fusão continuam com a coreografia escrita. |
+
+**O que o pulso mede.** A autocorrelação do envelope de ataques entre 0,25 s e
+2 s (240 a 30 BPM). Não é quantos ataques o disco tem, nem quão rápido ele é: é
+se os ataques caem numa grade. O envelope vem do fluxo espectral com
+**clareamento adaptativo por raia** — cada bin é dividido pelo próprio pico
+recente antes da diferença.
+
+**Por que o clareamento não é detalhe.** Sem ele, o descritor correlaciona
+**0,825 com o brilho medido do acervo** — mede timbre disfarçado de ritmo. Com
+ele, a redundância máxima com os quatro descritores antigos cai para 0,542
+(duração), 0,500 (brilho), 0,491 (volume) e −0,230 (dinâmica).
+
+**Estabilidade.** Comparando a primeira metade de cada álbum com a segunda:
+r = 0,994 entre as duas leituras, erro relativo médio de 8,8%. É uma constante
+de identidade, não uma medida que oscila.
+
+**Por que este descritor e não densidade de ataques.** A primeira hipótese foi
+contar ataques por segundo. Foi medida e **reprovada**: mesmo com o clareamento
+adaptativo, a taxa correlaciona 0,825 com o brilho, e é instável — erro
+metade-a-metade de 14,3%, com faixas do mesmo disco indo de 0,17 a 5,87
+ataques/s. Contar ataques mede quão transiente é o timbre; a autocorrelação mede
+se existe uma grade. Só a segunda é informação nova.
+
+**O que o pulso resolve.** `dynamics` alimenta os dois canais mais expressivos
+do sistema (teto de reação e envelope), e a compressão de bus destrói dynamics.
+O pulso é **imune à masterização**: esmagar um sinal com limiter agressivo derruba
+a dinâmica normalizada a 0,00 e move o pulso em 0,004. Compressão destrói
+amplitude de ataque; não destrói *quando* o ataque acontece.
+
 ## Identidade — o que pertence à faixa
 
 Até aqui, tudo o que um disco *é* parava no disco: as onze faixas de *Le Manoir*
@@ -68,6 +102,23 @@ viviam num mundo idêntico. P11 corrige isso sem medir nada de novo.
 | # | Característica | Propriedade física | Range | Justificativa perceptiva | Guardrail |
 | --- | --- | --- | --- | --- | --- |
 | P11 | Nível e dinâmica **da faixa** | Desloca `m0k`/`m0h` (nível) e o teto de reação + envelope (dinâmica) | ±0,25 em espaço normalizado | Um disco heterogêneo é uma sequência de peças diferentes, e o mundo tinha de saber disso. A faixa muda **quanto o mundo pesa e quanto ele reage**. | O álbum continua sendo a âncora: o viés médio ponderado por duração é zero. O peso do artista (P1), a luz (P6, P7) e a inércia (P8) **não** se movem por faixa — são identidade do disco. Tudo passa pelos mesmos `RANGE` de P1–P8. |
+
+| # | Característica | Propriedade física | Range | Justificativa perceptiva | Guardrail |
+| --- | --- | --- | --- | --- | --- |
+| P16 | Brilho **da faixa** | Dureza do rim light (`uRim`) | ±0,12 em espaço normalizado, com portão | P7 já diz que brilho é dureza de luz. P16 aplica a mesma relação numa escala de tempo mais fina: a luz do disco endurece nas faixas cortantes e amolece nas escuras. Nenhuma associação nova foi inventada. | **Só a luz.** O achatamento (P6) continua sendo do álbum: ele é a forma do anel *e entra no hit-test* — uma geometria que muda entre faixas move o alvo debaixo do cursor. Teto de ±0,12, metade do teto de P11, porque mexe num canal de identidade e não de reação. Média ponderada por duração ~zero. |
+
+**O portão.** O espalhamento de brilho entre faixas de um mesmo álbum só vira
+viés quando passa de 0,12 em espaço normalizado — acima da instabilidade medida
+*dentro* de uma faixa, que é 0,071 (mediana, primeira metade contra segunda).
+Abaixo disso o portão fecha e o disco fica parado. É o que separa diferença
+medida de ruído de medição.
+
+*All Systems Go* é exatamente esse caso: as quatro faixas medem 0,986 a 1,000 de
+brilho, espalhamento 0,013, portão 0,10 → amplitude de rim **0,00**. O disco mais
+uniforme do acervo não ganha movimento nenhum.
+
+**Redundância com P11.** O desvio de brilho por faixa correlaciona 0,137 com o
+viés de nível e 0,164 com o de dinâmica. É informação que P11 não carregava.
 
 **De onde vêm os números.** Não houve nova passada de DSP: o `envelope` de 512
 amostras já publicado é fatiado pelas fronteiras de `spans` (as mesmas de P9), e
@@ -124,6 +175,17 @@ ambient do acervo, e P12 já é dono do canal "tempo" — dois relógios embaral
 | # | Característica | Propriedade física | Range | Justificativa perceptiva | Guardrail |
 | --- | --- | --- | --- | --- | --- |
 | P14 | Peso do disco **apontado** | Força da segunda massa (`uM1`) | ×0,88 → ×1,16 sobre 0,03, com ganho 1,9 ao apontar | A coleção tinha dez corpos e uma massa só: `uM1` usava força fixa (0,03 / 0,052) para qualquer disco, e apontar um corpo mudava a opacidade de um texto. Agora o peso que se sente ao apontar é o peso medido daquele disco — você sente os discos antes de entrar em qualquer um. | Só na escala coleção. O ganho vale para `m0k`, **não** para o horizonte: apontar não deixa o disco maior, deixa você sentir o peso dele. `prefers-reduced-motion` tira o ganho e mantém o peso. Nenhum uniforme novo. |
+
+**A entrada de ingestão é o avesso de P14.** Apontar um disco pesa o campo
+(×1,97 na força). Apontar *Trazer um disco* faz o contrário: a segunda massa
+perde força (×0,45) e abre o horizonte (×1,30), sem sair do lugar. Um corpo puxa;
+um lugar vazio não puxa — tem boca. É o que separa, no campo, um disco que existe
+de um disco que ainda não chegou.
+
+Por que não deslocar a massa para o slot seguinte ao último disco, que seria o
+literal: com dez discos, esse slot fica a dez corpos de distância e simplesmente
+não aparece na tela. Um retorno que não se vê não é retorno. O lugar se abre onde
+o olho está.
 
 **A regra.** Quando você não aponta nada, `uM1` é o vizinho na direção da
 navegação, como sempre foi — mas agora com o `massScale` e o `horizonScale` dele.
@@ -182,18 +244,18 @@ percorridos de verdade — a diferença entre discos é medida, não decorativa.
 *All Systems Go* toca o teto de achatamento e o de rim light; os demais guardrails
 seguem sem ninguém encostado.
 
-| Álbum | Peso | Lente | Horiz. | Teto reação | Envelope | Achat. | Rim | Nav | Setores (min–máx) |
-| --- | --: | --: | --: | --: | --: | --: | --: | --: | --- |
-| Le Manoir | **551** | **0,92** | 0,97 | 0,086 | 0,153 | 0,632 | 4,09 | 6,02 | 11 · 14,5°–65,3° |
-| lebar | 617 | 0,97 | 1,00 | **0,186** | **0,300** | 0,620 | 3,79 | 5,89 | 9 · 24,1°–57,7° |
-| 0p | 725 | 1,07 | 1,05 | 0,080 | 0,144 | 0,642 | 4,34 | 5,44 | 7 · 37,6°–77,1° |
-| Dark Thoughts | 679 | 1,02 | 1,03 | 0,123 | 0,207 | 0,623 | 3,88 | 5,82 | 10 · 22,6°–49,9° |
-| Impromptu | 678 | 1,01 | 1,03 | 0,110 | 0,188 | 0,636 | 4,19 | 5,89 | 5 · 61,6°–81,9° |
-| e-world | 704 | **1,09** | 1,04 | 0,109 | 0,187 | 0,654 | 4,62 | **4,68** | 16 · 11,0°–39,5° |
-| Wry Way | 712 | 1,04 | 1,04 | 0,066 | 0,124 | 0,653 | 4,59 | 5,79 | 8 · 30,0°–63,4° |
-| All Systems Go | **748** | 1,05 | **1,06** | **0,053** | **0,104** | **0,670** | **5,00** | **6,17** | 4 · 78,9°–98,4° |
-| MKUltra | 678 | 1,06 | 1,03 | 0,096 | 0,168 | **0,589** | **3,05** | 4,92 | 6 · 31,2°–87,7° |
-| Jajce | 663 | 1,01 | **1,02** | 0,089 | 0,157 | 0,599 | 3,30 | 5,73 | 4 · 36,7°–129,3° |
+| Álbum | Peso | Lente | Horiz. | Teto reação | Envelope | Achat. | Rim | Nav | Giro | Rim por faixa | Setores (min–máx) |
+| --- | --: | --: | --: | --: | --: | --: | --: | --: | --: | --: | --- |
+| Le Manoir | **551** | **0,92** | 0,97 | 0,086 | 0,153 | 0,632 | 4,09 | 6,02 | 0,779 | 3,80–4,37 | 11 · 14,5°–65,3° |
+| lebar | 617 | 0,97 | 1,00 | **0,186** | **0,300** | 0,620 | 3,79 | 5,89 | **0,668** | 3,50–4,08 | 9 · 24,1°–57,7° |
+| 0p | 725 | 1,07 | 1,05 | 0,080 | 0,144 | 0,642 | 4,34 | 5,44 | 1,334 | 4,05–4,62 | 7 · 37,6°–77,1° |
+| Dark Thoughts | 679 | 1,02 | 1,03 | 0,123 | 0,207 | 0,623 | 3,88 | 5,82 | 0,955 | 3,60–4,17 | 10 · 22,6°–49,9° |
+| Impromptu | 678 | 1,01 | 1,03 | 0,110 | 0,188 | 0,636 | 4,19 | 5,89 | 0,794 | 3,91–4,47 | 5 · 61,6°–81,9° |
+| e-world | 704 | **1,09** | 1,04 | 0,109 | 0,187 | 0,654 | 4,62 | **4,68** | **1,386** | 4,33–4,85 | 16 · 11,0°–39,5° |
+| Wry Way | 712 | 1,04 | 1,04 | 0,066 | 0,124 | 0,653 | 4,59 | 5,79 | 0,982 | 4,30–4,87 | 8 · 30,0°–63,4° |
+| All Systems Go | **748** | 1,05 | **1,06** | **0,053** | **0,104** | **0,670** | **5,00** | **6,17** | 0,823 | **5,00–5,00** | 4 · 78,9°–98,4° |
+| MKUltra | 678 | 1,06 | 1,03 | 0,096 | 0,168 | **0,589** | **3,05** | 4,92 | 0,729 | 2,81–3,34 | 6 · 31,2°–87,7° |
+| Jajce | 663 | 1,01 | **1,02** | 0,089 | 0,157 | 0,599 | 3,30 | 5,73 | 0,748 | 3,02–3,59 | 4 · 36,7°–129,3° |
 
 Leituras que valem registrar:
 
@@ -210,6 +272,14 @@ Leituras que valem registrar:
   brilhante, o mais comprimido e o mais curto. Não é um empate apertado com
   ninguém — o segundo mais brilhante fica 874 Hz atrás. O corte de 0,2 Hz na
   âncora é coincidência de medição, não compressão de informação.
+* **O giro separa o par que estava mais perto de colidir.** Dark Thoughts e
+  Impromptu eram os dois discos mais parecidos do acervo: distância mínima de
+  0,1264 num espaço de oito canais normalizados. Com o pulso, 0,1738 — o par
+  mais próximo ficou **1,37× mais separado**, e a separação vem inteira do giro
+  (0,955 contra 0,794).
+* **e-world torce o espaço 2,07× mais que lebar.** No nível de álbum, o giro vai
+  de 0,107 a 0,222 — um disco sequenciado inclina o campo de deslocamento ao
+  dobro do que um disco tocado por gente em tempo livre.
 * **Três discos empatam no peso do artista.** Dark Thoughts, Impromptu e MKUltra
   medem −19,4 dB e derivam 679, 678 e 678. P1 não os separa, e isso está correto:
   eles têm de fato o mesmo volume médio. Quem os distingue são os outros canais —
@@ -265,6 +335,30 @@ P4 (ganho 1):
 horizonte se move tipicamente 1–3% — pode ficar abaixo do limiar de percepção.
 Passar disso exige romper o teto de P4 conscientemente, e essa decisão não foi
 tomada. Desligado, o sinal é exatamente zero e o mundo é idêntico ao de antes.
+
+## Descoberta — o cursor sabe o que está sob ele
+
+O cursor sempre foi um ponto de luz idêntico sobre o vazio e sobre um alvo. As
+interações-assinatura do mundo — entrar num corpo, escolher um setor, sair de uma
+escala — não tinham pista nenhuma, e quem usasse só as réguas nunca as encontrava.
+
+`uReach` acrescenta um anel fino em volta do cursor, com **sinal**, não com
+intensidade:
+
+| Sob o cursor | Anel | Significado |
+| --- | --- | --- |
+| Um corpo ou um setor | fecha (raio 0,019) e acende | dá para entrar |
+| O vazio, dentro de um álbum ou faixa | abre (raio 0,041) e enfraquece | dá para sair |
+| O vazio, na coleção | não existe | clicar ali não faz nada |
+| Um controle da camada mono | não existe | aquele clique não é do mundo |
+| Durante colapso ou fusão | não existe | não é hora de apontar |
+
+É a mesma gramática que a entrada de ingestão já tinha estabelecido — um corpo
+puxa, um lugar vazio tem boca. Nenhuma palavra na tela, nenhum tooltip, e nada
+que se mexa sozinho: o anel é estático e segue o cursor.
+
+No toque não há anel: não existe ponteiro pairando, e um anel preso no último
+ponto tocado seria ruído.
 
 ## O que não muda
 

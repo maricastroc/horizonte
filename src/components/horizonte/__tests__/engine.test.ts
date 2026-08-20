@@ -36,6 +36,7 @@ import {
   COMPOSITION_FALLBACK_W,
   COMPOSITION_MAX_W,
   RING,
+  INTAKE,
   SECOND_MASS,
 } from "../tokens";
 import { trackBiasOf } from "../content/signature";
@@ -697,5 +698,213 @@ describe("apontar tem peso (P14)", () => {
     apontarRegua(7);
     const c = fieldConstantsOf(ALBUMS[7].signature);
     expect(m1().z).toBeCloseTo(SECOND_MASS.k * c.massScale, 4);
+  });
+
+  const apontarEntrada = (on: boolean) => {
+    engine.teleportTo(0.95, 0.95);
+    engine.setRailAlb(-1);
+    engine.setIntake(on);
+    run(4);
+    env.advance();
+  };
+
+  it("apontar a entrada abre um lugar: menos massa, mais horizonte", () => {
+    const repouso = { ...m1() };
+    apontarEntrada(true);
+
+    expect(m1().z).toBeLessThan(repouso.z);
+    expect(m1().w).toBeGreaterThan(repouso.w);
+    expect(m1().z / repouso.z).toBeCloseTo(INTAKE.mass, 1);
+    expect(m1().w / repouso.w).toBeCloseTo(INTAKE.horizon, 1);
+  });
+
+  it("a entrada não desloca a segunda massa — o lugar é aqui, não fora da tela", () => {
+    const repouso = { ...m1() };
+    apontarEntrada(true);
+    expect(m1().x).toBeCloseTo(repouso.x, 3);
+    expect(m1().y).toBeCloseTo(repouso.y, 3);
+  });
+
+  it("é o oposto de apontar um disco: um pesa, o outro alivia", () => {
+    apontarRegua(7);
+    const disco = m1().z;
+    soltar();
+    const repouso = m1().z;
+    apontarEntrada(true);
+    const entrada = m1().z;
+
+    expect(disco).toBeGreaterThan(repouso);
+    expect(entrada).toBeLessThan(repouso);
+  });
+
+  it("soltar a entrada devolve o campo ao vizinho", () => {
+    const repouso = { ...m1() };
+    apontarEntrada(true);
+    apontarEntrada(false);
+    expect(m1().z).toBeCloseTo(repouso.z, 3);
+    expect(m1().w).toBeCloseTo(repouso.w, 3);
+  });
+
+  it("apontar a entrada ignora um disco que tenha ficado apontado na régua", () => {
+    apontarRegua(7);
+    engine.setIntake(true);
+    run(4);
+    const c = fieldConstantsOf(ALBUMS[7].signature);
+    expect(m1().z).toBeLessThan(SECOND_MASS.k * c.massScale);
+  });
+});
+
+describe("uma faixa que não carrega para de fingir que toca", () => {
+  const fault = (kind: "source" | "blocked") => {
+    engine.bus.onFault?.(kind);
+    run(2);
+    env.advance();
+  };
+
+  it("a falha tira o mundo do ar em vez de resolver em reprodução", () => {
+    engine.playTrack(0, 0);
+    expect(engine.st.mode).toBe("collapse");
+    fault("source");
+    expect(engine.st.mode).toBe("paused");
+    run(3);
+    expect(engine.st.mode).toBe("paused");
+  });
+
+  it("o motivo chega à camada de instrumentos", () => {
+    engine.playTrack(0, 0);
+    fault("source");
+    expect(engine.getSnapshot().fault).toBe("source");
+  });
+
+  it("o bloqueio do navegador é um motivo diferente do arquivo quebrado", () => {
+    engine.playTrack(0, 0);
+    fault("blocked");
+    expect(engine.getSnapshot().fault).toBe("blocked");
+  });
+
+  it("pedir de novo limpa a falha antes de tentar", () => {
+    engine.playTrack(0, 0);
+    fault("source");
+    expect(engine.getSnapshot().fault).toBe("source");
+
+    engine.transport();
+    run(2);
+    env.advance();
+    expect(engine.getSnapshot().fault).toBe(null);
+  });
+
+  it("a falha não derruba a faixa em foco: dá para ver qual falhou", () => {
+    engine.playTrack(2, 1);
+    fault("source");
+    expect(engine.st.playAlb).toBe(2);
+    expect(engine.st.trk).toBe(1);
+    expect(engine.st.scale).toBe("track");
+  });
+});
+
+describe("o cursor sabe o que está sob ele", () => {
+  const uReach = () =>
+    (engine as unknown as { gl: { uniforms: { uReach: { value: number } } } }).gl.uniforms.uReach
+      .value;
+
+  const apontar = (x: number, y: number, naUi = false) => {
+    engine.teleportTo(x, y);
+    engine.pointTo(x, y, naUi);
+    run(4);
+    env.advance();
+  };
+
+  const corpo = () => {
+    const p = albPos(engine.st.alb, engine.st, layoutFor("desktop"));
+    return [p.x, p.y] as const;
+  };
+
+  it("na coleção, sobre um corpo o anel fecha", () => {
+    apontar(...corpo());
+    expect(engine.reach).toBe("enter");
+    expect(uReach()).toBeGreaterThan(0.5);
+  });
+
+  it("na coleção, o vazio não promete nada — clicar ali não faz nada", () => {
+    apontar(0.02, 0.95);
+    expect(engine.reach).toBe("none");
+    expect(Math.abs(uReach())).toBeLessThan(0.1);
+  });
+
+  it("dentro do álbum, o vazio abre o anel: é ele que devolve uma escala", () => {
+    engine.enterAlbum(0);
+    run(3);
+    apontar(0.03, 0.96);
+    expect(engine.reach).toBe("leave");
+    expect(uReach()).toBeLessThan(-0.5);
+  });
+
+  it("entrar e sair têm sinais opostos, não intensidades diferentes do mesmo", () => {
+    engine.enterAlbum(0);
+    run(3);
+    apontar(...corpo());
+    const dentro = uReach();
+    apontar(0.03, 0.96);
+    const fora = uReach();
+    expect(dentro).toBeGreaterThan(0);
+    expect(fora).toBeLessThan(0);
+  });
+
+  it("sobre um controle o anel some: aquele clique não é do mundo", () => {
+    engine.enterAlbum(0);
+    run(3);
+    apontar(0.03, 0.96, true);
+    expect(engine.reach).toBe("none");
+  });
+
+  it("durante a cerimônia o anel some: não é hora de apontar", () => {
+    engine.enterAlbum(0);
+    run(3);
+    const [x, y] = corpo();
+    engine.teleportTo(x, y);
+    engine.pointTo(x, y, false);
+    run(0.5);
+    expect(engine.reach).toBe("enter");
+
+    engine.playTrack(0, 0);
+    engine.pointTo(x, y, false);
+    run(0.3);
+    expect(engine.st.mode).toBe("collapse");
+    expect(engine.reach).toBe("none");
+  });
+
+  it("no toque não há anel: não existe cursor pairando", () => {
+    engine.stop();
+    on({ coarse: true });
+    engine.enterAlbum(0);
+    run(3);
+    engine.teleportTo(0.03, 0.96);
+    engine.pointTo(0.03, 0.96, false);
+    run(4);
+    expect(engine.reach).toBe("none");
+  });
+});
+
+describe("volume", () => {
+  it("o motor guarda o nível e o mudo sem perder um no outro", () => {
+    engine.setVolume(0.4);
+    expect(engine.volume).toBeCloseTo(0.4, 5);
+    engine.setMuted(true);
+    expect(engine.muted).toBe(true);
+    expect(engine.volume).toBeCloseTo(0.4, 5);
+    engine.setMuted(false);
+    expect(engine.volume).toBeCloseTo(0.4, 5);
+  });
+
+  it("mexer no volume conta como presença: a camada não some na mão da pessoa", () => {
+    const clock = vi.spyOn(performance, "now");
+    clock.mockReturnValue(performance.now() + IDLE_MS + 1000);
+    env.advance();
+    expect(engine.getSnapshot().idle).toBe(true);
+
+    engine.setVolume(0.5);
+    env.advance();
+    expect(engine.getSnapshot().idle).toBe(false);
+    clock.mockRestore();
   });
 });

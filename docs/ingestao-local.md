@@ -206,6 +206,22 @@ Uma seleção vira um ou mais álbuns:
   curadas (dessaturação, sobreimpressão das tintas, grão, equalização de
   exposição). Sem CORS envolvido: o arquivo é local.
 
+### A entrada na coleção
+
+A ação de trazer um disco **não é um item do catálogo e não se parece com um**:
+fica fora da `<ul>` de álbuns, separada por respiro e régua própria, sem número de
+catálogo, em duas colunas em vez de três, e mais legível que as linhas da lista
+(contraste 12,2:1 contra os 5,6:1 dos discos). No lugar do quadrado preenchido que
+marca cada corpo, ela tem um quadrado **vazado** — um lugar entre os corpos que
+ainda não foi ocupado; ao apontar ou focar, ele se preenche.
+
+Apontar a entrada também move o campo, como apontar um disco move (P14) — só que
+na direção contrária: a segunda massa perde força e abre o horizonte. Ver
+[`mapa-sensorial.md`](mapa-sensorial.md).
+
+Arrastar arquivos sobre a janela troca o rótulo para *Solte para medir* e acende a
+entrada. Fora desse momento não há instrução, dropzone nem zona de upload.
+
 Nada é inventado. Sem tag de artista, o disco se chama **Disco local**; sem tag
 de álbum e sem pasta, **Sem título**; sem ano, o ano simplesmente não aparece na
 composição. O catálogo local numera `L—001`, `L—002`… contra o `H—` da curadoria.
@@ -273,6 +289,22 @@ disco local, por decisão de escopo. As URLs de objeto de um álbum registrado
 vivem enquanto a página viver; as de um grupo cancelado ou com erro são revogadas
 na hora.
 
+## Pulso e brilho por faixa
+
+Os dois descritores acrescentados depois da primeira versão (P15 e P16, ver
+[`mapa-sensorial.md`](mapa-sensorial.md)) atravessam o mesmo contrato de dois
+produtores. Medidos pelos dois caminhos sobre os dez álbuns do acervo:
+
+| Grandeza | Divergência TS ↔ Python |
+| --- | --: |
+| `pulse` do álbum | **0,0000%** nos dez |
+| `trackBrightness` de cada faixa | dentro de 0,001 normalizado |
+
+O pulso custa uma passada extra sobre as magnitudes que já são calculadas — o
+clareamento por raia entra no mesmo laço da FFT, e a autocorrelação roda uma vez
+por faixa sobre ~43 quadros por segundo. Não muda a ordem de grandeza do tempo
+de ingestão, que continua dominado pelo decode.
+
 ## Limitações conhecidas
 
 1. **Envelope não reprodutível byte a byte** entre decodificadores em discos
@@ -288,6 +320,9 @@ na hora.
    `afconvert`, e é aí que a divergência de PCM se concentra.
 6. **Grupos grandes** (uma pasta com muitos álbuns) são medidos em sequência; o
    progresso é global, mas o tempo soma.
+7. **O pulso precisa de faixa longa o bastante.** Abaixo de 172 quadros (~4 s) a
+   autocorrelação não significa nada e a faixa é descartada da média do álbum —
+   entra na duração e no envelope, não no pulso.
 
 ## Aferir
 

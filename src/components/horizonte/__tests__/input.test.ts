@@ -52,13 +52,21 @@ describe("ciclo de vida das escutas", () => {
 describe("cursor", () => {
   it("normaliza a posição pela janela", () => {
     move(500, 400);
-    expect(rec.last("pointTo")?.args).toEqual([0.5, 0.5]);
+    expect(rec.last("pointTo")?.args).toEqual([0.5, 0.5, false]);
   });
 
   it("segue o cursor mesmo sobre a camada de instruments", () => {
     fromUi = true;
     move(250, 200);
-    expect(rec.last("pointTo")?.args).toEqual([0.25, 0.25]);
+    expect(rec.last("pointTo")?.args).toEqual([0.25, 0.25, true]);
+  });
+
+  it("avisa o world quando o ponteiro está sobre um controle", () => {
+    move(500, 400);
+    expect(rec.last("pointTo")?.args[2]).toBe(false);
+    fromUi = true;
+    move(500, 400);
+    expect(rec.last("pointTo")?.args[2]).toBe(true);
   });
 
   it("um toque nasce onde o dedo encostou, sem trajeto", () => {

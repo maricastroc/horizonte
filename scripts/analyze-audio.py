@@ -69,6 +69,7 @@ ANCHOR = {
     "brightness": (200.0, 2600.0),   # Hz, centróide espectral (interpolado em log2)
     "duration": (900.0, 5400.0),     # s, de 15 a 90 minutos
     "rolloff": (400.0, 4200.0),      # Hz, onde se acumulam 85% da energia (log2)
+    "pulse": (0.08, 0.88),           # periodicidade do ataque, adimensional
     "bass_ratio": (0.20, 0.85),      # fração da energia abaixo de 300 Hz
 }
 
@@ -126,6 +127,68 @@ def frames(x):
     return fr, np.abs(np.fft.rfft(fr, axis=1))
 
 
+# --------------------------------------------------------------- pulso
+# Periodicidade do ataque: autocorrelação do envelope de ataques entre 0,25 s e
+# 2 s. Porte fiel de `pulseOf` em ingest/dsp.ts — mesmo clareamento por bin,
+# mesma janela de mediana, mesmas fronteiras de lag.
+PULSE_MEMORY = 0.90
+PULSE_FLOOR = 1e-4
+PULSE_MED_WIN_S = 1.5
+PULSE_LAG_LO_S = 0.25
+PULSE_LAG_HI_S = 2.0
+
+FPS = SR / HOP
+LAG_LO = max(2, round(PULSE_LAG_LO_S * FPS))
+LAG_HI = round(PULSE_LAG_HI_S * FPS)
+MED_HALF = max(1, round(PULSE_MED_WIN_S * FPS) // 2)
+MIN_PULSE_FRAMES = LAG_HI * 2
+
+
+def onset_envelope(mag):
+    """Fluxo espectral com clareamento adaptativo por raia.
+
+    Cada raia é dividida pelo próprio pico recente antes da diferença. É isso
+    que impede o descritor de virar um proxy de brilho: sem o clareamento, a
+    correlação com o brilho medido do acervo é 0,825.
+    """
+    n, bins = mag.shape
+    floor = PULSE_FLOOR * (FFT / 2)
+    peak = np.full(bins, floor)
+    prev = np.zeros(bins)
+    env = np.zeros(n)
+    for f in range(n):
+        row = mag[f]
+        peak = np.maximum(np.maximum(row, PULSE_MEMORY * peak), floor)
+        w = row / peak
+        d = w - prev
+        if f > 0:
+            env[f] = float(d[d > 0].sum())
+        prev = w
+    return env
+
+
+def pulse_of(env):
+    n = len(env)
+    if n < MIN_PULSE_FRAMES:
+        return 0.0
+    w = np.empty(n)
+    for i in range(n):
+        lo = max(0, i - MED_HALF)
+        hi = min(n, i + MED_HALF + 1)
+        m = float(np.median(env[lo:hi]))
+        w[i] = env[i] / m if m > 1e-9 else 0.0
+    w = w - w.mean()
+    e0 = float((w * w).sum())
+    if e0 < 1e-12:
+        return 0.0
+    best = 0.0
+    for lag in range(LAG_LO, min(n - 1, LAG_HI) + 1):
+        r = float((w[: n - lag] * w[lag:]).sum()) / e0
+        if r > best:
+            best = r
+    return best
+
+
 def band_bytes(mag):
     """Reproduz o valor 0..1 que `analysis.ts` lê de getByteFrequencyData."""
     freqs = np.fft.rfftfreq(FFT, 1 / SR)
@@ -141,9 +204,11 @@ def band_bytes(mag):
 # ------------------------------------------------------------------- por álbum
 def analyze_album(slug, tracks_files):
     rms_all, cent_all, roll_all = [], [], []
+    track_bright = []
     band_all = {k: [] for k in BANDS}
     env_parts, spans, dur_total = [], [], 0.0
     low_e = high_e = 0.0
+    pulse_num = pulse_den = 0.0
 
     for f in tracks_files:
         x = decode(f)
@@ -154,6 +219,7 @@ def analyze_album(slug, tracks_files):
         fr, mag = frames(x)
         if fr is None:
             env_parts.append(np.zeros(1))
+            track_bright.append(None)
             continue
 
         rms = np.sqrt((fr ** 2).mean(axis=1)) + 1e-9
@@ -161,12 +227,18 @@ def analyze_album(slug, tracks_files):
 
         freqs = np.fft.rfftfreq(FFT, 1 / SR)
         msum = mag.sum(axis=1) + 1e-9
-        cent_all.append((mag * freqs).sum(axis=1) / msum)
+        cent = (mag * freqs).sum(axis=1) / msum
+        cent_all.append(cent)
+        track_bright.append(float(cent.mean()))
         cs = np.cumsum(mag, axis=1)
         roll_all.append(freqs[np.argmax(cs >= 0.85 * cs[:, -1:], axis=1)])
 
         for k, v in band_bytes(mag).items():
             band_all[k].append(v)
+
+        if len(mag) >= MIN_PULSE_FRAMES:
+            pulse_num += pulse_of(onset_envelope(mag)) * dur
+            pulse_den += dur
 
         # balanço grave/agudo, para a tinta de reserva
         low_e += float(mag[:, freqs < 300].sum())
@@ -189,6 +261,9 @@ def analyze_album(slug, tracks_files):
     bright = float(C.mean())
     rolloff = float(RO.mean())
     bass_ratio = low_e / max(high_e, 1e-9)
+    pulse = pulse_num / pulse_den if pulse_den > 0 else 0.0
+    # Faixa curta demais para medir herda o brilho do álbum: não desloca a luz.
+    track_bright = [round(bright if b is None else b, 1) for b in track_bright]
 
     # ---- envelope do álbum inteiro, reamostrado para ENVELOPE_N pontos
     env = np.concatenate(env_parts)
@@ -217,6 +292,8 @@ def analyze_album(slug, tracks_files):
         brightness_hz=round(bright, 1),
         rolloff_hz=round(rolloff, 1),
         bass_ratio=round(bass_ratio, 4),
+        pulse=round(pulse, 4),
+        track_bright=track_bright,
         spans=[round(s / dur_total, 6) for s in spans],
         envelope=base64.b64encode(env_u8.tobytes()).decode(),
         band_ref=band_ref,
@@ -292,13 +369,9 @@ def emit(entries):
     def num(v):
         return json.dumps(v)
 
+    # O TypeScript deste repo não leva comentários: a explicação vive aqui e em
+    # docs/mapa-sensorial.md. Ver a docstring do módulo.
     lines = [
-        "// GERADO por scripts/analyze-audio.py — não editar à mão.",
-        "//",
-        "// Assinatura sensorial de cada álbum, medida uma vez a partir do próprio",
-        "// áudio. Define as constantes do campo; a reprodução só as perturba.",
-        "// Cada descritor é normalizado contra âncoras fixas e absolutas, então",
-        "// acrescentar um álbum não altera a assinatura de nenhum outro.",
         'import type { AlbumSignature } from "./signature";',
         "",
         "export const SIGNATURES: Record<string, AlbumSignature> = {",
@@ -311,15 +384,20 @@ def emit(entries):
             f'    dynamics: {num(e["dynamics"])},',
             f'    brightness: {num(e["brightness"])},',
             f'    duration: {num(e["duration"])},',
+            f'    pulse: {num(e["pulse"])},',
             "    measured: {",
             f'      loudnessDb: {num(s["loudness_db"])},',
             f'      dynamicsDb: {num(s["dynamics_db"])},',
             f'      brightnessHz: {num(s["brightness_hz"])},',
             f'      rolloffHz: {num(s["rolloff_hz"])},',
             f'      bassRatio: {num(s["bass_ratio"])},',
+            f'      pulse: {num(s["pulse"])},',
             f'      durationS: {num(s["duration"])},',
             "    },",
             f'    spans: {json.dumps(s["spans"])},',
+            "    trackBrightness: "
+            + json.dumps([norm(hz, "brightness", log=True) for hz in s["track_bright"]])
+            + ",",
             f'    envelope: {json.dumps(s["envelope"])},',
             "    reference: {",
             f'      bass: {json.dumps(list(s["band_ref"]["bass"]))},',
@@ -331,8 +409,6 @@ def emit(entries):
         if e.get("ink"):
             a, b = e["ink"]
             lines += [
-                "    // Capa acromática: a tinta vem do balanço espectral do próprio",
-                "    // álbum, não da posição dele na coleção.",
                 f'    inkA: {json.dumps(list(a))},',
                 f'    inkB: {json.dumps(list(b))},',
             ]
@@ -366,6 +442,7 @@ def main():
             dynamics=norm(sig["dynamics_db"], "dynamics"),
             brightness=norm(sig["brightness_hz"], "brightness", log=True),
             duration=norm(sig["duration"], "duration"),
+            pulse=norm(sig["pulse"], "pulse"),
         )
         cover_path = os.path.join(ROOT, "public", cover.lstrip("/"))
         if os.path.exists(cover_path) and cover_is_achromatic(cover_path):
@@ -377,15 +454,18 @@ def main():
     print(f"\n{len(entries)} álbuns → {os.path.relpath(OUT_TS, ROOT)}")
 
     if args.report:
-        print(f"\n{'álbum':30}{'loud':>7}{'dyn':>7}{'bright':>8}{'dur':>7}   normalizados")
+        print(
+            f"\n{'álbum':30}{'loud':>7}{'dyn':>7}{'bright':>8}{'dur':>7}{'pulso':>8}"
+            "   normalizados"
+        )
         for e in entries:
             s = e["sig"]
             tag = "  ← tinta do áudio" if e.get("ink") else ""
             print(
                 f"{s['slug']:30}{s['loudness_db']:>7.1f}{s['dynamics_db']:>7.1f}"
-                f"{s['brightness_hz']:>8.0f}{s['duration']/60:>7.1f}   "
+                f"{s['brightness_hz']:>8.0f}{s['duration']/60:>7.1f}{s['pulse']:>8.3f}   "
                 f"L{e['loudness']:.2f} D{e['dynamics']:.2f} "
-                f"B{e['brightness']:.2f} T{e['duration']:.2f}{tag}"
+                f"B{e['brightness']:.2f} T{e['duration']:.2f} P{e['pulse']:.2f}{tag}"
             )
 
 

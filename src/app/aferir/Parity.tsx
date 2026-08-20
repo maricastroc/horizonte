@@ -105,12 +105,14 @@ export default function Parity() {
       dynamics: norm(measurement.dynamicsDb, "dynamics"),
       brightness: norm(measurement.brightnessHz, "brightness", true),
       duration: norm(measurement.durationS, "duration"),
+      pulse: norm(measurement.pulse, "pulse"),
       measured: {
         loudnessDb: measurement.loudnessDb,
         dynamicsDb: measurement.dynamicsDb,
         brightnessHz: measurement.brightnessHz,
         rolloffHz: measurement.rolloffHz,
         bassRatio: measurement.bassRatio,
+        pulse: measurement.pulse,
         durationS: measurement.durationS,
       },
       spans: measurement.spans,
@@ -145,6 +147,7 @@ export default function Parity() {
       ["brightnessHz", measurement.brightnessHz, want.measured.brightnessHz],
       ["rolloffHz", measurement.rolloffHz, want.measured.rolloffHz],
       ["bassRatio", measurement.bassRatio, want.measured.bassRatio],
+      ["pulse", measurement.pulse, want.measured.pulse],
       ["durationS", measurement.durationS, want.measured.durationS],
     ].map(([key, got, wantV]) => ({
       key: key as string,

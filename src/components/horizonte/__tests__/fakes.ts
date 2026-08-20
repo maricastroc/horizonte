@@ -115,7 +115,13 @@ export function fakeContext(sampleRate = 44100) {
   };
   const ctx = {
     sampleRate,
+    currentTime: 0,
     createAnalyser: () => analyser,
+    createGain: () => ({
+      gain: { value: 1, setTargetAtTime() {} },
+      connect() {},
+      disconnect() {},
+    }),
     destination: {},
   };
   return { ctx: ctx as unknown as AudioContext, analyser };
@@ -132,6 +138,7 @@ export function sineTrack(amplitude: number, size = 1024): Uint8Array {
 export interface FakeAudio {
   preload: string;
   crossOrigin: string | null;
+  volume: number;
   src: string;
   currentTime: number;
   duration: number;
@@ -143,6 +150,7 @@ export interface FakeAudio {
   play(): Promise<void>;
   pause(): void;
   load(): void;
+  getAttribute(name: string): string | null;
   emit(kind: string): void;
 }
 
@@ -155,6 +163,7 @@ export function audioEnv() {
     const el: FakeAudio = {
       preload: "",
       crossOrigin: null,
+      volume: 1,
       src: "",
       currentTime: 0,
       duration: NaN,
@@ -180,6 +189,9 @@ export function audioEnv() {
       load() {
         el.loaded++;
       },
+      getAttribute(name) {
+        return name === "src" ? el.src || null : null;
+      },
       emit(kind) {
         for (const fn of listeners.get(kind) ?? []) fn();
       },
@@ -188,6 +200,7 @@ export function audioEnv() {
     return el;
   }
 
+  const analyserOut: unknown[] = [];
   const analyser = {
     fftSize: 2048,
     smoothingTimeConstant: 0,
@@ -200,16 +213,36 @@ export function audioEnv() {
     getByteTimeDomainData(a: Uint8Array) {
       a.fill(128);
     },
-    connect() {},
+    connect(destino: unknown) {
+      analyserOut.push(destino);
+    },
   };
 
   let closedList = 0;
+  const gains: { gain: { value: number }; out: unknown[] }[] = [];
   class FakeContext {
     sampleRate = 44100;
     state = "running";
+    currentTime = 0;
     destination = { label: "saida" };
     createAnalyser() {
       return analyser;
+    }
+    createGain() {
+      const saidas: unknown[] = [];
+      const node = {
+        gain: {
+          value: 1,
+          setTargetAtTime(v: number) {
+            node.gain.value = v;
+          },
+        },
+        out: saidas,
+        connect: (destino: unknown) => saidas.push(destino),
+        disconnect: () => {},
+      };
+      gains.push(node);
+      return node;
     }
     createMediaElementSource(el: FakeAudio) {
       return {
@@ -232,6 +265,8 @@ export function audioEnv() {
     created,
     connections,
     analyser,
+    analyserOut,
+    gains,
     closedContexts: () => closedList,
     restore() {
       (globalThis as Record<string, unknown>).window = previousWindow;
@@ -319,7 +354,13 @@ export function engineHarness({
   innerWidth = 1280,
   innerHeight = 800,
   reduced = false,
-}: { innerWidth?: number; innerHeight?: number; reduced?: boolean } = {}): EngineHarness {
+  coarse = false,
+}: {
+  innerWidth?: number;
+  innerHeight?: number;
+  reduced?: boolean;
+  coarse?: boolean;
+} = {}): EngineHarness {
   const previous: Record<string, unknown> = {};
   const g = globalThis as Record<string, unknown>;
   for (const k of ["document", "window", "Image", "Audio", "requestAnimationFrame", "cancelAnimationFrame"]) {
@@ -345,7 +386,11 @@ export function engineHarness({
     devicePixelRatio: 1,
     AudioContext: audioWindow?.AudioContext,
     matchMedia: (query: string) => ({
-      matches: query.includes("reduced-motion") ? reduced : false,
+      matches: query.includes("reduced-motion")
+        ? reduced
+        : query.includes("pointer: coarse")
+          ? coarse
+          : false,
       media: query,
       addEventListener: (_t: string, fn: (e: unknown) => void) => motion.add(fn),
       removeEventListener: (_t: string, fn: (e: unknown) => void) => motion.delete(fn),

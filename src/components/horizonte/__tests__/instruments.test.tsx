@@ -21,12 +21,14 @@ const BASE: Snapshot = {
   idle: false,
   variant: "desktop",
   announce: "",
+  fault: null,
 };
 
 function fakeEngine(initial: Partial<Snapshot> = {}) {
   let snap: Snapshot = { ...BASE, ...initial };
   const subscribers = new Set<() => void>();
   let sink: ((f: FrameOut) => void) | null = null;
+  const frame: FrameOut = { progress: 0, position: 0, duration: 0 };
   const calls: { label: string; args: unknown[] }[] = [];
 
   const register =
@@ -52,11 +54,17 @@ function fakeEngine(initial: Partial<Snapshot> = {}) {
     enterAlbum: register("enterAlbum"),
     playTrack: register("playTrack"),
     setRailAlb: register("setRailAlb"),
+    setIntake: register("setIntake"),
     setRailTrk: register("setRailTrk"),
     skip: register("skip"),
     transport: register("transport"),
     back: register("back"),
     seekFraction: register("seekFraction"),
+    setVolume: register("setVolume"),
+    setMuted: register("setMuted"),
+    volume: 1,
+    muted: false,
+    frameOut: frame,
   };
 
   return {
@@ -68,6 +76,7 @@ function fakeEngine(initial: Partial<Snapshot> = {}) {
       for (const fn of subscribers) fn();
     },
     frame(f: FrameOut) {
+      Object.assign(frame, f);
       sink?.(f);
     },
     hasFrame: () => sink !== null,
@@ -107,6 +116,100 @@ describe("régua de álbuns", () => {
     const items = within(rail).getAllByRole("button");
     expect(items[items.length - 1].textContent).toContain("Trazer um disco");
     expect(within(rail).queryByText(/upload|arquivo|enviar/i)).toBeNull();
+  });
+});
+
+describe("entrada para trazer um disco", () => {
+  const entrada = () => {
+    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+    const items = within(rail).getAllByRole("button");
+    return items[items.length - 1];
+  };
+
+  const linhaDeAlbum = () => {
+    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+    return within(rail).getAllByRole("button")[1];
+  };
+
+  it("é uma ação, não um item do catálogo: fica fora da lista de álbuns", () => {
+    mount();
+    expect(entrada().closest("ul")).toBeNull();
+    expect(linhaDeAlbum().closest("ul")).not.toBeNull();
+  });
+
+  it("não usa a coluna de código de catálogo nem finge ser um disco", () => {
+    mount();
+    expect(entrada().textContent).toBe("Trazer um disco");
+    expect(entrada().textContent).not.toMatch(/[HL]—\d/);
+    expect(entrada().className).toContain("grid-cols-[1fr_7px]");
+    expect(linhaDeAlbum().className).toContain("grid-cols-[1fr_46px_7px]");
+  });
+
+  it("lê mais claro que os discos da lista, e não mais claro que o disco em foco", () => {
+    mount();
+    expect(entrada().className).toContain("text-ink-text-2");
+    expect(entrada().className).not.toContain("text-ink-faint");
+    expect(linhaDeAlbum().className).not.toContain("text-ink-text-2");
+  });
+
+  it("é separada da lista por respiro e régua própria", () => {
+    mount();
+    expect(entrada().className).toContain("mt-2.5");
+    expect(entrada().className).toContain("border-t");
+    expect(entrada().className).toContain("border-rule");
+  });
+
+  it("tem alvo maior que uma linha de catálogo, e maior ainda no compacto", () => {
+    mount();
+    expect(entrada().className).toContain("h-[34px]");
+    expect(entrada().className).toContain("compact:min-h-[52px]");
+  });
+
+  it("o marcador é um lugar vazio que se preenche ao apontar", () => {
+    mount();
+    const marca = entrada().querySelector("span[aria-hidden]")!;
+    const tokens = marca.className.split(/\s+/);
+    expect(tokens).toContain("border-ink-faint");
+    expect(tokens).not.toContain("bg-paper");
+    expect(tokens).toContain("group-hover:bg-paper");
+    expect(tokens).toContain("group-focus-visible:bg-paper");
+  });
+
+  it("apontar avisa o campo, e sair devolve", () => {
+    const fake = mount();
+    fireEvent.pointerEnter(entrada());
+    expect(fake.last("setIntake")?.args).toEqual([true]);
+    expect(fake.last("setRailAlb")?.args).toEqual([-1]);
+    fireEvent.pointerLeave(entrada());
+    expect(fake.last("setIntake")?.args).toEqual([false]);
+  });
+
+  it("o foco por teclado avisa o campo igual ao ponteiro", () => {
+    const fake = mount();
+    fireEvent.focus(entrada());
+    expect(fake.last("setIntake")?.args).toEqual([true]);
+    fireEvent.blur(entrada());
+    expect(fake.last("setIntake")?.args).toEqual([false]);
+  });
+
+  it("é alcançável por teclado enquanto a régua está aberta", () => {
+    mount();
+    expect(entrada().getAttribute("tabindex")).toBe("0");
+  });
+
+  it("arrastar arquivos acende a entrada e diz o que fazer", () => {
+    mount();
+    const dt = { types: ["Files"] };
+    act(() => {
+      window.dispatchEvent(
+        Object.assign(new Event("dragenter"), { dataTransfer: dt }),
+      );
+    });
+    expect(entrada().textContent).toBe("Solte para medir");
+    expect(entrada().className).toContain("text-ink-text");
+    expect(entrada().querySelector("span[aria-hidden]")!.className.split(/\s+/)).toContain(
+      "bg-paper",
+    );
   });
 
   it("marca o disco em foco para tecnologia assistiva", () => {
@@ -261,13 +364,107 @@ describe("transporte", () => {
     expect(fake.last("transport")).toBeDefined();
   });
 
-  it("clicar na barra busca a fração correspondente", () => {
-    const fake = mount({ scale: "track", playAlb: 0, mode: "playing" });
-    const bar = screen.getByRole("progressbar", { name: "Progresso da faixa" });
-    bar.getBoundingClientRect = () => ({ left: 100, width: 400 }) as DOMRect;
+  it("a posição na faixa é um slider de verdade, não uma barra decorativa", () => {
+    mount({ scale: "track", playAlb: 0, mode: "playing" });
+    const seek = screen.getByRole("slider", { name: "Posição na faixa" });
+    expect(seek.tagName).toBe("INPUT");
+    expect(seek.tabIndex).toBe(0);
+    expect(screen.queryByRole("progressbar")).toBeNull();
+  });
 
-    fireEvent.click(bar, { clientX: 300 });
+  it("arrastar o slider busca a fração correspondente", () => {
+    const fake = mount({ scale: "track", playAlb: 0, mode: "playing" });
+    const seek = screen.getByRole("slider", { name: "Posição na faixa" });
+    fireEvent.change(seek, { target: { value: "500" } });
     expect(fake.last("seekFraction")?.args).toEqual([0.5]);
+  });
+
+  it("as setas movem cinco segundos, não uma fração da faixa", () => {
+    const fake = mount({ scale: "track", playAlb: 0, mode: "playing" });
+    fake.frame({ progress: 0.5, position: 60, duration: 120 });
+    const seek = screen.getByRole("slider", { name: "Posição na faixa" });
+
+    fireEvent.keyDown(seek, { key: "ArrowRight" });
+    expect(fake.last("seekFraction")?.args[0]).toBeCloseTo(0.5 + 5 / 120, 6);
+
+    fireEvent.keyDown(seek, { key: "ArrowLeft" });
+    expect(fake.last("seekFraction")?.args[0]).toBeCloseTo(0.5 - 5 / 120, 6);
+  });
+
+  it("Home e End vão às pontas da faixa", () => {
+    const fake = mount({ scale: "track", playAlb: 0, mode: "playing" });
+    fake.frame({ progress: 0.5, position: 60, duration: 120 });
+    const seek = screen.getByRole("slider", { name: "Posição na faixa" });
+
+    fireEvent.keyDown(seek, { key: "Home" });
+    expect(fake.last("seekFraction")?.args[0]).toBeLessThanOrEqual(0);
+    fireEvent.keyDown(seek, { key: "End" });
+    expect(fake.last("seekFraction")?.args[0]).toBeGreaterThanOrEqual(1);
+  });
+
+  it("sem faixa carregada o teclado não busca no vazio", () => {
+    const fake = mount({ scale: "collection" });
+    const seek = screen.getByRole("slider", { name: "Posição na faixa" });
+    fireEvent.keyDown(seek, { key: "ArrowRight" });
+    expect(fake.last("seekFraction")).toBeUndefined();
+  });
+});
+
+describe("volume", () => {
+  it("existe um controle de volume alcançável por teclado", () => {
+    mount();
+    const vol = screen.getByRole("slider", { name: "Volume" });
+    expect(vol.tagName).toBe("INPUT");
+    expect(vol.tabIndex).toBe(0);
+  });
+
+  it("mover o controle pede o novo nível ao motor", () => {
+    const fake = mount();
+    const vol = screen.getByRole("slider", { name: "Volume" });
+    fireEvent.change(vol, { target: { value: "40" } });
+    expect(fake.last("setVolume")?.args).toEqual([0.4]);
+  });
+
+  it("o mudo é um estado marcado, e volta a soar ao mexer no nível", () => {
+    const fake = mount();
+    const botao = screen.getByRole("button", { name: "Som" });
+    fireEvent.click(botao);
+    expect(fake.last("setMuted")?.args).toEqual([true]);
+    expect(screen.getByRole("button", { name: "Mudo" }).getAttribute("aria-pressed")).toBe("true");
+
+    fireEvent.change(screen.getByRole("slider", { name: "Volume" }), { target: { value: "70" } });
+    expect(fake.last("setVolume")?.args).toEqual([0.7]);
+    expect(screen.getByRole("button", { name: "Som" })).toBeDefined();
+  });
+
+  it("no mudo o controle mostra zero sem esquecer o nível escolhido", () => {
+    mount();
+    fireEvent.change(screen.getByRole("slider", { name: "Volume" }), { target: { value: "60" } });
+    fireEvent.click(screen.getByRole("button", { name: "Som" }));
+    expect((screen.getByRole("slider", { name: "Volume" }) as HTMLInputElement).value).toBe("0");
+    fireEvent.click(screen.getByRole("button", { name: "Mudo" }));
+    expect((screen.getByRole("slider", { name: "Volume" }) as HTMLInputElement).value).toBe("60");
+  });
+});
+
+describe("falha de reprodução", () => {
+  it("em silêncio, nada é dito", () => {
+    mount({ scale: "track", playAlb: 0, mode: "playing" });
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("uma faixa que não carrega diz isso, em vez de fingir que toca", () => {
+    const fake = mount({ scale: "track", playAlb: 0, mode: "playing" });
+    act(() => fake.update({ fault: "source", mode: "paused" }));
+    const aviso = screen.getByRole("status");
+    expect(aviso.textContent).toMatch(/não consegui carregar/i);
+    expect(screen.getByRole("button", { name: /Retomar/ })).toBeDefined();
+  });
+
+  it("o bloqueio do navegador é dito com o que fazer a seguir", () => {
+    const fake = mount({ scale: "track", playAlb: 0, mode: "paused" });
+    act(() => fake.update({ fault: "blocked" }));
+    expect(screen.getByRole("status").textContent).toMatch(/bloqueou o som/i);
   });
 });
 
@@ -307,8 +504,23 @@ describe("crédito e anúncio", () => {
     mount({ alb: 3 });
     const link = screen.getByRole("link", { name: ALBUMS[3].license.name });
     expect(link.getAttribute("href")).toBe(ALBUMS[3].license.source);
-    expect(link.getAttribute("title")).toBe(ALBUMS[3].license.attribution);
+    expect(link.getAttribute("title")).toContain(ALBUMS[3].license.attribution);
     expect(link.getAttribute("rel")).toBe("noreferrer");
+  });
+
+  it("a observação da curadoria acompanha a atribuição, quando o autor exige", () => {
+    const i = ALBUMS.findIndex((a) => a.note);
+    expect(i, "o acervo precisa de ao menos um disco com observação").toBeGreaterThanOrEqual(0);
+    mount({ alb: i });
+    const credito = screen.getByRole("link", { name: ALBUMS[i].license.name });
+    expect(credito.getAttribute("title")).toContain(ALBUMS[i].note!);
+  });
+
+  it("um disco sem observação não ganha traço sobrando no crédito", () => {
+    const i = ALBUMS.findIndex((a) => !a.note);
+    mount({ alb: i });
+    const credito = screen.getByRole("link", { name: ALBUMS[i].license.name });
+    expect(credito.getAttribute("title")).toBe(ALBUMS[i].license.attribution);
   });
 
   it("publica o anúncio do motor numa região viva", () => {
@@ -321,27 +533,25 @@ describe("crédito e anúncio", () => {
 describe("canal contínuo", () => {
   it("escreve progresso, tempo e leitura assistiva sem novo render", () => {
     const fake = mount({ scale: "track", playAlb: 0, mode: "playing" });
-    const bar = screen.getByRole("progressbar", { name: "Progresso da faixa" });
-    const filled = bar.querySelector(":scope > div > div") as HTMLElement;
+    const seek = screen.getByRole("slider", { name: "Posição na faixa" }) as HTMLInputElement;
 
     fake.frame({ progress: 0.25, position: 30, duration: 120 });
 
-    expect(filled.style.width).toBe("25%");
+    expect(seek.style.getPropertyValue("--fill")).toBe("25%");
+    expect(seek.value).toBe("250");
     expect(screen.getByText("00:30 / 02:00")).toBeDefined();
-    expect(bar.getAttribute("aria-valuenow")).toBe("25");
-    expect(bar.getAttribute("aria-valuetext")).toBe("00:30 de 02:00");
+    expect(seek.getAttribute("aria-valuetext")).toBe("00:30 de 02:00");
   });
 
   it("a leitura assistiva é espaçada, o pixel não", () => {
     const fake = mount({ scale: "track", playAlb: 0, mode: "playing" });
-    const bar = screen.getByRole("progressbar", { name: "Progresso da faixa" });
-    const filled = bar.querySelector(":scope > div > div") as HTMLElement;
+    const seek = screen.getByRole("slider", { name: "Posição na faixa" }) as HTMLInputElement;
 
     fake.frame({ progress: 0.1, position: 12, duration: 120 });
     fake.frame({ progress: 0.2, position: 24, duration: 120 });
 
-    expect(filled.style.width).toBe("20%");
-    expect(bar.getAttribute("aria-valuenow")).toBe("10");
+    expect(seek.style.getPropertyValue("--fill")).toBe("20%");
+    expect(seek.getAttribute("aria-valuetext")).toBe("00:12 de 02:00");
   });
 
   it("desmontar cancela o registro do quadro", () => {
@@ -400,12 +610,34 @@ describe("composição compacta — as duas réguas não disputam espaço", () =
     }
   });
 
-  it("no celular, na coleção a régua de discos continua ativa", () => {
+  it("no celular a régua de discos se abre sob demanda, para não cobrir o mundo", () => {
     mount({ variant: "mobile", scale: "collection" });
     const albuns = regua("Álbuns");
-    expect(albuns.getAttribute("aria-hidden")).toBe("false");
-    expect(albuns.className).toContain("pointer-events-auto");
-    expect(within(albuns).getAllByRole("button")[0].tabIndex).toBe(0);
+    expect(albuns.getAttribute("aria-hidden")).toBe("true");
+
+    const abrir = screen.getByRole("button", { name: "Álbuns" });
+    expect(abrir.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(abrir);
+
+    expect(regua("Álbuns").getAttribute("aria-hidden")).toBe("false");
+    expect(regua("Álbuns").className).toContain("pointer-events-auto");
+    expect(within(regua("Álbuns")).getAllByRole("button")[0].tabIndex).toBe(0);
+    expect(screen.getByRole("button", { name: "Fechar" })).toBeDefined();
+  });
+
+  it("no celular, escolher um disco fecha a régua", () => {
+    const fake = mount({ variant: "mobile", scale: "collection" });
+    fireEvent.click(screen.getByRole("button", { name: "Álbuns" }));
+    const linha = within(regua("Álbuns")).getAllByRole("button")[0];
+    fireEvent.click(linha);
+    expect(fake.last("enterAlbum")?.args).toEqual([0]);
+    expect(regua("Álbuns").getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("no desktop não existe botão de abrir régua: ela já está aberta", () => {
+    mount({ variant: "desktop", scale: "collection" });
+    expect(screen.queryByRole("button", { name: "Álbuns" })).toBeNull();
+    expect(regua("Álbuns").getAttribute("aria-hidden")).toBe("false");
   });
 
   it("no desktop as duas convivem, como sempre", () => {
@@ -427,11 +659,25 @@ describe("composição compacta — bordas do aparelho e alvos de toque", () => 
     );
   });
 
-  it("a régua de faixas mede altura pela viewport dinâmica, não por 100vh", () => {
+  it("as réguas dividem uma coluna limitada, sem contar linhas em pixel", () => {
     mount({ scale: "album" });
     const faixas = document.querySelector('nav[aria-label^="Faixas"]') as HTMLElement;
-    expect(faixas.className).toContain("100dvh");
-    expect(faixas.className).not.toContain("100vh-");
+    const coluna = faixas.parentElement as HTMLElement;
+
+    expect(coluna.className).toContain("top-14");
+    expect(coluna.className).toContain("bottom-37.5");
+    expect(coluna.className).toContain("flex-col");
+    expect(faixas.className).toContain("overflow-y-auto");
+    expect(faixas.className).toContain("min-h-0");
+  });
+
+  it("a régua de discos rola em vez de transbordar quando o acervo cresce", () => {
+    mount();
+    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+    const lista = within(rail).getAllByRole("listitem")[0].parentElement as HTMLElement;
+    expect(lista.className).toContain("overflow-y-auto");
+    expect(lista.className).toContain("min-h-0");
+    expect(screen.getByText("Trazer um disco").closest("ul")).toBeNull();
   });
 
   it("a linha de transporte quebra em vez de cortar o timecode", () => {

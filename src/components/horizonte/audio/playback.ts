@@ -2,18 +2,22 @@ import { mediaUrl, needsCors } from "../content/assets";
 import type { AudioSource } from "../content/types";
 import { clamp } from "../math";
 
+export type PlaybackFault = "source" | "blocked";
+
 export interface Playback {
   readonly kind: AudioSource["kind"];
   load(source: AudioSource): void;
   play(): Promise<void>;
   pause(): void;
   seek(seconds: number): void;
+  setVolume(value: number): void;
   readonly position: number;
   readonly duration: number;
   readonly playing: boolean;
   connect(ctx: AudioContext, node: AudioNode): boolean;
   dispose(): void;
   onEnded: (() => void) | null;
+  onFault: ((fault: PlaybackFault) => void) | null;
 }
 
 interface Resolved {
@@ -25,19 +29,28 @@ interface Resolved {
 abstract class ElementPlayback implements Playback {
   abstract readonly kind: AudioSource["kind"];
   onEnded: (() => void) | null = null;
+  onFault: ((fault: PlaybackFault) => void) | null = null;
 
   protected el: HTMLAudioElement;
   private node: MediaElementAudioSourceNode | null = null;
   private key = "";
   private wantPlay = false;
+  private disposed = false;
 
   constructor() {
     this.el = new Audio();
     this.el.preload = "auto";
     this.el.addEventListener("ended", () => this.onEnded?.());
+    this.el.addEventListener("error", () => this.fail("source"));
   }
 
   protected abstract resolve(source: AudioSource): Resolved | null;
+
+  private fail(fault: PlaybackFault) {
+    if (this.disposed || !this.el.getAttribute("src")) return;
+    this.wantPlay = false;
+    this.onFault?.(fault);
+  }
 
   load(source: AudioSource) {
     const resolved = this.resolve(source);
@@ -54,8 +67,10 @@ abstract class ElementPlayback implements Playback {
     this.wantPlay = true;
     try {
       await this.el.play();
-    } catch {
+    } catch (e) {
       this.wantPlay = false;
+      const name = (e as Error | undefined)?.name ?? "";
+      this.onFault?.(name === "NotAllowedError" ? "blocked" : "source");
     }
   }
 
@@ -67,6 +82,10 @@ abstract class ElementPlayback implements Playback {
   seek(seconds: number) {
     if (!Number.isFinite(this.el.duration)) return;
     this.el.currentTime = clamp(seconds, 0, Math.max(0, this.el.duration - 0.05));
+  }
+
+  setVolume(value: number) {
+    this.el.volume = clamp(value, 0, 1);
   }
 
   get position() {
@@ -88,6 +107,7 @@ abstract class ElementPlayback implements Playback {
   }
 
   dispose() {
+    this.disposed = true;
     this.el.pause();
     this.el.removeAttribute("src");
     this.el.load();

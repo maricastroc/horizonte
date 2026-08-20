@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Ceremony from "./Ceremony";
 import { ALBUMS } from "./content";
 import { ACCEPT } from "./ingest/formats";
 import { useIngest } from "./ingest/useIngest";
 import { timecode } from "./format";
 import { COLOR, IDLE_OPACITY, rgba } from "./tokens";
-import type { Scale, Snapshot } from "./types";
+import type { Fault, Scale, Snapshot } from "./types";
 import type { FieldEngine } from "./engine/FieldEngine";
 
 const DEFAULT_SNAPSHOT: Snapshot = {
@@ -23,6 +23,7 @@ const DEFAULT_SNAPSHOT: Snapshot = {
   idle: false,
   variant: "desktop",
   announce: `Coleção · ${ALBUMS.length} corpos`,
+  fault: null,
 };
 
 const noop = () => () => {};
@@ -42,6 +43,14 @@ const MARK_ON = "block justify-self-end w-[7px] h-[7px]";
 
 const ARIA_MS = 1000;
 
+const SEEK_STEPS = 1000;
+const SEEK_KEY_S = 5;
+
+const FAULT: Record<Fault, string> = {
+  source: "Não consegui carregar esta faixa.",
+  blocked: "O navegador bloqueou o som — peça de novo.",
+};
+
 export const isInstrumentsTarget = (e: Event) => {
   const target = e.target as HTMLElement | null;
   return !!target?.closest?.("[data-instruments]");
@@ -57,9 +66,19 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   const { status, dragging, ingest, cancel } = useIngest(engine);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const barRef = useRef<HTMLDivElement>(null);
-  const seekRef = useRef<HTMLDivElement>(null);
+  const seekRef = useRef<HTMLInputElement>(null);
   const tcRef = useRef<HTMLSpanElement>(null);
+  const scrubbing = useRef(false);
+
+  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
+  const [railOpen, setRailOpen] = useState(false);
+
+  useEffect(() => {
+    if (!engine) return;
+    engine.setVolume(volume);
+    engine.setMuted(muted);
+  }, [engine, volume, muted]);
 
   const album = ALBUMS[snap.alb];
   const ink = rgba(album.inkA, 1);
@@ -68,19 +87,20 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
 
   useEffect(() => {
     if (!engine) return;
-    const bar = barRef.current;
     const tc = tcRef.current;
     const seek = seekRef.current;
     let ariaAt = 0;
 
     return engine.onFrame(({ progress, position, duration }) => {
-      if (bar) bar.style.width = `${progress * 100}%`;
       if (tc) tc.textContent = `${timecode(position)} / ${timecode(duration)}`;
+      if (!seek || scrubbing.current) return;
+
+      seek.style.setProperty("--fill", `${progress * 100}%`);
+      seek.value = String(Math.round(progress * SEEK_STEPS));
 
       const agora = performance.now();
-      if (seek && agora - ariaAt > ARIA_MS) {
+      if (agora - ariaAt > ARIA_MS) {
         ariaAt = agora;
-        seek.setAttribute("aria-valuenow", String(Math.round(progress * 100)));
         seek.setAttribute("aria-valuetext", `${timecode(position)} de ${timecode(duration)}`);
       }
     });
@@ -100,25 +120,53 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   );
 
   const onSeek = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      const r = e.currentTarget.getBoundingClientRect();
-      engine?.seekFraction((e.clientX - r.left) / r.width);
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const el = e.currentTarget;
+      el.style.setProperty("--fill", `${(Number(el.value) / SEEK_STEPS) * 100}%`);
+      engine?.seekFraction(Number(el.value) / SEEK_STEPS);
     },
     [engine],
   );
 
-  const trackRailOn = snap.scale !== "collection";
-  const railTop = Math.max(238, 56 + (ALBUMS.length + 1) * 26 + 52);
-  const focusStyle = useMemo(
-    () =>
-      ({
-        ["--focus-ink" as string]: ink,
-        ["--rail-top" as string]: `${railTop}px`,
-      }) as React.CSSProperties,
-    [ink, railTop],
+  const onSeekKey = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (!engine) return;
+      const { duration, progress } = engine.frameOut;
+      if (!duration) return;
+      let seconds: number | null = null;
+      if (e.key === "ArrowLeft" || e.key === "ArrowDown") seconds = -SEEK_KEY_S;
+      else if (e.key === "ArrowRight" || e.key === "ArrowUp") seconds = SEEK_KEY_S;
+      else if (e.key === "Home") seconds = -duration;
+      else if (e.key === "End") seconds = duration;
+      if (seconds === null) return;
+      e.preventDefault();
+      engine.seekFraction(progress + seconds / duration);
+    },
+    [engine],
   );
 
-  const albumRailOn = !(trackRailOn && snap.variant === "mobile");
+  const onVolume = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setVolume(Number(e.currentTarget.value) / 100);
+      setMuted(false);
+    },
+    [],
+  );
+
+  const toggleMute = useCallback(() => setMuted((v) => !v), []);
+
+  const trackRailOn = snap.scale !== "collection";
+  const compact = snap.variant === "mobile";
+  const albumRailOn = compact ? snap.scale === "collection" && railOpen : true;
+
+  const focusStyle = useMemo(
+    () => ({ ["--focus-ink" as string]: ink }) as React.CSSProperties,
+    [ink],
+  );
+
+  const shownVolume = muted ? 0 : volume;
+
+  const credito = [album.license.attribution, album.note].filter(Boolean).join(" — ");
 
   return (
     <div
@@ -160,153 +208,196 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         </nav>
       </div>
 
-      <nav
-        aria-label="Álbuns"
-        aria-hidden={!albumRailOn}
+      <div
         className={[
-          "absolute right-8.5 top-14 w-53.5 border-t border-rule",
-          "transition-opacity duration-300 ease-out",
-          "tablet:w-47.5",
-          "compact:left-4 compact:right-4 compact:top-24 compact:w-auto",
-          "backdrop-blur-sm bg-void/35 -mx-2 px-2",
-          albumRailOn ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
+          "absolute right-8.5 top-14 bottom-37.5 flex flex-col items-end gap-6.5",
+          "compact:left-4 compact:right-4 compact:top-24 compact:bottom-37.5",
         ].join(" ")}
       >
-        <ul>
-          {ALBUMS.map((a, i) => {
-            const isCur = i === focusAlb;
-            const isHov = i === snap.hoverAlb;
-            return (
-              <li key={a.cat}>
-                <button
-                  type="button"
-                  tabIndex={albumRailOn ? 0 : -1}
-                  aria-current={isCur ? "true" : undefined}
-                  style={{ color: isCur ? COLOR.inkText : isHov ? COLOR.inkHover : undefined }}
-                  onPointerEnter={() => engine?.setRailAlb(i)}
-                  onPointerLeave={() => engine?.setRailAlb(-1)}
-                  onFocus={() => engine?.setRailAlb(i)}
-                  onBlur={() => engine?.setRailAlb(-1)}
-                  onClick={() => engine?.enterAlbum(i)}
-                  className={`grid grid-cols-[1fr_46px_7px] hover:text-ink-text ${ROW}`}
-                >
-                  <span className="truncate">{a.artist}</span>
-                  <span className="text-right text-ink-faint">{a.cat}</span>
-                  <span
-                    aria-hidden
-                    className={MARK}
-                    style={{
-                      background: isCur
-                        ? rgba(a.inkA, 1)
-                        : i === snap.playAlb
-                          ? rgba(a.inkA, 0.5)
-                          : COLOR.inkGhost,
+        <nav
+          id="regua-albuns"
+          aria-label="Álbuns"
+          aria-hidden={!albumRailOn}
+          className={[
+            "flex min-h-0 shrink flex-col w-53.5 border-t border-rule",
+            "transition-opacity duration-300 ease-out",
+            "tablet:w-47.5 compact:w-full",
+            "backdrop-blur-sm bg-void/55 -mx-2 px-2",
+            albumRailOn ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
+            albumRailOn ? "" : "max-h-0 overflow-hidden",
+          ].join(" ")}
+        >
+          <ul className="rail-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            {ALBUMS.map((a, i) => {
+              const isCur = i === focusAlb;
+              const isHov = i === snap.hoverAlb;
+              return (
+                <li key={a.cat}>
+                  <button
+                    type="button"
+                    tabIndex={albumRailOn ? 0 : -1}
+                    aria-current={isCur ? "true" : undefined}
+                    style={{ color: isCur ? COLOR.inkText : isHov ? COLOR.inkHover : undefined }}
+                    onPointerEnter={() => engine?.setRailAlb(i)}
+                    onPointerLeave={() => engine?.setRailAlb(-1)}
+                    onFocus={() => engine?.setRailAlb(i)}
+                    onBlur={() => engine?.setRailAlb(-1)}
+                    onClick={() => {
+                      setRailOpen(false);
+                      engine?.enterAlbum(i);
                     }}
-                  />
-                </button>
-              </li>
-            );
-          })}
-          <li>
-            <button
-              type="button"
-              tabIndex={albumRailOn ? 0 : -1}
-              onClick={pick}
-              onPointerEnter={() => engine?.setRailAlb(-1)}
-              className={`grid grid-cols-[1fr_46px_7px] text-ink-faint hover:text-ink-text ${ROW}`}
-            >
-              <span className="truncate">
-                {dragging ? "Solte para medir" : "Trazer um disco"}
-              </span>
-              <span className="text-right text-ink-ghost">{dragging ? "" : "+"}</span>
-              <span aria-hidden className={MARK} style={{ background: COLOR.inkGhost }} />
-            </button>
-          </li>
-        </ul>
-        <input
-          ref={fileRef}
-          type="file"
-          multiple
-          accept={ACCEPT}
-          tabIndex={-1}
-          aria-hidden
-          onChange={onPicked}
-          className="sr-only"
-        />
-      </nav>
+                    className={`grid grid-cols-[1fr_46px_7px] hover:text-ink-text ${ROW}`}
+                  >
+                    <span className="truncate">{a.artist}</span>
+                    <span className="text-right text-ink-faint">{a.cat}</span>
+                    <span
+                      aria-hidden
+                      className={MARK}
+                      style={{
+                        background: isCur
+                          ? rgba(a.inkA, 1)
+                          : i === snap.playAlb
+                            ? rgba(a.inkA, 0.5)
+                            : COLOR.inkGhost,
+                      }}
+                    />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
 
-      <nav
-        aria-label={`Faixas de ${album.title}`}
-        aria-hidden={!trackRailOn}
-        className={[
-          "absolute right-8.5 top-[var(--rail-top)] w-65.5 border-t border-rule",
-          "transition-opacity duration-300 ease-out",
-          "rail-scroll overflow-y-auto overscroll-contain",
-          "max-h-[calc(100dvh-var(--rail-top)-150px)] compact:max-h-[min(calc(100dvh-260px),45dvh)]",
-          "tablet:w-60",
-          "compact:left-4 compact:right-4 compact:top-auto compact:bottom-37.5 compact:w-auto",
-          "backdrop-blur-sm bg-void/35 -mx-2 px-2",
-          trackRailOn ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
-        ].join(" ")}
-      >
-        <ul>
-          {album.tracks.map((t, i) => {
-            const isPlay = snap.playAlb === snap.alb && i === snap.trk;
-            const isSel = i === snap.sel;
-            const isHov = i === snap.hoverTrk;
-            return (
-              <li key={t.id}>
-                <button
-                  type="button"
-                  tabIndex={trackRailOn ? 0 : -1}
-                  aria-current={isPlay ? "true" : undefined}
-                  style={{
-                    color: isPlay ? ink : isSel ? COLOR.inkText : isHov ? COLOR.inkHover : undefined,
-                  }}
-                  onPointerEnter={() => engine?.setRailTrk(i)}
-                  onPointerLeave={() => engine?.setRailTrk(-1)}
-                  onFocus={() => engine?.setRailTrk(i)}
-                  onBlur={() => engine?.setRailTrk(-1)}
-                  onClick={() => engine?.playTrack(snap.alb, i)}
-                  className={`grid grid-cols-[22px_1fr_34px_7px] hover:text-ink-text ${ROW}`}
-                >
-                  <span>{String(i + 1).padStart(2, "0")}</span>
-                  <span className="truncate">{t.title}</span>
-                  <span className="text-right text-ink-faint">{timecode(t.dur)}</span>
-                  <span
-                    aria-hidden
-                    className={isPlay || isSel ? MARK_ON : MARK}
+          <button
+            type="button"
+            tabIndex={albumRailOn ? 0 : -1}
+            onClick={pick}
+            onPointerEnter={() => {
+              engine?.setRailAlb(-1);
+              engine?.setIntake(true);
+            }}
+            onPointerLeave={() => engine?.setIntake(false)}
+            onFocus={() => engine?.setIntake(true)}
+            onBlur={() => engine?.setIntake(false)}
+            className={[
+              "group mt-2.5 grid w-full flex-none cursor-pointer grid-cols-[1fr_7px] items-center gap-[10px]",
+              "h-[34px] border-t border-rule pt-2.5 text-left compact:min-h-[52px]",
+              "transition-colors duration-200 hover:text-ink-text focus-visible:text-ink-text",
+              dragging ? "text-ink-text" : "text-ink-text-2",
+            ].join(" ")}
+          >
+            <span className="truncate">
+              {dragging ? "Solte para medir" : "Trazer um disco"}
+            </span>
+            <span
+              aria-hidden
+              className={[
+                "block h-[7px] w-[7px] justify-self-end border transition-colors duration-200",
+                "group-hover:border-paper group-hover:bg-paper",
+                "group-focus-visible:border-paper group-focus-visible:bg-paper",
+                dragging ? "border-paper bg-paper" : "border-ink-faint",
+              ].join(" ")}
+            />
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            multiple
+            accept={ACCEPT}
+            tabIndex={-1}
+            aria-hidden
+            onChange={onPicked}
+            className="sr-only"
+          />
+        </nav>
+
+        <nav
+          aria-label={`Faixas de ${album.title}`}
+          aria-hidden={!trackRailOn}
+          className={[
+            "w-65.5 border-t border-rule",
+            "transition-opacity duration-300 ease-out",
+            "rail-scroll min-h-0 overflow-y-auto overscroll-contain",
+            "tablet:w-60 compact:w-full",
+            "backdrop-blur-sm bg-void/55 -mx-2 px-2",
+            trackRailOn
+              ? "pointer-events-auto flex-1 opacity-100"
+              : "pointer-events-none max-h-0 flex-none overflow-hidden opacity-0",
+          ].join(" ")}
+        >
+          <ul>
+            {album.tracks.map((t, i) => {
+              const isPlay = snap.playAlb === snap.alb && i === snap.trk;
+              const isSel = i === snap.sel;
+              const isHov = i === snap.hoverTrk;
+              return (
+                <li key={t.id}>
+                  <button
+                    type="button"
+                    tabIndex={trackRailOn ? 0 : -1}
+                    aria-current={isPlay ? "true" : undefined}
                     style={{
-                      background: isPlay ? ink : isSel ? COLOR.inkText : COLOR.inkGhost,
+                      color: isPlay ? ink : isSel ? COLOR.inkText : isHov ? COLOR.inkHover : undefined,
                     }}
-                  />
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+                    onPointerEnter={() => engine?.setRailTrk(i)}
+                    onPointerLeave={() => engine?.setRailTrk(-1)}
+                    onFocus={() => engine?.setRailTrk(i)}
+                    onBlur={() => engine?.setRailTrk(-1)}
+                    onClick={() => engine?.playTrack(snap.alb, i)}
+                    className={`grid grid-cols-[22px_1fr_34px_7px] hover:text-ink-text ${ROW}`}
+                  >
+                    <span>{String(i + 1).padStart(2, "0")}</span>
+                    <span className="truncate">{t.title}</span>
+                    <span className="text-right text-ink-faint">{timecode(t.dur)}</span>
+                    <span
+                      aria-hidden
+                      className={isPlay || isSel ? MARK_ON : MARK}
+                      style={{
+                        background: isPlay ? ink : isSel ? COLOR.inkText : COLOR.inkGhost,
+                      }}
+                    />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </div>
+
       <div
         className={[
           "pointer-events-auto absolute bottom-6.5 left-8.5 flex w-150 flex-col gap-2.75",
           "compact:left-4 compact:right-4 compact:bottom-4 compact:w-auto compact:gap-3.5",
         ].join(" ")}
       >
-        <div
+        <input
           ref={seekRef}
-          role="progressbar"
-          aria-label="Progresso da faixa"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={0}
-          title="Buscar na faixa"
-          onClick={onSeek}
-          className="flex h-2.25 cursor-pointer items-center compact:h-11"
-        >
-          <div className="h-px w-full bg-[rgba(232,228,220,.16)]">
-            <div ref={barRef} className="h-px w-0" style={{ background: barInk }} />
-          </div>
-        </div>
+          type="range"
+          min={0}
+          max={SEEK_STEPS}
+          step={1}
+          defaultValue={0}
+          aria-label="Posição na faixa"
+          aria-valuetext="00:00 de 00:00"
+          onChange={onSeek}
+          onKeyDown={onSeekKey}
+          onPointerDown={() => {
+            scrubbing.current = true;
+          }}
+          onPointerUp={() => {
+            scrubbing.current = false;
+          }}
+          onPointerCancel={() => {
+            scrubbing.current = false;
+          }}
+          style={{ ["--range-ink" as string]: barInk }}
+          className="rail-range h-2.25 w-full compact:h-11"
+        />
+
+        {snap.fault && (
+          <p role="status" className="normal-case tracking-[.08em] text-ink-text-2">
+            {FAULT[snap.fault]}
+          </p>
+        )}
 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1 compact:gap-x-4.5 compact:gap-y-2">
           <button
@@ -335,6 +426,33 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           >
             Próxima ▸▸
           </button>
+
+          <div className="flex flex-none items-center gap-2.5">
+            <button
+              type="button"
+              aria-pressed={muted}
+              onClick={toggleMute}
+              className="cursor-pointer whitespace-nowrap hover:text-ink-text compact:py-3.5"
+            >
+              {muted ? "Mudo" : "Som"}
+            </button>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={Math.round(shownVolume * 100)}
+              onChange={onVolume}
+              aria-label="Volume"
+              aria-valuetext={`${Math.round(shownVolume * 100)}%`}
+              style={{
+                ["--range-ink" as string]: COLOR.inkText,
+                ["--fill" as string]: `${shownVolume * 100}%`,
+              }}
+              className="rail-range h-2.25 w-18 compact:h-11 compact:w-24"
+            />
+          </div>
+
           <span ref={tcRef} className="ml-auto flex-none whitespace-nowrap text-ink-faint">
             00:00 / 00:00
           </span>
@@ -355,6 +473,17 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         >
           ◂ Voltar
         </button>
+        {compact && snap.scale === "collection" && (
+          <button
+            type="button"
+            aria-expanded={railOpen}
+            aria-controls="regua-albuns"
+            onClick={() => setRailOpen((v) => !v)}
+            className="cursor-pointer whitespace-nowrap hover:text-ink-text compact:py-3.5"
+          >
+            {railOpen ? "Fechar" : "Álbuns"}
+          </button>
+        )}
         <span className="whitespace-nowrap text-ink-faint compact:hidden">
           {snap.scale === "collection"
             ? `Coleção · ${snap.navAlb + 1}/${ALBUMS.length}`
@@ -365,14 +494,14 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             href={album.license.source}
             target="_blank"
             rel="noreferrer"
-            title={album.license.attribution}
+            title={credito}
             className="cursor-pointer whitespace-nowrap text-ink-faint hover:text-ink-text compact:py-3.5"
           >
             {album.license.name}
           </a>
         ) : (
           <span
-            title={album.license.attribution}
+            title={credito}
             className="whitespace-nowrap text-ink-faint compact:py-3.5"
           >
             {album.license.name}

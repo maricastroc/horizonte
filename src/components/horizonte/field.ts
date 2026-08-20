@@ -11,6 +11,7 @@ export interface FieldConstants {
   flatten: number;
   rimHardness: number;
   navLerp: number;
+  swirl: number;
 }
 
 export const RANGE = {
@@ -22,6 +23,7 @@ export const RANGE = {
   flatten: [0.57, 0.67],
   rimHardness: [2.6, 5.0],
   navLerp: [6.2, 4.3],
+  swirl: [0.62, 1.55],
 } as const;
 
 export const heftOf = (s: AlbumSignature) => s.loudness * 0.68 + s.duration * 0.32;
@@ -29,6 +31,7 @@ export const heftOf = (s: AlbumSignature) => s.loudness * 0.68 + s.duration * 0.
 export function fieldConstantsOf(sig: AlbumSignature, bias?: TrackBias): FieldConstants {
   const loudness = bias ? clamp(sig.loudness + bias.loudness, 0, 1) : sig.loudness;
   const dynamics = bias ? clamp(sig.dynamics + bias.dynamics, 0, 1) : sig.dynamics;
+  const lit = bias ? clamp(sig.brightness + bias.brightness, 0, 1) : sig.brightness;
   const heft = loudness * 0.68 + sig.duration * 0.32;
   return {
     artistWeight: Math.round(lerp(RANGE.artistWeight[0], RANGE.artistWeight[1], sig.loudness)),
@@ -37,8 +40,9 @@ export function fieldConstantsOf(sig: AlbumSignature, bias?: TrackBias): FieldCo
     reactionCap: lerp(RANGE.reactionCap[0], RANGE.reactionCap[1], dynamics),
     envelopeDepth: lerp(RANGE.envelopeDepth[0], RANGE.envelopeDepth[1], dynamics),
     flatten: lerp(RANGE.flatten[0], RANGE.flatten[1], sig.brightness),
-    rimHardness: lerp(RANGE.rimHardness[0], RANGE.rimHardness[1], sig.brightness),
+    rimHardness: lerp(RANGE.rimHardness[0], RANGE.rimHardness[1], lit),
     navLerp: lerp(RANGE.navLerp[0], RANGE.navLerp[1], sig.duration),
+    swirl: lerp(RANGE.swirl[0], RANGE.swirl[1], sig.pulse),
   };
 }
 
@@ -52,6 +56,7 @@ export function mixConstants(a: FieldConstants, b: FieldConstants, t: number): F
     flatten: lerp(a.flatten, b.flatten, t),
     rimHardness: lerp(a.rimHardness, b.rimHardness, t),
     navLerp: lerp(a.navLerp, b.navLerp, t),
+    swirl: lerp(a.swirl, b.swirl, t),
   };
 }
 

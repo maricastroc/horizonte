@@ -5,6 +5,9 @@ uniform vec4 uM0, uM1;
 uniform vec3 uCur;
 uniform vec3 uWave;
 uniform float uSpin, uBlur, uTime, uFade, uGrain, uDisp, uJet;
+// Alcance do cursor: +1 sobre um alvo, -1 sobre o vazio que devolve uma escala.
+// O anel fecha ou abre — mesma gramática da entrada de ingestão, sem palavra alguma.
+uniform float uReach;
 // Dureza do fio de luz rasante: brilho de timbre vira dureza de luz.
 // Constante por álbum (centróide medido), perturbada de leve pelo trecho.
 uniform float uRim;
@@ -85,6 +88,13 @@ void main(){
 
   float cd = length(p - uCur.xy);
   col += uInk * exp(-cd * cd * 5200.0) * 0.55;
+
+  if (abs(uReach) > 0.004){
+    float rad = 0.030 - 0.011 * uReach;
+    float rq = (cd - rad) / 0.0026;
+    float amp = uReach > 0.0 ? uReach * 0.62 : -uReach * 0.30;
+    col += uInk * exp(-rq * rq) * amp;
+  }
 
   col *= uFade;
   col += (hash(gl_FragCoord.xy + fract(uTime) * 91.3) - 0.5) * uGrain;

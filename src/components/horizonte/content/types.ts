@@ -1,9 +1,8 @@
 export type AudioSource =
   | { kind: "local"; src: string; mime?: string }
-  | { kind: "file"; url: string; name: string }
-  | { kind: "spotify"; uri: string };
+  | { kind: "file"; url: string; name: string };
 
-export type ProviderId = "curated" | "local" | "spotify";
+export type ProviderId = "curated" | "local";
 
 export interface CoverProvenance {
   license: string;
@@ -43,5 +42,7 @@ export interface Album {
   inkA: Ink;
   inkB: Ink;
   license: License;
+  label?: string;
+  note?: string;
   tracks: Track[];
 }

@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AudioBus } from "../audio/bus";
 import { LocalPlayback } from "../audio/playback";
 import { NEUTRAL_SIGNATURE } from "../content/signature";
-import type { Track } from "../content/types";
+import type { AudioSource, Track } from "../content/types";
 import { audioEnv } from "./fakes";
+
+const desconhecida = { kind: "stream", uri: "x" } as unknown as AudioSource;
 
 let env: ReturnType<typeof audioEnv>;
 
@@ -50,7 +52,7 @@ describe("LocalPlayback", () => {
 
   it("ignora fontes que não são locais", () => {
     const p = new LocalPlayback();
-    p.load({ kind: "spotify", uri: "spotify:track:x" });
+    p.load(desconhecida);
     expect(env.created[0].src).toBe("");
   });
 
@@ -170,7 +172,7 @@ describe("AudioBus", () => {
 
   it("ignora uma fonte sem player disponível", () => {
     const bus = new AudioBus();
-    bus.load({ id: "s", title: "s", dur: 10, source: { kind: "spotify", uri: "spotify:track:x" } });
+    bus.load({ id: "s", title: "s", dur: 10, source: desconhecida });
     expect(env.created).toHaveLength(0);
     expect(bus.playing).toBe(false);
   });
@@ -237,5 +239,96 @@ describe("AudioBus", () => {
     const bus = new AudioBus();
     expect(() => bus.seek(30)).not.toThrow();
     expect(bus.position).toBe(0);
+  });
+});
+
+describe("volume — o ganho fica depois do analisador", () => {
+  it("o grafo é elemento → analisador → ganho → saída", async () => {
+    const bus = new AudioBus();
+    bus.load(track("a", "/music/a/01.m4a"));
+    await bus.play();
+
+    const ganho = env.gains[0];
+    expect(ganho).toBeDefined();
+    expect(env.connections.map((c) => c.destino)).toContain(env.analyser);
+    expect(env.analyserOut).toContain(ganho);
+    expect(ganho.out).toHaveLength(1);
+  });
+
+  it("baixar o volume não mexe no que o analisador enxerga", async () => {
+    const bus = new AudioBus();
+    bus.load(track("a", "/music/a/01.m4a"));
+    await bus.play();
+    const antes = env.analyser.fftSize;
+
+    bus.setVolume(0.2);
+    expect(env.gains[0].gain.value).toBeCloseTo(0.2, 5);
+    expect(env.created[0].volume).toBe(1);
+    expect(env.analyser.fftSize).toBe(antes);
+  });
+
+  it("o mudo zera o ganho sem esquecer o nível escolhido", async () => {
+    const bus = new AudioBus();
+    bus.load(track("a", "/music/a/01.m4a"));
+    await bus.play();
+
+    bus.setVolume(0.6);
+    bus.setMuted(true);
+    expect(env.gains[0].gain.value).toBe(0);
+    expect(bus.volume).toBeCloseTo(0.6, 5);
+    expect(bus.muted).toBe(true);
+
+    bus.setMuted(false);
+    expect(env.gains[0].gain.value).toBeCloseTo(0.6, 5);
+  });
+
+  it("o nível escolhido antes do grafo é aplicado quando ele nasce", async () => {
+    const bus = new AudioBus();
+    bus.setVolume(0.35);
+    bus.load(track("a", "/music/a/01.m4a"));
+    await bus.play();
+    expect(env.gains[0].gain.value).toBeCloseTo(0.35, 5);
+  });
+});
+
+describe("falha de reprodução", () => {
+  it("um erro no arquivo é anunciado, não engolido", async () => {
+    const bus = new AudioBus();
+    const faults: string[] = [];
+    bus.onFault = (f) => faults.push(f);
+    bus.load(track("a", "/music/a/01.m4a"));
+    await bus.play();
+
+    env.created[0].emit("error");
+    expect(faults).toEqual(["source"]);
+    expect(bus.playing).toBe(false);
+  });
+
+  it("a recusa do navegador é distinguida do arquivo quebrado", async () => {
+    const bus = new AudioBus();
+    const faults: string[] = [];
+    bus.onFault = (f) => faults.push(f);
+    bus.load(track("a", "/music/a/01.m4a"));
+
+    const el = env.created[0];
+    el.play = async () => {
+      const e = new Error("no");
+      e.name = "NotAllowedError";
+      throw e;
+    };
+    await bus.play();
+    expect(faults).toEqual(["blocked"]);
+  });
+
+  it("descartar o player não inventa uma falha", async () => {
+    const bus = new AudioBus();
+    const faults: string[] = [];
+    bus.onFault = (f) => faults.push(f);
+    bus.load(track("a", "/music/a/01.m4a"));
+    await bus.play();
+
+    bus.dispose();
+    env.created[0].emit("error");
+    expect(faults).toEqual([]);
   });
 });

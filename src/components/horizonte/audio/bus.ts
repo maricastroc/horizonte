@@ -1,7 +1,8 @@
 import type { AlbumSignature } from "../content/signature";
 import type { AudioSource, Track } from "../content/types";
+import { clamp } from "../math";
 import { AudioAnalysis, type AudioFrame } from "./analysis";
-import { FilePlayback, LocalPlayback, type Playback } from "./playback";
+import { FilePlayback, LocalPlayback, type Playback, type PlaybackFault } from "./playback";
 
 export interface VisualAudioState extends AudioFrame {
   position: number;
@@ -15,13 +16,19 @@ function playbackFor(source: AudioSource): Playback | null {
   return null;
 }
 
+const VOLUME_RAMP = 0.015;
+
 export class AudioBus {
   onEnded: (() => void) | null = null;
+  onFault: ((fault: PlaybackFault) => void) | null = null;
 
   private ctx: AudioContext | null = null;
   private analysis: AudioAnalysis | null = null;
+  private gain: GainNode | null = null;
   private players = new Map<AudioSource["kind"], Playback>();
   private current: Playback | null = null;
+  private level = 1;
+  private silent = false;
 
   readonly state: VisualAudioState = {
     energy: 0,
@@ -47,7 +54,10 @@ export class AudioBus {
     this.ctx = new Ctor();
     this.analysis = new AudioAnalysis(this.ctx);
     if (this.reference) this.analysis.setReference(this.reference);
-    this.analysis.analyser.connect(this.ctx.destination);
+    this.gain = this.ctx.createGain();
+    this.gain.gain.value = this.effectiveLevel();
+    this.analysis.analyser.connect(this.gain);
+    this.gain.connect(this.ctx.destination);
     return this.ctx;
   }
 
@@ -58,6 +68,38 @@ export class AudioBus {
     this.analysis?.setReference(sig.reference);
   }
 
+  private effectiveLevel() {
+    return this.silent ? 0 : this.level;
+  }
+
+  private applyLevel() {
+    const value = this.effectiveLevel();
+    if (this.gain && this.ctx) {
+      this.gain.gain.setTargetAtTime(value, this.ctx.currentTime, VOLUME_RAMP);
+      return;
+    }
+    this.current?.setVolume(value);
+  }
+
+  get volume() {
+    return this.level;
+  }
+
+  get muted() {
+    return this.silent;
+  }
+
+  setVolume(value: number) {
+    this.level = clamp(value, 0, 1);
+    this.silent = false;
+    this.applyLevel();
+  }
+
+  setMuted(muted: boolean) {
+    this.silent = muted;
+    this.applyLevel();
+  }
+
   load(track: Track) {
     const source = track.source;
     let player = this.players.get(source.kind);
@@ -65,6 +107,7 @@ export class AudioBus {
       const made = playbackFor(source);
       if (!made) return;
       made.onEnded = () => this.onEnded?.();
+      made.onFault = (fault) => this.onFault?.(fault);
       this.players.set(source.kind, made);
       player = made;
     }
@@ -78,6 +121,7 @@ export class AudioBus {
     const player = this.current;
     if (!player) return;
     if (ctx && this.analysis) player.connect(ctx, this.analysis.analyser);
+    player.setVolume(ctx ? 1 : this.effectiveLevel());
     await player.play();
   }
 
@@ -125,6 +169,8 @@ export class AudioBus {
     this.players.forEach((p) => p.dispose());
     this.players.clear();
     this.current = null;
+    this.gain?.disconnect();
+    this.gain = null;
     void this.ctx?.close();
     this.ctx = null;
     this.analysis = null;

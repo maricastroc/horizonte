@@ -25,9 +25,72 @@ export const ANCHOR: Record<string, [number, number]> = {
   duration: [900, 5400],
   rolloff: [400, 4200],
   bassRatio: [0.2, 0.85],
+  pulse: [0.08, 0.88],
 };
 
-export type AnchorKey = "loudness" | "dynamics" | "brightness" | "duration" | "rolloff" | "bassRatio";
+export type AnchorKey =
+  | "loudness"
+  | "dynamics"
+  | "brightness"
+  | "duration"
+  | "rolloff"
+  | "bassRatio"
+  | "pulse";
+
+export const PULSE = {
+  memory: 0.9,
+  floor: 1e-4,
+  medianWindowS: 1.5,
+  lagLoS: 0.25,
+  lagHiS: 2.0,
+} as const;
+
+const FPS = SR / HOP;
+const LAG_LO = Math.max(2, Math.round(PULSE.lagLoS * FPS));
+const LAG_HI = Math.round(PULSE.lagHiS * FPS);
+const MED_HALF = Math.max(1, Math.round(PULSE.medianWindowS * FPS) >> 1);
+
+export const MIN_PULSE_FRAMES = LAG_HI * 2;
+
+function medianOf(v: Float64Array, from: number, to: number): number {
+  const n = to - from;
+  if (n <= 0) return 0;
+  const c = new Float64Array(n);
+  for (let i = 0; i < n; i++) c[i] = v[from + i];
+  c.sort();
+  return n % 2 ? c[(n - 1) >> 1] : (c[n / 2 - 1] + c[n / 2]) / 2;
+}
+
+export function pulseOf(onset: Float64Array): number {
+  const n = onset.length;
+  if (n < MIN_PULSE_FRAMES) return 0;
+
+  const w = new Float64Array(n);
+  let mean = 0;
+  for (let i = 0; i < n; i++) {
+    const m = medianOf(onset, Math.max(0, i - MED_HALF), Math.min(n, i + MED_HALF + 1));
+    w[i] = m > 1e-9 ? onset[i] / m : 0;
+    mean += w[i];
+  }
+  mean /= n;
+
+  let e0 = 0;
+  for (let i = 0; i < n; i++) {
+    w[i] -= mean;
+    e0 += w[i] * w[i];
+  }
+  if (e0 < 1e-12) return 0;
+
+  let best = 0;
+  const hi = Math.min(n - 1, LAG_HI);
+  for (let lag = LAG_LO; lag <= hi; lag++) {
+    let s = 0;
+    for (let i = 0; i + lag < n; i++) s += w[i] * w[i + lag];
+    const r = s / e0;
+    if (r > best) best = r;
+  }
+  return best;
+}
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
@@ -85,6 +148,7 @@ export interface TrackAnalysis {
   lowEnergy: number;
   totalEnergy: number;
   envelope: Float64Array;
+  pulse: number;
 }
 
 interface BinPlan {
@@ -165,6 +229,12 @@ export function analyzeTrackPcm(
   const DB_SPAN = MAX_DB - MIN_DB;
   const SCALE = FFT / 2;
 
+  const bins = FFT / 2 + 1;
+  const onset = new Float64Array(count);
+  const peak = new Float64Array(bins).fill(PULSE.floor * SCALE);
+  const prevW = new Float64Array(bins);
+  const floor = PULSE.floor * SCALE;
+
   for (let f = 0; f < count; f++) {
     if ((f & 1023) === 0) {
       if (shouldAbort?.()) throw new AbortAnalysis();
@@ -180,6 +250,17 @@ export function analyzeTrackPcm(
     rms[f] = Math.sqrt(sq / FFT) + 1e-9;
 
     const mag = fft.magnitudes(frame);
+
+    let rise = 0;
+    for (let b = 0; b < mag.length; b++) {
+      const p = Math.max(mag[b], PULSE.memory * peak[b], floor);
+      peak[b] = p;
+      const wv = mag[b] / p;
+      const d = wv - prevW[b];
+      if (d > 0) rise += d;
+      prevW[b] = wv;
+    }
+    if (f > 0) onset[f] = rise;
 
     let num = 0;
     let den = 0;
@@ -235,7 +316,18 @@ export function analyzeTrackPcm(
     }
   }
 
-  return { durationS, frames: count, rms, centroid, rolloff, bands, lowEnergy, totalEnergy, envelope };
+  return {
+    durationS,
+    frames: count,
+    rms,
+    centroid,
+    rolloff,
+    bands,
+    lowEnergy,
+    totalEnergy,
+    envelope,
+    pulse: pulseOf(onset),
+  };
 }
 
 export class AbortAnalysis extends Error {
@@ -264,6 +356,8 @@ export interface AlbumMeasurement {
   brightnessHz: number;
   rolloffHz: number;
   bassRatio: number;
+  pulse: number;
+  trackBrightnessHz: number[];
   spans: number[];
   envelopeBytes: Uint8Array;
   envelopeLo: number;
@@ -319,6 +413,22 @@ export function composeAlbum(tracks: TrackAnalysis[]): AlbumMeasurement {
 
   const bassRatio = lowEnergy / Math.max(totalEnergy, 1e-9);
 
+  let pulseNum = 0;
+  let pulseDen = 0;
+  for (const t of tracks) {
+    if (t.frames < MIN_PULSE_FRAMES) continue;
+    pulseNum += t.pulse * t.durationS;
+    pulseDen += t.durationS;
+  }
+  const pulse = pulseDen > 0 ? pulseNum / pulseDen : 0;
+
+  const trackBrightnessHz = tracks.map((t) => {
+    if (t.frames === 0) return brightnessHz;
+    let sum = 0;
+    for (let i = 0; i < t.centroid.length; i++) sum += t.centroid[i];
+    return round(sum / t.centroid.length, 1);
+  });
+
   const env = concat(tracks.map((t) => t.envelope));
   const resampled = new Float64Array(ENVELOPE_N);
   const last = env.length - 1;
@@ -349,6 +459,8 @@ export function composeAlbum(tracks: TrackAnalysis[]): AlbumMeasurement {
     brightnessHz: round(brightnessHz, 1),
     rolloffHz: round(rolloffHz, 1),
     bassRatio: round(bassRatio, 4),
+    pulse: round(pulse, 4),
+    trackBrightnessHz,
     spans: durations.map((d) => round(d / total, 6)),
     envelopeBytes,
     envelopeLo: eLo,
@@ -389,6 +501,7 @@ export interface AlbumProbe {
   loudnessDb: number;
   dynamicsDb: number;
   brightnessHz: number;
+  pulse: number;
 }
 
 export function probeAlbum(tracks: TrackAnalysis[]): AlbumProbe | null {
@@ -404,11 +517,19 @@ export function probeAlbum(tracks: TrackAnalysis[]): AlbumProbe | null {
   for (let i = 0; i < C.length; i++) cSum += C[i];
 
   const rSorted = sortedCopy(R);
+  let pNum = 0;
+  let pDen = 0;
+  for (const t of tracks) {
+    if (t.frames < MIN_PULSE_FRAMES) continue;
+    pNum += t.pulse * t.durationS;
+    pDen += t.durationS;
+  }
   return {
     durationS: tracks.reduce((a, t) => a + t.durationS, 0),
     loudnessDb: 20 * Math.log10(rSum / R.length),
     dynamicsDb:
       20 * Math.log10(percentile(rSorted, 95) / Math.max(percentile(rSorted, 5), 1e-9)),
     brightnessHz: cSum / C.length,
+    pulse: pDen > 0 ? pNum / pDen : 0,
   };
 }
