@@ -1,5 +1,6 @@
-import { BREAKPOINT, GEO, RING, RING_UNIT } from "../tokens";
+import { BREAKPOINT, GEO, REACH, RING, RING_UNIT } from "../tokens";
 import { albumProgressOf } from "../state";
+import type { AlbumMorphology } from "../morphology";
 import type { FieldState, Variant } from "../types";
 
 export const variantFor = (w: number, h = Number.POSITIVE_INFINITY): Variant =>
@@ -69,8 +70,47 @@ export function albPos(i: number, s: FieldState, L: WorldLayout) {
   return { x, y, depth, d };
 }
 
+export const baseRadius = (W: number, H: number, zoom: number, play: number, L: WorldLayout) =>
+  Math.min(W, H) * (0.42 - zoom * 0.115 + play * 0.055) * L.ringScale;
+
 export const ringR = (W: number, H: number, s: FieldState, L: WorldLayout) =>
-  Math.min(W, H) * (0.42 - s.zoom * 0.115 + s.play * 0.055) * L.ringScale;
+  baseRadius(W, H, s.zoom, s.play, L);
+
+export interface BodyGeom {
+  cx: number;
+  cy: number;
+  R: number;
+  flatten: number;
+}
+
+export function bodyGeomAt(
+  W: number,
+  H: number,
+  anchorX: number,
+  anchorY: number,
+  base: number,
+  m: AlbumMorphology,
+  ecc = 1,
+): BodyGeom {
+  const R = base * m.circuit;
+  return {
+    cx: anchorX * W + m.eccX * R * ecc,
+    cy: anchorY * H + m.eccY * R * m.flatten * ecc,
+    R,
+    flatten: m.flatten,
+  };
+}
+
+export function bodyGeom(
+  W: number,
+  H: number,
+  s: FieldState,
+  L: WorldLayout,
+  m: AlbumMorphology,
+): BodyGeom {
+  const p = albPos(s.alb, s, L);
+  return bodyGeomAt(W, H, p.x, p.y, ringR(W, H, s, L), m, s.zoom);
+}
 
 export function sectorAt(bounds: number[], t: number): number {
   const n = bounds.length - 1;
@@ -120,7 +160,7 @@ export function hitTest(
   L: WorldLayout,
   bounds: (alb: number) => number[],
   albumCount: number,
-  flatten: number,
+  morphOf: (alb: number) => AlbumMorphology,
 ): Hit {
   const mx = mouseX * W;
   const my = mouseY * H;
@@ -130,7 +170,7 @@ export function hitTest(
     let bd = Infinity;
     for (let i = 0; i < albumCount; i++) {
       const p = albPos(i, s, L);
-      const r = Math.min(W, H) * 0.12 * p.depth + 26;
+      const r = Math.min(W, H) * 0.12 * p.depth * morphOf(i).circuit + 26;
       const dd = Math.hypot(mx - p.x * W, my - p.y * H);
       if (dd < r && dd < bd) {
         bd = dd;
@@ -140,16 +180,15 @@ export function hitTest(
     return { kind: best >= 0 ? "body" : "empty", i: best };
   }
 
-  const p = albPos(s.alb, s, L);
-  const bx = p.x * W;
-  const by = p.y * H;
-  const R = ringR(W, H, s, L);
-  const dx = mx - bx;
-  const dy = (my - by) / flatten;
-  const rr = Math.hypot(dx, dy);
+  const m = morphOf(s.alb);
+  const g = bodyGeom(W, H, s, L, m);
+  const dx = mx - g.cx;
+  const dy = (my - g.cy) / g.flatten;
+  const rr = Math.hypot(dx, dy) / g.R;
 
-  if (rr < R * 0.55) return { kind: "body", i: s.alb };
-  if (rr > R * 0.62 && rr < R * 1.34) {
+  const bodyR = Math.min(m.coreRatio * REACH.core, m.rMin * REACH.inner * 0.98);
+  if (rr < bodyR) return { kind: "body", i: s.alb };
+  if (rr > m.rMin * REACH.inner && rr < m.rMax * REACH.outer) {
     let a = Math.atan2(dy, dx) - s.ringRot;
     a = ((a % 6.2832) + 6.2832) % 6.2832;
     return { kind: "track", i: sectorAt(bounds(s.alb), a / 6.2832) };

@@ -193,7 +193,7 @@ describe("o pulso sobrevive à masterização — que é o ponto", () => {
 
     for (const k of LEGADO) expect(gradeEsmagada[k]).toBeCloseTo(soltoEsmagado[k], 1);
     expect(gradeEsmagada.c.reactionCap).toBeCloseTo(soltoEsmagado.c.reactionCap, 3);
-    expect(gradeEsmagada.c.envelopeDepth).toBeCloseTo(soltoEsmagado.c.envelopeDepth, 3);
+    expect(gradeEsmagada.c.rimHardness).toBeCloseTo(soltoEsmagado.c.rimHardness, 1);
 
     expect(worldDistance(gradeEsmagada.c, soltoEsmagado.c)).toBeGreaterThan(0.4);
   });

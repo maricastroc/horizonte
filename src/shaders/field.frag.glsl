@@ -15,6 +15,16 @@ uniform float uRim;
 // playhead vira a hora do dia, e a duração vira a velocidade da varredura.
 uniform vec2 uLight;
 uniform vec3 uInk;
+// Lobos do corpo: os harmônicos 2..4 do envelope do álbum viram a forma do
+// horizonte. A macroforma do disco — como ele sobe e desce ao longo da
+// duração — deixa de ser espessura de anel e passa a ser o contorno da massa.
+// uLobeA = (a2,b2,a3,b3) · uLobeB = (a4,b4,amplitude,rotação)
+uniform vec4 uLobeA;
+uniform vec4 uLobeB;
+// Achatamento do corpo. O núcleo e a coroa compartilham um ângulo de visada:
+// sem isto, um disco escuro (coroa muito achatada) deixa o núcleo escapar por
+// cima e por baixo, e o mundo se parte em dois objetos.
+uniform float uFlat;
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(41.71, 289.13))) * 43758.5453); }
 
@@ -27,18 +37,35 @@ vec2 pullOf(vec2 p, vec4 m, float spin){
   return -dir * k * 0.13 + tang * k * spin * 0.13;
 }
 
-float coreOf(vec2 p, vec4 m){
-  if (m.w <= 0.0) return 0.0;
-  float r = length(p - m.xy);
-  return smoothstep(m.w, m.w * 0.87, r);
+float lobeOf(vec2 d){
+  if (uLobeB.z <= 0.0001) return 1.0;
+  float th = atan(d.y, d.x) - uLobeB.w;
+  float v = uLobeA.x * cos(2.0 * th) + uLobeA.y * sin(2.0 * th)
+          + uLobeA.z * cos(3.0 * th) + uLobeA.w * sin(3.0 * th)
+          + uLobeB.x * cos(4.0 * th) + uLobeB.y * sin(4.0 * th);
+  return 1.0 + uLobeB.z * v;
 }
 
-float rimOf(vec2 p, vec4 m){
+vec2 bodySpace(vec2 d, float lobed){
+  float f = mix(1.0, uFlat, lobed);
+  return vec2(d.x, d.y / max(f, 0.05));
+}
+
+float coreOf(vec2 p, vec4 m, float lobed){
   if (m.w <= 0.0) return 0.0;
-  vec2 d = p - m.xy;
-  float r = length(d);
-  float band = exp(-pow((r - m.w * 1.01) / (m.w * 0.028), 2.0));
-  float g = max(0.0, dot(normalize(d), normalize(uLight)));
+  vec2 e = bodySpace(p - m.xy, lobed);
+  float r = length(e);
+  float w = m.w * mix(1.0, lobeOf(e), lobed);
+  return smoothstep(w, w * 0.87, r);
+}
+
+float rimOf(vec2 p, vec4 m, float lobed){
+  if (m.w <= 0.0) return 0.0;
+  vec2 e = bodySpace(p - m.xy, lobed);
+  float r = length(e);
+  float w = m.w * mix(1.0, lobeOf(e), lobed);
+  float band = exp(-pow((r - w * 1.01) / (w * 0.028), 2.0));
+  float g = max(0.0, dot(normalize(e), normalize(uLight)));
   return band * pow(g, uRim) * 1.25;
 }
 
@@ -70,9 +97,9 @@ void main(){
   vec2 offUv = off / vec2(aspect, 1.0);
   vec3 col = samp(uBack, uv, offUv, uBlur);
 
-  float core = max(coreOf(p, uM0), coreOf(p, uM1));
+  float core = max(coreOf(p, uM0, 1.0), coreOf(p, uM1, 0.0));
   col = mix(col, vec3(0.0), core);
-  col += uInk * (rimOf(p, uM0) + rimOf(p, uM1)) * 1.15;
+  col += uInk * (rimOf(p, uM0, 1.0) + rimOf(p, uM1, 0.0)) * 1.15;
 
   if (uJet > 0.001){
     vec2 jd = p - uM0.xy;

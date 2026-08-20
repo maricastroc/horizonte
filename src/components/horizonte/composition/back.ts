@@ -1,12 +1,13 @@
 import { ALBUMS, boundsOf } from "../content";
 import type { FieldConstants } from "../field";
+import { outerAt, type AlbumMorphology } from "../morphology";
 import { isEngaged, progressOf } from "../state";
-import { COLOR, GEO, PARTICLES, RING, rgba } from "../tokens";
+import { COLOR, GEO, MORPH, PARTICLES, RING, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
 import type { RingBakery } from "./ring";
 import { ls, type Ctx } from "./ctx";
-import { albPos, lockup, ringBufferScale, ringR, type WorldLayout } from "./layout";
+import { albPos, bodyGeom, lockup, ringBufferScale, type WorldLayout } from "./layout";
 
 export interface BackDeps {
   fonts: FontFamilies;
@@ -15,6 +16,8 @@ export interface BackDeps {
   weights: number[];
   parts: Particle[];
   C: FieldConstants;
+  morph: AlbumMorphology;
+  morphOf: (alb: number) => AlbumMorphology;
 }
 
 export function makeParticles(): Particle[] {
@@ -53,6 +56,48 @@ function drawRing(
   x.restore();
 }
 
+function drawSatellites(
+  x: Ctx,
+  bx: number,
+  by: number,
+  R: number,
+  m: AlbumMorphology,
+  fade: number,
+  ink: string,
+) {
+  if (fade <= 0.01) return;
+  x.save();
+  for (const sat of m.satellites) {
+    if (sat.weight <= 0.02) continue;
+    const px = bx + Math.cos(sat.angle) * sat.dist * R;
+    const py = by + Math.sin(sat.angle) * sat.dist * R * m.flatten;
+    const r = sat.size * R * (0.4 + 0.6 * sat.weight);
+    const a = fade * sat.weight;
+
+    x.globalAlpha = a * 0.95;
+    x.fillStyle = COLOR.body;
+    x.beginPath();
+    x.ellipse(px, py, r, r * m.flatten, 0, 0, 6.2832);
+    x.fill();
+
+    x.globalAlpha = a * 0.85;
+    x.strokeStyle = ink;
+    x.lineWidth = Math.max(1.4, r * MORPH.satRim);
+    x.beginPath();
+    x.ellipse(
+      px,
+      py,
+      r * (1 + MORPH.satRim * 0.5),
+      r * (1 + MORPH.satRim * 0.5) * m.flatten,
+      0,
+      MORPH.satArcSpan[0],
+      MORPH.satArcSpan[1],
+    );
+    x.stroke();
+  }
+  x.restore();
+}
+
 function trackLabels(
   x: Ctx,
   bx: number,
@@ -63,11 +108,12 @@ function trackLabels(
   s: FieldState,
   L: WorldLayout,
   fonts: FontFamilies,
-  flatten: number,
+  m: AlbumMorphology,
 ) {
   const A = ALBUMS[s.alb];
   const N = A.tracks.length;
   const bounds = boundsOf(A.signature, N);
+  const flatten = m.flatten;
   x.save();
   x.textBaseline = "middle";
   ls(x, "0.2em");
@@ -75,8 +121,9 @@ function trackLabels(
   for (let k = 0; k < N; k++) {
     const t = (bounds[k] + bounds[k + 1]) / 2;
     const a = t * 6.2832 + s.ringRot;
-    const px = Math.max(W * 0.055, Math.min(W * 0.62, bx + Math.cos(a) * R * 1.24));
-    const py = by + Math.sin(a) * R * 1.24 * flatten;
+    const reach = (m.rMax + 0.16) * R;
+    const px = Math.max(W * 0.055, Math.min(W * 0.62, bx + Math.cos(a) * reach));
+    const py = Math.max(H * 0.09, Math.min(H * 0.84, by + Math.sin(a) * reach * flatten));
     const on = k === s.sel || (s.playAlb === s.alb && k === s.trk);
     if (L.ringLabels === "selecionado" && !on) continue;
     const hidden = Math.cos(a) > 0.3 || (py > H * 0.6 && px < W * 0.46);
@@ -91,12 +138,13 @@ function trackLabels(
       py,
     );
 
+    const tick = outerAt(m, t) * R;
     x.globalAlpha = s.fadeSel * (on ? 0.6 : 0.18);
     x.strokeStyle = on ? rgba(A.inkA, 1) : COLOR.dust;
     x.lineWidth = 1;
     x.beginPath();
-    x.moveTo(bx + Math.cos(a) * R * 1.08, by + Math.sin(a) * R * 1.08 * flatten);
-    x.lineTo(bx + Math.cos(a) * R * 1.2, by + Math.sin(a) * R * 1.2 * flatten);
+    x.moveTo(bx + Math.cos(a) * tick * 1.04, by + Math.sin(a) * tick * 1.04 * flatten);
+    x.lineTo(bx + Math.cos(a) * (reach - R * 0.05), by + Math.sin(a) * (reach - R * 0.05) * flatten);
     x.stroke();
   }
   x.restore();
@@ -111,23 +159,23 @@ export function drawBack(
   deps: BackDeps,
 ) {
   const x = ctx as Ctx;
-  const { fonts, covers, rings, weights, parts, C } = deps;
+  const { fonts, covers, rings, weights, parts, C, morph, morphOf } = deps;
   const A = ALBUMS[s.alb];
   const inkA = (a: number) => rgba(A.inkA, a);
   const inkB = (a: number) => rgba(A.inkB, a);
-  const p0 = albPos(s.alb, s, L);
-  const bx = p0.x * W;
-  const by = p0.y * H;
+  const g = bodyGeom(W, H, s, L, morph);
+  const bx = g.cx;
+  const by = g.cy;
   const M = Math.min(W, H);
 
   x.fillStyle = COLOR.void;
   x.fillRect(0, 0, W, H);
 
-  const g = x.createRadialGradient(bx - W * 0.06, by, 0, bx, by, W * 0.62);
-  g.addColorStop(0, inkA(0.15 + s.energy * 0.07));
-  g.addColorStop(0.45, inkB(0.06));
-  g.addColorStop(1, "rgba(7,7,10,0)");
-  x.fillStyle = g;
+  const g0 = x.createRadialGradient(bx - W * 0.06, by, 0, bx, by, W * 0.62);
+  g0.addColorStop(0, inkA(0.15 + s.energy * 0.07));
+  g0.addColorStop(0.45, inkB(0.06));
+  g0.addColorStop(1, "rgba(7,7,10,0)");
+  x.fillStyle = g0;
   x.fillRect(0, 0, W, H);
 
   for (let i = 0; i < ALBUMS.length; i++) {
@@ -135,11 +183,12 @@ export function drawBack(
     const p = albPos(i, s, L);
     const a = Math.max(0, 0.62 * p.depth * (1 - s.zoom));
     if (a < 0.02) continue;
-    const R = M * (0.16 + 0.24 * p.depth) * L.ringScale;
-    drawRing(x, rings.arc(i), p.x * W, p.y * H, R, RING.anchor + i * RING.neighborPhase, a, C.flatten);
+    const mi = morphOf(i);
+    const R = M * (0.16 + 0.24 * p.depth) * L.ringScale * mi.circuit;
+    drawRing(x, rings.arc(i), p.x * W, p.y * H, R, RING.anchor + i * RING.neighborPhase, a, mi.flatten);
 
     x.save();
-    const br = M * GEO.neighborR * p.depth;
+    const br = M * GEO.neighborR * p.depth * mi.circuit;
     x.globalAlpha = a * 0.9;
     x.fillStyle = COLOR.body;
     x.beginPath();
@@ -173,7 +222,9 @@ export function drawBack(
     x.restore();
   }
 
-  const R = ringR(W, H, s, L);
+  const R = g.R;
+  drawSatellites(x, bx, by, R, morph, s.fadeSel * (1 - s.mix), inkA(0.9));
+
   if (s.fadeSel < 0.98) {
     drawRing(
       x,
@@ -183,7 +234,7 @@ export function drawBack(
       R,
       s.ringRot,
       (1 - s.fadeSel) * (1 - s.mix * 0.7) * 0.85,
-      C.flatten,
+      morph.flatten,
     );
   }
   if (s.fadeSel > 0.02) {
@@ -192,8 +243,8 @@ export function drawBack(
         ? s.trk
         : -1;
     const prog = progressOf(s);
-    const seg = rings.seg(s.alb, s.sel, s.hover, activeTrk, prog, inkA(1), C.envelopeDepth);
-    drawRing(x, seg, bx, by, R, s.ringRot, s.fadeSel * (1 - s.mix * 0.6), C.flatten);
+    const seg = rings.seg(s.alb, s.sel, s.hover, activeTrk, prog, inkA(1));
+    drawRing(x, seg, bx, by, R, s.ringRot, s.fadeSel * (1 - s.mix * 0.6), morph.flatten);
 
     if (s.mix > 0) {
       const other = ALBUMS[s.fuseAlb] ? s.fuseAlb : s.alb;
@@ -205,11 +256,11 @@ export function drawBack(
         R * (1.18 - s.mix * 0.18),
         -s.ringRot * 0.7 + 1.1,
         s.mix * 0.8,
-        C.flatten,
+        morph.flatten,
       );
     }
 
-    trackLabels(x, bx, by, R, W, H, s, L, fonts, C.flatten);
+    trackLabels(x, bx, by, R, W, H, s, L, fonts, morph);
   }
 
   x.save();
@@ -284,5 +335,5 @@ export function drawBack(
   scrimT.addColorStop(0, "rgba(7,7,10,.72)");
   scrimT.addColorStop(1, "rgba(7,7,10,0)");
   x.fillStyle = scrimT;
-  x.fillRect(0, 0, W, H * GEO.scrimTop);
+  x.fillRect(0, 0, W, H * (GEO.scrimTop));
 }

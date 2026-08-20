@@ -8,6 +8,7 @@ import { layoutFor } from "../composition/layout";
 import { RingBakery } from "../composition/ring";
 import { ALBUMS, boundsOf } from "../content";
 import { fieldConstantsOf } from "../field";
+import { morphologyOf } from "../morphology";
 import { createFieldUniforms } from "../fieldMaterial";
 import { initialState } from "../state";
 import { PARTICLES } from "../tokens";
@@ -24,6 +25,9 @@ const state = (over: Partial<FieldState> = {}): FieldState => ({ ...initialState
 
 const weights = ALBUMS.map((a) => Math.round(fieldConstantsOf(a.signature).artistWeight));
 
+const morphOf = (alb: number) =>
+  morphologyOf(ALBUMS[alb].signature, ALBUMS[alb].tracks.length);
+
 const backDeps = () => ({
   fonts: FONTS,
   covers,
@@ -31,6 +35,8 @@ const backDeps = () => ({
   weights: weights,
   parts: makeParticles(),
   C: fieldConstantsOf(ALBUMS[0].signature),
+  morph: morphOf(0),
+  morphOf,
 });
 
 beforeEach(() => {
@@ -261,7 +267,7 @@ describe("RingBakery", () => {
   });
 
   it("o setor devolve sempre o mesmo buffer de saída", () => {
-    const s = rings.seg(0, 0, -1, -1, 0, "rgba(0,0,0,1)", 0.2);
-    expect(rings.seg(0, 1, -1, -1, 0, "rgba(0,0,0,1)", 0.2)).toBe(s);
+    const s = rings.seg(0, 0, -1, -1, 0, "rgba(0,0,0,1)");
+    expect(rings.seg(0, 1, -1, -1, 0, "rgba(0,0,0,1)")).toBe(s);
   });
 });

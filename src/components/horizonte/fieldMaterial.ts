@@ -22,6 +22,9 @@ export interface FieldUniforms {
   uRim: { value: number };
   uLight: { value: THREE.Vector2 };
   uInk: { value: THREE.Vector3 };
+  uLobeA: { value: THREE.Vector4 };
+  uLobeB: { value: THREE.Vector4 };
+  uFlat: { value: number };
   [key: string]: THREE.IUniform;
 }
 
@@ -45,6 +48,9 @@ export function createFieldUniforms(): FieldUniforms {
     uRim: { value: 3.5 },
     uLight: { value: new THREE.Vector2(-0.7, 0.71) },
     uInk: { value: new THREE.Vector3(1, 1, 1) },
+    uLobeA: { value: new THREE.Vector4(0, 0, 0, 0) },
+    uLobeB: { value: new THREE.Vector4(0, 0, 0, 0) },
+    uFlat: { value: 1 },
   };
 }
 

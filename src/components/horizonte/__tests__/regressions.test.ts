@@ -23,6 +23,8 @@ import { FieldEngine } from "../engine/FieldEngine";
 import * as T from "../engine/transport";
 import type { Catalog } from "../engine/transport";
 import { hitTest, layoutFor, sectorAt } from "../composition/layout";
+import { NEUTRAL_MORPHOLOGY } from "../morphology";
+import { MORPH } from "../tokens";
 import { initialState } from "../state";
 import { engineHarness, type EngineHarness, type FakeAudio } from "./fakes";
 
@@ -127,7 +129,7 @@ describe("janela degenerada", () => {
 
   it("o hit-test sobrevive a dimensões degeneradas", () => {
     const s = { ...initialState(), scale: "album" as const };
-    const h = hitTest(0.5, 0.5, 2, 2, s, layoutFor("desktop"), () => [0, 1], 1, 0.62);
+    const h = hitTest(0.5, 0.5, 2, 2, s, layoutFor("desktop"), () => [0, 1], 1, () => NEUTRAL_MORPHOLOGY);
     expect(["body", "track", "empty"]).toContain(h.kind);
   });
 });
@@ -194,9 +196,11 @@ describe("signature sensorial nas bordas", () => {
     m().enterAlbum(i);
     for (let k = 0; k < 60; k++) a().advance(16);
 
-    const C = (m() as unknown as { C: { flatten: number; rimHardness: number } }).C;
-    expect(C.flatten).toBeGreaterThan(0.55);
-    expect(C.flatten).toBeLessThanOrEqual(0.68);
+    const C = (m() as unknown as { C: { rimHardness: number } }).C;
+    const M = (m() as unknown as { M: { flatten: number; coreRatio: number } }).M;
+    expect(M.flatten).toBeGreaterThanOrEqual(MORPH.flatten[0]);
+    expect(M.flatten).toBeLessThanOrEqual(MORPH.flatten[1]);
+    expect(M.coreRatio).toBeLessThanOrEqual(MORPH.core[1]);
     expect(C.rimHardness).toBeLessThanOrEqual(5);
   });
 });

@@ -8,6 +8,8 @@ import { drawFront, type FrontDeps } from "../composition/front";
 import { loadCovers, makeCover, type CoverAsset } from "../composition/cover";
 import {
   albPos,
+  baseRadius,
+  bodyGeom,
   hitTest,
   layoutFor,
   ringRotationTarget,
@@ -16,6 +18,12 @@ import {
   type WorldLayout,
 } from "../composition/layout";
 import { RingBakery } from "../composition/ring";
+import {
+  mixMorphology,
+  morphologyOf,
+  NEUTRAL_MORPHOLOGY,
+  type AlbumMorphology,
+} from "../morphology";
 import { ALBUMS, NEUTRAL_BIAS, onCatalogChange, trackBiasOf, type TrackBias } from "../content";
 import {
   fieldConstantsOf,
@@ -44,6 +52,7 @@ import {
   IDLE_MS,
   LERP,
   INTAKE,
+  MORPH,
   SECOND_MASS,
   SEQ,
   TRACK_BIAS,
@@ -65,6 +74,8 @@ const PAN = {
 } as const;
 
 const CURSOR_GAIN = 9;
+
+const HORIZON_REF = 0.096;
 
 function readExperiment(name: string) {
   const search = (globalThis as { location?: { search?: string } }).location?.search ?? "";
@@ -95,6 +106,7 @@ export class FieldEngine implements InputActions {
   private covers: CoverAsset[];
   private rings: RingBakery;
   private FIELD: FieldConstants[] = [];
+  private MORPH: AlbumMorphology[] = [];
   private WEIGHTS: number[] = [];
   private unsubscribeCatalog: (() => void) | null = null;
   private parts: Particle[] = makeParticles();
@@ -111,6 +123,8 @@ export class FieldEngine implements InputActions {
 
   private mouse = { x: 0.55, y: 0.45, tx: 0.55, ty: 0.45, v: 0, down: false, moved: 0, lx: 0 };
   private C: FieldConstants;
+  private M: AlbumMorphology = NEUTRAL_MORPHOLOGY;
+  private hzK = 1;
   private bias: TrackBias = { ...NEUTRAL_BIAS };
   private lightSweep = 0;
   private m1 = { x: 0, y: 0, k: 0, h: 0, alb: -1, ready: false };
@@ -199,6 +213,7 @@ export class FieldEngine implements InputActions {
       }
     }
     this.FIELD = ALBUMS.map((a) => fieldConstantsOf(a.signature));
+    this.MORPH = ALBUMS.map((a) => morphologyOf(a.signature, a.tracks.length));
     this.WEIGHTS = this.FIELD.map((c) => Math.round(c.artistWeight));
     this.rings.sync();
   }
@@ -332,6 +347,10 @@ export class FieldEngine implements InputActions {
     this.intake = on;
   }
 
+  private morphAt(i: number): AlbumMorphology {
+    return this.MORPH[clamp(i, 0, this.MORPH.length - 1)] ?? NEUTRAL_MORPHOLOGY;
+  }
+
   private hit() {
     return hitTest(
       this.mouse.tx,
@@ -342,8 +361,38 @@ export class FieldEngine implements InputActions {
       this.L,
       (a) => this.rings.bounds(a),
       ALBUMS.length,
-      this.C.flatten,
+      (a) => this.morphAt(a),
     );
+  }
+
+  private morphFor(): AlbumMorphology {
+    const s = this.st;
+    const n = this.MORPH.length;
+    if (!n) return NEUTRAL_MORPHOLOGY;
+    let m: AlbumMorphology;
+    if (s.scale === "collection") {
+      const i = clamp(Math.floor(s.nav), 0, n - 1);
+      const j = clamp(i + 1, 0, n - 1);
+      m = mixMorphology(this.MORPH[i], this.MORPH[j], s.nav - i);
+    } else {
+      m = this.morphAt(s.alb);
+    }
+    if (s.mix > 0 && this.MORPH[s.fuseAlb]) m = mixMorphology(m, this.MORPH[s.fuseAlb], s.mix);
+    return m;
+  }
+
+  private leadSatellite() {
+    let best: (typeof this.M.satellites)[number] | null = null;
+    for (const sat of this.M.satellites) {
+      if (sat.weight <= 0.02) continue;
+      if (!best || sat.weight * sat.size > best.weight * best.size) best = sat;
+    }
+    return best;
+  }
+
+  private horizonUnit(): number {
+    const R = baseRadius(this.W, this.H, 1, 0, this.L) * this.M.circuit;
+    return (this.M.coreRatio * R) / Math.max(1, this.H);
   }
 
   private fieldFor(): FieldConstants {
@@ -487,6 +536,8 @@ export class FieldEngine implements InputActions {
       weights: this.WEIGHTS,
       parts: this.parts,
       C: this.C,
+      morph: this.M,
+      morphOf: (a) => this.morphAt(a),
     };
   }
 
@@ -501,6 +552,7 @@ export class FieldEngine implements InputActions {
     if (s.segueT < SEQ.segue.total) s.segueT += dt;
     this.trackBias(dt);
     this.C = this.fieldFor();
+    this.M = this.morphFor();
 
     const K = this.reduced ? 0.25 : 1;
     const m = this.mouse;
@@ -535,9 +587,11 @@ export class FieldEngine implements InputActions {
     this.reachOf(h, dt);
 
     const C = this.C;
+    const hzK = this.horizonUnit() / HORIZON_REF;
+    this.hzK = hzK;
     const tgt = {
       m0k: 0.088 * K * C.massScale,
-      m0h: 0.112 * C.horizonScale,
+      m0h: 0.112 * hzK,
       spin: 0.06 * C.swirl,
       blur: 0,
       fade: 1,
@@ -546,7 +600,7 @@ export class FieldEngine implements InputActions {
     };
     if (s.scale === "album") {
       tgt.m0k = 0.1 * K * C.massScale;
-      tgt.m0h = 0.096 * C.horizonScale;
+      tgt.m0h = 0.096 * hzK;
       tgt.spin = 0.16 * C.swirl;
     }
 
@@ -661,13 +715,14 @@ export class FieldEngine implements InputActions {
 
     const p = albPos(at, s, this.L);
     const C = this.FIELD[clamp(at, 0, n - 1)];
+    const mm = this.morphAt(at);
     const gain = pointed >= 0 && !this.intake && !this.reduced ? SECOND_MASS.pointGain : 1;
     const k = this.intake
       ? SECOND_MASS.k * INTAKE.mass
       : SECOND_MASS.k * C.massScale * gain;
     const h = this.intake
       ? SECOND_MASS.h * INTAKE.horizon
-      : SECOND_MASS.h * C.horizonScale;
+      : SECOND_MASS.h * (mm.coreRatio / MORPH.coreRef) * mm.circuit;
 
     const m = this.m1;
     if (!m.ready || m.alb !== at) m.alb = at;
@@ -702,7 +757,7 @@ export class FieldEngine implements InputActions {
       const e = Math.min(1, p / SEQ.reduced);
       tgt.fade = 0.45 + 0.55 * Math.abs(e * 2 - 1);
       tgt.m0k = 0.075 * K;
-      tgt.m0h = 0.082;
+      tgt.m0h = 0.082 * this.hzK;
       tgt.play = e;
       if (p >= SEQ.reduced) s.mode = "playing";
       return;
@@ -711,20 +766,20 @@ export class FieldEngine implements InputActions {
     if (p < SEQ.collapse.ramp) {
       const e = p / SEQ.collapse.ramp;
       tgt.m0k = 0.055 + e * e * 0.3;
-      tgt.m0h = 0.112 + e * 0.03;
+      tgt.m0h = (0.112 + e * 0.03) * this.hzK;
       tgt.spin = 0.06 + e * 2.3;
       tgt.blur = e * 1.5;
       tgt.fade = 1 - Math.pow(e, 2.6);
     } else if (p < SEQ.collapse.valleyEnd) {
       tgt.m0k = 0.36;
-      tgt.m0h = 0.1;
+      tgt.m0h = 0.1 * this.hzK;
       tgt.spin = 2.4;
       tgt.blur = 1.5;
       tgt.fade = SEQ.valley.fade;
     } else if (p < SEQ.collapse.total) {
       const e = (p - SEQ.collapse.valleyEnd) / 0.95;
       tgt.m0k = 0.36 - e * 0.28;
-      tgt.m0h = 0.1 - e * 0.02;
+      tgt.m0h = (0.1 - e * 0.02) * this.hzK;
       tgt.spin = 2.4 - e * 2.1;
       tgt.blur = 1.5 * (1 - e);
       tgt.fade = Math.min(1, e * 1.9);
@@ -744,7 +799,7 @@ export class FieldEngine implements InputActions {
     tgt.play = isPlaying ? 1 : 0.86;
     tgt.m0k =
       curvature(0.075 * C.massScale, isPlaying ? a.accent.bass : a.accent.bass * 0.25, cap) * K;
-    tgt.m0h = 0.082 * C.horizonScale;
+    tgt.m0h = 0.082 * this.hzK;
     tgt.spin = isPlaying
       ? curvature(0.42 * C.swirl, a.accent.mid * 0.7 + a.flux * 0.3, cap)
       : 0.06 * C.swirl;
@@ -807,9 +862,11 @@ export class FieldEngine implements InputActions {
     const u = this.gl.uniforms;
     const res = u.uRes.value;
     const aspect = res.x / res.y;
-    const p0 = albPos(s.alb, s, this.L);
-    const mx = (p0.x - 0.5) * aspect;
-    const my = 0.5 - p0.y;
+    const geo = bodyGeom(this.W, this.H, s, this.L, this.M);
+    const gx = geo.cx / this.W;
+    const gy = geo.cy / this.H;
+    const mx = (gx - 0.5) * aspect;
+    const my = 0.5 - gy;
 
     let m1x = mx + s.m1x;
     let m1y = my + s.m1y;
@@ -820,9 +877,33 @@ export class FieldEngine implements InputActions {
       m1y = 0.5 - this.m1.y;
       m1k = this.m1.k;
       m1h = this.m1.h;
+    } else if (s.scale !== "collection" && s.mode !== "fusion" && s.m1k <= 1e-4) {
+      const sat = this.leadSatellite();
+      if (sat) {
+        const sx = (geo.cx + Math.cos(sat.angle) * sat.dist * geo.R) / this.W;
+        const sy = (geo.cy + Math.sin(sat.angle) * sat.dist * geo.R * geo.flatten) / this.H;
+        m1x = (sx - 0.5) * aspect;
+        m1y = 0.5 - sy;
+        m1k = SECOND_MASS.k * this.C.massScale * sat.weight * s.fadeSel;
+        m1h = ((sat.size * geo.R) / this.H) * (0.4 + 0.6 * sat.weight);
+      }
     }
 
     const A = ALBUMS[s.alb];
+    const lobeAmp = this.M.relief * MORPH.coreLobe;
+    u.uLobeA.value.set(
+      this.M.lobeCos[0] ?? 0,
+      this.M.lobeSin[0] ?? 0,
+      this.M.lobeCos[1] ?? 0,
+      this.M.lobeSin[1] ?? 0,
+    );
+    u.uLobeB.value.set(
+      this.M.lobeCos[2] ?? 0,
+      this.M.lobeSin[2] ?? 0,
+      lobeAmp * s.fadeSel,
+      -s.ringRot,
+    );
+    u.uFlat.value = 1 + (this.M.flatten - 1) * s.fadeSel;
     u.uM0.value.set(mx, my, s.m0k, s.m0h);
     u.uM1.value.set(m1x, m1y, m1k, m1h);
     u.uCur.value.set((this.mouse.x - 0.5) * aspect, 0.5 - this.mouse.y, s.curK);

@@ -37,17 +37,61 @@ export const GEO = {
 
 export const RING = {
   buffer: 1000,
+  unitR: 330,
+  arcIn: 0.737,
+  arcOut: 1,
   Rin: 350,
   Rout: 475,
   gap: 0.02,
   slices: 44,
   arcSlices: 280,
   alpha: { normal: 0.42, hover: 0.8, selected: 0.92, playing: 1 },
+  lift: 0.035,
   anchor: -1.9,
   neighborPhase: 0.7,
 } as const;
 
-export const RING_UNIT = RING.Rout / RING.buffer;
+export const RING_UNIT = RING.unitR / RING.buffer;
+
+export const MORPH = {
+  massAnchor: [0.1, 0.95],
+  circuit: [0.56, 0.94],
+  spreadAnchor: [0.02, 0.8],
+  spreadShrink: 0.1,
+  flatten: [0.46, 0.9],
+  core: [0.2, 0.5],
+  bandFill: 0.62,
+  plate: [0.52, 1.34],
+  strataGap: 0.19,
+  strataReach: 0.6,
+  shells: 3,
+  coreRef: 0.34,
+  coreLobe: 0.55,
+  relief: [0.05, 0.34],
+  fragAnchor: [0.12, 0.75],
+  fragment: [0.004, 0.052],
+  hierAnchor: [0.05, 0.45],
+  eccAnchor: [0.02, 0.22],
+  eccReach: 0.26,
+  satellites: 4,
+  satOnset: 0.1,
+  satStep: 0.18,
+  satKnee: 0.26,
+  satPhase: 0.6180339887498949,
+  satArc: [-2.6, 4.6],
+  satDist: [1.34, 0.32],
+  satSize: 0.3,
+  satGrow: 0.55,
+  satRim: 0.19,
+  satArcSpan: [2.05, 4.15],
+  satFalloff: 0.72,
+} as const;
+
+export const REACH = {
+  core: 1.5,
+  inner: 0.86,
+  outer: 1.16,
+} as const;
 
 export const SEQ = {
   collapse: { total: 2.25, ramp: 1.1, valleyEnd: 1.3 },

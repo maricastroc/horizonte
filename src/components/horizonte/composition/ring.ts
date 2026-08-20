@@ -1,12 +1,11 @@
-import { ALBUMS, boundsOf, envelopeOf, sampleEnvelope } from "../content";
+import { ALBUMS, boundsOf } from "../content";
 import { clamp } from "../math";
+import { crownAt, morphologyOf, shellsAt, type AlbumMorphology } from "../morphology";
 import { RING } from "../tokens";
 import type { CoverAsset } from "./cover";
 import { COVER_SIZE } from "./cover";
 
 const C = RING.buffer / 2;
-
-const GAP_TURN = 0.0075;
 
 const MIN_TURN = 1.4 / 360;
 
@@ -20,7 +19,9 @@ function buffer(): HTMLCanvasElement {
 function bakeArc(cover: HTMLCanvasElement, len: number): HTMLCanvasElement {
   const c = buffer();
   const x = c.getContext("2d")!;
-  const { Rin, Rout, arcSlices: N } = RING;
+  const N = RING.arcSlices;
+  const Rin = RING.unitR * RING.arcIn;
+  const Rout = RING.unitR * RING.arcOut;
   const th = Rout - Rin;
   const sw = COVER_SIZE / N;
   const arc = (2 * Math.PI * Rin) / N;
@@ -63,16 +64,14 @@ export interface SectorGeometry {
 function bakeSectors(
   cover: HTMLCanvasElement,
   bounds: number[],
-  env: Float32Array,
-  depth: number,
+  m: AlbumMorphology,
   sel: number,
   hover: number,
   active: number,
 ): { canvas: HTMLCanvasElement; sectors: SectorGeometry[] } {
   const c = buffer();
   const x = c.getContext("2d")!;
-  const { Rin, Rout, alpha } = RING;
-  const th = Rout - Rin;
+  const { alpha, unitR } = RING;
   const n = bounds.length - 1;
   const sectors: SectorGeometry[] = [];
 
@@ -87,7 +86,7 @@ function bakeSectors(
     const b0 = bounds[k];
     const b1 = bounds[k + 1];
     const span = b1 - b0;
-    const g = Math.min(GAP_TURN, Math.max(0, span - MIN_TURN)) / 2;
+    const g = Math.min(m.fragment, Math.max(0, span - MIN_TURN), span * 0.42) / 2;
     const t0 = b0 + g;
     const t1 = b1 - g;
 
@@ -101,33 +100,35 @@ function bakeSectors(
         : isHov
           ? alpha.hover
           : alpha.normal;
-    const inner = isSel || isAct ? Rin - th * 0.16 : Rin;
-    const baseTh = (isSel || isAct ? th * 1.16 : th * 0.82);
-    sectors.push({ t0, t1, inner });
+    const lift = isSel || isAct ? RING.lift : 0;
+
+    const mid = crownAt(m, (t0 + t1) / 2);
+    sectors.push({ t0, t1, inner: (mid.inner - lift) * unitR });
 
     const SL = slicesOf(span);
-    const arcPx = (2 * Math.PI * inner) / Math.max(1, totalSlices);
+    const arcPx = (2 * Math.PI * mid.inner * unitR) / Math.max(1, totalSlices);
     for (let i = 0; i < SL; i++) {
       const f = i / SL;
       const t = t0 + (t1 - t0) * f;
-
-      const e = sampleEnvelope(env, b0 + span * f);
-      const thick = baseTh * clamp(1 + depth * (e * 2 - 1), 0.55, 1.2);
-
+      const shells = shellsAt(m, t);
       x.save();
       x.rotate(t * 6.2832);
       x.globalAlpha = base;
-      x.drawImage(
-        cover,
-        Math.floor(t * COVER_SIZE),
-        0,
-        colW,
-        COVER_SIZE,
-        inner,
-        -arcPx * 1.7,
-        thick,
-        arcPx * 3.4,
-      );
+      for (let sh = 0; sh < shells.length; sh++) {
+        const inner = (shells[sh].inner - lift) * unitR;
+        const outer = (shells[sh].outer + lift) * unitR;
+        x.drawImage(
+          cover,
+          Math.floor(t * COVER_SIZE),
+          0,
+          colW,
+          COVER_SIZE,
+          inner,
+          -arcPx * 1.7,
+          Math.max(2, outer - inner),
+          arcPx * 3.4,
+        );
+      }
       x.restore();
     }
   }
@@ -141,7 +142,6 @@ interface SegCacheKey {
   sel: number;
   hover: number;
   active: number;
-  depth: number;
 }
 
 export class RingBakery {
@@ -184,6 +184,11 @@ export class RingBakery {
     return boundsOf(album.signature, album.tracks.length);
   }
 
+  morph(alb: number): AlbumMorphology {
+    const album = ALBUMS[alb];
+    return morphologyOf(album.signature, album.tracks.length);
+  }
+
   seg(
     alb: number,
     sel: number,
@@ -191,33 +196,22 @@ export class RingBakery {
     active: number,
     progress: number,
     ink: string,
-    depth: number,
   ): HTMLCanvasElement {
     const cover = this.covers[alb];
-    const key: SegCacheKey = {
-      alb,
-      version: cover.version,
-      sel,
-      hover,
-      active,
-      depth: Math.round(depth * 200),
-    };
+    const key: SegCacheKey = { alb, version: cover.version, sel, hover, active };
     const stale =
       !this.segKey ||
       this.segKey.alb !== key.alb ||
       this.segKey.version !== key.version ||
       this.segKey.sel !== key.sel ||
       this.segKey.hover !== key.hover ||
-      this.segKey.active !== key.active ||
-      this.segKey.depth !== key.depth;
+      this.segKey.active !== key.active;
 
     if (stale) {
-      const album = ALBUMS[alb];
       const baked = bakeSectors(
         cover.canvas,
         this.bounds(alb),
-        envelopeOf(album.signature),
-        depth,
+        this.morph(alb),
         sel,
         hover,
         active,
@@ -246,7 +240,7 @@ export class RingBakery {
       x.arc(
         0,
         0,
-        s.inner - 10,
+        Math.max(6, s.inner - 10),
         s.t0 * 6.2832,
         (isAct ? s.t0 + (s.t1 - s.t0) * progress : s.t1) * 6.2832,
       );

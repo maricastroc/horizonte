@@ -11,6 +11,8 @@ import {
   sectorAt,
   variantFor,
 } from "../composition/layout";
+import { NEUTRAL_MORPHOLOGY } from "../morphology";
+import { REACH } from "../tokens";
 import { baseState } from "./fixtures";
 
 const W = 1000;
@@ -155,7 +157,7 @@ describe("sectorAt", () => {
 describe("hitTest — scale campo", () => {
   const s = baseState({ scale: "collection", nav: 0, zoom: 0 });
   const hit = (x: number, y: number) =>
-    hitTest(x, y, W, H, s, DESKTOP, () => UNIFORM, 3, GEO.flatten);
+    hitTest(x, y, W, H, s, DESKTOP, () => UNIFORM, 3, () => NEUTRAL_MORPHOLOGY);
 
   it("aponta o corpo sob o cursor", () => {
     const p = albPos(0, s, DESKTOP);
@@ -176,7 +178,8 @@ describe("hitTest — scale álbum", () => {
   const s = baseState({ scale: "album", alb: 0, nav: 0, zoom: 1, play: 0 });
   const R = ringR(W, H, s, DESKTOP);
   const center = albPos(0, s, DESKTOP);
-  const flatten = GEO.flatten;
+  const M = NEUTRAL_MORPHOLOGY;
+  const flatten = M.flatten;
 
   const point = (radius: number, back = 0, st = s) => {
     const ang = back * Math.PI * 2;
@@ -190,17 +193,18 @@ describe("hitTest — scale álbum", () => {
       DESKTOP,
       () => UNIFORM,
       3,
-      flatten,
+      () => M,
     );
   };
 
   it("o núcleo do corpo é alvo de transporte", () => {
     expect(point(0)).toEqual({ kind: "body", i: 0 });
-    expect(point(R * 0.5)).toEqual({ kind: "body", i: 0 });
+    expect(point(R * M.coreRatio * 0.9)).toEqual({ kind: "body", i: 0 });
   });
 
-  it("há uma zona morta entre o corpo e o ring", () => {
-    expect(point(R * 0.58)).toEqual({ kind: "empty", i: -1 });
+  it("o alvo do corpo nunca invade a coroa", () => {
+    const bodyR = Math.min(M.coreRatio * REACH.core, M.rMin * REACH.inner * 0.98);
+    expect(bodyR).toBeLessThan(M.rMin * REACH.inner);
   });
 
   it("a banda do ring seleciona a faixa pelo ângulo", () => {
@@ -210,12 +214,12 @@ describe("hitTest — scale álbum", () => {
     expect(point(R, 0.875)).toEqual({ kind: "track", i: 3 });
   });
 
-  it("a banda cobre a espessura inteira do ring", () => {
-    expect(point(R * 0.7, 0.125)).toEqual({ kind: "track", i: 0 });
-    expect(point(R * 1.3, 0.125)).toEqual({ kind: "track", i: 0 });
+  it("a banda cobre a espessura inteira da coroa", () => {
+    expect(point(R * M.rMin * 0.95, 0.125)).toEqual({ kind: "track", i: 0 });
+    expect(point(R * M.rMax * 1.1, 0.125)).toEqual({ kind: "track", i: 0 });
   });
 
-  it("fora do ring volta a ser vazio", () => {
+  it("fora da coroa volta a ser vazio", () => {
     expect(point(R * 1.5)).toEqual({ kind: "empty", i: -1 });
   });
 
@@ -225,11 +229,13 @@ describe("hitTest — scale álbum", () => {
     expect(point(R, 0.125, rotated)).toEqual({ kind: "track", i: 2 });
   });
 
-  it("o achatamento do ring entra na conta do alvo (P6)", () => {
-    expect(120).toBeLessThan(R * 0.55);
-    expect(120 / flatten).toBeGreaterThan(R * 0.62);
+  it("o achatamento do corpo entra na conta do alvo", () => {
+    const bodyR = Math.min(M.coreRatio * REACH.core, M.rMin * REACH.inner * 0.98);
+    const py = R * M.rMin * 0.95 * flatten;
+    expect(py / R).toBeLessThan(bodyR);
+    expect(py / flatten / R).toBeGreaterThan(M.rMin * REACH.inner);
     expect(
-      hitTest(center.x, center.y - 120 / H, W, H, s, DESKTOP, () => UNIFORM, 3, flatten).kind,
+      hitTest(center.x, center.y - py / H, W, H, s, DESKTOP, () => UNIFORM, 3, () => M).kind,
     ).toBe("track");
   });
 });

@@ -28,8 +28,9 @@ vi.mock("../fieldMaterial", async (importarReal) => {
 
 import { ALBUMS } from "../content";
 import { FieldEngine } from "../engine/FieldEngine";
-import { albPos, layoutFor } from "../composition/layout";
+import { albPos, bodyGeom, layoutFor } from "../composition/layout";
 import { fieldConstantsOf, reduceMotion } from "../field";
+import { morphologyOf } from "../morphology";
 import {
   IDLE_MS,
   PARTICLES,
@@ -37,6 +38,7 @@ import {
   COMPOSITION_MAX_W,
   RING,
   INTAKE,
+  MORPH,
   SECOND_MASS,
 } from "../tokens";
 import { trackBiasOf } from "../content/signature";
@@ -338,11 +340,13 @@ describe("contrato de uniformes", () => {
 
     const res = u().uRes.value as unknown as { x: number; y: number };
     const aspect = res.x / res.y;
-    const p = albPos(2, engine.st, layoutFor("desktop"));
+    const size = engine as unknown as { W: number; H: number };
+    const mm = morphologyOf(ALBUMS[2].signature, ALBUMS[2].tracks.length);
+    const g = bodyGeom(size.W, size.H, engine.st, layoutFor("desktop"), mm);
     const m0 = u().uM0.value as unknown as { x: number; y: number; z: number; w: number };
 
-    expect(m0.x).toBeCloseTo((p.x - 0.5) * aspect, 6);
-    expect(m0.y).toBeCloseTo(0.5 - p.y, 6);
+    expect(m0.x).toBeCloseTo((g.cx / size.W - 0.5) * aspect, 6);
+    expect(m0.y).toBeCloseTo(0.5 - g.cy / size.H, 6);
     expect(m0.z).toBeCloseTo(engine.st.m0k, 6);
     expect(m0.w).toBeCloseTo(engine.st.m0h, 6);
   });
@@ -385,10 +389,11 @@ describe("contrato de uniformes", () => {
     const dir = s.nav - Math.round(s.nav) >= 0 ? 1 : -1;
     const vizinho = Math.max(0, Math.min(ALBUMS.length - 1, Math.round(s.nav) + dir));
     const c = fieldConstantsOf(ALBUMS[vizinho].signature);
+    const mm = morphologyOf(ALBUMS[vizinho].signature, ALBUMS[vizinho].tracks.length);
 
     const m1 = u().uM1.value as unknown as { z: number; w: number };
     expect(m1.z).toBeCloseTo(SECOND_MASS.k * c.massScale, 4);
-    expect(m1.w).toBeCloseTo(SECOND_MASS.h * c.horizonScale, 4);
+    expect(m1.w).toBeCloseTo(SECOND_MASS.h * (mm.coreRatio / MORPH.coreRef) * mm.circuit, 4);
   });
 
   it("o tempo do shader acompanha o relógio do world", () => {
@@ -665,8 +670,8 @@ describe("apontar tem peso (P14)", () => {
 
   it("o horizonte do corpo apontado é o dele, sem ganho", () => {
     apontarRegua(7);
-    const c = fieldConstantsOf(ALBUMS[7].signature);
-    expect(m1().w).toBeCloseTo(SECOND_MASS.h * c.horizonScale, 4);
+    const mm = morphologyOf(ALBUMS[7].signature, ALBUMS[7].tracks.length);
+    expect(m1().w).toBeCloseTo(SECOND_MASS.h * (mm.coreRatio / MORPH.coreRef) * mm.circuit, 4);
   });
 
   it("a massa chega com inércia, não teleporta", () => {
@@ -715,7 +720,7 @@ describe("apontar tem peso (P14)", () => {
     expect(m1().z).toBeLessThan(repouso.z);
     expect(m1().w).toBeGreaterThan(repouso.w);
     expect(m1().z / repouso.z).toBeCloseTo(INTAKE.mass, 1);
-    expect(m1().w / repouso.w).toBeCloseTo(INTAKE.horizon, 1);
+    expect(m1().w).toBeCloseTo(SECOND_MASS.h * INTAKE.horizon, 4);
   });
 
   it("a entrada não desloca a segunda massa — o lugar é aqui, não fora da tela", () => {
@@ -815,8 +820,12 @@ describe("o cursor sabe o que está sob ele", () => {
   };
 
   const corpo = () => {
-    const p = albPos(engine.st.alb, engine.st, layoutFor("desktop"));
-    return [p.x, p.y] as const;
+    const L = layoutFor("desktop");
+    const alb = engine.st.alb;
+    const mm = morphologyOf(ALBUMS[alb].signature, ALBUMS[alb].tracks.length);
+    const size = (engine as unknown as { W: number; H: number });
+    const g = bodyGeom(size.W, size.H, engine.st, L, mm);
+    return [g.cx / size.W, g.cy / size.H] as const;
   };
 
   it("na coleção, sobre um corpo o anel fecha", () => {
