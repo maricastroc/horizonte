@@ -303,6 +303,9 @@ export function morphologyOf(sig: AlbumSignature, trackCount: number): AlbumMorp
   return m;
 }
 
+export const neighborScale = (m: AlbumMorphology) =>
+  1 + (m.circuit - 1) * MORPH.neighborDamp;
+
 export const NEUTRAL_MORPHOLOGY: AlbumMorphology = {
   bounds: [0, 1],
   plate: [1],

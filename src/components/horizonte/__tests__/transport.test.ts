@@ -50,6 +50,77 @@ describe("enterAlbum", () => {
   });
 });
 
+describe("enterAlbum — a escuta atravessa a troca de disco", () => {
+  it("parado, entrar num álbum continua em silêncio", () => {
+    const s = state();
+    expect(T.enterAlbum(s, catalog, 2)).toEqual([]);
+    expect(s.playAlb).toBe(-1);
+    expect(s.mode).toBe("stopped");
+    expect(s.scale).toBe("album");
+  });
+
+  it("tocando, entrar noutro álbum abre pela primeira faixa", () => {
+    const s = playing();
+    const effects = T.enterAlbum(s, catalog, 2);
+
+    expect(effects).toEqual([{ kind: "load", alb: 2, trk: 0 }]);
+    expect(s.playAlb).toBe(2);
+    expect(s.trk).toBe(0);
+    expect(s.sel).toBe(0);
+    expect(s.dur).toBe(catalog.trackDuration(2, 0));
+  });
+
+  it("a troca de disco é emenda, não cerimônia: o mundo se apresenta uma vez só", () => {
+    const s = playing({ seqT: 9 });
+    T.enterAlbum(s, catalog, 2);
+
+    expect(s.mode).toBe("playing");
+    expect(s.segueT).toBe(0);
+    expect(s.seqT, "nenhuma cerimônia foi armada").toBe(9);
+    expect(s.mix).toBe(0);
+    expect(s.waveR).toBeLessThan(0);
+  });
+
+  it("depois da troca o transporte pausa em vez de recomeçar", () => {
+    const s = playing();
+    T.enterAlbum(s, catalog, 2);
+
+    expect(kinds(T.transport(s, catalog))).toEqual(["pause"]);
+    expect(s.mode).toBe("paused");
+    expect(s.trk).toBe(0);
+  });
+
+  it("pausado, entrar noutro álbum respeita a pausa", () => {
+    const s = playing({ mode: "paused" });
+    expect(T.enterAlbum(s, catalog, 2)).toEqual([]);
+    expect(s.playAlb).toBe(1);
+    expect(s.mode).toBe("paused");
+  });
+
+  it("entrar no disco que já toca não reinicia a faixa", () => {
+    const s = playing({ trk: 2, sel: 2 });
+    expect(T.enterAlbum(s, catalog, 1)).toEqual([]);
+    expect(s.trk).toBe(2);
+    expect(s.sel).toBe(2);
+    expect(s.mode).toBe("playing");
+  });
+
+  it("a navegação acompanha o disco em qualquer caminho", () => {
+    const s = playing({ navT: 1 });
+    T.enterAlbum(s, catalog, 2);
+    expect(s.navT).toBe(s.alb);
+
+    const t = playing({ navT: 1, scale: "album" });
+    T.playTrack(t, catalog, 2, 1);
+    expect(t.navT).toBe(t.alb);
+
+    const f = playing({ navT: 1 });
+    T.fuseTo(f, 2, 0);
+    T.endFusion(f, catalog, 120);
+    expect(f.navT).toBe(f.alb);
+  });
+});
+
 describe("playTrack", () => {
   it("colapsa para a faixa e pede o carregamento", () => {
     const s = state({ alb: 2 });

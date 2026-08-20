@@ -1,6 +1,6 @@
 import { BREAKPOINT, GEO, REACH, RING, RING_UNIT } from "../tokens";
 import { albumProgressOf } from "../state";
-import type { AlbumMorphology } from "../morphology";
+import { neighborScale, type AlbumMorphology } from "../morphology";
 import type { FieldState, Variant } from "../types";
 
 export const variantFor = (w: number, h = Number.POSITIVE_INFINITY): Variant =>
@@ -29,7 +29,7 @@ const DESKTOP: WorldLayout = {
   spreadX: GEO.spreadX,
   spreadY: GEO.spreadY,
   ringScale: 1,
-  fitCollection: 0.9,
+  fitCollection: 0.52,
   fitAlbum: 0.52,
   ringLabels: "todos",
 };
@@ -37,7 +37,7 @@ const DESKTOP: WorldLayout = {
 const TABLET: WorldLayout = {
   ...DESKTOP,
   variant: "tablet",
-  anchorCollection: { x: 0.56, y: 0.4 },
+  anchorCollection: { x: 0.44, y: 0.4 },
   anchorAlbum: { x: 0.5, y: 0.4 },
   ringScale: 0.86,
   fitCollection: 0.92,
@@ -123,7 +123,7 @@ export function sectorAt(bounds: number[], t: number): number {
 export function lockup(W: number, H: number, s: FieldState) {
   const p = s.play;
   const z = s.zoom;
-  const size = W * (0.185 - p * 0.045 - z * 0.088);
+  const size = W * (GEO.lockup - p * 0.045 - z * GEO.lockupZoom);
   const ay = H * (0.555 + p * 0.03);
   return {
     size,
@@ -170,7 +170,7 @@ export function hitTest(
     let bd = Infinity;
     for (let i = 0; i < albumCount; i++) {
       const p = albPos(i, s, L);
-      const r = Math.min(W, H) * 0.12 * p.depth * morphOf(i).circuit + 26;
+      const r = Math.min(W, H) * 0.12 * p.depth * neighborScale(morphOf(i)) + 26;
       const dd = Math.hypot(mx - p.x * W, my - p.y * H);
       if (dd < r && dd < bd) {
         bd = dd;

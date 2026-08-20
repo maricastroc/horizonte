@@ -1,6 +1,6 @@
 import { ALBUMS, boundsOf } from "../content";
 import type { FieldConstants } from "../field";
-import { outerAt, type AlbumMorphology } from "../morphology";
+import { neighborScale, outerAt, type AlbumMorphology } from "../morphology";
 import { isEngaged, progressOf } from "../state";
 import { COLOR, GEO, MORPH, PARTICLES, RING, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
@@ -184,11 +184,12 @@ export function drawBack(
     const a = Math.max(0, 0.62 * p.depth * (1 - s.zoom));
     if (a < 0.02) continue;
     const mi = morphOf(i);
-    const R = M * (0.16 + 0.24 * p.depth) * L.ringScale * mi.circuit;
+    const ns = neighborScale(mi);
+    const R = M * (0.16 + 0.24 * p.depth) * L.ringScale * ns;
     drawRing(x, rings.arc(i), p.x * W, p.y * H, R, RING.anchor + i * RING.neighborPhase, a, mi.flatten);
 
     x.save();
-    const br = M * GEO.neighborR * p.depth * mi.circuit;
+    const br = M * GEO.neighborR * p.depth * ns;
     x.globalAlpha = a * 0.9;
     x.fillStyle = COLOR.body;
     x.beginPath();

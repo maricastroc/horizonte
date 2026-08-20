@@ -20,6 +20,7 @@ vi.mock("../fieldMaterial", async (importarReal) => {
 import { ALBUMS } from "../content";
 import { FieldEngine } from "../engine/FieldEngine";
 import { SEQ } from "../tokens";
+import { GEO } from "../tokens";
 import { engineHarness, type EngineHarness, type FakeAudio } from "./fakes";
 
 const FONTS = { archivo: "A", bodoni: "B", mono: "M" };
@@ -194,8 +195,8 @@ describe("fluxo: gesto chega ao world", () => {
 
   it("um toque no corpo do disco abre o álbum", () => {
     world();
-    const x = 0.615 * 1280;
-    const y = 0.425 * 800;
+    const x = GEO.anchorCollection.x * 1280;
+    const y = GEO.anchorCollection.y * 800;
     env.fire("pointermove", { clientX: x, clientY: y, pointerType: "mouse" });
     env.fire("pointerdown", { clientX: x, clientY: y, pointerType: "mouse" });
     env.fire("pointerup", { clientX: x + 1, clientY: y, pointerType: "mouse" });

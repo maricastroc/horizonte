@@ -271,7 +271,6 @@ describe("pulso por faixa — a grade respira dentro do disco (P17)", () => {
   });
 
   it("o portão do pulso é mais estreito que o do timbre — ele é mais ruidoso", () => {
-    // Um espalhamento de 0,10 abre o timbre e não abre o pulso.
     const spans = iguais(4);
     const base = signature(0.5, 0.5, 0.5, 0.5, spans, encodeEnvelope([0, 128, 255, 128]));
     const estreito = [0.50, 0.55, 0.50, 0.60];
@@ -304,8 +303,6 @@ describe("pulso por faixa — a grade respira dentro do disco (P17)", () => {
   });
 
   it("o teto é macio: divergir muito e divergir pouco não dão o mesmo deslocamento", () => {
-    // As quatro faixas divergem ±0,25 e ±0,15 do álbum. Um teto duro de 0,12
-    // achataria as quatro em dois valores e a ordem sumiria.
     const s = comPulso([0.5, 0.6, 0.9, 1.0], iguais(4));
     const v = trackBiasOf(s, 4).map((b) => b.pulse);
 
@@ -323,7 +320,6 @@ describe("pulso por faixa — a grade respira dentro do disco (P17)", () => {
       const bias = trackBiasOf(s, album.tracks.length).map((b) => b.pulse);
       const ordem = tp.map((v, i) => ({ v, b: bias[i] })).sort((x, y) => x.v - y.v);
       for (let i = 1; i < ordem.length; i++) {
-        // Faixa com mais pulso nunca recebe menos deslocamento que uma com menos.
         expect(ordem[i].b, `${album.id} faixa ${i}`).toBeGreaterThanOrEqual(ordem[i - 1].b - 1e-9);
       }
     }

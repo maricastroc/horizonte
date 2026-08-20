@@ -15,9 +15,28 @@ export interface Catalog {
   hasTrack(alb: number, trk: number): boolean;
 }
 
+export function segueToAlbum(s: FieldState, cat: Catalog, alb: number): AudioEffect[] {
+  s.playAlb = alb;
+  s.alb = alb;
+  s.navT = alb;
+  s.trk = 0;
+  s.sel = 0;
+  s.dur = cat.trackDuration(alb, 0);
+  s.pos = 0;
+  s.scale = "track";
+  s.zoomT = 1;
+  s.mode = "playing";
+  s.segueT = 0;
+  return [{ kind: "load", alb, trk: 0 }];
+}
+
 export function enterAlbum(s: FieldState, cat: Catalog, i: number): AudioEffect[] {
-  s.alb = clamp(Math.round(i), 0, cat.size - 1);
-  s.navT = s.alb;
+  const alb = clamp(Math.round(i), 0, cat.size - 1);
+  if (s.mode === "playing" && s.playAlb >= 0 && s.playAlb !== alb) {
+    return segueToAlbum(s, cat, alb);
+  }
+  s.alb = alb;
+  s.navT = alb;
   s.scale = "album";
   s.zoomT = 1;
   s.sel = s.playAlb === s.alb ? s.trk : 0;
@@ -30,6 +49,7 @@ export function playTrack(s: FieldState, cat: Catalog, alb: number, trk: number)
 
   s.playAlb = alb;
   s.alb = alb;
+  s.navT = alb;
   s.trk = trk;
   s.sel = trk;
   s.dur = cat.trackDuration(alb, trk);
@@ -77,6 +97,7 @@ export function endFusion(s: FieldState, cat: Catalog, loadedDuration: number): 
   s.mode = "playing";
   if (held) {
     s.alb = s.fuseAlb;
+    s.navT = s.alb;
     s.sel = s.fuseB;
     if (s.scale !== "album") {
       s.scale = "track";

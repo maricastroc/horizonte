@@ -22,8 +22,10 @@ export const rgba = (v: Rgb, a: number) =>
 
 export const GEO = {
   marginText: 0.028,
+  lockup: 0.115,
+  lockupZoom: 0.018,
   marginTitle: 0.032,
-  anchorCollection: { x: 0.615, y: 0.425 },
+  anchorCollection: { x: 0.46, y: 0.425 },
   anchorAlbum: { x: 0.6, y: 0.44 },
   flatten: 0.62,
   spreadX: 0.285,
@@ -85,6 +87,7 @@ export const MORPH = {
   satRim: 0.19,
   satArcSpan: [2.05, 4.15],
   satFalloff: 0.72,
+  neighborDamp: 0.45,
 } as const;
 
 export const REACH = {
