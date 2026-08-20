@@ -205,6 +205,7 @@ def band_bytes(mag):
 def analyze_album(slug, tracks_files):
     rms_all, cent_all, roll_all = [], [], []
     track_bright = []
+    track_pulse = []
     band_all = {k: [] for k in BANDS}
     env_parts, spans, dur_total = [], [], 0.0
     low_e = high_e = 0.0
@@ -220,6 +221,7 @@ def analyze_album(slug, tracks_files):
         if fr is None:
             env_parts.append(np.zeros(1))
             track_bright.append(None)
+            track_pulse.append(None)
             continue
 
         rms = np.sqrt((fr ** 2).mean(axis=1)) + 1e-9
@@ -237,8 +239,12 @@ def analyze_album(slug, tracks_files):
             band_all[k].append(v)
 
         if len(mag) >= MIN_PULSE_FRAMES:
-            pulse_num += pulse_of(onset_envelope(mag)) * dur
+            pk = pulse_of(onset_envelope(mag))
+            track_pulse.append(pk)
+            pulse_num += pk * dur
             pulse_den += dur
+        else:
+            track_pulse.append(None)
 
         # balanço grave/agudo, para a tinta de reserva
         low_e += float(mag[:, freqs < 300].sum())
@@ -264,6 +270,7 @@ def analyze_album(slug, tracks_files):
     pulse = pulse_num / pulse_den if pulse_den > 0 else 0.0
     # Faixa curta demais para medir herda o brilho do álbum: não desloca a luz.
     track_bright = [round(bright if b is None else b, 1) for b in track_bright]
+    track_pulse = [round(pulse if v is None else v, 4) for v in track_pulse]
 
     # ---- envelope do álbum inteiro, reamostrado para ENVELOPE_N pontos
     env = np.concatenate(env_parts)
@@ -294,6 +301,7 @@ def analyze_album(slug, tracks_files):
         bass_ratio=round(bass_ratio, 4),
         pulse=round(pulse, 4),
         track_bright=track_bright,
+        track_pulse=track_pulse,
         spans=[round(s / dur_total, 6) for s in spans],
         envelope=base64.b64encode(env_u8.tobytes()).decode(),
         band_ref=band_ref,
@@ -397,6 +405,9 @@ def emit(entries):
             f'    spans: {json.dumps(s["spans"])},',
             "    trackBrightness: "
             + json.dumps([norm(hz, "brightness", log=True) for hz in s["track_bright"]])
+            + ",",
+            "    trackPulse: "
+            + json.dumps([norm(v, "pulse") for v in s["track_pulse"]])
             + ",",
             f'    envelope: {json.dumps(s["envelope"])},',
             "    reference: {",

@@ -112,6 +112,7 @@ export function signatureOf(m: AlbumMeasurement, inkA: Ink, inkB: Ink): AlbumSig
     },
     spans: m.spans,
     trackBrightness: m.trackBrightnessHz.map((hz) => norm(hz, "brightness", true)),
+    trackPulse: m.trackPulse.map((v) => norm(v, "pulse")),
     envelope: encodeEnvelope(m.envelopeBytes),
     reference: m.reference,
     inkA,

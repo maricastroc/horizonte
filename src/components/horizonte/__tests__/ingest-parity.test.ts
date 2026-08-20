@@ -126,6 +126,11 @@ describe.skipIf(!has)("paridade browser ↔ pipeline offline", () => {
         expect(norm(got.durationS, "duration")).toBeCloseTo(want.duration, 2);
         expect(norm(got.pulse, "pulse")).toBeCloseTo(want.pulse, 2);
 
+        expect(got.trackPulse.length).toBe(want.trackPulse?.length);
+        got.trackPulse.forEach((v, i) => {
+          expect(norm(v, "pulse")).toBeCloseTo(want.trackPulse![i], 3);
+        });
+
         expect(got.trackBrightnessHz.length).toBe(want.trackBrightness?.length);
         got.trackBrightnessHz.forEach((hz, i) => {
           expect(norm(hz, "brightness", true)).toBeCloseTo(want.trackBrightness![i], 3);

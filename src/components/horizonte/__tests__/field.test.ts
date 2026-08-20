@@ -230,14 +230,14 @@ describe("viés de faixa nas constantes (P11)", () => {
   const sig = signature(0.5, 0.5, 0.5, 0.5);
 
   it("sem viés, o resultado é idêntico ao do álbum", () => {
-    expect(fieldConstantsOf(sig, { loudness: 0, dynamics: 0, brightness: 0 })).toEqual(
+    expect(fieldConstantsOf(sig, { loudness: 0, dynamics: 0, brightness: 0, pulse: 0 })).toEqual(
       fieldConstantsOf(sig),
     );
   });
 
   it("a faixa move massa, horizonte, teto de reação e envelope", () => {
     const base = fieldConstantsOf(sig);
-    const forte = fieldConstantsOf(sig, { loudness: 0.2, dynamics: 0.2, brightness: 0 });
+    const forte = fieldConstantsOf(sig, { loudness: 0.2, dynamics: 0.2, brightness: 0, pulse: 0 });
     expect(forte.massScale).toBeGreaterThan(base.massScale);
     expect(forte.horizonScale).toBeGreaterThan(base.horizonScale);
     expect(forte.reactionCap).toBeGreaterThan(base.reactionCap);
@@ -246,17 +246,28 @@ describe("viés de faixa nas constantes (P11)", () => {
 
   it("a faixa não move a tipografia, a forma do anel nem a inércia do álbum", () => {
     const base = fieldConstantsOf(sig);
-    const outra = fieldConstantsOf(sig, { loudness: -0.25, dynamics: 0.25, brightness: 0.12 });
+    const outra = fieldConstantsOf(sig, { loudness: -0.25, dynamics: 0.25, brightness: 0.12, pulse: 0 });
     expect(outra.artistWeight).toBe(base.artistWeight);
     expect(outra.flatten).toBe(base.flatten);
     expect(outra.navLerp).toBe(base.navLerp);
-    expect(outra.swirl).toBe(base.swirl);
+  });
+
+  it("o pulso da faixa move só o giro do campo", () => {
+    const base = fieldConstantsOf(sig);
+    const firme = fieldConstantsOf(sig, { loudness: 0, dynamics: 0, brightness: 0, pulse: 0.12 });
+    const solto = fieldConstantsOf(sig, { loudness: 0, dynamics: 0, brightness: 0, pulse: -0.12 });
+
+    expect(firme.swirl).toBeGreaterThan(base.swirl);
+    expect(solto.swirl).toBeLessThan(base.swirl);
+    expect(firme.rimHardness).toBe(base.rimHardness);
+    expect(firme.flatten).toBe(base.flatten);
+    expect(firme.artistWeight).toBe(base.artistWeight);
   });
 
   it("o brilho da faixa move só a dureza da luz", () => {
     const base = fieldConstantsOf(sig);
-    const clara = fieldConstantsOf(sig, { loudness: 0, dynamics: 0, brightness: 0.12 });
-    const escura = fieldConstantsOf(sig, { loudness: 0, dynamics: 0, brightness: -0.12 });
+    const clara = fieldConstantsOf(sig, { loudness: 0, dynamics: 0, brightness: 0.12, pulse: 0 });
+    const escura = fieldConstantsOf(sig, { loudness: 0, dynamics: 0, brightness: -0.12, pulse: 0 });
 
     expect(clara.rimHardness).toBeGreaterThan(base.rimHardness);
     expect(escura.rimHardness).toBeLessThan(base.rimHardness);
@@ -278,6 +289,8 @@ describe("viés de faixa nas constantes (P11)", () => {
         expect(c.envelopeDepth, album.id).toBeLessThanOrEqual(RANGE.envelopeDepth[1]);
         expect(c.rimHardness, album.id).toBeGreaterThanOrEqual(RANGE.rimHardness[0]);
         expect(c.rimHardness, album.id).toBeLessThanOrEqual(RANGE.rimHardness[1]);
+        expect(c.swirl, album.id).toBeGreaterThanOrEqual(RANGE.swirl[0]);
+        expect(c.swirl, album.id).toBeLessThanOrEqual(RANGE.swirl[1]);
       }
     }
   });
@@ -298,6 +311,7 @@ describe("viés de faixa nas constantes (P11)", () => {
         loudness: 0.2,
         dynamics: 0.25,
         brightness: 0.1,
+        pulse: 0.1,
       }),
     );
     expect(c.reactionCap).toBe(0);

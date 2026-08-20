@@ -357,6 +357,7 @@ export interface AlbumMeasurement {
   rolloffHz: number;
   bassRatio: number;
   pulse: number;
+  trackPulse: number[];
   trackBrightnessHz: number[];
   spans: number[];
   envelopeBytes: Uint8Array;
@@ -422,6 +423,8 @@ export function composeAlbum(tracks: TrackAnalysis[]): AlbumMeasurement {
   }
   const pulse = pulseDen > 0 ? pulseNum / pulseDen : 0;
 
+  const trackPulse = tracks.map((t) => (t.frames < MIN_PULSE_FRAMES ? pulse : t.pulse));
+
   const trackBrightnessHz = tracks.map((t) => {
     if (t.frames === 0) return brightnessHz;
     let sum = 0;
@@ -460,6 +463,7 @@ export function composeAlbum(tracks: TrackAnalysis[]): AlbumMeasurement {
     rolloffHz: round(rolloffHz, 1),
     bassRatio: round(bassRatio, 4),
     pulse: round(pulse, 4),
+    trackPulse: trackPulse.map((v) => round(v, 4)),
     trackBrightnessHz,
     spans: durations.map((d) => round(d / total, 6)),
     envelopeBytes,

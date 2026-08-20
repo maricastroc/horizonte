@@ -32,6 +32,7 @@ export function fieldConstantsOf(sig: AlbumSignature, bias?: TrackBias): FieldCo
   const loudness = bias ? clamp(sig.loudness + bias.loudness, 0, 1) : sig.loudness;
   const dynamics = bias ? clamp(sig.dynamics + bias.dynamics, 0, 1) : sig.dynamics;
   const lit = bias ? clamp(sig.brightness + bias.brightness, 0, 1) : sig.brightness;
+  const grid = bias ? clamp(sig.pulse + bias.pulse, 0, 1) : sig.pulse;
   const heft = loudness * 0.68 + sig.duration * 0.32;
   return {
     artistWeight: Math.round(lerp(RANGE.artistWeight[0], RANGE.artistWeight[1], sig.loudness)),
@@ -42,7 +43,7 @@ export function fieldConstantsOf(sig: AlbumSignature, bias?: TrackBias): FieldCo
     flatten: lerp(RANGE.flatten[0], RANGE.flatten[1], sig.brightness),
     rimHardness: lerp(RANGE.rimHardness[0], RANGE.rimHardness[1], lit),
     navLerp: lerp(RANGE.navLerp[0], RANGE.navLerp[1], sig.duration),
-    swirl: lerp(RANGE.swirl[0], RANGE.swirl[1], sig.pulse),
+    swirl: lerp(RANGE.swirl[0], RANGE.swirl[1], grid),
   };
 }
 

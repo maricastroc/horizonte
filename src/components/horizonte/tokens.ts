@@ -66,8 +66,6 @@ export const TRACK_BIAS = { blend: 0.55, cap: 0.25, lerp: 1.2 } as const;
 
 export const SECOND_MASS = { k: 0.03, h: 0.052, pointGain: 1.9, lerp: 3.5 } as const;
 
-// O lugar vazio depois do último disco: apontar a entrada de ingestão abre ali
-// uma depressão rasa e de boca larga — um corpo que ainda não existe.
 export const INTAKE = { mass: 0.45, horizon: 1.3 } as const;
 
 export const LERP = {

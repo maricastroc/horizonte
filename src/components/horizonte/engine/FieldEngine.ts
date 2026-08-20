@@ -622,6 +622,7 @@ export class FieldEngine implements InputActions {
     this.bias.loudness += (target.loudness - this.bias.loudness) * k;
     this.bias.dynamics += (target.dynamics - this.bias.dynamics) * k;
     this.bias.brightness += (target.brightness - this.bias.brightness) * k;
+    this.bias.pulse += (target.pulse - this.bias.pulse) * k;
   }
 
   private ringRotation(dt: number) {
@@ -656,10 +657,6 @@ export class FieldEngine implements InputActions {
     const focused = clamp(Math.round(s.nav), 0, n - 1);
     const pointed = s.hoverBody >= 0 && s.hoverBody !== focused ? s.hoverBody : -1;
     const dir = s.nav - Math.round(s.nav) >= 0 ? 1 : -1;
-    // Apontar a entrada de ingestão não move a segunda massa de lugar — o slot
-    // seguinte ao último disco fica a dez corpos daqui e não se veria. O que
-    // muda é o que aquele lugar *é*: o poço perde força e abre a boca, e o
-    // espaço ao lado do disco em foco deixa de puxar. Um lugar, não um corpo.
     const at = pointed >= 0 && !this.intake ? pointed : focused + dir;
 
     const p = albPos(at, s, this.L);

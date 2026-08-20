@@ -244,3 +244,109 @@ describe("brilho por faixa — a luz respira dentro do disco (P16)", () => {
     }
   });
 });
+
+describe("pulso por faixa — a grade respira dentro do disco (P17)", () => {
+  const comPulso = (tp: number[] | undefined, spans: number[]) => {
+    const s = signature(0.5, 0.5, 0.5, 0.5, spans, encodeEnvelope([0, 128, 255, 128]));
+    return { ...s, trackPulse: tp };
+  };
+  const iguais = (n: number) => new Array(n).fill(1 / n);
+  const amp = (s: AlbumSignature, n: number) => {
+    const v = trackBiasOf(s, n).map((b) => b.pulse);
+    return Math.max(...v) - Math.min(...v);
+  };
+
+  it("sem pulso por faixa publicado, o giro não se move", () => {
+    for (const b of trackBiasOf(comPulso(undefined, iguais(4)), 4)) expect(b.pulse).toBe(0);
+  });
+
+  it("um array de tamanho errado é ignorado", () => {
+    for (const b of trackBiasOf(comPulso([0.1, 0.9], iguais(4)), 4)) expect(b.pulse).toBe(0);
+  });
+
+  it("faixas com a mesma grade não produzem movimento", () => {
+    for (const b of trackBiasOf(comPulso([0.6, 0.6, 0.6, 0.6], iguais(4)), 4)) {
+      expect(Math.abs(b.pulse)).toBeLessThan(1e-9);
+    }
+  });
+
+  it("o portão do pulso é mais estreito que o do timbre — ele é mais ruidoso", () => {
+    // Um espalhamento de 0,10 abre o timbre e não abre o pulso.
+    const spans = iguais(4);
+    const base = signature(0.5, 0.5, 0.5, 0.5, spans, encodeEnvelope([0, 128, 255, 128]));
+    const estreito = [0.50, 0.55, 0.50, 0.60];
+    const comTimbre = { ...base, trackBrightness: estreito };
+    const comGrade = { ...base, trackPulse: estreito };
+
+    const ampT = (() => {
+      const v = trackBiasOf(comTimbre, 4).map((b) => b.brightness);
+      return Math.max(...v) - Math.min(...v);
+    })();
+    expect(ampT).toBeGreaterThan(0.02);
+    expect(amp(comGrade, 4)).toBeLessThan(0.005);
+  });
+
+  it("um espalhamento largo move a grade de verdade", () => {
+    expect(amp(comPulso([0.05, 0.95, 0.10, 0.90], iguais(4)), 4)).toBeGreaterThan(0.15);
+  });
+
+  it("o álbum continua sendo a âncora: o viés médio por duração é ~zero", () => {
+    const spans = [0.4, 0.3, 0.2, 0.1];
+    const s = comPulso([0.1, 0.4, 0.7, 0.95], spans);
+    const media = trackBiasOf(s, 4).reduce((a, b, i) => a + b.pulse * spans[i], 0);
+    expect(Math.abs(media)).toBeLessThan(0.02);
+  });
+
+  it("nenhuma faixa passa do teto declarado", () => {
+    for (const b of trackBiasOf(comPulso([0, 1, 0, 1], iguais(4)), 4)) {
+      expect(Math.abs(b.pulse)).toBeLessThanOrEqual(0.12);
+    }
+  });
+
+  it("o teto é macio: divergir muito e divergir pouco não dão o mesmo deslocamento", () => {
+    // As quatro faixas divergem ±0,25 e ±0,15 do álbum. Um teto duro de 0,12
+    // achataria as quatro em dois valores e a ordem sumiria.
+    const s = comPulso([0.5, 0.6, 0.9, 1.0], iguais(4));
+    const v = trackBiasOf(s, 4).map((b) => b.pulse);
+
+    expect(v[3]).toBeGreaterThan(v[2]);
+    expect(v[0]).toBeLessThan(v[1]);
+    expect(new Set(v.map((x) => x.toFixed(4))).size).toBe(4);
+    for (const x of v) expect(Math.abs(x)).toBeLessThan(0.12);
+  });
+
+  it("no acervo, a ordem entre as faixas sobrevive ao teto", () => {
+    for (const album of CURATION) {
+      const s = SIGNATURES[album.id];
+      const tp = s.trackPulse;
+      if (!tp) continue;
+      const bias = trackBiasOf(s, album.tracks.length).map((b) => b.pulse);
+      const ordem = tp.map((v, i) => ({ v, b: bias[i] })).sort((x, y) => x.v - y.v);
+      for (let i = 1; i < ordem.length; i++) {
+        // Faixa com mais pulso nunca recebe menos deslocamento que uma com menos.
+        expect(ordem[i].b, `${album.id} faixa ${i}`).toBeGreaterThanOrEqual(ordem[i - 1].b - 1e-9);
+      }
+    }
+  });
+
+  it("no acervo, o disco mais uniforme em grade quase não se move", () => {
+    const de = (slug: string) => {
+      const n = CURATION.find((a) => a.id === slug)!.tracks.length;
+      return amp(SIGNATURES[slug], n);
+    };
+    expect(de("jono-terbakar-lebar")).toBeLessThan(0.05);
+    expect(de("mark-wilson-x-dark-thoughts")).toBeGreaterThan(0.15);
+  });
+
+  it("todo álbum publica um pulso por faixa alinhado com as faixas", () => {
+    for (const album of CURATION) {
+      const s = SIGNATURES[album.id];
+      expect(s.trackPulse, album.id).toBeDefined();
+      expect(s.trackPulse!.length, album.id).toBe(album.tracks.length);
+      for (const v of s.trackPulse!) {
+        expect(v, album.id).toBeGreaterThanOrEqual(0);
+        expect(v, album.id).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+});

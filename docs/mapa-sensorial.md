@@ -105,7 +105,7 @@ viviam num mundo idêntico. P11 corrige isso sem medir nada de novo.
 
 | # | Característica | Propriedade física | Range | Justificativa perceptiva | Guardrail |
 | --- | --- | --- | --- | --- | --- |
-| P16 | Brilho **da faixa** | Dureza do rim light (`uRim`) | ±0,12 em espaço normalizado, com portão | P7 já diz que brilho é dureza de luz. P16 aplica a mesma relação numa escala de tempo mais fina: a luz do disco endurece nas faixas cortantes e amolece nas escuras. Nenhuma associação nova foi inventada. | **Só a luz.** O achatamento (P6) continua sendo do álbum: ele é a forma do anel *e entra no hit-test* — uma geometria que muda entre faixas move o alvo debaixo do cursor. Teto de ±0,12, metade do teto de P11, porque mexe num canal de identidade e não de reação. Média ponderada por duração ~zero. |
+| P16 | Brilho **da faixa** | Dureza do rim light (`uRim`) | teto com joelho em 0,12 em espaço normalizado, com portão | P7 já diz que brilho é dureza de luz. P16 aplica a mesma relação numa escala de tempo mais fina: a luz do disco endurece nas faixas cortantes e amolece nas escuras. Nenhuma associação nova foi inventada. | **Só a luz.** O achatamento (P6) continua sendo do álbum: ele é a forma do anel *e entra no hit-test* — uma geometria que muda entre faixas move o alvo debaixo do cursor. Teto de ±0,12, metade do teto de P11, porque mexe num canal de identidade e não de reação. Média ponderada por duração ~zero. |
 
 **O portão.** O espalhamento de brilho entre faixas de um mesmo álbum só vira
 viés quando passa de 0,12 em espaço normalizado — acima da instabilidade medida
@@ -114,11 +114,62 @@ Abaixo disso o portão fecha e o disco fica parado. É o que separa diferença
 medida de ruído de medição.
 
 *All Systems Go* é exatamente esse caso: as quatro faixas medem 0,986 a 1,000 de
-brilho, espalhamento 0,013, portão 0,10 → amplitude de rim **0,00**. O disco mais
-uniforme do acervo não ganha movimento nenhum.
+brilho, espalhamento 0,013 — abaixo do piso de ruído — e o portão fecha em zero.
+Amplitude de rim **0,00**: o disco mais uniforme do acervo não ganha movimento
+nenhum.
 
 **Redundância com P11.** O desvio de brilho por faixa correlaciona 0,137 com o
 viés de nível e 0,164 com o de dinâmica. É informação que P11 não carregava.
+
+| # | Característica | Propriedade física | Range | Justificativa perceptiva | Guardrail |
+| --- | --- | --- | --- | --- | --- |
+| P17 | Pulso **da faixa** | Componente tangencial da lente (`uSpin`) | teto com joelho em 0,12 em espaço normalizado, com portão | Um disco tem uma grade média, mas as faixas não têm todas a mesma. Dentro de *Dark Thoughts* o pulso vai de 0,00 a 0,95 entre faixas. A faixa desloca o giro em torno da base do álbum — a mesma relação de P15, numa escala de tempo mais fina. | O giro não entra no hit-test (o alvo é decidido pelo achatamento), então mexê-lo por faixa não move nada sob o cursor. Mesmo teto de ±0,12 de P16 e mesma média ponderada ~zero. **Portão mais estreito que o do timbre**, porque o pulso por faixa é mais ruidoso. |
+
+**O teto tem joelho.** P16 e P17 não cortam: abaixo de meio teto o desvio passa
+**exato**, e acima ele é comprimido assintoticamente até 0,12. É um limitador de
+joelho suave, a mesma forma que um compressor de masterização usa.
+
+Com corte duro, 36% das faixas do acervo encostavam no teto do pulso — e
+*Dark Thoughts* renderizava suas dez faixas em **três** valores distintos de giro,
+nove delas fincadas no limite. Uma faixa que diverge 0,59 do álbum e outra que
+diverge 0,20 recebiam exatamente o mesmo deslocamento: a ordem entre "diferente" e
+"muito diferente" desaparecia.
+
+| | amplitude mediana | *Dark Thoughts*, níveis distintos | *Impromptu*, que não saturava |
+| --- | --: | --: | --: |
+| Corte duro | 0,239 | **3** | 0,159 |
+| `tanh` puro | 0,200 | 8 | 0,139 |
+| **Joelho** | **0,223** | 7 | **0,157** |
+
+A `tanh` pura resolveria a ordem, mas comprimiria também o meio da escala e
+tiraria amplitude de discos que nem estavam saturando. O joelho preserva esses
+discos intactos e comprime só o que encostava no limite. O limite continua sendo
+0,12 — ele deixou de ser alcançável, não de existir.
+
+O teto de P11 fica **duro**: só uma faixa em oitenta encosta nele, então ali o
+corte é guardrail e não perda de ordem.
+
+**O portão, em forma única.** P16 e P17 usam a mesma função: subtrai-se um **piso
+de ruído medido** e ramp-se até abrir. O piso é a instabilidade do descritor
+*dentro* de uma faixa — primeira metade contra segunda:
+
+| Canal por faixa | Piso (instabilidade medida) | Rampa | Espalhamento típico entre faixas |
+| --- | --: | --: | --: |
+| Brilho (P16) | 0,071 | 0,12 | 0,317 (mediana) |
+| Pulso (P17) | **0,118** | 0,28 | 0,418 (mediana) |
+
+O pulso por faixa oscila 1,7× mais dentro de uma faixa do que o brilho, e por
+isso precisa de mais espalhamento para o portão abrir. Vale registrar que esse
+piso é **conservador de propósito**: a instabilidade foi medida comparando duas
+análises de meia duração, cada uma mais ruidosa que a medição da faixa inteira.
+
+**Redundância entre os dois canais por faixa.** O desvio de pulso e o desvio de
+brilho, faixa a faixa no acervo inteiro, correlacionam **|r| = 0,054**. São dois
+sinais independentes, não o mesmo com dois nomes.
+
+**Resultado medido.** Dentro de um álbum, o giro varia 0,192 (mediana) contra
+0,718 de amplitude entre todos os discos — cerca de 27%. E *lebar*, cujas nove
+faixas têm quase a mesma grade (espalhamento 0,175), move apenas 0,041.
 
 **De onde vêm os números.** Não houve nova passada de DSP: o `envelope` de 512
 amostras já publicado é fatiado pelas fronteiras de `spans` (as mesmas de P9), e

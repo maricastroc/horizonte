@@ -18,6 +18,7 @@ export const SIGNATURES: Record<string, AlbumSignature> = {
     },
     spans: [0.072522, 0.181343, 0.040301, 0.055127, 0.090602, 0.104636, 0.093612, 0.146501, 0.067962, 0.064291, 0.083104],
     trackBrightness: [0.6852, 0.7221, 0.4644, 0.6636, 0.6562, 0.7966, 0.3262, 0.4831, 0.5424, 0.484, 0.5867],
+    trackPulse: [0.4145, 0.0, 0.133, 0.4133, 0.4267, 0.1014, 0.4277, 0.0, 0.3512, 0.0617, 0.0019],
     envelope: "CCEsDikAFwAjAO7Fe2ZWfIit4vqv2paxyN3OyqGhtAAAAAAAAABkdIRXP1c1Z8ZVZENSL0VCWUxLUEwsPj9MUjIuRUtLMTxia1OXJ2Y4KCsrLzo1OylLei5QLSgrQy1MNThAS0FHRE1JODFAI0MxMUA3TpGdb3osMToxLx8sKy8rMHpuYFB4WWZQTGBViHlJNlF+XGI5Vkxba3OvVVZqhoh4Q3RhWXl1SI5uirajguq9moogLislQlVjdTBJYHVVYGOldp5tokRCNUBELGV5ZFNSTkxYVl92aoRQllUzLzcQsSkrIwoNFAsAJSAnDxMJFhQQFiIdEjgrGg8IAgcCBxwdBgQTAwASFSwAIxcbDhcODDIJDgAAh7axhqnP5913lGSAqP2Ze1ZYh4WCuc6NiY5nqePQ29Khao+eo5Clh5+XaHWHrqPDgqbBkaS93Zx7knSz/M7s45qHk5CJorvAxIyOufLQ/6qXc/+nZK/Qibzb/9vir7H/kN//yeeW1KKz3f/7deumqer/6vuCibyPuAD/WDWdV1zP0O+ofv/o3rn/////7v/40O3j/8L/tNix14m+vkhPNURH7Zxqd21EePL/4qjpp/+9/9ORyrvZu2BcSllSYigAQUU+NE0oIUwuK0o4NSMbAwcUMzU8KUEwPSgQNzxrnv3//5EwAAAAAAA=",
     reference: {
       bass: [0.6984, 0.9174],
@@ -43,6 +44,7 @@ export const SIGNATURES: Record<string, AlbumSignature> = {
     },
     spans: [0.160366, 0.068902, 0.089634, 0.088415, 0.156707, 0.103049, 0.151829, 0.067073, 0.114024],
     trackBrightness: [0.4208, 0.5196, 0.427, 0.7588, 0.5272, 0.2623, 0.5284, 0.3848, 0.4555],
+    trackPulse: [0.0, 0.0992, 0.0342, 0.0232, 0.1752, 0.22, 0.0, 0.096, 0.0],
     envelope: "AAAhFjBDSS8zTipDXj5YcEdCUHF3XDKIZjWhWlCOUm9JmY04m2NfU7oQRUJGR2mFSz5QgVpbhHSz4Oi9weX2xNnz2tbQxcHaTFRnaX8pExEwAAAAGRdGPThKLnMmKFE4GioyKDBmJiVKMkM2XDk8OzsWPTgoAACvxVqQfYlheplXqI21Vq5qRP//q3aWisdqsGtpkUGh///5mv//cVO6jjdvFwArRhoAVGnQaHUUSAZwtHoDFLKSAABATk7zZHAAMSFtKBA0Y2dp/85+ADNMAABcNLJkrIFedCRcRGF0msj/iMCv7vB9/+nW/f+4tLL/tOL0/4z/wtD/29Od3v+54//VtP//////1Vq/SSVJPV0QKBceOB5XGhQ5MiU5EQQMAADow0GWqXF/iZlWndCsUbLMhSplhGJbpIE+t04/OnRTXIyFVcGwhkBvgll4lLRoonZjKhQAYS8xiZRQcYIuSHNeY2Z5jTWCgm5wOXGrhMyEeIUoLj1HVkV+rEmUJB8UQyUnJzo6bZJTV1xadlhaQkJKdkJHk11Th5XFaWaYQCkbBgAFTFO7W3Zjn1iNY4FgiBqOn8yic/jPTXa/xZVk1nqUk8oMAHtHVFyBQoCicGWioBbIrHkx8LBlVcXOar9vRxO2XojQxZcj2z27pKFSrK99tM5RQhGJWBJLEB0LAAA=",
     reference: {
       bass: [0.5002, 0.8877],
@@ -68,6 +70,7 @@ export const SIGNATURES: Record<string, AlbumSignature> = {
     },
     spans: [0.104472, 0.112131, 0.154918, 0.141639, 0.145805, 0.214151, 0.126885],
     trackBrightness: [0.7863, 0.8195, 0.2912, 0.6135, 0.6313, 0.7436, 0.9624],
+    trackPulse: [0.9693, 0.834, 0.8881, 0.0, 1.0, 0.938, 0.7629],
     envelope: "CRAgIiUhgGh9X4lccFxjQHFGflt5VG1CAAAAIRMbGhpoWHBpfWuQfIuCoJSqmbmVqpyuZwcAAD0ifpxnuaqZ0qHPqpTDjbjGnaJuAhsBHQwXjDeCgmeoapCJb6OCipSd2a3S0pzdtJzSprfBmikABgcGAC8IAEFbOU1VNmxIRlVzV1pKi2lTRFVXfEtRYVZXW085bF1NZ2tVZmRiZWJdPGl/bnGCoIGDiE57eXRubWJvVn9pME5YM00iAAAAAAAADCIwLBo7PkZYUURJR0NRLUddVGBnRUFIQ1d9UVpvVWiFXlhdSlyPWVZta2+QUmJfWFhydGFWa1x9Z2pRQSszHwoEAAAAAAAEAVJAXDlUR0w3cKxxr3Gbb4JVdGpoTGdDZHCSVEKBa4dOjclatYqrrqmZ2ozDq7ayu7Ddi9eTqp22lKyFlqCfhq6OqIKoPnkeHx4wKptRWFU3PK+hiZ5nUWKywO3cyMy/lcT53b28tqmotNXUy8jL1afG/9KRnKOjms3S4cbS7v/R8P/m18jOu8JbcVRVVc7Zy+H/0P/s7vH9vf3/+eb///z//////////////////9nNvNq8pZ8AfVZMYIKShnqkzZ2vtMG9mcTTo7KjsKKQuK2bhCk6WCUwNI0wTlWsUFiBn1xwk3+ChpZbj5i2Ybyxuna4tqGIogA=",
     reference: {
       bass: [0.7928, 0.9973],
@@ -95,6 +98,7 @@ export const SIGNATURES: Record<string, AlbumSignature> = {
     },
     spans: [0.120551, 0.116064, 0.102212, 0.096376, 0.07332, 0.070565, 0.138685, 0.119349, 0.062865, 0.100013],
     trackBrightness: [0.7196, 0.2258, 0.5157, 0.473, 0.5103, 0.5961, 0.4676, 0.6237, 0.6107, 0.4462],
+    trackPulse: [0.5645, 0.0, 0.3472, 0.1992, 0.0, 0.8794, 0.948, 0.2021, 0.0657, 0.2089],
     envelope: "//9rOE1G/yBtHM//o0YzhWz+ZpuD//95QFn/eKJYhtr/xYJiM/9PfWuf//+Tbpg2/4teIpP/zJKAvjscAABFTE+bRlKbaVs6bj6R10dfRWtAg3JhVGepaZxdZ199XJZZUmdMeD/HYzellviFUbJup5TSeWC9QWA6BAVceHiDoKC5ommXkM6vmsaMsp27zrKHvJ2n1660kZa/zt6jmp59rsllPB4aKkQ/ZndmLQAAPG67gKvRj8a92Ljc6+PBvr/C0+S2ycCrx8CwzsWaw/D/y/T/8bL///l41eJ/wU0AACpjb0g5NFGCZ1CKlqvycdqBhkPyfmRVcmlvcGBaeVFobhUEAAAAWUSpXUN8XlSFUFWOQbGNQllA02JJRVt6XmSvfoqEb1McAACRf0uMdpZSUVkPd5WrYY2HpFyk35JffFhO/5nIq431rbzQy9nKnMupo/+jlcKr6t3H++OPsoKGu8bBvo+utLqi15ixsIoAAAA1JCkiMFAxP0NiT2ZyV0pKQmxQjmiTZFaRgYxkeYqWbG6IVbNyUXlHap88fDZpaHA6IBQPEQ8SBg4DAAAAzVQWhWnFMjx/HjN5VZVBWzLJrE6Cj2SHtWVRMyoHAFWlVWh2ZotcVWqPm6W0xLLfsvCKrf+goch2QKVniGPAwGqNoLCHhDX/5lSCoGA6EQAAAAA=",
     reference: {
       bass: [0.6724, 0.9859],
@@ -120,6 +124,7 @@ export const SIGNATURES: Record<string, AlbumSignature> = {
     },
     spans: [0.173773, 0.22383, 0.227501, 0.171229, 0.203667],
     trackBrightness: [0.679, 0.6871, 0.5446, 0.8298, 0.5314],
+    trackPulse: [0.171, 0.3174, 0.1334, 0.2777, 0.0395],
     envelope: "hx6PGD5eZAALDkVsP3L1q5f/z1+j/zOp76/xuP/dq//i9+3///2q9eT/+rT7xuWM8eKHfw+afqJbo/90/9uYjO2J//yt/9ylgUz/5LCSm+yLc37jFQAAAACTAGqqb3wAXQAAb7ek1wDbxNOs7n/EwrGttMu1pf/z59Ls9NjDyNTl5I3gx/L/tviyj7HkxP/kqPtmieeSmahpb3iHkNuyqL2WlZJuVxa9jGfsq2pp0Zhbkq3UAJ1hiNewmr+4nWu9lJ++xenoqr3bwAAAKswYtJ2UKl2UUucxr07QRI2QXnh9tWqdQ/tgnI9zpWX5U8v/j4log2//n6aOw7F85L+wyIz/wP9yW2c8661RuDTQodvOP5l+8f+S1uDLjTDWcNdybJSVuNn4wo2jh8zHa/+4qypMf0C33KiveyMKhTs2AAAAHW2Efsm/67y+tn3WmaHHu8WOZpGbhcvO4se/0vPo69X+0cNTsLCFmVaTPpzAxKAx78+6meShfnmZXkJf5cyYPxJJtez3xbvZ1MTZy9/py/irmCsAAAAiWlJleIJVR5k3OIfGoXFia2OfhNVkX3d4gKq9wEDElo3CdoR9oZVwjtPXrpKbr3PYqs6bfMdre7W2vUlLrYGKbKSAfISwlpd9dL2btXW4n1mOkI10f1png8qBhGjIn/bVvsy1oAUAAAA=",
     reference: {
       bass: [0.6229, 0.9693],
@@ -145,6 +150,7 @@ export const SIGNATURES: Record<string, AlbumSignature> = {
     },
     spans: [0.049618, 0.058743, 0.07289, 0.052957, 0.057562, 0.030496, 0.068835, 0.054743, 0.045398, 0.076025, 0.066759, 0.060523, 0.07239, 0.109772, 0.072983, 0.050307],
     trackBrightness: [0.9215, 0.7975, 0.914, 0.9016, 0.8662, 0.9294, 0.8577, 0.9294, 0.7212, 0.7915, 0.7429, 0.6459, 0.8121, 0.8157, 0.929, 0.7897],
+    trackPulse: [0.9333, 0.9254, 0.8109, 0.9214, 0.8494, 0.1559, 0.9214, 1.0, 0.1731, 0.7729, 0.8838, 0.9545, 0.744, 0.8885, 0.909, 0.8115],
     envelope: "AE3/M0UQ/zJvwL6J/16BbfPhs8t6xv+nQAAOVCpgXKi2TLpmrJvw/+6AaGpR+//Q89/tZ9x20QAsJDQ5SiRyUlNoVS5w2buP7pKuimDan8bY3fDshdHd8q/FUxYAAitFV0dJP1VdkFuXg2/E2k5ORFbo3J+tRScAHCE1TLFfbuGrg3TOT4m/v6BlprXa59eS/xmLYx0AC1jV/5/h01P11vv2/4F/CVlrirRtVI7msuNWemy0X/9i+rb/0bygqn+DjHS6/4HM/wAAGDV6MZlw/8WFoaT/W5eTm//SsYnj//+vLkUIAEVcWlZgW2h8cHJ+dImFmIGXgZdjOQAANBo1HW1shqt1t1CwPKJ4jqSESLamVbCuT5hypcWcTO/RZVJjRQAAVURKTKJhqZqzk3kycWZxgst9xJaSxp+Dmma2kNe0nM8UAA4Xem6JXpFsenxSbIBpVk90fpCEdpqQgnhnXB8AAAA7OT5xU4qjn2m8LijviYjEebvNibHnfFxkk5h7cbWni8plMwAAG1M8YEktODZHV1FeZf+k/7f7OERUa2t+sPqnxqJoo8PW5r8znmtrbuhUYSzf0LibncT/1f1TJwBAMzY0Mzs2NACAeH2EfEORt7a0e0h0XMBh1NPlIVz/63ZhfFwAKlR5WE1kaUtGkGCTn1tocqC55TZ1k720HAA=",
     reference: {
       bass: [0.7179, 0.987],
@@ -170,6 +176,7 @@ export const SIGNATURES: Record<string, AlbumSignature> = {
     },
     spans: [0.176065, 0.150264, 0.085365, 0.131249, 0.14512, 0.09817, 0.083231, 0.130537],
     trackBrightness: [0.8876, 0.8905, 0.8482, 0.9444, 0.6278, 0.6298, 0.7311, 0.8518],
+    trackPulse: [0.365, 0.6998, 0.098, 0.2636, 0.1686, 0.683, 0.3952, 0.3987],
     envelope: "NgAABQAEEwARNohHrUYAPohcdD9tCm9ia2t/YXBqhUplZVFNUkA6LjBASTk/NDJDhZR+hICAhC5inZ9qYW9ssR+gqK2ny5y5uqSnqZ/BpKGRsaC1oauZqqS5RAogMxgZQ2AhOxETRhMeNhAVTSYsRSYnRVw3RyYjKlAoJDwsI1RaQVZbZFMSES4oHFMSGzFIP1gcECEVEQ4ABAgeIAAAAAAAAAAAAAAZLhwaIzMcCjpjIgw5bDEqTigvQDgjQT4qHEMjGxo0FBYlQx0lNmstHk/JTDAlOy4ON0AODwsdJBcmJygrHSMwJzAVa2BUJXMkiIloLJcXNy5EFHFhfJd5j3Wid5BSNjRJSzdhCFhUHxwdBgYKCwTQ5L621d+u3tOese+51cCZxt2w58aVluKNaXFlXH93cl1qYnldV4FchGNxT3VfaFR1jm5Dd19fXFRIbHROnpQ8aFEiXRtkgJiIiV5+UG9aVUY/Rk5gUTJUJFd7ZUaAZWSSVWBhX1d7bH1/LzxWc08YL0NKPWI+dWNuSUMAAABs////5v/w////jv/4//f/f////5f/24HHNf//////n/L/5P//6Jw3ABQHAAcABBIlKjtTZWWFeYN+f4SLZIaFfH6Ee3KGd316cVNviXBybHBRaWRaYWN8fYFgZGxYc5OSkpiIhY2Ig4qHgmA=",
     reference: {
       bass: [0.7196, 0.991],
@@ -195,6 +202,7 @@ export const SIGNATURES: Record<string, AlbumSignature> = {
     },
     spans: [0.258149, 0.24949, 0.273204, 0.219157],
     trackBrightness: [1.0, 0.986, 1.0, 0.9909],
+    trackPulse: [0.208, 0.1967, 0.077, 0.4311],
     envelope: "16HQ4OHD77/wxiOEuJmtXZfWWpTas7qqj6PF/3ydscX/pf/Q/Prww//u1///60qHs5y0UiF4gYm/r2CllPyktOPk77PO/f/z5tf14f/RFv//JP87k83B3t7gs/7A0sPJ7Oak/97kY93/2P7k///Su+eV+ebT0ujc5PL6/9zF////5gAAAAAIAJjAvZGdz93yhqqqkbPe0qq+i6bFuXrR0aCWnsqHsXPribl7r8zYfre5gkqqwbaT///q7OG0tcStsKaXmIih03nViJCj7zJ6juqjzUGK0dVp1wBLAE0vABOXg6Nhw4mixs3Y1cq00LjS/+Lp+/Hk4Jvncpy1y+JyAgAAAAAAAHdkg6z/4ILCdcSpUL9faY2WYjGdOl82SXOMf0BzjkF/eo6ihmWGOz5QVZlBIEdSclEkMmeikVpcYmdgh3COVJ5qXoRXbntonnt9qV1xYkexli80ZiSjsAwwNXZjaJyqmnq8g51VsdMmXwU9UC5tXGFFhIySs4J7fTxeipFKRF6PeZNOOAQAAAAAAI+3pqSKnI6bi3WojpZqlrqzg6eVpJqlvLC8lHCdrIiRfoF0g6KHq5tniaC7lpGirZaAwJOmt6ydo4mOoquWlamjlmqFyHLAXZ6gnZ+FnqijrY2HNaqwctVxnKG7ecKzs6ino6GyZIq+laXTrLtEAAA=",
     reference: {
       bass: [0.7904, 0.9888],
@@ -220,6 +228,7 @@ export const SIGNATURES: Record<string, AlbumSignature> = {
     },
     spans: [0.086781, 0.182644, 0.243509, 0.152211, 0.182644, 0.152211],
     trackBrightness: [0.3353, 0.1505, 0.0712, 0.1066, 0.3528, 0.1112],
+    trackPulse: [0.2065, 0.0796, 0.2789, 0.0, 0.1651, 0.0],
     envelope: "ABIGDqYbQhYYBk8yYzkyGJBWcl88N45qtgZPLzZLAWVrVj0yAkkgzJxsGAkAAELW1mxXidPas2xrxp9fY7mvpm2KvMZoXaPWtWvZhcKUZHTGkYZ0qrqUaIfIz7uOwpvVfIjurJhnmemzx2Krps6HhsLKm2aBu7WZfKysl3Bur6GzcZKiuygIAAAAACZloJqrdFVqVE6RjZ57Z2CJVImMln9yZpFcfZSFiYN1mnyAh4uEd1iVfn+JlJF7fZWGqJCDi3OSh46Li4amf4yXfI2Fga+EdJ6UjIN9q9RbjnOEgWaxlXKMgYmEa6CcapCYh4V5lppSj5jciIR4nlh5tJmsmlRWDQIAAAAAiGDH0UAgTrCrIopxkU4hT6iCMHmL7GA7XK6fVYXLZnNnmqSgSm+KVmc6X9F5QpOoW3s1bnKDbYViToMtjIptQTtvd5JCaatOAwAAAAA/juvI/v/p3/vjoOj/5Pf3yv+zzsSS1O/E1v//hebr//fQ2f/p3+7f5t7z1+D/9OLE1f/r5f///6r9vP///+v6+rT/+vX/9sX/68H////v5sb06ryrvd6TVCsBAAAAOoNxhms0eWCGfD5xdpmnm61ymrBrpId1pYZ9rpOGlpuAooSCoo2djZCr0JWbqJ7Amq6emq69l5y4hbSSgahomLKlgpqBubA7EAAAAAA=",
     reference: {
       bass: [0.8115, 0.9857],
@@ -247,6 +256,7 @@ export const SIGNATURES: Record<string, AlbumSignature> = {
     },
     spans: [0.101852, 0.359241, 0.239525, 0.299383],
     trackBrightness: [0.0946, 0.4018, 0.3003, 0.1729],
+    trackPulse: [0.218, 0.0, 0.0, 0.4915],
     envelope: "AC1wnHya3/+R849AR0heRjpGNHOBZHdGfszU///x26TZ1tbct6azr/fOmauztsXTeYEUAAAAABgyTiZEMzUwQ0M7S0NKL01VVjxXXENKSFY4alRvUWpoVGtcZTx3YGVHcWVTZmhgS4JgY1l2VmuXlX18tbOVsbywh6C5uo2Lv+OFiKPeloGt9IKhlLpvd4Whh3PUvp17nL+PmZepj4Jz1ODKt9ayy//q/vbS7/Crv8P/5tn//9+00/+rvvL/////37O33+f/5///zeex2ryftvH///P/97rOuOL/xv//3c7Ip2czMSkfDgIAAAAAFCd90HydyHR+vHxqunF8vXhqpn5iqW1jqW1xnnVmp2mCqGyTpmGVmXKLon6JkX6BfIyOoIyCknyKl3+TopGItp6XkbachMGPlMuZhM6bdNSqftyYg9GQgNKUhcSOcsWChsGYkdaAeMZ1csdoeK1RM0cYEBEAAAAAAAAADkNamG1bYl6MXWGHc4Nya3KCp2dsbpKUdWN5m5dthI+qjmGXa66BjYduoHhrk3WXioODj610bYOdn4FpdKSVf4d3q5JZlGmxkYKZdKyEf6+g45abvK27rqra5rqxnpajsn14gaShbJRnpoCBiW+tiHt5Y5uFdZKHlICEiZmwe3uFyc2vj5TGxoXAssaub0IxJw4DAAAAAAA=",
     reference: {
       bass: [0.8475, 0.9911],

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SIGNATURES } from "../content/signature.generated";
+import { trackBiasOf } from "../content/signature";
 import { fieldConstantsOf, RANGE, type FieldConstants } from "../field";
 import { analyzeTrackPcm, composeAlbum, norm, SR } from "../ingest/dsp";
 
@@ -268,6 +269,52 @@ describe("o acervo não converge", () => {
   it("o acervo percorre o range do pulso, não se amontoa numa ponta", () => {
     const values = worlds.map((w) => w.sig.pulse);
     expect(Math.max(...values) - Math.min(...values)).toBeGreaterThan(0.6);
+  });
+
+  it("os dois canais por faixa não são o mesmo sinal com dois nomes", () => {
+    const cor = (a: number[], b: number[]) => {
+      const n = a.length;
+      const ma = a.reduce((x, y) => x + y, 0) / n;
+      const mb = b.reduce((x, y) => x + y, 0) / n;
+      let s = 0;
+      let da = 0;
+      let db = 0;
+      for (let i = 0; i < n; i++) {
+        const u = a[i] - ma;
+        const v = b[i] - mb;
+        s += u * v;
+        da += u * u;
+        db += v * v;
+      }
+      return s / Math.sqrt(da * db);
+    };
+    const dp: number[] = [];
+    const db: number[] = [];
+    for (const w of worlds) {
+      const tp = w.sig.trackPulse;
+      const tb = w.sig.trackBrightness;
+      if (!tp || !tb || tp.length !== tb.length) continue;
+      const mp = tp.reduce((x, y) => x + y, 0) / tp.length;
+      const mb = tb.reduce((x, y) => x + y, 0) / tb.length;
+      tp.forEach((v, i) => {
+        dp.push(v - mp);
+        db.push(tb[i] - mb);
+      });
+    }
+    expect(dp.length).toBeGreaterThan(20);
+    expect(Math.abs(cor(dp, db))).toBeLessThan(0.5);
+  });
+
+  it("dentro de um álbum, a grade se move sem estourar o range do giro", () => {
+    for (const w of worlds) {
+      const n = w.sig.trackPulse?.length ?? 0;
+      if (n < 2) continue;
+      for (const bias of trackBiasOf(w.sig, n)) {
+        const c = fieldConstantsOf(w.sig, bias);
+        expect(c.swirl, w.slug).toBeGreaterThanOrEqual(RANGE.swirl[0]);
+        expect(c.swirl, w.slug).toBeLessThanOrEqual(RANGE.swirl[1]);
+      }
+    }
   });
 
   it("o pulso move o giro do campo e mais nada", () => {
