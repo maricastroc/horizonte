@@ -25,6 +25,8 @@ export interface FieldUniforms {
   uLobeA: { value: THREE.Vector4 };
   uLobeB: { value: THREE.Vector4 };
   uFlat: { value: number };
+  uWorld: { value: number };
+  uGuard: { value: THREE.Vector3 };
   [key: string]: THREE.IUniform;
 }
 
@@ -51,6 +53,8 @@ export function createFieldUniforms(): FieldUniforms {
     uLobeA: { value: new THREE.Vector4(0, 0, 0, 0) },
     uLobeB: { value: new THREE.Vector4(0, 0, 0, 0) },
     uFlat: { value: 1 },
+    uWorld: { value: 1 },
+    uGuard: { value: new THREE.Vector3(0, 1, 1) },
   };
 }
 

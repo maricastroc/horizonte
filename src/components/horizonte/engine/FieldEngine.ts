@@ -8,6 +8,7 @@ import { drawFront, type FrontDeps } from "../composition/front";
 import { loadCovers, makeCover, type CoverAsset } from "../composition/cover";
 import {
   albPos,
+  bandsFor,
   baseRadius,
   bodyGeom,
   hitTest,
@@ -17,6 +18,7 @@ import {
   type Hit,
   type WorldLayout,
 } from "../composition/layout";
+import { bandsOf, sameBands, stageBox, FULL_BANDS } from "../composition/bands";
 import { RingBakery } from "../composition/ring";
 import {
   mixMorphology,
@@ -49,6 +51,7 @@ import {
 import {
   COMPOSITION_FALLBACK_W,
   COMPOSITION_MAX_W,
+  GUARD,
   IDLE_MS,
   LERP,
   INTAKE,
@@ -391,8 +394,25 @@ export class FieldEngine implements InputActions {
   }
 
   private horizonUnit(): number {
-    const R = baseRadius(this.W, this.H, 1, 0, this.L) * this.M.circuit;
+    const R = this.L.staged
+      ? bodyGeom(this.W, this.H, this.st, this.L, this.M).R
+      : baseRadius(this.W, this.H, 1, 0, this.L) * this.M.circuit;
     return (this.M.coreRatio * R) / Math.max(1, this.H);
+  }
+
+  private worldUnit(): number {
+    if (!this.L.staged) return 1;
+    const b = bandsFor(this.W, this.H, this.st, this.L);
+    return Math.max(0.05, (2 * stageBox(this.W, this.H, b).halfH) / Math.max(1, this.H));
+  }
+
+  private guard(out: THREE.Vector3) {
+    if (!this.L.staged) {
+      out.set(0, 1, 1);
+      return;
+    }
+    const b = bandsFor(this.W, this.H, this.st, this.L);
+    out.set(0.5 - b.stage, GUARD.soft, GUARD.residual);
   }
 
   private fieldFor(): FieldConstants {
@@ -904,6 +924,8 @@ export class FieldEngine implements InputActions {
       -s.ringRot,
     );
     u.uFlat.value = 1 + (this.M.flatten - 1) * s.fadeSel;
+    u.uWorld.value = this.worldUnit();
+    this.guard(u.uGuard.value as THREE.Vector3);
     u.uM0.value.set(mx, my, s.m0k, s.m0h);
     u.uM1.value.set(m1x, m1y, m1k, m1h);
     u.uCur.value.set((this.mouse.x - 0.5) * aspect, 0.5 - this.mouse.y, s.curK);
@@ -927,10 +949,11 @@ export class FieldEngine implements InputActions {
 
   private buildSnapshot(force = false): Snapshot {
     const s = this.st;
-    const idle = performance.now() - this.intent > IDLE_MS;
+    const idle = !this.coarse && performance.now() - this.intent > IDLE_MS;
     const navAlb = Math.round(s.nav);
     const next: Snapshot = {
       scale: s.scale,
+      bands: this.L.staged ? bandsOf(this.W, this.H, s.zoomT) : FULL_BANDS,
       mode: s.mode,
       alb: s.alb,
       navAlb,
@@ -964,6 +987,7 @@ export class FieldEngine implements InputActions {
       prev.idle === next.idle &&
       prev.variant === next.variant &&
       prev.fault === next.fault &&
+      sameBands(prev.bands, next.bands) &&
       prev.announce === next.announce;
     return same ? prev : next;
   }

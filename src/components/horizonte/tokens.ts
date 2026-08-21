@@ -96,6 +96,69 @@ export const REACH = {
   outer: 1.16,
 } as const;
 
+export const BAND = {
+  tallAnchor: [1.5, 2.2],
+  top: [0.17, 0.116],
+  player: [0.32, 0.166],
+  identity: [0.115, 0.096],
+  shareField: 0.86,
+  shareAlbum: 0.46,
+  inset: 0.055,
+  gutter: 0.042,
+  fill: 0.9,
+  slack: 0.5,
+} as const;
+
+export const GUARD = { soft: 0.05, residual: 0.22 } as const;
+
+export const LOCKUP = {
+  desktop: {
+    size: 0.115,
+    sizeCap: 1,
+    play: 0.045,
+    zoom: 0.018,
+    title: 0.53,
+    meta: 0.011,
+    metaFloor: 0,
+    margin: 0.028,
+    marginTitle: 0.032,
+    marginMeta: 0.034,
+    baseline: 0.555,
+    baselinePlay: 0.03,
+    titleGap: 0.5,
+    metaGap: 0.24,
+    fitTitle: 0,
+    fitMeta: 0,
+    floor: 0.55,
+    metaAlpha: 0.75,
+  },
+  mobile: {
+    size: 0.105,
+    sizeCap: 0.052,
+    play: 0.012,
+    zoom: 0.008,
+    title: 0.56,
+    meta: 0.34,
+    metaFloor: 0.03,
+    margin: 0.042,
+    marginTitle: 0.042,
+    marginMeta: 0.042,
+    baseline: 0,
+    baselinePlay: 0,
+    titleGap: 0.82,
+    metaGap: 0.62,
+    fitTitle: 0.98,
+    fitMeta: 0.98,
+    floor: 0.5,
+    metaAlpha: 0.92,
+  },
+} as const;
+
+export const SHARD = {
+  desktop: { x: 0.855, y: 0.08, w: 0.055, h: 0.62, rot: 0.26, alpha: 0.26 },
+  mobile: { x: 0.79, y: -0.02, w: 0.085, h: 0.42, rot: 0.3, alpha: 0.17 },
+} as const;
+
 export const SEQ = {
   collapse: { total: 2.25, ramp: 1.1, valleyEnd: 1.3 },
   valley: { fade: 0.03 },

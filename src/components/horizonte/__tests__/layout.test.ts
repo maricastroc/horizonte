@@ -36,7 +36,7 @@ describe("variantFor", () => {
 
   it("no mobile os bodies entram em fila, um por tela", () => {
     expect(layoutFor("mobile").spreadX).toBeGreaterThan(1);
-    expect(layoutFor("mobile").ringLabels).toBe("selecionado");
+    expect(layoutFor("mobile").ringLabels).toBe("nenhum");
   });
 
   it("tela baixa usa a composição compacta, por mais larga que seja", () => {
@@ -121,9 +121,9 @@ describe("ringR e lockup", () => {
   });
 
   it("o lockup cede espaço conforme a faixa toma a tela", () => {
-    const stopped = lockup(W, H, baseState({ play: 0, zoom: 0 }));
-    const playing = lockup(W, H, baseState({ play: 1, zoom: 0 }));
-    const inside = lockup(W, H, baseState({ play: 0, zoom: 1 }));
+    const stopped = lockup(W, H, baseState({ play: 0, zoom: 0 }), DESKTOP);
+    const playing = lockup(W, H, baseState({ play: 1, zoom: 0 }), DESKTOP);
+    const inside = lockup(W, H, baseState({ play: 0, zoom: 1 }), DESKTOP);
 
     expect(playing.size).toBeLessThan(stopped.size);
     expect(inside.size).toBeLessThan(stopped.size);

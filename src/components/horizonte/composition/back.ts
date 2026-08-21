@@ -7,7 +7,15 @@ import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
 import type { RingBakery } from "./ring";
 import { ls, type Ctx } from "./ctx";
-import { albPos, bodyGeom, lockup, ringBufferScale, type WorldLayout } from "./layout";
+import { stageBox, type Bands } from "./bands";
+import {
+  albPos,
+  bandsFor,
+  bodyGeom,
+  lockup,
+  ringBufferScale,
+  type WorldLayout,
+} from "./layout";
 
 export interface BackDeps {
   fonts: FontFamilies;
@@ -114,6 +122,7 @@ function trackLabels(
   const N = A.tracks.length;
   const bounds = boundsOf(A.signature, N);
   const flatten = m.flatten;
+  const mudo = L.ringLabels === "nenhum";
   x.save();
   x.textBaseline = "middle";
   ls(x, "0.2em");
@@ -125,29 +134,48 @@ function trackLabels(
     const px = Math.max(W * 0.055, Math.min(W * 0.62, bx + Math.cos(a) * reach));
     const py = Math.max(H * 0.09, Math.min(H * 0.84, by + Math.sin(a) * reach * flatten));
     const on = k === s.sel || (s.playAlb === s.alb && k === s.trk);
-    if (L.ringLabels === "selecionado" && !on) continue;
-    const hidden = Math.cos(a) > 0.3 || (py > H * 0.6 && px < W * 0.46);
-    if (hidden && !on) continue;
+    if (L.ringLabels !== "todos" && !on) continue;
 
-    x.globalAlpha = s.fadeSel * (on ? 0.95 : 0.42);
-    x.fillStyle = on ? rgba(A.inkA, 1) : COLOR.dust;
-    x.textAlign = Math.cos(a) < 0 ? "right" : "left";
-    x.fillText(
-      `${String(k + 1).padStart(2, "0")}  ${A.tracks[k].title.toUpperCase()}`,
-      px,
-      py,
-    );
+    if (!mudo) {
+      const hidden = Math.cos(a) > 0.3 || (py > H * 0.6 && px < W * 0.46);
+      if (hidden && !on) continue;
+
+      x.globalAlpha = s.fadeSel * (on ? 0.95 : 0.42);
+      x.fillStyle = on ? rgba(A.inkA, 1) : COLOR.dust;
+      x.textAlign = Math.cos(a) < 0 ? "right" : "left";
+      x.fillText(
+        `${String(k + 1).padStart(2, "0")}  ${A.tracks[k].title.toUpperCase()}`,
+        px,
+        py,
+      );
+    }
 
     const tick = outerAt(m, t) * R;
+    const far = mudo ? tick * 1.3 : reach - R * 0.05;
     x.globalAlpha = s.fadeSel * (on ? 0.6 : 0.18);
     x.strokeStyle = on ? rgba(A.inkA, 1) : COLOR.dust;
     x.lineWidth = 1;
     x.beginPath();
     x.moveTo(bx + Math.cos(a) * tick * 1.04, by + Math.sin(a) * tick * 1.04 * flatten);
-    x.lineTo(bx + Math.cos(a) * (reach - R * 0.05), by + Math.sin(a) * (reach - R * 0.05) * flatten);
+    x.lineTo(bx + Math.cos(a) * far, by + Math.sin(a) * far * flatten);
     x.stroke();
   }
   x.restore();
+}
+
+function bandScrim(x: Ctx, W: number, H: number, b: Bands, lift: number) {
+  const topo = x.createLinearGradient(0, 0, 0, b.top * H);
+  topo.addColorStop(0, "rgba(7,7,10,.86)");
+  topo.addColorStop(1, "rgba(7,7,10,0)");
+  x.fillStyle = topo;
+  x.fillRect(0, 0, W, b.top * H);
+
+  const chao = x.createLinearGradient(0, b.stage * H - lift, 0, H);
+  chao.addColorStop(0, "rgba(7,7,10,0)");
+  chao.addColorStop(0.3, "rgba(7,7,10,.6)");
+  chao.addColorStop(1, "rgba(7,7,10,.9)");
+  x.fillStyle = chao;
+  x.fillRect(0, b.stage * H - lift, W, H - b.stage * H + lift);
 }
 
 export function drawBack(
@@ -163,10 +191,12 @@ export function drawBack(
   const A = ALBUMS[s.alb];
   const inkA = (a: number) => rgba(A.inkA, a);
   const inkB = (a: number) => rgba(A.inkB, a);
+  const b = bandsFor(W, H, s, L);
+  const box = stageBox(W, H, b);
   const g = bodyGeom(W, H, s, L, morph);
   const bx = g.cx;
   const by = g.cy;
-  const M = Math.min(W, H);
+  const M = L.staged ? Math.min(W, 2 * box.halfH) : Math.min(W, H);
 
   x.fillStyle = COLOR.void;
   x.fillRect(0, 0, W, H);
@@ -185,21 +215,23 @@ export function drawBack(
     if (a < 0.02) continue;
     const mi = morphOf(i);
     const ns = neighborScale(mi);
+    const nx = p.x * W;
+    const ny = L.staged ? box.cy : p.y * H;
     const R = M * (0.16 + 0.24 * p.depth) * L.ringScale * ns;
-    drawRing(x, rings.arc(i), p.x * W, p.y * H, R, RING.anchor + i * RING.neighborPhase, a, mi.flatten);
+    drawRing(x, rings.arc(i), nx, ny, R, RING.anchor + i * RING.neighborPhase, a, mi.flatten);
 
     x.save();
     const br = M * GEO.neighborR * p.depth * ns;
     x.globalAlpha = a * 0.9;
     x.fillStyle = COLOR.body;
     x.beginPath();
-    x.ellipse(p.x * W, p.y * H, br, br, 0, 0, 6.2832);
+    x.ellipse(nx, ny, br, br, 0, 0, 6.2832);
     x.fill();
 
     x.strokeStyle = rgba(ALBUMS[i].inkA, 0.9);
     x.lineWidth = 1.6;
     x.beginPath();
-    x.arc(p.x * W, p.y * H, br, 2.0, 4.1);
+    x.arc(nx, ny, br, 2.0, 4.1);
     x.stroke();
 
     x.textAlign = "center";
@@ -209,15 +241,15 @@ export function drawBack(
 
     const nw = weights[i];
     x.font = `${nw} ${M * GEO.neighborR * p.depth}px ${fonts.archivo}`;
-    x.fillText(ALBUMS[i].artist, p.x * W, p.y * H + br + M * 0.075 * p.depth);
+    x.fillText(ALBUMS[i].artist, nx, ny + br + M * 0.075 * p.depth);
 
     ls(x, "0.2em");
     x.globalAlpha = a * (i === s.hoverBody ? 0.95 : 0.5);
     x.font = `500 ${W * 0.0092}px ${fonts.mono}`;
     x.fillText(
       `${ALBUMS[i].cat} · ${ALBUMS[i].tracks.length} FAIXAS`,
-      p.x * W,
-      p.y * H + br + M * 0.105 * p.depth,
+      nx,
+      ny + br + M * 0.105 * p.depth,
     );
     x.textAlign = "left";
     x.restore();
@@ -277,39 +309,13 @@ export function drawBack(
   }
   x.restore();
 
-  const lk = lockup(W, H, s);
-  x.save();
-  x.textBaseline = "alphabetic";
-  ls(x, "-0.035em");
-  let asz = lk.size;
-  const wgt = Math.round(C.artistWeight);
-  x.font = `${wgt} ${asz}px ${fonts.archivo}`;
-  const fit = s.scale === "collection" ? L.fitCollection : L.fitAlbum;
-  if (fit > 0) {
-    const maxW = W * fit - W * GEO.marginText;
-    const mw = x.measureText(A.artist).width;
-    if (mw > maxW) {
-      asz = Math.max(asz * 0.55, asz * (maxW / mw));
-      x.font = `${wgt} ${asz}px ${fonts.archivo}`;
-    }
-  }
-  x.globalAlpha = (1 - s.mix) * (0.92 - s.play * 0.25);
-  x.fillStyle = COLOR.paper;
-  x.fillText(A.artist, W * GEO.marginText, lk.ay);
-  if (s.mix > 0 && ALBUMS[s.fuseAlb]) {
-    x.globalAlpha = s.mix * (0.92 - s.play * 0.25);
-    x.fillText(
-      ALBUMS[s.fuseAlb].artist,
-      W * GEO.marginText + (1 - s.mix) * W * 0.12,
-      lk.ay + (1 - s.mix) * H * 0.05,
-    );
-  }
-  x.restore();
+  const lk = lockup(W, H, s, L);
 
-  if (s.play > 0.02) {
+  const coverBand = () => {
+    if (s.play <= 0.02) return;
     const bandH = H * GEO.bandH * s.play;
     x.save();
-    x.globalAlpha = GEO.bandAlpha * s.play;
+    x.globalAlpha = GEO.bandAlpha * s.play * (L.staged ? 0.6 : 1);
     x.drawImage(covers[s.alb].canvas, 0, H - bandH, W, bandH);
     x.globalCompositeOperation = "destination-out";
     const fg = x.createLinearGradient(0, H - bandH, 0, H);
@@ -319,11 +325,50 @@ export function drawBack(
     x.fillStyle = fg;
     x.fillRect(0, H - bandH, W, bandH);
     x.restore();
+  };
 
+  if (L.staged) {
+    coverBand();
+    bandScrim(x, W, H, b, lk.size * 0.6);
+  }
+
+  x.save();
+  x.textBaseline = "alphabetic";
+  ls(x, "-0.035em");
+  let asz = lk.size;
+  const wgt = Math.round(C.artistWeight);
+  x.font = `${wgt} ${asz}px ${fonts.archivo}`;
+  const fit = s.scale === "collection" ? L.fitCollection : L.fitAlbum;
+  if (fit > 0) {
+    const maxW = L.staged ? W - lk.margin * 2 : W * fit - lk.margin;
+    const mw = x.measureText(A.artist).width;
+    if (mw > maxW) {
+      asz = Math.max(asz * lk.floor, asz * (maxW / mw));
+      x.font = `${wgt} ${asz}px ${fonts.archivo}`;
+    }
+  }
+  x.globalAlpha = (1 - s.mix) * (0.92 - s.play * 0.25);
+  x.fillStyle = COLOR.paper;
+  x.fillText(A.artist, lk.margin, lk.ay);
+  if (s.mix > 0 && ALBUMS[s.fuseAlb]) {
+    x.globalAlpha = s.mix * (0.92 - s.play * 0.25);
+    x.fillText(
+      ALBUMS[s.fuseAlb].artist,
+      lk.margin + (1 - s.mix) * W * 0.12,
+      lk.ay + (1 - s.mix) * H * 0.05,
+    );
+  }
+  x.restore();
+
+  if (!L.staged) coverBand();
+
+  if (s.play > 0.02) {
     const prog = progressOf(s);
     x.fillStyle = inkA(0.85 * s.play);
     x.fillRect(0, H - 2, W * prog, 2);
   }
+
+  if (L.staged) return;
 
   const scrim = x.createLinearGradient(0, H * GEO.scrimBottom, 0, H);
   scrim.addColorStop(0, "rgba(7,7,10,0)");

@@ -13,7 +13,8 @@
     "media:upload": "node scripts/upload-media.mjs",
     "media:check": "node scripts/upload-media.mjs --check",
     "media:dry": "node scripts/upload-media.mjs --dry-run",
-    "analyze": "python3 scripts/analyze-audio.py --report"
+    "analyze": "python3 scripts/analyze-audio.py --report",
+    "curadoria": "python3 scripts/curadoria.py"
   },
   "dependencies": {
     "@types/three": "^0.185.4",

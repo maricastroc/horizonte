@@ -1,3 +1,4 @@
+import { FULL_BANDS } from "../composition/bands";
 import { afterEach, describe, expect, it } from "vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import Instruments, { isInstrumentsTarget } from "../Instruments";
@@ -10,6 +11,7 @@ import type { Snapshot } from "../types";
 
 const BASE: Snapshot = {
   scale: "collection",
+  bands: FULL_BANDS,
   mode: "stopped",
   alb: 0,
   navAlb: 0,
@@ -162,7 +164,10 @@ describe("entrada para trazer um disco", () => {
   it("tem alvo maior que uma linha de catálogo, e maior ainda no compacto", () => {
     mount();
     expect(entrada().className).toContain("h-[34px]");
-    expect(entrada().className).toContain("compact:min-h-[52px]");
+    cleanup();
+    mount({ variant: "mobile", scale: "collection" });
+    fireEvent.click(screen.getByRole("button", { name: "Álbuns" }));
+    expect(entrada().className).toContain("min-h-[52px]");
   });
 
   it("o marcador é um lugar vazio que se preenche ao apontar", () => {

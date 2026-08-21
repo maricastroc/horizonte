@@ -1,7 +1,17 @@
-import { BREAKPOINT, GEO, REACH, RING, RING_UNIT } from "../tokens";
+import { BAND, BREAKPOINT, GEO, LOCKUP, REACH, RING, RING_UNIT, SHARD } from "../tokens";
 import { albumProgressOf } from "../state";
+import { clamp, lerp } from "../math";
 import { neighborScale, type AlbumMorphology } from "../morphology";
 import type { FieldState, Variant } from "../types";
+import {
+  bandsOf,
+  extentOf,
+  fitRadius,
+  stageBox,
+  FULL_BANDS,
+  type Bands,
+  type StageBox,
+} from "./bands";
 
 export const variantFor = (w: number, h = Number.POSITIVE_INFINITY): Variant =>
   w < BREAKPOINT.mobile || h < BREAKPOINT.short
@@ -9,6 +19,9 @@ export const variantFor = (w: number, h = Number.POSITIVE_INFINITY): Variant =>
     : w < BREAKPOINT.tablet
       ? "tablet"
       : "desktop";
+
+export type LockupSpec = (typeof LOCKUP)["desktop"] | (typeof LOCKUP)["mobile"];
+export type ShardSpec = (typeof SHARD)["desktop"] | (typeof SHARD)["mobile"];
 
 export interface WorldLayout {
   variant: Variant;
@@ -19,7 +32,10 @@ export interface WorldLayout {
   ringScale: number;
   fitCollection: number;
   fitAlbum: number;
-  ringLabels: "todos" | "selecionado";
+  ringLabels: "todos" | "selecionado" | "nenhum";
+  staged: boolean;
+  type: LockupSpec;
+  shard: ShardSpec;
 }
 
 const DESKTOP: WorldLayout = {
@@ -32,6 +48,9 @@ const DESKTOP: WorldLayout = {
   fitCollection: 0.52,
   fitAlbum: 0.52,
   ringLabels: "todos",
+  staged: false,
+  type: LOCKUP.desktop,
+  shard: SHARD.desktop,
 };
 
 const TABLET: WorldLayout = {
@@ -51,10 +70,13 @@ const MOBILE: WorldLayout = {
   anchorAlbum: { x: 0.5, y: 0.33 },
   spreadX: 1.02,
   spreadY: 0.03,
-  ringScale: 0.7,
-  fitCollection: 0.86,
-  fitAlbum: 0.86,
-  ringLabels: "selecionado",
+  ringScale: 1.15,
+  fitCollection: 0.9,
+  fitAlbum: 0.9,
+  ringLabels: "nenhum",
+  staged: true,
+  type: LOCKUP.mobile,
+  shard: SHARD.mobile,
 };
 
 export const layoutFor = (variant: Variant): WorldLayout =>
@@ -101,6 +123,35 @@ export function bodyGeomAt(
   };
 }
 
+export const bandsFor = (W: number, H: number, s: FieldState, L: WorldLayout): Bands =>
+  L.staged ? bandsOf(W, H, s.zoom) : FULL_BANDS;
+
+export function placeInStage(
+  box: StageBox,
+  m: AlbumMorphology,
+  natural: number,
+  freeX: number,
+  zoom: number,
+): BodyGeom {
+  const e = extentOf(m);
+  const R = Math.min(natural, fitRadius(box, e, m.flatten));
+
+  const midX = ((e.x0 + e.x1) / 2) * R;
+  const midY = ((e.y0 + e.y1) / 2) * m.flatten * R;
+  const slackX = Math.max(0, box.halfW - ((e.x1 - e.x0) / 2) * R);
+  const slackY = Math.max(0, box.halfH - ((e.y1 - e.y0) / 2) * m.flatten * R);
+
+  const offX = clamp(m.eccX * R * BAND.slack, -slackX, slackX);
+  const offY = clamp(m.eccY * R * m.flatten * BAND.slack, -slackY, slackY);
+
+  return {
+    cx: lerp(freeX + m.eccX * R, box.cx - midX + offX, clamp(zoom, 0, 1)),
+    cy: box.cy - midY + offY,
+    R,
+    flatten: m.flatten,
+  };
+}
+
 export function bodyGeom(
   W: number,
   H: number,
@@ -109,7 +160,14 @@ export function bodyGeom(
   m: AlbumMorphology,
 ): BodyGeom {
   const p = albPos(s.alb, s, L);
-  return bodyGeomAt(W, H, p.x, p.y, ringR(W, H, s, L), m, s.zoom);
+  if (!L.staged) return bodyGeomAt(W, H, p.x, p.y, ringR(W, H, s, L), m, s.zoom);
+  return placeInStage(
+    stageBox(W, H, bandsFor(W, H, s, L)),
+    m,
+    ringR(W, H, s, L) * m.circuit,
+    p.x * W,
+    s.zoom,
+  );
 }
 
 export function sectorAt(bounds: number[], t: number): number {
@@ -120,18 +178,62 @@ export function sectorAt(bounds: number[], t: number): number {
   return n - 1;
 }
 
-export function lockup(W: number, H: number, s: FieldState) {
+export interface Lockup {
+  size: number;
+  ay: number;
+  ty: number;
+  tsize: number;
+  msize: number;
+  my: number;
+  margin: number;
+  marginTitle: number;
+  marginMeta: number;
+  widthTitle: number;
+  widthMeta: number;
+  floor: number;
+  metaAlpha: number;
+}
+
+const RISE = 0.72;
+
+export function lockup(W: number, H: number, s: FieldState, L: WorldLayout): Lockup {
+  const t = L.type;
   const p = s.play;
   const z = s.zoom;
-  const size = W * (GEO.lockup - p * 0.045 - z * GEO.lockupZoom);
-  const ay = H * (0.555 + p * 0.03);
+  const nominal = W * (t.size - p * t.play - z * t.zoom);
+  const meta = (v: number) => Math.max(v * t.meta, W * t.metaFloor);
+
+  let size = t.sizeCap < 1 ? Math.min(nominal, H * t.sizeCap) : nominal;
+  let ay = H * (t.baseline + p * t.baselinePlay);
+
+  if (L.staged) {
+    const b = bandsFor(W, H, s, L);
+    const room = Math.max(1, (b.identity - b.stage) * H);
+    const stack = RISE + t.titleGap + t.metaGap;
+    if (size * stack + meta(size) * 0.35 > room) {
+      size = Math.min(
+        (room - W * t.metaFloor * 0.35) / stack,
+        room / (stack + t.meta * 0.35),
+      );
+    }
+    ay = b.stage * H + size * RISE;
+  }
+
+  const ty = ay + size * t.titleGap;
   return {
     size,
     ay,
-    ty: ay + size * 0.5,
-    tsize: size * 0.53,
-    msize: W * 0.011,
-    my: ay + size * 0.5 + size * 0.24,
+    ty,
+    tsize: size * t.title,
+    msize: L.staged ? meta(size) : W * t.meta,
+    my: ty + size * t.metaGap,
+    margin: W * t.margin,
+    marginTitle: W * t.marginTitle,
+    marginMeta: W * t.marginMeta,
+    widthTitle: t.fitTitle ? t.fitTitle * W - 2 * W * t.marginTitle : 0,
+    widthMeta: t.fitMeta ? t.fitMeta * W - 2 * W * t.marginMeta : 0,
+    floor: t.floor,
+    metaAlpha: t.metaAlpha,
   };
 }
 

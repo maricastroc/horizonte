@@ -1,7 +1,6 @@
 import type { AlbumSignature } from "../content/signature";
 import type { AlbumMorphology } from "../morphology";
 import type { Variant } from "../types";
-import { layoutFor } from "../composition/layout";
 import { STAGE, blur, ncc, silhouetteOf, type SilhouetteOptions } from "./silhouette";
 
 export const GLANCE_PX = 24;
@@ -21,6 +20,8 @@ export const glanceSigma = (
   W: number = STAGE.W,
   worldScale = 1,
 ) => (GLANCE_PX * gw * worldScale) / W;
+
+export const glanceOf = (ppx: number, worldScale = 1) => GLANCE_PX * ppx * worldScale;
 
 export interface Subject {
   label: string;
@@ -64,8 +65,8 @@ export function measure(
   );
   const gw = shots[0]?.gw ?? STAGE.gw;
   const gh = shots[0]?.gh ?? STAGE.gh;
-  const sigma =
-    opts.sigma ?? glanceSigma(gw, opts.W ?? STAGE.W, layoutFor(variant).ringScale);
+  const ppx = shots[0]?.ppx ?? STAGE.gw / STAGE.W;
+  const sigma = opts.sigma ?? glanceOf(ppx);
   const soft = shots.map((s) => blur(s.data, gw, gh, sigma));
 
   const pairs: PairScore[] = [];

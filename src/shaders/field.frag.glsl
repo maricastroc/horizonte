@@ -25,16 +25,29 @@ uniform vec4 uLobeB;
 // sem isto, um disco escuro (coroa muito achatada) deixa o núcleo escapar por
 // cima e por baixo, e o mundo se parte em dois objetos.
 uniform float uFlat;
+// Escala do mundo em unidades de tela. O campo é medido pelo eixo menor, mas o
+// shader trabalha num espaço normalizado pela altura: num telefone o mesmo
+// m0k desviava três vezes mais fração de largura que no desktop, e a tipografia
+// saía da viewport. A lente passa a medir distância e desvio em unidades de
+// mundo, e não em unidades de viewport.
+uniform float uWorld;
+// Contrato de camadas. A lente é um fenômeno do palco: acima do chão do palco
+// ela deforma tudo, abaixo dele decai para um resíduo. É o que deixa a
+// identidade, a lista e o transporte legíveis sem tirá-los do mundo — eles
+// continuam recebendo interferência, só que leve. No desktop uGuard.z = 1 e
+// esta função é a identidade.
+// uGuard = (chão do palco em p.y · maciez · resíduo)
+uniform vec3 uGuard;
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(41.71, 289.13))) * 43758.5453); }
 
 vec2 pullOf(vec2 p, vec4 m, float spin){
-  vec2 d = p - m.xy;
+  vec2 d = (p - m.xy) / uWorld;
   float r = max(length(d), 1e-4);
   float k = min(m.z / (r * r + 0.014), 0.85);
   vec2 dir = d / r;
   vec2 tang = vec2(-dir.y, dir.x);
-  return -dir * k * 0.13 + tang * k * spin * 0.13;
+  return (-dir * k * 0.13 + tang * k * spin * 0.13) * uWorld;
 }
 
 float lobeOf(vec2 d){
@@ -89,10 +102,12 @@ void main(){
   vec2 off = pullOf(p, uM0, uSpin) + pullOf(p, uM1, uSpin);
   off += pullOf(p, vec4(uCur.xy, uCur.z, 0.0), uSpin * 0.4);
 
-  vec2 dw = p - uM0.xy;
+  vec2 dw = (p - uM0.xy) / uWorld;
   float rw = length(dw);
   float dr = rw - uWave.x;
-  off += normalize(dw + 1e-5) * uWave.y * exp(-dr * dr * 42.0);
+  off += normalize(dw + 1e-5) * uWave.y * exp(-dr * dr * 42.0) * uWorld;
+
+  off *= mix(uGuard.z, 1.0, smoothstep(uGuard.x - uGuard.y, uGuard.x + uGuard.y, p.y));
 
   vec2 offUv = off / vec2(aspect, 1.0);
   vec3 col = samp(uBack, uv, offUv, uBlur);
@@ -102,7 +117,7 @@ void main(){
   col += uInk * (rimOf(p, uM0, 1.0) + rimOf(p, uM1, 0.0)) * 1.15;
 
   if (uJet > 0.001){
-    vec2 jd = p - uM0.xy;
+    vec2 jd = (p - uM0.xy) / uWorld;
     float axis = abs(jd.x * 0.62 + jd.y * 0.78);
     float along = clamp(1.0 - abs(jd.x * 0.78 - jd.y * 0.62) * 0.7, 0.0, 1.0);
     col += uInk * exp(-axis * axis * 900.0) * along * uJet * 2.4;

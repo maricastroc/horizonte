@@ -1,3 +1,5 @@
+import type { Bands } from "./composition/bands";
+
 export type Scale = "collection" | "album" | "track";
 export type Mode = "stopped" | "collapse" | "playing" | "paused" | "fusion";
 export type Variant = "desktop" | "tablet" | "mobile";
@@ -63,6 +65,7 @@ export type Fault = "source" | "blocked";
 
 export interface Snapshot {
   scale: Scale;
+  bands: Bands;
   mode: Mode;
   alb: number;
   navAlb: number;

@@ -1,5 +1,12 @@
 import { boundsOf, type AlbumSignature } from "../content/signature";
-import { baseRadius, bodyGeomAt, layoutFor, sectorAt } from "../composition/layout";
+import {
+  baseRadius,
+  bodyGeomAt,
+  layoutFor,
+  placeInStage,
+  sectorAt,
+} from "../composition/layout";
+import { bandsOf, stageBox } from "../composition/bands";
 import { clamp } from "../math";
 import { morphologyOf, shellsAt, type AlbumMorphology } from "../morphology";
 import { MORPH, RING } from "../tokens";
@@ -12,6 +19,17 @@ export const STAGE = {
   gh: 180,
   sub: 2,
 } as const;
+
+export const STAGE_MOBILE = {
+  W: 390,
+  H: 844,
+  gw: 176,
+  gh: 0,
+  sub: 2,
+} as const;
+
+export const stageFor = (variant: Variant = "desktop") =>
+  variant === "mobile" ? STAGE_MOBILE : STAGE;
 
 const TAU = 6.283185307179586;
 
@@ -34,6 +52,7 @@ export interface Silhouette {
   data: Float32Array;
   gw: number;
   gh: number;
+  ppx: number;
 }
 
 export function silhouetteOf(
@@ -41,16 +60,25 @@ export function silhouetteOf(
   trackCount: number,
   opts: SilhouetteOptions = {},
 ): Silhouette {
-  const W = opts.W ?? STAGE.W;
-  const H = opts.H ?? STAGE.H;
-  const gw = opts.gw ?? STAGE.gw;
-  const gh = opts.gh ?? STAGE.gh;
+  const ref = stageFor(opts.variant);
+  const W = opts.W ?? ref.W;
+  const H = opts.H ?? ref.H;
   const L = layoutFor(opts.variant ?? "desktop");
 
   const m = opts.morph ?? morphologyOf(sig, trackCount);
   const bounds = boundsOf(sig, trackCount);
   const base = baseRadius(W, H, 1, 0, L);
-  const g = bodyGeomAt(W, H, L.anchorAlbum.x, L.anchorAlbum.y, base, m);
+  const box = L.staged ? stageBox(W, H, bandsOf(W, H, 1)) : null;
+  const g = box
+    ? placeInStage(box, m, base * m.circuit, L.anchorAlbum.x * W, 1)
+    : bodyGeomAt(W, H, L.anchorAlbum.x, L.anchorAlbum.y, base, m);
+
+  const winX = box ? box.cx - box.halfW : 0;
+  const winY = box ? box.cy - box.halfH : 0;
+  const winW = box ? 2 * box.halfW : W;
+  const winH = box ? 2 * box.halfH : H;
+  const gw = opts.gw ?? ref.gw;
+  const gh = opts.gh ?? (ref.gh || Math.max(1, Math.round((gw * winH) / winW)));
 
   const sats = m.satellites
     .filter((s) => s.weight > 0.02)
@@ -70,8 +98,8 @@ export function silhouetteOf(
       let acc = 0;
       for (let sy = 0; sy < sub; sy++) {
         for (let sx = 0; sx < sub; sx++) {
-          const x = ((px + (sx + 0.5) / sub) / gw) * W;
-          const y = ((py + (sy + 0.5) / sub) / gh) * H;
+          const x = winX + ((px + (sx + 0.5) / sub) / gw) * winW;
+          const y = winY + ((py + (sy + 0.5) / sub) / gh) * winH;
           acc += inkAt(x, y);
         }
       }
@@ -79,7 +107,7 @@ export function silhouetteOf(
     }
   }
 
-  return { data, gw, gh };
+  return { data, gw, gh, ppx: gw / winW };
 
   function inkAt(x: number, y: number): number {
     const dx = x - g.cx;
