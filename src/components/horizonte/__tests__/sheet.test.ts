@@ -6,7 +6,7 @@ import { silhouetteOf } from "../perception/silhouette";
 const OUT = process.env.HORIZONTE_SHEET;
 
 describe.runIf(OUT)("folha de contato", () => {
-  it("escreve as silhuetas do acervo", async () => {
+  it("writes the silhouettes of the catalogue", async () => {
     const fs = await import("node:fs");
     const zlib = await import("node:zlib");
     const dir = OUT!;
@@ -74,8 +74,8 @@ describe.runIf(OUT)("folha de contato", () => {
       fs.writeFileSync(`${dir}/${name}.png`, png(px, W, H));
     };
 
-    sheet("antes", true);
-    sheet("depois", false);
-    expect(fs.existsSync(`${dir}/depois.png`)).toBe(true);
+    sheet("before", true);
+    sheet("after", false);
+    expect(fs.existsSync(`${dir}/after.png`)).toBe(true);
   });
 });

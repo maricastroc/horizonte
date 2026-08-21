@@ -229,7 +229,7 @@ export function audioEnv() {
       return analyser;
     }
     createGain() {
-      const saidas: unknown[] = [];
+      const outputs: unknown[] = [];
       const node = {
         gain: {
           value: 1,
@@ -237,8 +237,8 @@ export function audioEnv() {
             node.gain.value = v;
           },
         },
-        out: saidas,
-        connect: (destino: unknown) => saidas.push(destino),
+        out: outputs,
+        connect: (destino: unknown) => outputs.push(destino),
         disconnect: () => {},
       };
       gains.push(node);

@@ -5,7 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Horizonte",
   description:
-    "A música tem massa; massa deforma o espaço. Uma experiência musical espacial.",
+    "Music has mass; mass bends space. A spatial music experience.",
 };
 
 export const viewport: Viewport = {
@@ -18,7 +18,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="pt-BR"
+      lang="en"
       className={`${archivo.variable} ${bodoni.variable} ${mono.variable}`}
     >
       <body>{children}</body>

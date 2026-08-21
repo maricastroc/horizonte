@@ -69,7 +69,7 @@ const rel = (got: number, want: number) =>
 describe.skipIf(!has)("paridade browser ↔ pipeline offline", () => {
   const slugs = Object.keys(SIGNATURES).filter((s) => tracksOf(s).length > 0);
 
-  it("encontra o cache de análise", () => {
+  it("finds the analysis cache", () => {
     expect(slugs.length).toBeGreaterThan(0);
   });
 
@@ -77,7 +77,7 @@ describe.skipIf(!has)("paridade browser ↔ pipeline offline", () => {
 
   for (const slug of slugs) {
     it(
-      `reproduz a assinatura de ${slug}`,
+      `reproduces the signature of ${slug}`,
       () => {
         const want = SIGNATURES[slug];
         const analyses = tracksOf(slug).map((f) => analyzeTrackPcm(readWav(f)));

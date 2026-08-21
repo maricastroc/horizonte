@@ -13,7 +13,7 @@ async function bitmapOf(blob: Blob): Promise<ImageBitmap | HTMLImageElement> {
     return await new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("capa ilegível"));
+      img.onerror = () => reject(new Error("unreadable cover"));
       img.src = url;
     });
   } finally {

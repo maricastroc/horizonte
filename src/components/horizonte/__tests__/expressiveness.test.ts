@@ -131,88 +131,88 @@ const span = (k: keyof typeof RANGE) => Math.abs(RANGE[k][1] - RANGE[k][0]);
 const CHANNELS = Object.keys(RANGE) as (keyof typeof RANGE)[];
 
 const worldDistance = (a: FieldConstants, b: FieldConstants, chs = CHANNELS) => {
-  const uteis = chs.filter((k) => span(k) > 0);
-  if (uteis.length === 0) return 0;
-  return Math.max(...uteis.map((k) => Math.abs(a[k] - b[k]) / span(k)));
+  const usable = chs.filter((k) => span(k) > 0);
+  if (usable.length === 0) return 0;
+  return Math.max(...usable.map((k) => Math.abs(a[k] - b[k]) / span(k)));
 };
 
-describe("o descritor mede periodicidade, e não outra coisa disfarçada", () => {
-  it("separa uma grade regular de ataques soltos com a mesma densidade", () => {
-    const grade = measure("regular");
-    const solto = measure("jitter", { jitterMs: 110 });
+describe("the descriptor measures periodicity, not something else in disguise", () => {
+  it("separates a regular grid from loose attacks of the same density", () => {
+    const grid = measure("regular");
+    const loose = measure("jitter", { jitterMs: 110 });
 
-    for (const k of LEGADO) expect(grade[k]).toBeCloseTo(solto[k], 2);
-    expect(grade.pulse - solto.pulse).toBeGreaterThan(0.6);
+    for (const k of LEGADO) expect(grid[k]).toBeCloseTo(loose[k], 2);
+    expect(grid.pulse - loose.pulse).toBeGreaterThan(0.6);
   });
 
-  it("sem ataques não há pulso, por mais estacionário que o sinal seja", () => {
-    expect(measure("ruído", { kind: "noise" }).pulse).toBeLessThan(0.05);
+  it("with no attacks there is no pulse, however stationary the signal is", () => {
+    expect(measure("noise", { kind: "noise" }).pulse).toBeLessThan(0.05);
     expect(measure("drone", { kind: "drone" }).pulse).toBeLessThan(0.05);
   });
 
-  it("não é volume disfarçado: vinte dB abaixo, o mesmo pulso", () => {
-    const alto = measure("regular");
-    const baixo = measure("baixo", { level: 0.025, pad: 0.004 });
-    expect(Math.abs(alto.pulse - baixo.pulse)).toBeLessThan(0.05);
+  it("it is not loudness in disguise: twenty dB down, the same pulse", () => {
+    const high = measure("regular");
+    const low = measure("low", { level: 0.025, pad: 0.004 });
+    expect(Math.abs(high.pulse - low.pulse)).toBeLessThan(0.05);
   });
 
-  it("não é brilho disfarçado: escuro e cortante medem o mesmo pulso", () => {
-    const escuro = measure("escuro", { tone: "dark" });
-    const claro = measure("claro", { tone: "bright" });
-    expect(Math.abs(escuro.brightness - claro.brightness)).toBeGreaterThan(0.05);
-    expect(Math.abs(escuro.pulse - claro.pulse)).toBeLessThan(0.08);
+  it("it is not brightness in disguise: dark and cutting measure the same pulse", () => {
+    const dark = measure("dark", { tone: "dark" });
+    const light = measure("light", { tone: "bright" });
+    expect(Math.abs(dark.brightness - light.brightness)).toBeGreaterThan(0.05);
+    expect(Math.abs(dark.pulse - light.pulse)).toBeLessThan(0.08);
   });
 
-  it("não é andamento disfarçado: 76 e 120 BPM são igualmente periódicos", () => {
-    const rapido = measure("regular");
-    const lento = measure("lento", { bpm: 76 });
-    expect(Math.abs(rapido.pulse - lento.pulse)).toBeLessThan(0.1);
-    expect(rapido.pulse).toBeGreaterThan(0.85);
-    expect(lento.pulse).toBeGreaterThan(0.85);
+  it("it is not tempo in disguise: 76 and 120 BPM are equally periodic", () => {
+    const fast = measure("regular");
+    const slow = measure("slow", { bpm: 76 });
+    expect(Math.abs(fast.pulse - slow.pulse)).toBeLessThan(0.1);
+    expect(fast.pulse).toBeGreaterThan(0.85);
+    expect(slow.pulse).toBeGreaterThan(0.85);
   });
 });
 
-describe("o pulso sobrevive à masterização — que é o ponto", () => {
-  it("esmagar o master destrói a dinâmica medida", () => {
-    const cru = measure("regular");
-    const esmagado = measure("esmagado", { limit: 14 });
-    expect(cru.dynamics - esmagado.dynamics).toBeGreaterThanOrEqual(0);
-    expect(esmagado.dynamics).toBeLessThan(0.05);
-    expect(esmagado.loudness).toBeGreaterThan(0.8);
+describe("the pulse survives mastering — which is the point", () => {
+  it("crushing the master destroys the measured dynamics", () => {
+    const raw = measure("regular");
+    const crushed = measure("crushed", { limit: 14 });
+    expect(raw.dynamics - crushed.dynamics).toBeGreaterThanOrEqual(0);
+    expect(crushed.dynamics).toBeLessThan(0.05);
+    expect(crushed.loudness).toBeGreaterThan(0.8);
   });
 
-  it("e não mexe no pulso", () => {
-    const cru = measure("regular");
-    const esmagado = measure("esmagado", { limit: 14 });
-    expect(Math.abs(cru.pulse - esmagado.pulse)).toBeLessThan(0.05);
+  it("and does not touch the pulse", () => {
+    const raw = measure("regular");
+    const crushed = measure("crushed", { limit: 14 });
+    expect(Math.abs(raw.pulse - crushed.pulse)).toBeLessThan(0.05);
   });
 
-  it("dois masters igualmente esmagados continuam distinguíveis pelo pulso", () => {
-    const gradeEsmagada = measure("esmagado", { limit: 14 });
-    const soltoEsmagado = measure("esmagado-solto", { jitterMs: 110, limit: 14 });
+  it("two equally crushed masters remain distinguishable by pulse", () => {
+    const crushedGrid = measure("crushed", { limit: 14 });
+    const looseCrushed = measure("crushed-loose", { jitterMs: 110, limit: 14 });
 
-    for (const k of LEGADO) expect(gradeEsmagada[k]).toBeCloseTo(soltoEsmagado[k], 1);
-    expect(gradeEsmagada.c.reactionCap).toBeCloseTo(soltoEsmagado.c.reactionCap, 3);
-    expect(gradeEsmagada.c.rimHardness).toBeCloseTo(soltoEsmagado.c.rimHardness, 1);
+    for (const k of LEGADO) expect(crushedGrid[k]).toBeCloseTo(looseCrushed[k], 1);
+    expect(crushedGrid.c.reactionCap).toBeCloseTo(looseCrushed.c.reactionCap, 3);
+    expect(crushedGrid.c.rimHardness).toBeCloseTo(looseCrushed.c.rimHardness, 1);
 
-    expect(worldDistance(gradeEsmagada.c, soltoEsmagado.c)).toBeGreaterThan(0.4);
+    expect(worldDistance(crushedGrid.c, looseCrushed.c)).toBeGreaterThan(0.4);
   });
 
-  it("o mundo de um master esmagado deixou de ser inevitavelmente o mesmo", () => {
-    const a = measure("esmagado", { limit: 14 });
-    const b = measure("esmagado-solto", { jitterMs: 110, limit: 14 });
-    const antes = worldDistance(
+  it("a crushed master's world is no longer inevitably the same", () => {
+    const a = measure("crushed", { limit: 14 });
+    const b = measure("crushed-loose", { jitterMs: 110, limit: 14 });
+    const before = worldDistance(
       a.c,
       b.c,
       CHANNELS.filter((k) => k !== "swirl"),
     );
-    const depois = worldDistance(a.c, b.c);
-    expect(antes).toBeLessThan(0.01);
-    expect(depois).toBeGreaterThan(antes * 20);
+    const after = worldDistance(a.c, b.c);
+    expect(before).toBeLessThan(0.01);
+    expect(after).toBeGreaterThan(before * 20);
   });
 });
 
-describe("o acervo não converge", () => {
+describe("the catalogue does not converge", () => {
   const slugs = Object.keys(SIGNATURES);
   const worlds = slugs.map((s) => ({ slug: s, sig: SIGNATURES[s], c: fieldConstantsOf(SIGNATURES[s]) }));
 
@@ -231,18 +231,18 @@ describe("o acervo não converge", () => {
     return { min, pair };
   };
 
-  it("nenhum par de discos do acervo produz praticamente o mesmo mundo", () => {
+  it("no pair of records in the catalogue produces practically the same world", () => {
     const { min, pair } = minSeparation(CHANNELS);
     expect(min, `${pair[0]} e ${pair[1]} quase colidem`).toBeGreaterThan(0.15);
   });
 
-  it("o pulso afastou o par mais próximo, em vez de só existir", () => {
-    const antes = minSeparation(CHANNELS.filter((k) => k !== "swirl"));
-    const depois = minSeparation(CHANNELS);
-    expect(depois.min / antes.min).toBeGreaterThan(1.2);
+  it("the pulse pushed the closest pair apart, instead of merely existing", () => {
+    const before = minSeparation(CHANNELS.filter((k) => k !== "swirl"));
+    const after = minSeparation(CHANNELS);
+    expect(after.min / before.min).toBeGreaterThan(1.2);
   });
 
-  it("o pulso carrega informação que os outros descritores não carregam", () => {
+  it("the pulse carries information the other descriptors do not", () => {
     const cor = (a: number[], b: number[]) => {
       const n = a.length;
       const ma = a.reduce((x, y) => x + y, 0) / n;
@@ -266,12 +266,12 @@ describe("o acervo não converge", () => {
     }
   });
 
-  it("o acervo percorre o range do pulso, não se amontoa numa ponta", () => {
+  it("the catalogue spans the pulse range instead of bunching at one end", () => {
     const values = worlds.map((w) => w.sig.pulse);
     expect(Math.max(...values) - Math.min(...values)).toBeGreaterThan(0.6);
   });
 
-  it("os dois canais por faixa não são o mesmo sinal com dois nomes", () => {
+  it("the two per-track channels are not the same signal under two names", () => {
     const cor = (a: number[], b: number[]) => {
       const n = a.length;
       const ma = a.reduce((x, y) => x + y, 0) / n;
@@ -305,7 +305,7 @@ describe("o acervo não converge", () => {
     expect(Math.abs(cor(dp, db))).toBeLessThan(0.5);
   });
 
-  it("dentro de um álbum, a grade se move sem estourar o range do giro", () => {
+  it("within an album, the grid moves without blowing the spin range", () => {
     for (const w of worlds) {
       const n = w.sig.trackPulse?.length ?? 0;
       if (n < 2) continue;
@@ -317,7 +317,7 @@ describe("o acervo não converge", () => {
     }
   });
 
-  it("o pulso move o giro do campo e mais nada", () => {
+  it("the pulse moves the field's spin and nothing else", () => {
     const base = SIGNATURES[slugs[0]];
     const a = fieldConstantsOf({ ...base, pulse: 0 });
     const b = fieldConstantsOf({ ...base, pulse: 1 });

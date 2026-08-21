@@ -450,8 +450,8 @@ export class FieldEngine implements InputActions {
     this.back();
   }
 
-  private apply(efeitos: AudioEffect[]) {
-    for (const e of efeitos) {
+  private apply(effects: AudioEffect[]) {
+    for (const e of effects) {
       if (e.kind === "load" || e.kind === "play") this.faultKind = null;
       if (e.kind === "load") {
         const album = ALBUMS[e.alb];
@@ -468,8 +468,8 @@ export class FieldEngine implements InputActions {
     }
   }
 
-  private run(efeitos: AudioEffect[]) {
-    this.apply(efeitos);
+  private run(effects: AudioEffect[]) {
+    this.apply(effects);
     this.markIntent();
   }
 
@@ -970,7 +970,7 @@ export class FieldEngine implements InputActions {
           ? `${String(s.trk + 1).padStart(2, "0")} · ${
               ALBUMS[s.playAlb].tracks[s.trk]?.title ?? ""
             } — ${ALBUMS[s.playAlb].artist}`
-          : `Coleção · ${ALBUMS.length} corpos`,
+          : `Collection · ${ALBUMS.length} bodies`,
     };
     if (force) return next;
     const prev = this.snap;

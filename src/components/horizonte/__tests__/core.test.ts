@@ -5,93 +5,93 @@ import { albumProgressOf, initialState, isEngaged, progressOf } from "../state";
 import type { Mode } from "../types";
 
 describe("clamp", () => {
-  it("devolve o valor quando está dentro", () => {
+  it("returns the value when it is inside", () => {
     expect(clamp(0.5, 0, 1)).toBe(0.5);
   });
 
-  it("satura nas pontas", () => {
+  it("saturates at the ends", () => {
     expect(clamp(-3, 0, 1)).toBe(0);
     expect(clamp(9, 0, 1)).toBe(1);
     expect(clamp(0, 0, 1)).toBe(0);
     expect(clamp(1, 0, 1)).toBe(1);
   });
 
-  it("funciona com limites negativos", () => {
+  it("works with negative bounds", () => {
     expect(clamp(-0.4, -0.5, 0.5)).toBe(-0.4);
     expect(clamp(-9, -0.5, 0.5)).toBe(-0.5);
   });
 });
 
 describe("lerp", () => {
-  it("ancora nos extremos", () => {
+  it("anchors at the extremes", () => {
     expect(lerp(10, 20, 0)).toBe(10);
     expect(lerp(10, 20, 1)).toBe(20);
   });
 
-  it("interpola no meio", () => {
+  it("interpolates in between", () => {
     expect(lerp(10, 20, 0.5)).toBe(15);
   });
 
-  it("satura em vez de extrapolar", () => {
+  it("saturates instead of extrapolating", () => {
     expect(lerp(10, 20, -4)).toBe(10);
     expect(lerp(10, 20, 4)).toBe(20);
   });
 
-  it("aceita ranges invertidos", () => {
+  it("accepts inverted ranges", () => {
     expect(lerp(6.2, 4.3, 1)).toBeCloseTo(4.3, 10);
   });
 });
 
 describe("timecode", () => {
-  it("formata minutos e segundos com dois dígitos", () => {
+  it("formats minutes and seconds with two digits", () => {
     expect(timecode(0)).toBe("00:00");
     expect(timecode(9)).toBe("00:09");
     expect(timecode(75)).toBe("01:15");
     expect(timecode(600)).toBe("10:00");
   });
 
-  it("trunca frações em vez de arredondar", () => {
+  it("truncates fractions instead of rounding", () => {
     expect(timecode(59.99)).toBe("00:59");
   });
 
-  it("passa de uma hora sem quebrar o formato", () => {
+  it("passes one hour without breaking the format", () => {
     expect(timecode(3671)).toBe("61:11");
   });
 
-  it("lê negativo como zero", () => {
+  it("reads negative as zero", () => {
     expect(timecode(-5)).toBe("00:00");
     expect(timecode(-0.2)).toBe("00:00");
   });
 });
 
 describe("progressOf", () => {
-  it("é zero sem duração conhecida", () => {
+  it("is zero with no known duration", () => {
     expect(progressOf({ pos: 30, dur: 0 })).toBe(0);
   });
 
-  it("é a fração percorrida", () => {
+  it("is the fraction travelled", () => {
     expect(progressOf({ pos: 30, dur: 120 })).toBe(0.25);
   });
 
-  it("satura em 1 se a posição passar da duração", () => {
+  it("saturates at 1 if the position passes the duration", () => {
     expect(progressOf({ pos: 200, dur: 120 })).toBe(1);
   });
 });
 
 describe("isEngaged", () => {
-  it("é verdadeiro com faixa carregada sob o transporte", () => {
+  it("is true with a track loaded under the transport", () => {
     expect(isEngaged("playing")).toBe(true);
     expect(isEngaged("paused")).toBe(true);
   });
 
-  it("é falso nos modos sem faixa estabelecida", () => {
+  it("is false in modes with no established track", () => {
     const others: Mode[] = ["stopped", "collapse", "fusion"];
     for (const m of others) expect(isEngaged(m)).toBe(false);
   });
 });
 
 describe("initialState", () => {
-  it("abre na coleção, sem nada tocando", () => {
+  it("opens on the collection, with nothing playing", () => {
     const s = initialState();
     expect(s.scale).toBe("collection");
     expect(s.mode).toBe("stopped");
@@ -101,7 +101,7 @@ describe("initialState", () => {
     expect(s.waveR).toBe(-1);
   });
 
-  it("devolve um estado novo a cada chamada", () => {
+  it("returns a new state on every call", () => {
     const a = initialState();
     const b = initialState();
     expect(a).not.toBe(b);
@@ -109,7 +109,7 @@ describe("initialState", () => {
     expect(b.alb).toBe(0);
   });
 
-  it("não tem campo indefinido ou NaN", () => {
+  it("has no undefined or NaN field", () => {
     const s = initialState() as unknown as Record<string, unknown>;
     for (const [k, v] of Object.entries(s)) {
       expect(v, k).toBeDefined();
@@ -118,34 +118,34 @@ describe("initialState", () => {
   });
 });
 
-describe("albumProgressOf — a posição no disco, não na faixa", () => {
+describe("albumProgressOf — the position in the record, not in the track", () => {
   const bounds = [0, 0.25, 0.75, 1];
 
-  it("no início de uma faixa cai na fronteira dela", () => {
+  it("at the start of a track it lands on that track's boundary", () => {
     expect(albumProgressOf(bounds, 1, 0)).toBeCloseTo(0.25, 10);
   });
 
-  it("no fim de uma faixa encosta na fronteira seguinte", () => {
+  it("at the end of a track it touches the next boundary", () => {
     expect(albumProgressOf(bounds, 1, 1)).toBeCloseTo(0.75, 10);
   });
 
-  it("é contínua na emenda entre faixas", () => {
+  it("is continuous across the splice between tracks", () => {
     expect(albumProgressOf(bounds, 0, 1)).toBeCloseTo(albumProgressOf(bounds, 1, 0), 10);
     expect(albumProgressOf(bounds, 1, 1)).toBeCloseTo(albumProgressOf(bounds, 2, 0), 10);
   });
 
-  it("percorre o setor proporcionalmente", () => {
+  it("traverses the sector proportionally", () => {
     expect(albumProgressOf(bounds, 1, 0.5)).toBeCloseTo(0.5, 10);
   });
 
-  it("satura faixa e progresso fora do intervalo", () => {
+  it("saturates track and progress outside the range", () => {
     expect(albumProgressOf(bounds, -5, 0.5)).toBeCloseTo(0.125, 10);
     expect(albumProgressOf(bounds, 99, 0.5)).toBeCloseTo(0.875, 10);
     expect(albumProgressOf(bounds, 0, -2)).toBe(0);
     expect(albumProgressOf(bounds, 2, 9)).toBe(1);
   });
 
-  it("sem fronteiras devolve zero", () => {
+  it("with no boundaries it returns zero", () => {
     expect(albumProgressOf([], 0, 0.5)).toBe(0);
   });
 });

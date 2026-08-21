@@ -92,7 +92,7 @@ const numbers = (color: string) => {
   return v.length === 4 && v[3] === 1 ? v.slice(0, 3) : v;
 };
 
-const trackRail = () => document.querySelector("nav[aria-label^='Faixas de']") as HTMLElement;
+const trackRail = () => document.querySelector("nav[aria-label^='Tracks of']") as HTMLElement;
 
 const mount = (initial: Partial<Snapshot> = {}) => {
   const fake = fakeEngine(initial);
@@ -102,107 +102,107 @@ const mount = (initial: Partial<Snapshot> = {}) => {
 
 afterEach(cleanup);
 
-describe("régua de álbuns", () => {
-  it("lista o acervo inteiro com artista e catálogo", () => {
+describe("album rail", () => {
+  it("lists the whole catalogue with artist and catalogue number", () => {
     mount();
-    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+    const rail = screen.getByRole("navigation", { name: "Albums" });
     const items = within(rail).getAllByRole("button");
     expect(items).toHaveLength(ALBUMS.length + 1);
     expect(within(rail).getByText(ALBUMS[0].artist)).toBeDefined();
     expect(within(rail).getByText(ALBUMS[0].cat)).toBeDefined();
   });
 
-  it("fecha a régua com a entrada de disco local, sem virar gerenciador de arquivos", () => {
+  it("closes the rail with the local-record intake, without becoming a file manager", () => {
     mount();
-    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+    const rail = screen.getByRole("navigation", { name: "Albums" });
     const items = within(rail).getAllByRole("button");
-    expect(items[items.length - 1].textContent).toContain("Trazer um disco");
-    expect(within(rail).queryByText(/upload|arquivo|enviar/i)).toBeNull();
+    expect(items[items.length - 1].textContent).toContain("Bring a record");
+    expect(within(rail).queryByText(/upload|file|send/i)).toBeNull();
   });
 });
 
-describe("entrada para trazer um disco", () => {
-  const entrada = () => {
-    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+describe("intake for bringing a record", () => {
+  const intake = () => {
+    const rail = screen.getByRole("navigation", { name: "Albums" });
     const items = within(rail).getAllByRole("button");
     return items[items.length - 1];
   };
 
-  const linhaDeAlbum = () => {
-    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+  const albumLine = () => {
+    const rail = screen.getByRole("navigation", { name: "Albums" });
     return within(rail).getAllByRole("button")[1];
   };
 
-  it("é uma ação, não um item do catálogo: fica fora da lista de álbuns", () => {
+  it("it is an action, not a catalogue item: it sits outside the album list", () => {
     mount();
-    expect(entrada().closest("ul")).toBeNull();
-    expect(linhaDeAlbum().closest("ul")).not.toBeNull();
+    expect(intake().closest("ul")).toBeNull();
+    expect(albumLine().closest("ul")).not.toBeNull();
   });
 
-  it("não usa a coluna de código de catálogo nem finge ser um disco", () => {
+  it("it uses neither the catalogue-code column nor pretends to be a record", () => {
     mount();
-    expect(entrada().textContent).toBe("Trazer um disco");
-    expect(entrada().textContent).not.toMatch(/[HL]—\d/);
-    expect(entrada().className).toContain("grid-cols-[1fr_7px]");
-    expect(linhaDeAlbum().className).toContain("grid-cols-[1fr_46px_7px]");
+    expect(intake().textContent).toBe("Bring a record");
+    expect(intake().textContent).not.toMatch(/[HL]—\d/);
+    expect(intake().className).toContain("grid-cols-[1fr_7px]");
+    expect(albumLine().className).toContain("grid-cols-[1fr_46px_7px]");
   });
 
-  it("lê mais claro que os discos da lista, e não mais claro que o disco em foco", () => {
+  it("it reads lighter than the records in the list, and no lighter than the focused record", () => {
     mount();
-    expect(entrada().className).toContain("text-ink-text-2");
-    expect(entrada().className).not.toContain("text-ink-faint");
-    expect(linhaDeAlbum().className).not.toContain("text-ink-text-2");
+    expect(intake().className).toContain("text-ink-text-2");
+    expect(intake().className).not.toContain("text-ink-faint");
+    expect(albumLine().className).not.toContain("text-ink-text-2");
   });
 
-  it("é separada da lista por respiro e régua própria", () => {
+  it("it is separated from the list by breathing room and its own rule", () => {
     mount();
-    expect(entrada().className).toContain("mt-2.5");
-    expect(entrada().className).toContain("border-t");
-    expect(entrada().className).toContain("border-rule");
+    expect(intake().className).toContain("mt-2.5");
+    expect(intake().className).toContain("border-t");
+    expect(intake().className).toContain("border-rule");
   });
 
-  it("tem alvo maior que uma linha de catálogo, e maior ainda no compacto", () => {
+  it("it has a larger target than a catalogue line, and larger still when compact", () => {
     mount();
-    expect(entrada().className).toContain("h-[34px]");
+    expect(intake().className).toContain("h-[34px]");
     cleanup();
     mount({ variant: "mobile", scale: "collection" });
-    fireEvent.click(screen.getByRole("button", { name: "Álbuns" }));
-    expect(entrada().className).toContain("min-h-[52px]");
+    fireEvent.click(screen.getByRole("button", { name: "Albums" }));
+    expect(intake().className).toContain("min-h-[52px]");
   });
 
-  it("o marcador é um lugar vazio que se preenche ao apontar", () => {
+  it("the marker is an empty place that fills on pointing", () => {
     mount();
-    const marca = entrada().querySelector("span[aria-hidden]")!;
-    const tokens = marca.className.split(/\s+/);
+    const mark = intake().querySelector("span[aria-hidden]")!;
+    const tokens = mark.className.split(/\s+/);
     expect(tokens).toContain("border-ink-faint");
     expect(tokens).not.toContain("bg-paper");
     expect(tokens).toContain("group-hover:bg-paper");
     expect(tokens).toContain("group-focus-visible:bg-paper");
   });
 
-  it("apontar avisa o campo, e sair devolve", () => {
+  it("pointing tells the field, and leaving gives it back", () => {
     const fake = mount();
-    fireEvent.pointerEnter(entrada());
+    fireEvent.pointerEnter(intake());
     expect(fake.last("setIntake")?.args).toEqual([true]);
     expect(fake.last("setRailAlb")?.args).toEqual([-1]);
-    fireEvent.pointerLeave(entrada());
+    fireEvent.pointerLeave(intake());
     expect(fake.last("setIntake")?.args).toEqual([false]);
   });
 
-  it("o foco por teclado avisa o campo igual ao ponteiro", () => {
+  it("keyboard focus tells the field just as the pointer does", () => {
     const fake = mount();
-    fireEvent.focus(entrada());
+    fireEvent.focus(intake());
     expect(fake.last("setIntake")?.args).toEqual([true]);
-    fireEvent.blur(entrada());
+    fireEvent.blur(intake());
     expect(fake.last("setIntake")?.args).toEqual([false]);
   });
 
-  it("é alcançável por teclado enquanto a régua está aberta", () => {
+  it("it is keyboard-reachable while the rail is open", () => {
     mount();
-    expect(entrada().getAttribute("tabindex")).toBe("0");
+    expect(intake().getAttribute("tabindex")).toBe("0");
   });
 
-  it("arrastar arquivos acende a entrada e diz o que fazer", () => {
+  it("dragging files lights the intake and says what to do", () => {
     mount();
     const dt = { types: ["Files"] };
     act(() => {
@@ -210,38 +210,38 @@ describe("entrada para trazer um disco", () => {
         Object.assign(new Event("dragenter"), { dataTransfer: dt }),
       );
     });
-    expect(entrada().textContent).toBe("Solte para medir");
-    expect(entrada().className).toContain("text-ink-text");
-    expect(entrada().querySelector("span[aria-hidden]")!.className.split(/\s+/)).toContain(
+    expect(intake().textContent).toBe("Drop to measure");
+    expect(intake().className).toContain("text-ink-text");
+    expect(intake().querySelector("span[aria-hidden]")!.className.split(/\s+/)).toContain(
       "bg-paper",
     );
   });
 
-  it("marca o disco em foco para tecnologia assistiva", () => {
+  it("marks the focused record for assistive technology", () => {
     mount({ navAlb: 3 });
-    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+    const rail = screen.getByRole("navigation", { name: "Albums" });
     const currents = within(rail).getAllByRole("button").filter((b) => b.getAttribute("aria-current"));
     expect(currents).toHaveLength(1);
     expect(currents[0].textContent).toContain(ALBUMS[3].artist);
   });
 
-  it("na coleção o foco segue a navegação, não o álbum aberto", () => {
+  it("in the collection focus follows navigation, not the open album", () => {
     mount({ scale: "collection", navAlb: 2, alb: 5 });
-    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+    const rail = screen.getByRole("navigation", { name: "Albums" });
     const current = within(rail).getAllByRole("button").find((b) => b.getAttribute("aria-current"));
     expect(current?.textContent).toContain(ALBUMS[2].artist);
   });
 
-  it("fora da coleção o foco é o álbum aberto", () => {
+  it("outside the collection focus is the open album", () => {
     mount({ scale: "album", navAlb: 2, alb: 5 });
-    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+    const rail = screen.getByRole("navigation", { name: "Albums" });
     const current = within(rail).getAllByRole("button").find((b) => b.getAttribute("aria-current"));
     expect(current?.textContent).toContain(ALBUMS[5].artist);
   });
 
-  it("a marca distingue foco, disco tocando e rest", () => {
+  it("the mark distinguishes focus, playing record and rest", () => {
     const fake = mount({ scale: "album", alb: 1, playAlb: 4 });
-    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+    const rail = screen.getByRole("navigation", { name: "Albums" });
     const marks = within(rail).getAllByRole("button").map((b) => b.querySelector("span[aria-hidden]")!);
 
     expect(numbers(marks[1].getAttribute("style") ?? "")).toEqual(numbers(rgba(ALBUMS[1].inkA, 1)));
@@ -250,16 +250,16 @@ describe("entrada para trazer um disco", () => {
     void fake;
   });
 
-  it("clicar num disco pede a entrada nele", () => {
+  it("clicking a record asks to enter it", () => {
     const fake = mount();
-    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+    const rail = screen.getByRole("navigation", { name: "Albums" });
     fireEvent.click(within(rail).getAllByRole("button")[6]);
     expect(fake.last("enterAlbum")?.args).toEqual([6]);
   });
 
-  it("apontar e sair do disco liga e desliga o realce no world", () => {
+  it("pointing at and leaving the record turns the world's highlight on and off", () => {
     const fake = mount();
-    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+    const rail = screen.getByRole("navigation", { name: "Albums" });
     const target = within(rail).getAllByRole("button")[2];
 
     fireEvent.pointerEnter(target);
@@ -268,16 +268,16 @@ describe("entrada para trazer um disco", () => {
     expect(fake.last("setRailAlb")?.args).toEqual([-1]);
   });
 
-  it("o realce também acompanha o foco por teclado", () => {
+  it("the highlight follows keyboard focus too", () => {
     const fake = mount();
-    const rail = screen.getByRole("navigation", { name: "Álbuns" });
+    const rail = screen.getByRole("navigation", { name: "Albums" });
     fireEvent.focus(within(rail).getAllByRole("button")[3]);
     expect(fake.last("setRailAlb")?.args).toEqual([3]);
   });
 });
 
-describe("régua de faixas", () => {
-  it("fica escondida e fora da ordem de tabulação na coleção", () => {
+describe("track rail", () => {
+  it("it stays hidden and outside the tab order in the collection", () => {
     mount({ scale: "collection" });
     const rail = trackRail();
     expect(rail.getAttribute("aria-hidden")).toBe("true");
@@ -286,17 +286,17 @@ describe("régua de faixas", () => {
     }
   });
 
-  it("aparece e fica navegável no álbum", () => {
+  it("it appears and becomes navigable in the album", () => {
     mount({ scale: "album", alb: 2 });
     const rail = trackRail();
-    expect(rail.getAttribute("aria-label")).toBe(`Faixas de ${ALBUMS[2].title}`);
+    expect(rail.getAttribute("aria-label")).toBe(`Tracks of ${ALBUMS[2].title}`);
     expect(rail.getAttribute("aria-hidden")).toBe("false");
     const items = within(rail).getAllByRole("button");
     expect(items).toHaveLength(ALBUMS[2].tracks.length);
     expect(items[0].getAttribute("tabindex")).toBe("0");
   });
 
-  it("mostra número, título e duração de cada faixa", () => {
+  it("shows number, title and duration of each track", () => {
     mount({ scale: "album", alb: 2 });
     const rail = trackRail();
     const first = within(rail).getAllByRole("button")[0];
@@ -305,7 +305,7 @@ describe("régua de faixas", () => {
     expect(first.textContent).toContain(timecode(ALBUMS[2].tracks[0].dur));
   });
 
-  it("a faixa em curso é anunciada como atual", () => {
+  it("the current track is announced as current", () => {
     mount({ scale: "track", alb: 2, playAlb: 2, trk: 3 });
     const rail = trackRail();
     const currents = within(rail).getAllByRole("button").filter((b) => b.getAttribute("aria-current"));
@@ -313,7 +313,7 @@ describe("régua de faixas", () => {
     expect(currents[0].textContent).toContain(ALBUMS[2].tracks[3].title);
   });
 
-  it("a marca cresce na faixa tocando e na selecionada", () => {
+  it("the mark grows on the playing track and on the selected one", () => {
     mount({ scale: "album", alb: 2, playAlb: 2, trk: 1, sel: 3 });
     const rail = trackRail();
     const marks = within(rail).getAllByRole("button").map((b) => b.querySelector("span[aria-hidden]")!);
@@ -323,7 +323,7 @@ describe("régua de faixas", () => {
     expect(marks[0].className).toContain("w-[5px]");
   });
 
-  it("a faixa tocando usa a ink do disco e a selecionada a ink de texto", () => {
+  it("the playing track uses the record's ink and the selected one the text ink", () => {
     mount({ scale: "album", alb: 2, playAlb: 2, trk: 1, sel: 3 });
     const rail = trackRail();
     const marks = within(rail).getAllByRole("button").map((b) => b.querySelector("span[aria-hidden]")!);
@@ -332,7 +332,7 @@ describe("régua de faixas", () => {
     expect(numbers(marks[3].getAttribute("style") ?? "")).toEqual(numbers(COLOR.inkText));
   });
 
-  it("clicar numa faixa pede a reprodução dela no disco aberto", () => {
+  it("clicking a track asks to play it in the open record", () => {
     const fake = mount({ scale: "album", alb: 2 });
     const rail = trackRail();
     fireEvent.click(within(rail).getAllByRole("button")[2]);
@@ -340,54 +340,54 @@ describe("régua de faixas", () => {
   });
 });
 
-describe("transporte", () => {
-  it("convida a tocar quando nada foi carregado", () => {
+describe("transport", () => {
+  it("invites playing when nothing has loaded", () => {
     mount();
-    expect(screen.getByRole("button", { name: /Tocar/ })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Play/ })).toBeDefined();
   });
 
-  it("oferece retomar quando há faixa pausada", () => {
+  it("offers resume when a track is paused", () => {
     mount({ scale: "track", playAlb: 0, mode: "paused" });
-    expect(screen.getByRole("button", { name: /Retomar/ })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Resume/ })).toBeDefined();
   });
 
-  it("oferece pausar durante a reprodução e marca o estado", () => {
+  it("offers pause during playback and marks the state", () => {
     mount({ scale: "track", playAlb: 0, mode: "playing" });
-    const button = screen.getByRole("button", { name: /Pausar/ });
+    const button = screen.getByRole("button", { name: /Pause/ });
     expect(button.getAttribute("aria-pressed")).toBe("true");
   });
 
-  it("os três controles chamam o motor", () => {
+  it("the three controls call the engine", () => {
     const fake = mount({ scale: "track", playAlb: 0, mode: "playing" });
-    fireEvent.click(screen.getByRole("button", { name: /Anterior/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Previous/ }));
     expect(fake.last("skip")?.args).toEqual([-1]);
 
-    fireEvent.click(screen.getByRole("button", { name: /Próxima/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Next/ }));
     expect(fake.last("skip")?.args).toEqual([1]);
 
-    fireEvent.click(screen.getByRole("button", { name: /Pausar/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Pause/ }));
     expect(fake.last("transport")).toBeDefined();
   });
 
-  it("a posição na faixa é um slider de verdade, não uma barra decorativa", () => {
+  it("the position in the track is a real slider, not a decorative bar", () => {
     mount({ scale: "track", playAlb: 0, mode: "playing" });
-    const seek = screen.getByRole("slider", { name: "Posição na faixa" });
+    const seek = screen.getByRole("slider", { name: "Position in track" });
     expect(seek.tagName).toBe("INPUT");
     expect(seek.tabIndex).toBe(0);
     expect(screen.queryByRole("progressbar")).toBeNull();
   });
 
-  it("arrastar o slider busca a fração correspondente", () => {
+  it("dragging the slider seeks the corresponding fraction", () => {
     const fake = mount({ scale: "track", playAlb: 0, mode: "playing" });
-    const seek = screen.getByRole("slider", { name: "Posição na faixa" });
+    const seek = screen.getByRole("slider", { name: "Position in track" });
     fireEvent.change(seek, { target: { value: "500" } });
     expect(fake.last("seekFraction")?.args).toEqual([0.5]);
   });
 
-  it("as setas movem cinco segundos, não uma fração da faixa", () => {
+  it("the arrows move five seconds, not a fraction of the track", () => {
     const fake = mount({ scale: "track", playAlb: 0, mode: "playing" });
     fake.frame({ progress: 0.5, position: 60, duration: 120 });
-    const seek = screen.getByRole("slider", { name: "Posição na faixa" });
+    const seek = screen.getByRole("slider", { name: "Position in track" });
 
     fireEvent.keyDown(seek, { key: "ArrowRight" });
     expect(fake.last("seekFraction")?.args[0]).toBeCloseTo(0.5 + 5 / 120, 6);
@@ -396,10 +396,10 @@ describe("transporte", () => {
     expect(fake.last("seekFraction")?.args[0]).toBeCloseTo(0.5 - 5 / 120, 6);
   });
 
-  it("Home e End vão às pontas da faixa", () => {
+  it("Home and End go to the track's ends", () => {
     const fake = mount({ scale: "track", playAlb: 0, mode: "playing" });
     fake.frame({ progress: 0.5, position: 60, duration: 120 });
-    const seek = screen.getByRole("slider", { name: "Posição na faixa" });
+    const seek = screen.getByRole("slider", { name: "Position in track" });
 
     fireEvent.keyDown(seek, { key: "Home" });
     expect(fake.last("seekFraction")?.args[0]).toBeLessThanOrEqual(0);
@@ -407,105 +407,105 @@ describe("transporte", () => {
     expect(fake.last("seekFraction")?.args[0]).toBeGreaterThanOrEqual(1);
   });
 
-  it("sem faixa carregada o teclado não busca no vazio", () => {
+  it("with no loaded track the keyboard does not seek into the void", () => {
     const fake = mount({ scale: "collection" });
-    const seek = screen.getByRole("slider", { name: "Posição na faixa" });
+    const seek = screen.getByRole("slider", { name: "Position in track" });
     fireEvent.keyDown(seek, { key: "ArrowRight" });
     expect(fake.last("seekFraction")).toBeUndefined();
   });
 });
 
 describe("volume", () => {
-  it("existe um controle de volume alcançável por teclado", () => {
+  it("there is a keyboard-reachable volume control", () => {
     mount();
     const vol = screen.getByRole("slider", { name: "Volume" });
     expect(vol.tagName).toBe("INPUT");
     expect(vol.tabIndex).toBe(0);
   });
 
-  it("mover o controle pede o novo nível ao motor", () => {
+  it("moving the control asks the engine for the new level", () => {
     const fake = mount();
     const vol = screen.getByRole("slider", { name: "Volume" });
     fireEvent.change(vol, { target: { value: "40" } });
     expect(fake.last("setVolume")?.args).toEqual([0.4]);
   });
 
-  it("o mudo é um estado marcado, e volta a soar ao mexer no nível", () => {
+  it("mute is a marked state, and sound returns when the level is touched", () => {
     const fake = mount();
-    const botao = screen.getByRole("button", { name: "Som" });
-    fireEvent.click(botao);
+    const button = screen.getByRole("button", { name: "Sound" });
+    fireEvent.click(button);
     expect(fake.last("setMuted")?.args).toEqual([true]);
-    expect(screen.getByRole("button", { name: "Mudo" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "Mute" }).getAttribute("aria-pressed")).toBe("true");
 
     fireEvent.change(screen.getByRole("slider", { name: "Volume" }), { target: { value: "70" } });
     expect(fake.last("setVolume")?.args).toEqual([0.7]);
-    expect(screen.getByRole("button", { name: "Som" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Sound" })).toBeDefined();
   });
 
-  it("no mudo o controle mostra zero sem esquecer o nível escolhido", () => {
+  it("when muted the control shows zero without forgetting the chosen level", () => {
     mount();
     fireEvent.change(screen.getByRole("slider", { name: "Volume" }), { target: { value: "60" } });
-    fireEvent.click(screen.getByRole("button", { name: "Som" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sound" }));
     expect((screen.getByRole("slider", { name: "Volume" }) as HTMLInputElement).value).toBe("0");
-    fireEvent.click(screen.getByRole("button", { name: "Mudo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Mute" }));
     expect((screen.getByRole("slider", { name: "Volume" }) as HTMLInputElement).value).toBe("60");
   });
 });
 
-describe("falha de reprodução", () => {
-  it("em silêncio, nada é dito", () => {
+describe("playback fault", () => {
+  it("in silence, nothing is said", () => {
     mount({ scale: "track", playAlb: 0, mode: "playing" });
     expect(screen.queryByRole("status")).toBeNull();
   });
 
-  it("uma faixa que não carrega diz isso, em vez de fingir que toca", () => {
+  it("a track that fails to load says so, instead of pretending to play", () => {
     const fake = mount({ scale: "track", playAlb: 0, mode: "playing" });
     act(() => fake.update({ fault: "source", mode: "paused" }));
-    const aviso = screen.getByRole("status");
-    expect(aviso.textContent).toMatch(/não consegui carregar/i);
-    expect(screen.getByRole("button", { name: /Retomar/ })).toBeDefined();
+    const warning = screen.getByRole("status");
+    expect(warning.textContent).toMatch(/could not load/i);
+    expect(screen.getByRole("button", { name: /Resume/ })).toBeDefined();
   });
 
-  it("o bloqueio do navegador é dito com o que fazer a seguir", () => {
+  it("the browser's block is stated along with what to do next", () => {
     const fake = mount({ scale: "track", playAlb: 0, mode: "paused" });
     act(() => fake.update({ fault: "blocked" }));
-    expect(screen.getByRole("status").textContent).toMatch(/bloqueou o som/i);
+    expect(screen.getByRole("status").textContent).toMatch(/blocked the sound/i);
   });
 });
 
-describe("scales e retorno", () => {
-  it("marca a scale corrente na trilha", () => {
+describe("scales and return", () => {
+  it("marks the current scale in the trail", () => {
     mount({ scale: "album" });
-    const track = screen.getByRole("navigation", { name: "Escala" });
+    const track = screen.getByRole("navigation", { name: "Scale" });
     const current = within(track).getAllByRole("button").find((b) => b.getAttribute("aria-current") === "step");
-    expect(current?.textContent).toBe("Álbum");
+    expect(current?.textContent).toBe("Album");
   });
 
-  it("clicar numa scale pede a mudança", () => {
+  it("clicking a scale asks for the change", () => {
     const fake = mount({ scale: "album" });
-    const track = screen.getByRole("navigation", { name: "Escala" });
-    fireEvent.click(within(track).getByText("Faixa"));
+    const track = screen.getByRole("navigation", { name: "Scale" });
+    fireEvent.click(within(track).getByText("Track"));
     expect(fake.last("goScale")?.args).toEqual(["track"]);
   });
 
-  it("voltar fica inerte na coleção", () => {
+  it("back is inert in the collection", () => {
     mount({ scale: "collection" });
-    const goBack = [...document.querySelectorAll("button")].find((b) => b.textContent?.includes("Voltar"))!;
+    const goBack = [...document.querySelectorAll("button")].find((b) => b.textContent?.includes("Back"))!;
     expect(goBack.getAttribute("tabindex")).toBe("-1");
     expect(goBack.getAttribute("aria-hidden")).toBe("true");
   });
 
-  it("voltar fica ativo fora da coleção e chama o motor", () => {
+  it("back is active outside the collection and calls the engine", () => {
     const fake = mount({ scale: "album" });
-    const goBack = screen.getByRole("button", { name: /Voltar/ });
+    const goBack = screen.getByRole("button", { name: /Back/ });
     expect(goBack.getAttribute("tabindex")).toBe("0");
     fireEvent.click(goBack);
     expect(fake.last("back")).toBeDefined();
   });
 });
 
-describe("crédito e anúncio", () => {
-  it("credita a licença do disco em foco", () => {
+describe("credit and announcement", () => {
+  it("credits the focused record's licence", () => {
     mount({ alb: 3 });
     const link = screen.getByRole("link", { name: ALBUMS[3].license.name });
     expect(link.getAttribute("href")).toBe(ALBUMS[3].license.source);
@@ -513,53 +513,53 @@ describe("crédito e anúncio", () => {
     expect(link.getAttribute("rel")).toBe("noreferrer");
   });
 
-  it("a observação da curadoria acompanha a atribuição, quando o autor exige", () => {
+  it("the curation note follows the attribution, when the author requires it", () => {
     const i = ALBUMS.findIndex((a) => a.note);
-    expect(i, "o acervo precisa de ao menos um disco com observação").toBeGreaterThanOrEqual(0);
+    expect(i, "the catalogue needs at least one record with a note").toBeGreaterThanOrEqual(0);
     mount({ alb: i });
-    const credito = screen.getByRole("link", { name: ALBUMS[i].license.name });
-    expect(credito.getAttribute("title")).toContain(ALBUMS[i].note!);
+    const credit = screen.getByRole("link", { name: ALBUMS[i].license.name });
+    expect(credit.getAttribute("title")).toContain(ALBUMS[i].note!);
   });
 
-  it("um disco sem observação não ganha traço sobrando no crédito", () => {
+  it("a record with no note gets no stray dash in the credit", () => {
     const i = ALBUMS.findIndex((a) => !a.note);
     mount({ alb: i });
-    const credito = screen.getByRole("link", { name: ALBUMS[i].license.name });
-    expect(credito.getAttribute("title")).toBe(ALBUMS[i].license.attribution);
+    const credit = screen.getByRole("link", { name: ALBUMS[i].license.name });
+    expect(credit.getAttribute("title")).toBe(ALBUMS[i].license.attribution);
   });
 
-  it("publica o anúncio do motor numa região viva", () => {
+  it("publishes the engine's announcement in a live region", () => {
     mount({ announce: "01 · Le Manoir — Tristan Lohengrin" });
     const region = document.querySelector("[aria-live='polite']");
     expect(region?.textContent).toBe("01 · Le Manoir — Tristan Lohengrin");
   });
 });
 
-describe("canal contínuo", () => {
-  it("escreve progresso, tempo e leitura assistiva sem novo render", () => {
+describe("continuous channel", () => {
+  it("writes progress, time and assistive reading without a new render", () => {
     const fake = mount({ scale: "track", playAlb: 0, mode: "playing" });
-    const seek = screen.getByRole("slider", { name: "Posição na faixa" }) as HTMLInputElement;
+    const seek = screen.getByRole("slider", { name: "Position in track" }) as HTMLInputElement;
 
     fake.frame({ progress: 0.25, position: 30, duration: 120 });
 
     expect(seek.style.getPropertyValue("--fill")).toBe("25%");
     expect(seek.value).toBe("250");
     expect(screen.getByText("00:30 / 02:00")).toBeDefined();
-    expect(seek.getAttribute("aria-valuetext")).toBe("00:30 de 02:00");
+    expect(seek.getAttribute("aria-valuetext")).toBe("00:30 of 02:00");
   });
 
-  it("a leitura assistiva é espaçada, o pixel não", () => {
+  it("the assistive reading is spaced out, the pixel is not", () => {
     const fake = mount({ scale: "track", playAlb: 0, mode: "playing" });
-    const seek = screen.getByRole("slider", { name: "Posição na faixa" }) as HTMLInputElement;
+    const seek = screen.getByRole("slider", { name: "Position in track" }) as HTMLInputElement;
 
     fake.frame({ progress: 0.1, position: 12, duration: 120 });
     fake.frame({ progress: 0.2, position: 24, duration: 120 });
 
     expect(seek.style.getPropertyValue("--fill")).toBe("20%");
-    expect(seek.getAttribute("aria-valuetext")).toBe("00:12 de 02:00");
+    expect(seek.getAttribute("aria-valuetext")).toBe("00:12 of 02:00");
   });
 
-  it("desmontar cancela o registro do quadro", () => {
+  it("unmounting cancels the frame registration", () => {
     const fake = fakeEngine();
     const display = render(<Instruments engine={fake.engine} />);
     expect(fake.hasFrame()).toBe(true);
@@ -568,16 +568,16 @@ describe("canal contínuo", () => {
   });
 });
 
-describe("sem motor", () => {
-  it("desenha a coleção e não quebra ao clicar", () => {
+describe("with no engine", () => {
+  it("draws the collection and does not break on click", () => {
     render(<Instruments engine={null} />);
     expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
-    expect(() => fireEvent.click(screen.getByRole("button", { name: /Tocar/ }))).not.toThrow();
+    expect(() => fireEvent.click(screen.getByRole("button", { name: /Play/ }))).not.toThrow();
   });
 });
 
-describe("reação ao instantâneo", () => {
-  it("um aviso do motor repinta a interface", () => {
+describe("reaction to the snapshot", () => {
+  it("an engine warning repaints the interface", () => {
     const fake = mount({ scale: "collection", alb: 0 });
     expect(screen.queryByText(ALBUMS[4].tracks[0].title)).toBe(null);
 
@@ -586,14 +586,14 @@ describe("reação ao instantâneo", () => {
   });
 });
 
-describe("fronteira com o world", () => {
-  it("reconhece um alvo nascido na camada de instruments", () => {
+describe("boundary with the world", () => {
+  it("recognizes a target born in the instruments layer", () => {
     mount();
-    const button = screen.getByRole("button", { name: /Tocar/ });
+    const button = screen.getByRole("button", { name: /Play/ });
     expect(isInstrumentsTarget({ target: button } as unknown as Event)).toBe(true);
   });
 
-  it("um alvo de fora do painel não pertence à camada", () => {
+  it("a target from outside the panel does not belong to the layer", () => {
     mount();
     const outside = document.createElement("canvas");
     document.body.appendChild(outside);
@@ -601,91 +601,91 @@ describe("fronteira com o world", () => {
   });
 });
 
-describe("composição compacta — as duas réguas não disputam espaço", () => {
-  const regua = (label: string) =>
+describe("compact composition — the two rails do not fight for space", () => {
+  const rail = (label: string) =>
     document.querySelector(`nav[aria-label^="${label}"]`) as HTMLElement;
 
-  it("no celular, abrir um álbum recolhe a régua de discos", () => {
+  it("on the phone, opening an album collapses the record rail", () => {
     mount({ variant: "mobile", scale: "album", alb: 0 });
-    const albuns = regua("Álbuns");
-    expect(albuns.getAttribute("aria-hidden")).toBe("true");
-    expect(albuns.className).toContain("pointer-events-none");
-    for (const b of within(albuns).getAllByRole("button", { hidden: true })) {
+    const albums = rail("Albums");
+    expect(albums.getAttribute("aria-hidden")).toBe("true");
+    expect(albums.className).toContain("pointer-events-none");
+    for (const b of within(albums).getAllByRole("button", { hidden: true })) {
       expect(b.tabIndex).toBe(-1);
     }
   });
 
-  it("no celular a régua de discos se abre sob demanda, para não cobrir o mundo", () => {
+  it("on the phone the record rail opens on demand, so it does not cover the world", () => {
     mount({ variant: "mobile", scale: "collection" });
-    const albuns = regua("Álbuns");
-    expect(albuns.getAttribute("aria-hidden")).toBe("true");
+    const albums = rail("Albums");
+    expect(albums.getAttribute("aria-hidden")).toBe("true");
 
-    const abrir = screen.getByRole("button", { name: "Álbuns" });
-    expect(abrir.getAttribute("aria-expanded")).toBe("false");
-    fireEvent.click(abrir);
+    const open = screen.getByRole("button", { name: "Albums" });
+    expect(open.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(open);
 
-    expect(regua("Álbuns").getAttribute("aria-hidden")).toBe("false");
-    expect(regua("Álbuns").className).toContain("pointer-events-auto");
-    expect(within(regua("Álbuns")).getAllByRole("button")[0].tabIndex).toBe(0);
-    expect(screen.getByRole("button", { name: "Fechar" })).toBeDefined();
+    expect(rail("Albums").getAttribute("aria-hidden")).toBe("false");
+    expect(rail("Albums").className).toContain("pointer-events-auto");
+    expect(within(rail("Albums")).getAllByRole("button")[0].tabIndex).toBe(0);
+    expect(screen.getByRole("button", { name: "Close" })).toBeDefined();
   });
 
-  it("no celular, escolher um disco fecha a régua", () => {
+  it("on the phone, choosing a record closes the rail", () => {
     const fake = mount({ variant: "mobile", scale: "collection" });
-    fireEvent.click(screen.getByRole("button", { name: "Álbuns" }));
-    const linha = within(regua("Álbuns")).getAllByRole("button")[0];
-    fireEvent.click(linha);
+    fireEvent.click(screen.getByRole("button", { name: "Albums" }));
+    const line = within(rail("Albums")).getAllByRole("button")[0];
+    fireEvent.click(line);
     expect(fake.last("enterAlbum")?.args).toEqual([0]);
-    expect(regua("Álbuns").getAttribute("aria-hidden")).toBe("true");
+    expect(rail("Albums").getAttribute("aria-hidden")).toBe("true");
   });
 
-  it("no desktop não existe botão de abrir régua: ela já está aberta", () => {
+  it("on desktop there is no open-rail button: it is already open", () => {
     mount({ variant: "desktop", scale: "collection" });
-    expect(screen.queryByRole("button", { name: "Álbuns" })).toBeNull();
-    expect(regua("Álbuns").getAttribute("aria-hidden")).toBe("false");
+    expect(screen.queryByRole("button", { name: "Albums" })).toBeNull();
+    expect(rail("Albums").getAttribute("aria-hidden")).toBe("false");
   });
 
-  it("no desktop as duas convivem, como sempre", () => {
+  it("on desktop the two coexist, as always", () => {
     mount({ variant: "desktop", scale: "album", alb: 0 });
-    const albuns = regua("Álbuns");
-    expect(albuns.getAttribute("aria-hidden")).toBe("false");
-    expect(albuns.className).toContain("pointer-events-auto");
-    expect(regua("Faixas").className).toContain("pointer-events-auto");
+    const albums = rail("Albums");
+    expect(albums.getAttribute("aria-hidden")).toBe("false");
+    expect(albums.className).toContain("pointer-events-auto");
+    expect(rail("Tracks").className).toContain("pointer-events-auto");
   });
 });
 
-describe("composição compacta — bordas do aparelho e alvos de toque", () => {
-  it("a camada de instrumentos respeita as safe areas do aparelho", () => {
+describe("compact composition — device edges and touch targets", () => {
+  it("the instruments layer respects the device's safe areas", () => {
     mount();
-    const camada = document.querySelector("[data-instruments]") as HTMLElement;
-    expect(camada.className).toContain("instruments-safe");
-    expect(camada.className, "inset-0 sobrescreveria os recuos de safe-area").not.toContain(
+    const layer = document.querySelector("[data-instruments]") as HTMLElement;
+    expect(layer.className).toContain("instruments-safe");
+    expect(layer.className, "inset-0 would override the safe-area insets").not.toContain(
       "inset-0",
     );
   });
 
-  it("as réguas dividem uma coluna limitada, sem contar linhas em pixel", () => {
+  it("the rails share a bounded column, without counting lines in pixels", () => {
     mount({ scale: "album" });
-    const faixas = document.querySelector('nav[aria-label^="Faixas"]') as HTMLElement;
-    const coluna = faixas.parentElement as HTMLElement;
+    const tracks = document.querySelector('nav[aria-label^="Tracks"]') as HTMLElement;
+    const column = tracks.parentElement as HTMLElement;
 
-    expect(coluna.className).toContain("top-14");
-    expect(coluna.className).toContain("bottom-37.5");
-    expect(coluna.className).toContain("flex-col");
-    expect(faixas.className).toContain("overflow-y-auto");
-    expect(faixas.className).toContain("min-h-0");
+    expect(column.className).toContain("top-14");
+    expect(column.className).toContain("bottom-37.5");
+    expect(column.className).toContain("flex-col");
+    expect(tracks.className).toContain("overflow-y-auto");
+    expect(tracks.className).toContain("min-h-0");
   });
 
-  it("a régua de discos rola em vez de transbordar quando o acervo cresce", () => {
+  it("the record rail scrolls instead of overflowing when the catalogue grows", () => {
     mount();
-    const rail = screen.getByRole("navigation", { name: "Álbuns" });
-    const lista = within(rail).getAllByRole("listitem")[0].parentElement as HTMLElement;
-    expect(lista.className).toContain("overflow-y-auto");
-    expect(lista.className).toContain("min-h-0");
-    expect(screen.getByText("Trazer um disco").closest("ul")).toBeNull();
+    const rail = screen.getByRole("navigation", { name: "Albums" });
+    const list = within(rail).getAllByRole("listitem")[0].parentElement as HTMLElement;
+    expect(list.className).toContain("overflow-y-auto");
+    expect(list.className).toContain("min-h-0");
+    expect(screen.getByText("Bring a record").closest("ul")).toBeNull();
   });
 
-  it("a linha de transporte quebra em vez de cortar o timecode", () => {
+  it("the transport line wraps instead of clipping the timecode", () => {
     mount();
     const tc = screen.getByText(/00:00 \/ 00:00/);
     expect(tc.parentElement?.className).toContain("flex-wrap");

@@ -39,26 +39,26 @@ const album = (alb: number, over: Partial<FieldState> = {}): FieldState =>
   baseState({ scale: "album", alb, nav: alb, zoom: 1, play: 0, ...over });
 
 const SCENES = [
-  { label: "coleção", zoom: 0 },
-  { label: "álbum", zoom: 1 },
+  { label: "collection", zoom: 0 },
+  { label: "album", zoom: 1 },
 ];
 
-describe("regiões da composição mobile", () => {
-  it("as bandas se sucedem sem se sobrepor, em toda tela alvo", () => {
+describe("regions of the mobile composition", () => {
+  it("the bands follow one another without overlapping, on every target screen", () => {
     for (const v of CANVASES) {
       for (const scene of SCENES) {
         const b = bandsOf(v.w, v.h, scene.zoom);
-        const onde = `${v.label} · ${scene.label}`;
-        expect(b.top, onde).toBeGreaterThan(0);
-        expect(b.stage, onde).toBeGreaterThan(b.top);
-        expect(b.identity, onde).toBeGreaterThanOrEqual(b.stage);
-        expect(b.list, onde).toBeGreaterThanOrEqual(b.identity);
-        expect(b.list, onde).toBeLessThan(1);
+        const where = `${v.label} · ${scene.label}`;
+        expect(b.top, where).toBeGreaterThan(0);
+        expect(b.stage, where).toBeGreaterThan(b.top);
+        expect(b.identity, where).toBeGreaterThanOrEqual(b.stage);
+        expect(b.list, where).toBeGreaterThanOrEqual(b.identity);
+        expect(b.list, where).toBeLessThan(1);
       }
     }
   });
 
-  it("abertura, palco e transporte nunca ficam pequenos demais para o toque", () => {
+  it("opening, stage and transport are never too small to touch", () => {
     for (const v of CANVASES) {
       const px = v.h / (v.label.includes("@1x") ? 1 : DPR_MAX);
       const b = bandsOf(v.w, v.h, 1);
@@ -68,43 +68,43 @@ describe("regiões da composição mobile", () => {
     }
   });
 
-  it("no álbum sobra lista utilizável, mesmo na tela mais curta", () => {
+  it("in the album a usable list remains, even on the shortest screen", () => {
     for (const v of CANVASES) {
       const px = v.h / (v.label.includes("@1x") ? 1 : DPR_MAX);
       const b = bandsOf(v.w, v.h, 1);
-      expect((b.list - b.identity) * px, `lista ${v.label}`).toBeGreaterThanOrEqual(2 * 48);
+      expect((b.list - b.identity) * px, `list ${v.label}`).toBeGreaterThanOrEqual(2 * 48);
     }
   });
 
-  it("na coleção o palco toma o campo, no álbum ele cede espaço à lista", () => {
+  it("in the collection the stage takes the field, in the album it yields space to the list", () => {
     for (const v of CANVASES) {
-      const campo = bandsOf(v.w, v.h, 0);
-      const disco = bandsOf(v.w, v.h, 1);
-      expect(campo.stage, v.label).toBeGreaterThan(disco.stage);
-      expect(campo.list - campo.identity, v.label).toBeLessThan(disco.list - disco.identity);
+      const field = bandsOf(v.w, v.h, 0);
+      const record = bandsOf(v.w, v.h, 1);
+      expect(field.stage, v.label).toBeGreaterThan(record.stage);
+      expect(field.list - field.identity, v.label).toBeLessThan(record.list - record.identity);
     }
   });
 
-  it("na paisagem do telefone a composição encolhe, mas nada é cortado", () => {
+  it("in phone landscape the composition shrinks, but nothing is cut", () => {
     for (const v of LANDSCAPE) {
       const b = bandsOf(v.w, v.h, 1);
       expect(b.stage, v.label).toBeGreaterThan(b.top);
       expect(b.list, v.label).toBeGreaterThanOrEqual(b.identity);
       expect(b.top * v.h, `abertura ${v.label}`).toBeGreaterThanOrEqual(62);
       expect((1 - b.list) * v.h, `transporte ${v.label}`).toBeGreaterThanOrEqual(124);
-      expect((b.list - b.identity) * v.h, `lista ${v.label}`).toBeGreaterThanOrEqual(48);
+      expect((b.list - b.identity) * v.h, `list ${v.label}`).toBeGreaterThanOrEqual(48);
     }
   });
 
-  it("desktop e tablet não ganham bandas: a composição é só do mobile", () => {
+  it("desktop and tablet get no bands: the composition is mobile-only", () => {
     expect(MOBILE.staged).toBe(true);
     expect(DESKTOP.staged).toBe(false);
     expect(layoutFor("tablet").staged).toBe(false);
   });
 });
 
-describe("o mundo cabe no palco — nenhuma morfologia invade a interface", () => {
-  it("corpo, coroa e satélites de todo álbum ficam dentro do palco", () => {
+describe("the world fits the stage — no morphology invades the interface", () => {
+  it("body, corona and satellites of every album stay inside the stage", () => {
     for (const v of CANVASES) {
       for (const scene of SCENES) {
         const box = stageBox(v.w, v.h, bandsOf(v.w, v.h, scene.zoom));
@@ -112,19 +112,19 @@ describe("o mundo cabe no palco — nenhuma morfologia invade a interface", () =
           const m = morphOf(alb);
           const g = bodyGeom(v.w, v.h, album(alb, { zoom: scene.zoom }), MOBILE, m);
           const e = extentOf(m);
-          const onde = `${ALBUMS[alb].id} · ${v.label} · ${scene.label}`;
+          const where = `${ALBUMS[alb].id} · ${v.label} · ${scene.label}`;
 
-          expect(g.cy + e.y1 * m.flatten * g.R, onde).toBeLessThanOrEqual(box.cy + box.halfH + 0.5);
-          expect(g.cy + e.y0 * m.flatten * g.R, onde).toBeGreaterThanOrEqual(box.cy - box.halfH - 0.5);
+          expect(g.cy + e.y1 * m.flatten * g.R, where).toBeLessThanOrEqual(box.cy + box.halfH + 0.5);
+          expect(g.cy + e.y0 * m.flatten * g.R, where).toBeGreaterThanOrEqual(box.cy - box.halfH - 0.5);
           if (scene.zoom < 1) continue;
-          expect(g.cx + e.x1 * g.R, onde).toBeLessThanOrEqual(box.cx + box.halfW + 0.5);
-          expect(g.cx + e.x0 * g.R, onde).toBeGreaterThanOrEqual(box.cx - box.halfW - 0.5);
+          expect(g.cx + e.x1 * g.R, where).toBeLessThanOrEqual(box.cx + box.halfW + 0.5);
+          expect(g.cx + e.x0 * g.R, where).toBeGreaterThanOrEqual(box.cx - box.halfW - 0.5);
         }
       }
     }
   });
 
-  it("o palco termina antes da identidade, então nada do mundo pousa sobre a lista", () => {
+  it("the stage ends before the identity, so nothing of the world lands on the list", () => {
     for (const v of CANVASES) {
       const b = bandsOf(v.w, v.h, 1);
       const box = stageBox(v.w, v.h, b);
@@ -132,13 +132,13 @@ describe("o mundo cabe no palco — nenhuma morfologia invade a interface", () =
     }
   });
 
-  it("o mobile não desenha rótulo radial de faixa — a lista é quem nomeia", () => {
-    expect(MOBILE.ringLabels).toBe("nenhum");
-    expect(DESKTOP.ringLabels).toBe("todos");
+  it("mobile draws no radial track label — the list is what names", () => {
+    expect(MOBILE.ringLabels).toBe("none");
+    expect(DESKTOP.ringLabels).toBe("all");
   });
 });
 
-describe("a morfologia continua diferente entre discos", () => {
+describe("the morphology stays different across records", () => {
   const fills = (w: number, h: number) => {
     const box = stageBox(w, h, bandsOf(w, h, 1));
     return ALBUMS.map((_, alb) => {
@@ -154,26 +154,26 @@ describe("a morfologia continua diferente entre discos", () => {
     });
   };
 
-  it("o palco não nivela os corpos: o raio continua percorrendo um intervalo largo", () => {
+  it("the stage does not flatten the bodies: the radius still spans a wide range", () => {
     for (const v of VIEWPORTS) {
       const rs = fills(v.w, v.h).map((f) => f.R);
       expect(Math.max(...rs) / Math.min(...rs), v.label).toBeGreaterThan(1.35);
     }
   });
 
-  it("nem os nivela em ocupação: um disco compacto não enche o palco como um extenso", () => {
+  it("nor does it flatten their occupancy: a compact record does not fill the stage like a vast one", () => {
     for (const v of VIEWPORTS) {
       const areas = fills(v.w, v.h).map((f) => f.area);
       expect(Math.max(...areas) / Math.min(...areas), v.label).toBeGreaterThan(2);
     }
   });
 
-  it("dois discos quaisquer continuam com raios distintos", () => {
+  it("any two records still have distinct radii", () => {
     const rs = fills(390, 844).map((f) => Math.round(f.R * 100) / 100);
     expect(new Set(rs).size).toBe(ALBUMS.length);
   });
 
-  it("o corte do palco só encolhe: nenhum corpo cresce para preencher a moldura", () => {
+  it("the stage crop only shrinks: no body grows to fill the frame", () => {
     for (const v of VIEWPORTS) {
       for (let alb = 0; alb < ALBUMS.length; alb++) {
         const m = morphOf(alb);
@@ -186,23 +186,23 @@ describe("a morfologia continua diferente entre discos", () => {
   });
 });
 
-describe("identidade do álbum no mobile", () => {
-  it("o bloco de identidade cabe na própria banda, em toda tela alvo", () => {
+describe("album identity on mobile", () => {
+  it("the identity block fits its own band, on every target screen", () => {
     for (const v of CANVASES) {
       for (const scene of SCENES) {
         const s = album(0, { zoom: scene.zoom });
         const lk = lockup(v.w, v.h, s, MOBILE);
         const b = bandsOf(v.w, v.h, scene.zoom);
-        const onde = `${v.label} · ${scene.label}`;
-        expect(lk.ay, onde).toBeGreaterThanOrEqual(b.stage * v.h);
-        expect(lk.my + lk.msize * 0.35, onde).toBeLessThanOrEqual(b.identity * v.h + 0.5);
-        expect(lk.ty, onde).toBeGreaterThan(lk.ay);
-        expect(lk.my, onde).toBeGreaterThan(lk.ty);
+        const where = `${v.label} · ${scene.label}`;
+        expect(lk.ay, where).toBeGreaterThanOrEqual(b.stage * v.h);
+        expect(lk.my + lk.msize * 0.35, where).toBeLessThanOrEqual(b.identity * v.h + 0.5);
+        expect(lk.ty, where).toBeGreaterThan(lk.ay);
+        expect(lk.my, where).toBeGreaterThan(lk.ty);
       }
     }
   });
 
-  it("a margem do texto no canvas é a mesma calha da interface", () => {
+  it("the canvas text margin is the same gutter as the interface", () => {
     for (const v of CANVASES) {
       const lk = lockup(v.w, v.h, album(0), MOBILE);
       expect(lk.margin / v.w, v.label).toBeCloseTo(BAND.gutter, 10);
@@ -211,7 +211,7 @@ describe("identidade do álbum no mobile", () => {
     }
   });
 
-  it("a linha de metadados nunca cai abaixo do legível", () => {
+  it("the metadata line never drops below legible", () => {
     for (const v of CANVASES) {
       const dpr = v.label.includes("@1x") ? 1 : DPR_MAX;
       const lk = lockup(v.w, v.h, album(0), MOBILE);
@@ -220,14 +220,14 @@ describe("identidade do álbum no mobile", () => {
     }
   });
 
-  it("no mobile o nome tem teto de escala; no desktop ele é livre", () => {
-    const alto = lockup(390, 2000, album(0), MOBILE);
-    expect(alto.size).toBeLessThan(390 * 0.105);
+  it("on mobile the name has a scale ceiling; on desktop it is free", () => {
+    const high = lockup(390, 2000, album(0), MOBILE);
+    expect(high.size).toBeLessThan(390 * 0.105);
     expect(lockup(1440, 900, album(0), DESKTOP).size).toBeCloseTo(1440 * 0.115 - 1440 * 0.018, 6);
   });
 });
 
-describe("nenhum texto do canvas sai da viewport", () => {
+describe("no canvas text leaves the viewport", () => {
   const paint = (textWidth: number, w: number, h: number, s: FieldState) => {
     const env = engineHarness();
     try {
@@ -255,36 +255,36 @@ describe("nenhum texto do canvas sai da viewport", () => {
   };
 
   const sizeOf = (source: string) => Number(/(\d+(?:\.\d+)?)px/.exec(source)?.[1] ?? 0);
-  const familia = (sources: string[], fam: string) =>
+  const family = (sources: string[], fam: string) =>
     sources.filter((f) => f.trim().endsWith(fam)).map(sizeOf);
 
-  it("um nome largo demais encolhe até caber na calha", () => {
+  it("an over-wide name shrinks until it fits the gutter", () => {
     for (const v of VIEWPORTS) {
       const s = album(0);
       const nominal = lockup(v.w, v.h, s, MOBILE);
-      const largo = paint(nominal.size * 40, v.w, v.h, s);
-      const nomes = familia(largo.back.sources, "A");
-      expect(nomes.length, `back ${v.label}`).toBeGreaterThan(1);
-      expect(nomes[nomes.length - 1], `back ${v.label}`).toBeLessThan(nominal.size);
+      const wide = paint(nominal.size * 40, v.w, v.h, s);
+      const names = family(wide.back.sources, "A");
+      expect(names.length, `back ${v.label}`).toBeGreaterThan(1);
+      expect(names[names.length - 1], `back ${v.label}`).toBeLessThan(nominal.size);
     }
   });
 
-  it("o título e os metadados da frente também encolhem — antes não encolhiam", () => {
+  it("the front title and metadata shrink too — before, they did not", () => {
     for (const v of VIEWPORTS) {
       const s = album(0);
       const lk = lockup(v.w, v.h, s, MOBILE);
-      const largo = paint(lk.tsize * 40, v.w, v.h, s);
-      const titulo = largo.front.sources.filter((f) => f.includes("italic")).map(sizeOf);
-      expect(titulo.length, v.label).toBeGreaterThan(0);
-      expect(Math.min(...titulo), `título ${v.label}`).toBeLessThan(lk.tsize);
+      const wide = paint(lk.tsize * 40, v.w, v.h, s);
+      const title = wide.front.sources.filter((f) => f.includes("italic")).map(sizeOf);
+      expect(title.length, v.label).toBeGreaterThan(0);
+      expect(Math.min(...title), `title ${v.label}`).toBeLessThan(lk.tsize);
     }
   });
 
-  it("o encolhimento tem piso: a identidade não vira nota de rodapé", () => {
+  it("the shrinking has a floor: the identity does not become a footnote", () => {
     const s = album(0);
     const lk = lockup(390, 844, s, MOBILE);
-    const largo = paint(lk.size * 400, 390, 844, s);
-    const nomes = familia(largo.back.sources, "A");
-    expect(nomes[nomes.length - 1]).toBeGreaterThanOrEqual(lk.size * lk.floor - 1e-6);
+    const wide = paint(lk.size * 400, 390, 844, s);
+    const names = family(wide.back.sources, "A");
+    expect(names[names.length - 1]).toBeGreaterThanOrEqual(lk.size * lk.floor - 1e-6);
   });
 });

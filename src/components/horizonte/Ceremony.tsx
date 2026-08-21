@@ -11,15 +11,15 @@ interface Reading {
 }
 
 const READINGS: Reading[] = [
-  { key: "loudness", label: "seu peso", at: 0.2, words: ["leve", "denso", "pesado"] },
+  { key: "loudness", label: "its weight", at: 0.2, words: ["light", "dense", "heavy"] },
   {
     key: "dynamics",
-    label: "sua dinâmica",
+    label: "its dynamics",
     at: 0.42,
-    words: ["comprimida", "respirando", "aberta"],
+    words: ["compressed", "breathing", "open"],
   },
-  { key: "brightness", label: "sua luz", at: 0.62, words: ["escura", "morna", "cortante"] },
-  { key: "duration", label: "sua travessia", at: 0.82, words: ["curta", "longa", "extensa"] },
+  { key: "brightness", label: "its light", at: 0.62, words: ["dark", "warm", "cutting"] },
+  { key: "duration", label: "its crossing", at: 0.82, words: ["short", "long", "vast"] },
 ];
 
 const wordFor = (r: Reading, probe: IngestProbe | null) => {
@@ -29,13 +29,13 @@ const wordFor = (r: Reading, probe: IngestProbe | null) => {
 };
 
 const HEADLINE: Record<IngestStatus["phase"], string> = {
-  reading: "abrindo o disco",
-  decoding: "medindo o disco",
-  measuring: "medindo o disco",
-  composing: "traçando o horizonte",
-  done: "o disco entrou",
-  failed: "não deu para medir",
-  cancelled: "medição interrompida",
+  reading: "opening the record",
+  decoding: "measuring the record",
+  measuring: "measuring the record",
+  composing: "tracing the horizon",
+  done: "the record is in",
+  failed: "could not measure it",
+  cancelled: "measurement stopped",
 };
 
 export default function Ceremony({
@@ -105,7 +105,7 @@ export default function Ceremony({
 
       <div className="flex items-baseline justify-between gap-4">
         <span className="text-ink-faint normal-case tracking-[.08em]">
-          Nada sai deste dispositivo.
+          Nothing leaves this device.
         </span>
         {!settled && (
           <button
@@ -113,7 +113,7 @@ export default function Ceremony({
             onClick={onCancel}
             className="cursor-pointer whitespace-nowrap text-ink-faint hover:text-ink-text"
           >
-            Parar
+            Stop
           </button>
         )}
       </div>

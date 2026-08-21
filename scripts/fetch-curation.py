@@ -66,12 +66,12 @@ CURATION = [
     dict(
         kind="manual", cat="H—001", slug="tristan-lohengrin-le-manoir",
         artist="Tristan Lohengrin", title="Le Manoir", year="2019",
-        label="Tristan Lohengrin (auto-publicado)",
+        label="Tristan Lohengrin (self-released)",
         verify_url="https://tristanlohengrin.bandcamp.com/album/le-manoir-album-cc-by-40",
         expect_license_url=CC_BY_4_ALT, license=CC_BY, verified="2026-08-18",
-        cover=dict(license="Não declarada pelo autor", credit="Arte de David Harrington",
+        cover=dict(license="Not declared by the author", credit="Art by David Harrington",
                    source="https://tristanlohengrin.bandcamp.com/album/le-manoir-album-cc-by-40"),
-        note="O autor acrescenta um termo extra: proibido registrar em Content ID.",
+        note="The author adds an extra term: registering in Content ID is forbidden.",
         tracks=tl([("Le Manoir", 96), ("Dans le Jardin", 240), ("Le Hall", 53),
                    ("A travers les couloirs", 73), ("La Salle de Bal", 119), ("La Chambre", 138),
                    ("Le Couloir Secret", 123), ("La Salle de Torture", 194), ("Poursuivi", 90),
@@ -82,7 +82,7 @@ CURATION = [
         artist="Jono Terbakar", title="lebar", year="2023", label="Sangat Records",
         verify_url="https://jonoterbakar.bandcamp.com/album/lebar",
         expect_license_url=CC_BY_4_ALT, license=CC_BY, verified="2026-08-18",
-        cover=dict(license="Não declarada", source="https://jonoterbakar.bandcamp.com/album/lebar"),
+        cover=dict(license="Not declared", source="https://jonoterbakar.bandcamp.com/album/lebar"),
         tracks=tl([("nirlaba", 263), ("tetes embun yang merasa samudera", 113),
                    ("balada seni dari ujung bumi", 147), ("bajigurik - radio edit", 145),
                    ("liat tanah, tanah liat", 257), ("jika dan hanya jika", 169),
@@ -92,22 +92,22 @@ CURATION = [
     dict(
         kind="manual", cat="H—003", slug="le-morte-dabby-0p",
         artist="Le Morte d'Abby", title="0p", year="2022",
-        label="Le Morte d'Abby (auto-publicado)",
+        label="Le Morte d'Abby (self-released)",
         verify_url="https://lemortedabby.bandcamp.com/album/0p",
         expect_license_url=CC_BY_4_ALT, license=CC_BY, verified="2026-08-18",
-        cover=dict(license="Não declarada", source="https://lemortedabby.bandcamp.com/album/0p"),
+        cover=dict(license="Not declared", source="https://lemortedabby.bandcamp.com/album/0p"),
         tracks=tl([("0pVI", 283), ("0pVII", 304), ("0pVIII", 420), ("0pIX", 384),
                    ("0pX", 395), ("0pXI", 580), ("0pXII", 344)]),
     ),
     dict(
         kind="manual", cat="H—004", slug="mark-wilson-x-dark-thoughts",
         artist="Mark Wilson X", title="Dark Thoughts", year="2023",
-        label="Mark Wilson X (auto-publicado)",
+        label="Mark Wilson X (self-released)",
         verify_url="https://freemusicarchive.org/music/mark-wilson-x/dark-thoughts/",
         expect_license_url=CC_BY_4_ALT, license=CC_BY, verified="2026-08-18",
-        cover=dict(license="Unsplash License", credit="Foto de Riccardo Pelati (Unsplash)",
+        cover=dict(license="Unsplash License", credit="Photo by Riccardo Pelati (Unsplash)",
                    source="https://markwilsonx.bandcamp.com/album/dark-thoughts-cc-by"),
-        note="Crédito exigido pelo autor: “[TÍTULO] © 2023 by Mark Wilson X is licensed under CC BY 4.0”.",
+        note="Credit required by the author: “[TITLE] © 2023 by Mark Wilson X is licensed under CC BY 4.0”.",
         tracks=tl([("Ritual", 216), ("The Stranger", 208), ("The Killer Awoke", 183),
                    ("Terror Drome", 173), ("Something Not Right Part One", 131),
                    ("Something Not Right Part Two", 127), ("A Killer In Me", 249),
@@ -117,10 +117,10 @@ CURATION = [
         kind="blocked", cat="H—005", slug="widder-shadows-of-widder",
         artist="WIDDER", title="shadows of WIDDER", year="2023",
         verify_url="https://widder-music.bandcamp.com/album/shadows-of-widder",
-        reason=("Licença contraditória na própria página: o selo Creative Commons aponta para "
-                "by-sa/4.0 enquanto o texto afirma “Attribution 4.0 International”. BY-SA e BY "
-                "impõem obrigações diferentes; escolher uma seria presumir. Precisa de "
-                "confirmação do artista."),
+        reason=("Contradictory licence on the page itself: the Creative Commons badge points "
+                "to by-sa/4.0 while the text states “Attribution 4.0 International”. BY-SA and "
+                "BY impose different obligations; picking one would be presuming. Needs "
+                "confirmation from the artist."),
         verified="2026-08-18",
     ),
     dict(
@@ -128,55 +128,58 @@ CURATION = [
         artist="Noctilia Grah",
         title="Background Music For Video Essays About Video Games", year="—",
         verify_url="https://noctiliagrah.bandcamp.com/",
-        reason=("Sem licença Creative Commons verificável. O subdomínio noctiliagrah.bandcamp.com "
-                "não existe (o Bandcamp o oferece para cadastro). A única declaração encontrada é "
-                "um termo próprio, “free to use in noncommercial works, with credit”, que não é CC "
-                "e é incompatível com hospedar o arquivo num projeto potencialmente comercial."),
+        reason=("No verifiable Creative Commons licence. The subdomain "
+                "noctiliagrah.bandcamp.com does not exist (Bandcamp offers it for "
+                "registration). The only statement found is a bespoke term, “free to use in "
+                "noncommercial works, with credit”, which is not CC and is incompatible with "
+                "hosting the file in a potentially commercial project."),
         verified="2026-08-18",
     ),
     dict(
         kind="manual", cat="H—007", slug="darin-wilson-meanderings",
         artist="Darin Wilson", title="Meanderings", year="2022",
-        label="Darin Wilson (auto-publicado)",
+        label="Darin Wilson (self-released)",
         verify_url="https://darinwilson.bandcamp.com/album/meanderings",
         expect_license_url=CC_BY_4_ALT, license=CC_BY, verified="2026-08-18",
-        cover=dict(license="Não declarada", source="https://darinwilson.bandcamp.com/album/meanderings"),
-        note=("Preço mínimo de US$ 1 no Bandcamp — não é name-your-price. A licença CC BY 4.0 "
-              "permite redistribuir depois de adquirido. A cópia em archive.org "
-              "(darin-wilson-meanderings) é reupload de terceiro, sem licença declarada, e não foi usada."),
+        cover=dict(license="Not declared", source="https://darinwilson.bandcamp.com/album/meanderings"),
+        note=("US$ 1 minimum price on Bandcamp — it is not name-your-price. The CC BY 4.0 "
+              "licence allows redistribution once acquired. The archive.org copy "
+              "(darin-wilson-meanderings) is a third-party reupload with no declared licence, "
+              "and was not used."),
         tracks=tl([("Part 1", 208), ("Part 2", 283), ("Part 3", 204),
                    ("Part 4", 195), ("Part 5", 240), ("Part 6", 167)]),
     ),
     dict(
         kind="manual", cat="H—011", slug="darin-wilson-impromptu",
         artist="Darin Wilson", title="Impromptu", year="2012",
-        label="Darin Wilson (auto-publicado)",
+        label="Darin Wilson (self-released)",
         verify_url="https://darinwilson.bandcamp.com/album/impromptu",
         expect_license_url=CC_BY_SA_4, license=CC_BY_SA, verified="2026-08-18",
-        cover=dict(license="Não declarada", source="https://darinwilson.bandcamp.com/album/impromptu"),
-        note=("Não é o álbum originalmente aguardado (Meanderings, H—007, ainda pendente): os "
-              "arquivos fornecidos correspondem a Impromptu, cinco standards de jazz em piano solo. "
-              "Licença é CC BY-SA 4.0 (Attribution-ShareAlike), não CC BY 4.0 — a obrigação extra de "
-              "compartilhar a adaptação (o áudio recodificado) sob a mesma BY-SA se aplica a este "
-              "álbum e é diferente do resto da coleção."),
+        cover=dict(license="Not declared", source="https://darinwilson.bandcamp.com/album/impromptu"),
+        note=("Not the album originally expected (Meanderings, H—007, still pending): the "
+              "files provided correspond to Impromptu, five jazz standards on solo piano. The "
+              "licence is CC BY-SA 4.0 (Attribution-ShareAlike), not CC BY 4.0 — the extra "
+              "obligation to share the adaptation (the re-encoded audio) under the same BY-SA "
+              "applies to this album and differs from the rest of the collection."),
         tracks=tl([("One For Bill", 282), ("Blue Monk", 364), ("Spring Is Here", 370),
                    ("Solar", 278), ("Blue In Green", 331)]),
     ),
     dict(
         kind="manual", cat="H—012", slug="dark-antey-deep-russian-depression",
         artist="Dark Antey", title="Deep Russian Depression", year="2025",
-        label="Dark Antey (auto-publicado)",
+        label="Dark Antey (self-released)",
         verify_url="https://darkantey.bandcamp.com/album/deep-russian-depression",
         expect_license_text="Creative Commons Attribution 4.0 International (CC BY 4.0)",
         license=CC_BY, verified="2026-08-18",
-        cover=dict(license="Não declarada", source="https://darkantey.bandcamp.com/album/deep-russian-depression"),
-        note=("A licença está declarada apenas em texto livre na descrição do álbum — o campo "
-              "estruturado de licença do Bandcamp para este item mostra “all rights reserved”, sem "
-              "selo/link para creativecommons.org. A declaração do autor é inequívoca (nomeia CC BY "
-              "4.0 por extenso, permite uso comercial, dá a frase de crédito exata: “Music by Dark "
-              "Antey”), mas não há o selo estruturado que os demais álbuns têm — registrado aqui para "
-              "auditoria futura. Download gratuito sem preço mínimo, mas via fluxo humano do Bandcamp "
-              "(possível exigência de e-mail); arquivos precisam ser colocados manualmente."),
+        cover=dict(license="Not declared", source="https://darkantey.bandcamp.com/album/deep-russian-depression"),
+        note=("The licence is declared only in free text in the album description — Bandcamp's "
+              "structured licence field for this item shows “all rights reserved”, with no "
+              "badge or link to creativecommons.org. The author's statement is unambiguous (it "
+              "names CC BY 4.0 in full, permits commercial use, and gives the exact credit "
+              "line: “Music by Dark Antey”), but the structured badge the other albums carry "
+              "is absent — recorded here for future audit. Free download with no minimum "
+              "price, but through Bandcamp's human flow (an email may be required); files must "
+              "be staged manually."),
         tracks=tl([("Deep Russian Depression", 178), ("Где я спешил, взбираясь к небесам", 197),
                    ("Прогулка по ночному небу", 88), ("Один в пустой комнате", 147),
                    ("Разбитые воспоминания", 198), ("Метафизический сон во тьме", 221),
@@ -188,46 +191,49 @@ CURATION = [
         kind="blocked", cat="H—014", slug="apophysia-from-the-universe-to-the-past",
         artist="ApophysiA", title="From The Universe To The Past", year="2019",
         verify_url="https://apophysia.bandcamp.com/album/from-the-universe-to-the-past",
-        reason=("Licença contraditória na própria página, mesmo padrão que já excluiu WIDDER: o selo "
-                "estruturado do Bandcamp aponta para creativecommons.org/licenses/by-nc-nd/4.0 "
-                "(NonCommercial-NoDerivatives) enquanto o texto do artista afirma “is licensed under a "
-                "Creative Commons Attribution 4.0 International License” (CC BY puro, sem NC nem ND). "
-                "Duas licenças incompatíveis declaradas no mesmo lançamento; escolher uma seria "
-                "presumir. Verificado a pedido do usuário como possível substituto; rejeitado antes de "
-                "qualquer download."),
+        reason=("Contradictory licence on the page itself, the same pattern that already "
+                "excluded WIDDER: Bandcamp's structured badge points to "
+                "creativecommons.org/licenses/by-nc-nd/4.0 (NonCommercial-NoDerivatives) while "
+                "the artist's text states “is licensed under a Creative Commons Attribution "
+                "4.0 International License” (plain CC BY, no NC, no ND). Two incompatible "
+                "licences declared on the same release; picking one would be presuming. "
+                "Checked at the user's request as a possible replacement; rejected before any "
+                "download."),
         verified="2026-08-18",
     ),
     dict(
         kind="blocked", cat="H—015", slug="apophysia-compilations-and-other-stories",
         artist="ApophysiA", title="Compilations and other Stories", year="2018",
         verify_url="https://apophysia.bandcamp.com/album/compilations-and-other-stories",
-        reason=("CC BY-NC-ND 4.0 — selo estruturado do Bandcamp, sem nenhuma declaração textual do "
-                "artista que a contradiga ou abrande (ao contrário de From The Universe To The Past, "
-                "H—014, que ao menos tinha um texto conflitante). NoDerivatives proíbe a recodificação "
-                "que este projeto sempre faz; NonCommercial é uma segunda restrição incompatível. "
-                "Verificado a pedido do usuário como possível substituto; rejeitado antes de qualquer "
-                "download."),
+        reason=("CC BY-NC-ND 4.0 — Bandcamp's structured badge, with no textual statement from "
+                "the artist contradicting or softening it (unlike From The Universe To The "
+                "Past, H—014, which at least had conflicting text). NoDerivatives forbids the "
+                "re-encoding this project always performs; NonCommercial is a second "
+                "incompatible restriction. Checked at the user's request as a possible "
+                "replacement; rejected before any download."),
         verified="2026-08-18",
     ),
     dict(
         kind="blocked", cat="H—013", slug="stellardrone-on-a-beam-of-light",
         artist="Stellardrone", title="On A Beam Of Light", year="2009",
         verify_url="https://archive.org/details/OnABeamOfLight",
-        reason=("Licença confirmada em archive.org (mirror com metadados estruturados do lançamento "
-                "original no Jamendo): CC BY-NC-ND 3.0. A cláusula NoDerivatives proíbe a adaptação "
-                "que este projeto sempre faz (recodificar para AAC) — mesmo motivo que já havia "
-                "excluído tranz023Holocaos. NonCommercial adiciona uma segunda restrição incompatível "
-                "com um projeto que pode vir a ser comercial. Verificado a pedido do usuário como "
-                "possível substituto; rejeitado pela mesma regra aplicada a todo o resto da curadoria."),
+        reason=("Licence confirmed on archive.org (a mirror carrying structured metadata from "
+                "the original Jamendo release): CC BY-NC-ND 3.0. The NoDerivatives clause "
+                "forbids the adaptation this project always performs (re-encoding to AAC) — "
+                "the same reason that already excluded tranz023Holocaos. NonCommercial adds a "
+                "second restriction incompatible with a project that may become commercial. "
+                "Checked at the user's request as a possible replacement; rejected under the "
+                "same rule applied to the rest of the curation."),
         verified="2026-08-18",
     ),
     dict(
         kind="blocked", cat="H—008", slug="ivan-duch-sand",
         artist="Ivan Duch", title="Sand", year="2021",
         verify_url="https://ivanduch.com/albums/sand/",
-        reason=("Não é CC BY. É um pack comercial de US$ 4,00 sob “licença não-exclusiva que exige "
-                "atribuição” — termo proprietário do autor, sem permissão de redistribuição. A "
-                "biblioteca CC BY 4.0 do Ivan Duch existe, mas Sand não faz parte dela."),
+        reason=("Not CC BY. It is a commercial US$ 4.00 pack under a “non-exclusive licence "
+                "requiring attribution” — the author's own proprietary term, with no "
+                "redistribution permission. Ivan Duch's CC BY 4.0 library does exist, but Sand "
+                "is not part of it."),
         verified="2026-08-18",
     ),
     dict(
@@ -256,10 +262,11 @@ CURATION = [
                    credit="“Sign in front of former Eddie's House of Jazz, Main Street, Buffalo, "
                           "New York” via Wikimedia Commons",
                    source="https://commons.wikimedia.org/wiki/Main_Page"),
-        note=("A capa é CC BY-SA 4.0 (share-alike) — obrigação diferente da do áudio, que é CC BY 4.0. "
-              "São 65 faixas: a régua de faixas foi generalizada para acompanhar o tamanho da lista. "
-              "No Bandcamp o álbum custa US$ 10,99; MP3 avulsos gratuitos em ifnessfreemusic.com, "
-              "mas o site não agrupa por álbum."),
+        note=("The cover is CC BY-SA 4.0 (share-alike) — a different obligation from the "
+              "audio, which is CC BY 4.0. There are 65 tracks: the track rail was generalized "
+              "to follow the list's size. On Bandcamp the album costs US$ 10.99; individual "
+              "MP3s are free at ifnessfreemusic.com, but the site does not group them by "
+              "album."),
         tracks=tl([("Vincent in Paris", 94), ("Chicago or Bust", 101), ("Ornette Ornette", 119),
                    ("Blue Messenger", 66), ("Careful There", 135), ("Back Porch Blues", 180),
                    ("La Resistencia", 111), ("Jazz Fugue #6 for Keyboard", 54),
@@ -281,7 +288,7 @@ CURATION = [
         kind="archive", cat="H—016", slug="madison-kenny-all-systems-go",
         identifier="MadKen001A",
         verify_url="https://archive.org/details/MadKen001A", artist="Madison Kenny", title="All Systems Go",
-        year="2006", label="Madison Kenny (auto-publicado)", original_cat="MadKen001A",
+        year="2006", label="Madison Kenny (self-released)", original_cat="MadKen001A",
         cover_file="01 Front Cover color adjusted.jpg", strip=None,
         license=CC_BY, verified="2026-08-18",
         cover=dict(license="CC BY 4.0 (mesma do item no Internet Archive)",
@@ -883,8 +890,8 @@ def main():
             continue
 
         inkA, inkB = extract_inks(cover_img, entry["slug"])
-        changes = ["Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
-                   "Capa recortada em quadrado central e reamostrada para 1024 px WebP."]
+        changes = ["Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+                   "Cover cropped to a centre square and resampled to 1024 px WebP."]
         album = dict(
             id=entry["slug"], provider="curated", artist=entry["artist"], title=entry["title"],
             year=entry["year"], cat=entry["cat"], cover=f"/music/{entry['slug']}/cover.webp",
@@ -898,7 +905,7 @@ def main():
                 source=entry["verify_url"],
                 attribution=f"{entry['artist']} — {entry['title']} "
                             f"({entry.get('label', entry['artist'])}, {entry['year']}). "
-                            f"Licenciado sob {entry['license']['name']}.",
+                            f"Licensed under {entry['license']['name']}.",
                 redistributable=True,
                 cover=entry["cover"],
                 verifiedAt=entry["verified"],

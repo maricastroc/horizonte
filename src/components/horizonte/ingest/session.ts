@@ -91,8 +91,8 @@ export class IngestSession {
         phase: "failed",
         error:
           rejected.length > 0
-            ? `Este navegador não lê esses arquivos. Ele lê: ${supportedLabels().join(", ")}.`
-            : "Nenhum arquivo de áudio reconhecido.",
+            ? `This browser cannot read those files. It reads: ${supportedLabels().join(", ")}.`
+            : "No recognized audio file.",
       });
       return { indices: [], rejected };
     }

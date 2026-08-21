@@ -32,7 +32,7 @@ export interface WorldLayout {
   ringScale: number;
   fitCollection: number;
   fitAlbum: number;
-  ringLabels: "todos" | "selecionado" | "nenhum";
+  ringLabels: "all" | "selected" | "none";
   staged: boolean;
   type: LockupSpec;
   shard: ShardSpec;
@@ -47,7 +47,7 @@ const DESKTOP: WorldLayout = {
   ringScale: 1,
   fitCollection: 0.52,
   fitAlbum: 0.52,
-  ringLabels: "todos",
+  ringLabels: "all",
   staged: false,
   type: LOCKUP.desktop,
   shard: SHARD.desktop,
@@ -61,7 +61,7 @@ const TABLET: WorldLayout = {
   ringScale: 0.86,
   fitCollection: 0.92,
   fitAlbum: 0.62,
-  ringLabels: "selecionado",
+  ringLabels: "selected",
 };
 
 const MOBILE: WorldLayout = {
@@ -73,7 +73,7 @@ const MOBILE: WorldLayout = {
   ringScale: 1.15,
   fitCollection: 0.9,
   fitAlbum: 0.9,
-  ringLabels: "nenhum",
+  ringLabels: "none",
   staged: true,
   type: LOCKUP.mobile,
   shard: SHARD.mobile,

@@ -5,7 +5,7 @@ import { NEUTRAL_SIGNATURE } from "../content/signature";
 import type { AudioSource, Track } from "../content/types";
 import { audioEnv } from "./fakes";
 
-const desconhecida = { kind: "stream", uri: "x" } as unknown as AudioSource;
+const unknown = { kind: "stream", uri: "x" } as unknown as AudioSource;
 
 let env: ReturnType<typeof audioEnv>;
 
@@ -25,12 +25,12 @@ afterEach(() => {
 });
 
 describe("LocalPlayback", () => {
-  it("prepara o elemento para tocar sem espera", () => {
+  it("prepares the element to play without waiting", () => {
     new LocalPlayback();
     expect(env.created[0].preload).toBe("auto");
   });
 
-  it("carrega a faixa e volta ao início", () => {
+  it("loads the track and rewinds to the start", () => {
     const p = new LocalPlayback();
     const el = env.created[0];
     el.currentTime = 42;
@@ -40,7 +40,7 @@ describe("LocalPlayback", () => {
     expect(el.currentTime).toBe(0);
   });
 
-  it("recarregar a mesma faixa não a rebobina", () => {
+  it("reloading the same track does not rewind it", () => {
     const p = new LocalPlayback();
     const el = env.created[0];
     p.load({ kind: "local", src: "/music/a/01.m4a" });
@@ -50,13 +50,13 @@ describe("LocalPlayback", () => {
     expect(el.currentTime).toBe(42);
   });
 
-  it("ignora fontes que não são locais", () => {
+  it("ignores sources that are not local", () => {
     const p = new LocalPlayback();
-    p.load(desconhecida);
+    p.load(unknown);
     expect(env.created[0].src).toBe("");
   });
 
-  it("só pede CORS quando a mídia é remota", () => {
+  it("only requests CORS when the media is remote", () => {
     const p = new LocalPlayback();
     const el = env.created[0];
     p.load({ kind: "local", src: "/music/a/01.m4a" });
@@ -66,7 +66,7 @@ describe("LocalPlayback", () => {
     expect(el.crossOrigin).toBe("anonymous");
   });
 
-  it("tocar e pausar acompanham o elemento", async () => {
+  it("play and pause follow the element", async () => {
     const p = new LocalPlayback();
     const el = env.created[0];
     await p.play();
@@ -78,14 +78,14 @@ describe("LocalPlayback", () => {
     expect(el.paused).toBe(true);
   });
 
-  it("reprodução bloqueada pelo navegador não fica presa em tocando", async () => {
+  it("playback blocked by the browser does not get stuck in playing", async () => {
     const p = new LocalPlayback();
     env.created[0].failOnPlay = true;
     await p.play();
     expect(p.playing).toBe(false);
   });
 
-  it("posição e duração ignoram valores não finitos", () => {
+  it("position and duration ignore non-finite values", () => {
     const p = new LocalPlayback();
     const el = env.created[0];
     expect(p.duration).toBe(0);
@@ -102,7 +102,7 @@ describe("LocalPlayback", () => {
     expect(p.position).toBe(12);
   });
 
-  it("buscar sem duração conhecida não mexe no elemento", () => {
+  it("seeking with no known duration does not touch the element", () => {
     const p = new LocalPlayback();
     const el = env.created[0];
     el.currentTime = 5;
@@ -110,7 +110,7 @@ describe("LocalPlayback", () => {
     expect(el.currentTime).toBe(5);
   });
 
-  it("buscar respeita os limites da faixa", () => {
+  it("seeking respects the track's bounds", () => {
     const p = new LocalPlayback();
     const el = env.created[0];
     el.duration = 180;
@@ -125,7 +125,7 @@ describe("LocalPlayback", () => {
     expect(el.currentTime).toBeCloseTo(179.95, 5);
   });
 
-  it("avisa quando a faixa termina", () => {
+  it("reports when the track ends", () => {
     const p = new LocalPlayback();
     let end = 0;
     p.onEnded = () => end++;
@@ -133,7 +133,7 @@ describe("LocalPlayback", () => {
     expect(end).toBe(1);
   });
 
-  it("descartar solta o elemento", () => {
+  it("disposing releases the element", () => {
     const p = new LocalPlayback();
     const el = env.created[0];
     p.load({ kind: "local", src: "/music/a/01.m4a" });
@@ -146,13 +146,13 @@ describe("LocalPlayback", () => {
 });
 
 describe("AudioBus", () => {
-  it("não monta o grafo de áudio antes do primeiro play", () => {
+  it("does not build the audio graph before the first play", () => {
     const bus = new AudioBus();
     bus.load(track("a", "/music/a/01.m4a"));
     expect(env.connections).toHaveLength(0);
   });
 
-  it("liga o elemento ao analyser ao tocar", async () => {
+  it("connects the element to the analyser on play", async () => {
     const bus = new AudioBus();
     bus.load(track("a", "/music/a/01.m4a"));
     await bus.play();
@@ -161,7 +161,7 @@ describe("AudioBus", () => {
     expect(bus.playing).toBe(true);
   });
 
-  it("reaproveita o mesmo player entre faixas do mesmo tipo", async () => {
+  it("reuses the same player across tracks of the same type", async () => {
     const bus = new AudioBus();
     bus.load(track("a", "/music/a/01.m4a"));
     bus.load(track("b", "/music/a/02.m4a"));
@@ -170,14 +170,14 @@ describe("AudioBus", () => {
     expect(env.created[0].src).toBe("/music/a/02.m4a");
   });
 
-  it("ignora uma fonte sem player disponível", () => {
+  it("ignores a source with no available player", () => {
     const bus = new AudioBus();
-    bus.load({ id: "s", title: "s", dur: 10, source: desconhecida });
+    bus.load({ id: "s", title: "s", dur: 10, source: unknown });
     expect(env.created).toHaveLength(0);
     expect(bus.playing).toBe(false);
   });
 
-  it("repassa o fim da faixa", async () => {
+  it("forwards the track's end", async () => {
     const bus = new AudioBus();
     let end = 0;
     bus.onEnded = () => end++;
@@ -188,7 +188,7 @@ describe("AudioBus", () => {
     expect(end).toBe(1);
   });
 
-  it("a signature escolhida antes do grafo é aplicada quando ele nasce", async () => {
+  it("the signature chosen before the graph is applied when it is born", async () => {
     const bus = new AudioBus();
     bus.setSignature(NEUTRAL_SIGNATURE);
     bus.load(track("a", "/music/a/01.m4a"));
@@ -197,7 +197,7 @@ describe("AudioBus", () => {
     expect(() => bus.update(0.05)).not.toThrow();
   });
 
-  it("o estado visual acompanha posição e duração do elemento", async () => {
+  it("the visual state follows the element's position and duration", async () => {
     const bus = new AudioBus();
     bus.load(track("a", "/music/a/01.m4a"));
     await bus.play();
@@ -210,12 +210,12 @@ describe("AudioBus", () => {
     expect(s.playing).toBe(true);
   });
 
-  it("devolve sempre o mesmo objeto de estado", () => {
+  it("always returns the same state object", () => {
     const bus = new AudioBus();
     expect(bus.update(0.05)).toBe(bus.update(0.05));
   });
 
-  it("sem grafo, o estado ainda é legível e zerado", () => {
+  it("with no graph, the state is still readable and zeroed", () => {
     const bus = new AudioBus();
     const s = bus.update(0.05);
     expect(s.position).toBe(0);
@@ -224,7 +224,7 @@ describe("AudioBus", () => {
     expect(s.energy).toBe(0);
   });
 
-  it("descartar fecha o contexto e solta os players", async () => {
+  it("disposing closes the context and releases the players", async () => {
     const bus = new AudioBus();
     bus.load(track("a", "/music/a/01.m4a"));
     await bus.play();
@@ -235,39 +235,39 @@ describe("AudioBus", () => {
     expect(bus.playing).toBe(false);
   });
 
-  it("buscar sem faixa carregada não quebra", () => {
+  it("seeking with no loaded track does not break", () => {
     const bus = new AudioBus();
     expect(() => bus.seek(30)).not.toThrow();
     expect(bus.position).toBe(0);
   });
 });
 
-describe("volume — o ganho fica depois do analisador", () => {
-  it("o grafo é elemento → analisador → ganho → saída", async () => {
+describe("volume — the gain sits after the analyser", () => {
+  it("the graph is element → analyser → gain → output", async () => {
     const bus = new AudioBus();
     bus.load(track("a", "/music/a/01.m4a"));
     await bus.play();
 
-    const ganho = env.gains[0];
-    expect(ganho).toBeDefined();
+    const gain = env.gains[0];
+    expect(gain).toBeDefined();
     expect(env.connections.map((c) => c.destino)).toContain(env.analyser);
-    expect(env.analyserOut).toContain(ganho);
-    expect(ganho.out).toHaveLength(1);
+    expect(env.analyserOut).toContain(gain);
+    expect(gain.out).toHaveLength(1);
   });
 
-  it("baixar o volume não mexe no que o analisador enxerga", async () => {
+  it("lowering the volume does not change what the analyser sees", async () => {
     const bus = new AudioBus();
     bus.load(track("a", "/music/a/01.m4a"));
     await bus.play();
-    const antes = env.analyser.fftSize;
+    const before = env.analyser.fftSize;
 
     bus.setVolume(0.2);
     expect(env.gains[0].gain.value).toBeCloseTo(0.2, 5);
     expect(env.created[0].volume).toBe(1);
-    expect(env.analyser.fftSize).toBe(antes);
+    expect(env.analyser.fftSize).toBe(before);
   });
 
-  it("o mudo zera o ganho sem esquecer o nível escolhido", async () => {
+  it("muting zeroes the gain without forgetting the chosen level", async () => {
     const bus = new AudioBus();
     bus.load(track("a", "/music/a/01.m4a"));
     await bus.play();
@@ -282,7 +282,7 @@ describe("volume — o ganho fica depois do analisador", () => {
     expect(env.gains[0].gain.value).toBeCloseTo(0.6, 5);
   });
 
-  it("o nível escolhido antes do grafo é aplicado quando ele nasce", async () => {
+  it("the level chosen before the graph is applied when it is born", async () => {
     const bus = new AudioBus();
     bus.setVolume(0.35);
     bus.load(track("a", "/music/a/01.m4a"));
@@ -291,8 +291,8 @@ describe("volume — o ganho fica depois do analisador", () => {
   });
 });
 
-describe("falha de reprodução", () => {
-  it("um erro no arquivo é anunciado, não engolido", async () => {
+describe("playback fault", () => {
+  it("a file error is announced, not swallowed", async () => {
     const bus = new AudioBus();
     const faults: string[] = [];
     bus.onFault = (f) => faults.push(f);
@@ -304,7 +304,7 @@ describe("falha de reprodução", () => {
     expect(bus.playing).toBe(false);
   });
 
-  it("a recusa do navegador é distinguida do arquivo quebrado", async () => {
+  it("the browser's refusal is distinguished from a broken file", async () => {
     const bus = new AudioBus();
     const faults: string[] = [];
     bus.onFault = (f) => faults.push(f);
@@ -320,7 +320,7 @@ describe("falha de reprodução", () => {
     expect(faults).toEqual(["blocked"]);
   });
 
-  it("descartar o player não inventa uma falha", async () => {
+  it("disposing the player does not invent a fault", async () => {
     const bus = new AudioBus();
     const faults: string[] = [];
     bus.onFault = (f) => faults.push(f);

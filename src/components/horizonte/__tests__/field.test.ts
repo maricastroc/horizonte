@@ -71,8 +71,8 @@ const CONTRACT = {
 
 const round = (v: number, decimals: number) => Number(v.toFixed(decimals));
 
-describe("signature → constantes do álbum", () => {
-  it("todo álbum do acervo tem contrato publicado no mapa sensorial", () => {
+describe("signature → album constants", () => {
+  it("every album in the catalogue has a contract published in the sensory map", () => {
     const withoutContract = CURATION.filter((a) => !(a.id in CONTRACT)).map((a) => a.id);
     expect(withoutContract).toEqual([]);
   });
@@ -80,7 +80,7 @@ describe("signature → constantes do álbum", () => {
   for (const album of CURATION.filter((a) => a.id in CONTRACT)) {
     const expected = CONTRACT[album.id as keyof typeof CONTRACT];
 
-    it(`${album.title} deriva as constantes publicadas`, () => {
+    it(`${album.title} derives the published constants`, () => {
       const c = fieldConstantsOf(SIGNATURES[album.id]);
       expect({
         weight: c.artistWeight,
@@ -97,7 +97,7 @@ describe("signature → constantes do álbum", () => {
       });
     });
 
-    it(`${album.title} setoriza o ring pelas durações reais (P9)`, () => {
+    it(`${album.title} sectorizes the ring by real durations (P9)`, () => {
       const [tracks, smaller, greater] = expected.sectors;
       const bounds = boundsOf(SIGNATURES[album.id], album.tracks.length);
       const degrees = bounds.slice(1).map((b, k) => (b - bounds[k]) * 360);
@@ -109,7 +109,7 @@ describe("signature → constantes do álbum", () => {
   }
 });
 
-describe("guardrails do mapa sensorial", () => {
+describe("sensory map guardrails", () => {
   const derived = CURATION.map((a) => fieldConstantsOf(SIGNATURES[a.id]));
 
   const inRange = (
@@ -124,11 +124,11 @@ describe("guardrails do mapa sensorial", () => {
     }
   };
 
-  it("nenhum álbum ultrapassa os limites declarados em RANGE", () => {
+  it("no album exceeds the limits declared in RANGE", () => {
     (Object.keys(RANGE) as (keyof typeof RANGE)[]).forEach(inRange);
   });
 
-  it("só All Systems Go satura contra uma âncora, e por 0,2 Hz", () => {
+  it("only All Systems Go saturates against an anchor, and by 0.2 Hz", () => {
     const saturatedList = CURATION.flatMap((album) => {
       const sig = SIGNATURES[album.id];
       return (["loudness", "dynamics", "brightness", "duration"] as const)
@@ -138,7 +138,7 @@ describe("guardrails do mapa sensorial", () => {
     expect(saturatedList).toEqual(["madison-kenny-all-systems-go.brightness"]);
   });
 
-  it("prefers-reduced-motion zera a perturbação ao vivo (P4)", () => {
+  it("prefers-reduced-motion zeroes the live perturbation (P4)", () => {
     for (const c of derived) {
       const r = reduceMotion(c);
       expect(r.reactionCap).toBe(0);
@@ -149,7 +149,7 @@ describe("guardrails do mapa sensorial", () => {
     }
   });
 
-  it("o acervo percorre os ranges de verdade, não em teoria", () => {
+  it("the catalogue spans the ranges for real, not in theory", () => {
     const amplitude = (f: (c: FieldConstants) => number, key: keyof typeof RANGE) => {
       const vs = derived.map(f);
       const [a, b] = RANGE[key];
@@ -163,7 +163,7 @@ describe("guardrails do mapa sensorial", () => {
 });
 
 describe("fieldConstantsOf", () => {
-  it("mapeia os extremos dos descritores nos extremos dos ranges", () => {
+  it("maps descriptor extremes onto range extremes", () => {
     const min = fieldConstantsOf(signature(0, 0, 0, 0));
     const max = fieldConstantsOf(signature(1, 1, 1, 1));
 
@@ -178,13 +178,13 @@ describe("fieldConstantsOf", () => {
     expect(max.navLerp).toBeLessThan(min.navLerp);
   });
 
-  it("o peso combina volume e duração na proporção 0,68/0,32 (P2)", () => {
+  it("weight blends loudness and duration at 0.68/0.32 (P2)", () => {
     expect(heftOf(signature(1, 0, 0, 0))).toBeCloseTo(0.68, 10);
     expect(heftOf(signature(0, 0, 0, 1))).toBeCloseTo(0.32, 10);
     expect(heftOf(signature(1, 0, 0, 1))).toBeCloseTo(1, 10);
   });
 
-  it("cada descritor move só os canais que lhe pertencem", () => {
+  it("each descriptor moves only the channels that belong to it", () => {
     const base = fieldConstantsOf(signature(0.5, 0.5, 0.5, 0.5));
     const bright = fieldConstantsOf(signature(0.5, 0.5, 1, 0.5));
 
@@ -199,58 +199,58 @@ describe("mixConstants", () => {
   const a = fieldConstantsOf(signature(0, 0, 0, 0));
   const b = fieldConstantsOf(signature(1, 1, 1, 1));
 
-  it("devolve os extremos em t=0 e t=1", () => {
+  it("returns the extremes at t=0 and t=1", () => {
     expect(mixConstants(a, b, 0)).toEqual(a);
     expect(mixConstants(a, b, 1)).toEqual(b);
   });
 
-  it("interpola linearmente no meio", () => {
+  it("interpolates linearly in between", () => {
     const m = mixConstants(a, b, 0.5);
     expect(m.massScale).toBeCloseTo((a.massScale + b.massScale) / 2, 10);
     expect(m.rimHardness).toBeCloseTo((a.rimHardness + b.rimHardness) / 2, 10);
   });
 
-  it("satura fora de [0,1] em vez de extrapolar", () => {
+  it("saturates outside [0,1] instead of extrapolating", () => {
     expect(mixConstants(a, b, -3)).toEqual(a);
     expect(mixConstants(a, b, 9)).toEqual(b);
   });
 });
 
-describe("viés de faixa nas constantes (P11)", () => {
+describe("track bias in the constants (P11)", () => {
   const sig = signature(0.5, 0.5, 0.5, 0.5);
 
-  it("sem viés, o resultado é idêntico ao do álbum", () => {
+  it("with no bias, the result is identical to the album's", () => {
     expect(fieldConstantsOf(sig, { loudness: 0, dynamics: 0, brightness: 0, pulse: 0 })).toEqual(
       fieldConstantsOf(sig),
     );
   });
 
-  it("a faixa move massa e teto de reação", () => {
+  it("the track moves mass and reaction ceiling", () => {
     const base = fieldConstantsOf(sig);
-    const forte = fieldConstantsOf(sig, { loudness: 0.2, dynamics: 0.2, brightness: 0, pulse: 0 });
-    expect(forte.massScale).toBeGreaterThan(base.massScale);
-    expect(forte.reactionCap).toBeGreaterThan(base.reactionCap);
+    const strong = fieldConstantsOf(sig, { loudness: 0.2, dynamics: 0.2, brightness: 0, pulse: 0 });
+    expect(strong.massScale).toBeGreaterThan(base.massScale);
+    expect(strong.reactionCap).toBeGreaterThan(base.reactionCap);
   });
 
-  it("a faixa não move a tipografia nem a inércia do álbum", () => {
+  it("the track moves neither the typography nor the album's inertia", () => {
     const base = fieldConstantsOf(sig);
-    const outra = fieldConstantsOf(sig, { loudness: -0.25, dynamics: 0.25, brightness: 0.12, pulse: 0 });
-    expect(outra.artistWeight).toBe(base.artistWeight);
-    expect(outra.navLerp).toBe(base.navLerp);
+    const other = fieldConstantsOf(sig, { loudness: -0.25, dynamics: 0.25, brightness: 0.12, pulse: 0 });
+    expect(other.artistWeight).toBe(base.artistWeight);
+    expect(other.navLerp).toBe(base.navLerp);
   });
 
-  it("o pulso da faixa move só o giro do campo", () => {
+  it("the track's pulse moves only the field's spin", () => {
     const base = fieldConstantsOf(sig);
     const firme = fieldConstantsOf(sig, { loudness: 0, dynamics: 0, brightness: 0, pulse: 0.12 });
-    const solto = fieldConstantsOf(sig, { loudness: 0, dynamics: 0, brightness: 0, pulse: -0.12 });
+    const loose = fieldConstantsOf(sig, { loudness: 0, dynamics: 0, brightness: 0, pulse: -0.12 });
 
     expect(firme.swirl).toBeGreaterThan(base.swirl);
-    expect(solto.swirl).toBeLessThan(base.swirl);
+    expect(loose.swirl).toBeLessThan(base.swirl);
     expect(firme.rimHardness).toBe(base.rimHardness);
     expect(firme.artistWeight).toBe(base.artistWeight);
   });
 
-  it("o brilho da faixa move só a dureza da luz", () => {
+  it("the track's brightness moves only the hardness of the light", () => {
     const base = fieldConstantsOf(sig);
     const clara = fieldConstantsOf(sig, { loudness: 0, dynamics: 0, brightness: 0.12, pulse: 0 });
     const escura = fieldConstantsOf(sig, { loudness: 0, dynamics: 0, brightness: -0.12, pulse: 0 });
@@ -261,7 +261,7 @@ describe("viés de faixa nas constantes (P11)", () => {
     expect(escura.navLerp).toBe(base.navLerp);
   });
 
-  it("nenhuma faixa do acervo escapa dos guardrails do álbum", () => {
+  it("no track in the catalogue escapes the album's guardrails", () => {
     for (const album of CURATION) {
       const s = SIGNATURES[album.id];
       for (const bias of trackBiasOf(s, album.tracks.length)) {
@@ -278,17 +278,17 @@ describe("viés de faixa nas constantes (P11)", () => {
     }
   });
 
-  it("o peso do artista é o mesmo em todas as faixas de um disco", () => {
+  it("the artist weight is the same across every track of a record", () => {
     for (const album of CURATION) {
       const s = SIGNATURES[album.id];
-      const pesos = trackBiasOf(s, album.tracks.length).map(
+      const weights = trackBiasOf(s, album.tracks.length).map(
         (bias) => fieldConstantsOf(s, bias).artistWeight,
       );
-      expect(new Set(pesos).size, album.id).toBe(1);
+      expect(new Set(weights).size, album.id).toBe(1);
     }
   });
 
-  it("reduceMotion continua zerando o teto de reação da faixa", () => {
+  it("reduceMotion still zeroes the track's reaction ceiling", () => {
     const c = reduceMotion(
       fieldConstantsOf(signature(0.9, 0.9, 0.5, 0.5), {
         loudness: 0.2,
@@ -301,33 +301,33 @@ describe("viés de faixa nas constantes (P11)", () => {
   });
 });
 
-describe("a luz atravessa a faixa (P12)", () => {
-  it("a varredura é simétrica em torno do meio da faixa", () => {
+describe("the light crosses the track (P12)", () => {
+  it("the sweep is symmetric around the track's midpoint", () => {
     expect(lightSweepOf(0.5)).toBe(0);
     expect(lightSweepOf(0)).toBeCloseTo(-LIGHT.arc / 2, 10);
     expect(lightSweepOf(1)).toBeCloseTo(LIGHT.arc / 2, 10);
   });
 
-  it("é monotônica e satura fora da faixa", () => {
+  it("is monotonic and saturates outside the track", () => {
     expect(lightSweepOf(0.25)).toBeLessThan(lightSweepOf(0.75));
     expect(lightSweepOf(-4)).toBe(lightSweepOf(0));
     expect(lightSweepOf(9)).toBe(lightSweepOf(1));
   });
 
-  it("a direção gira sem mudar de módulo", () => {
+  it("the direction rotates without changing magnitude", () => {
     const base = Math.hypot(...lightDirection(0));
     for (const p of [0, 0.25, 0.5, 0.75, 1]) {
       expect(Math.hypot(...lightDirection(lightSweepOf(p)))).toBeCloseTo(base, 10);
     }
   });
 
-  it("no meio da faixa a luz está na direção histórica do handoff", () => {
+  it("at the track's midpoint the light sits in the handoff's historical direction", () => {
     const [x, y] = lightDirection(lightSweepOf(0.5));
     expect(x).toBeCloseTo(LIGHT.base[0], 10);
     expect(y).toBeCloseTo(LIGHT.base[1], 10);
   });
 
-  it("o arco total percorrido é o declarado", () => {
+  it("the total arc travelled is the declared one", () => {
     const ang = (p: number) => Math.atan2(...(lightDirection(lightSweepOf(p)).reverse() as [number, number]));
     expect(ang(1) - ang(0)).toBeCloseTo(LIGHT.arc, 6);
   });

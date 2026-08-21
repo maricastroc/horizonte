@@ -142,21 +142,21 @@ export const CURATION: CuratedAlbum[] = [
       name: "CC BY 4.0",
       url: "https://creativecommons.org/licenses/by/4.0/",
       source: "https://tristanlohengrin.bandcamp.com/album/le-manoir-album-cc-by-40",
-      attribution: "Tristan Lohengrin — Le Manoir (Tristan Lohengrin (auto-publicado), 2019). Licenciado sob CC BY 4.0.",
+      attribution: "Tristan Lohengrin — Le Manoir (Tristan Lohengrin (self-released), 2019). Licensed under CC BY 4.0.",
       redistributable: true,
       cover: {
-        license: "Não declarada pelo autor",
-        credit: "Arte de David Harrington",
+        license: "Not declared by the author",
+        credit: "Art by David Harrington",
         source: "https://tristanlohengrin.bandcamp.com/album/le-manoir-album-cc-by-40"
       },
       verifiedAt: "2026-08-18",
       changes: [
-        "Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
-        "Capa recortada em quadrado central e reamostrada para 1024 px WebP."
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
       ]
     },
-    label: "Tristan Lohengrin (auto-publicado)",
-    note: "O autor acrescenta um termo extra: proibido registrar em Content ID."
+    label: "Tristan Lohengrin (self-released)",
+    note: "The author adds an extra term: registering in Content ID is forbidden."
   },
   {
     id: "jono-terbakar-lebar",
@@ -264,16 +264,16 @@ export const CURATION: CuratedAlbum[] = [
       name: "CC BY 4.0",
       url: "https://creativecommons.org/licenses/by/4.0/",
       source: "https://jonoterbakar.bandcamp.com/album/lebar",
-      attribution: "Jono Terbakar — lebar (Sangat Records, 2023). Licenciado sob CC BY 4.0.",
+      attribution: "Jono Terbakar — lebar (Sangat Records, 2023). Licensed under CC BY 4.0.",
       redistributable: true,
       cover: {
-        license: "Não declarada",
+        license: "Not declared",
         source: "https://jonoterbakar.bandcamp.com/album/lebar"
       },
       verifiedAt: "2026-08-18",
       changes: [
-        "Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
-        "Capa recortada em quadrado central e reamostrada para 1024 px WebP."
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
       ]
     },
     label: "Sangat Records"
@@ -364,19 +364,19 @@ export const CURATION: CuratedAlbum[] = [
       name: "CC BY 4.0",
       url: "https://creativecommons.org/licenses/by/4.0/",
       source: "https://lemortedabby.bandcamp.com/album/0p",
-      attribution: "Le Morte d'Abby — 0p (Le Morte d'Abby (auto-publicado), 2022). Licenciado sob CC BY 4.0.",
+      attribution: "Le Morte d'Abby — 0p (Le Morte d'Abby (self-released), 2022). Licensed under CC BY 4.0.",
       redistributable: true,
       cover: {
-        license: "Não declarada",
+        license: "Not declared",
         source: "https://lemortedabby.bandcamp.com/album/0p"
       },
       verifiedAt: "2026-08-18",
       changes: [
-        "Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
-        "Capa recortada em quadrado central e reamostrada para 1024 px WebP."
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
       ]
     },
-    label: "Le Morte d'Abby (auto-publicado)"
+    label: "Le Morte d'Abby (self-released)"
   },
   {
     id: "mark-wilson-x-dark-thoughts",
@@ -494,21 +494,21 @@ export const CURATION: CuratedAlbum[] = [
       name: "CC BY 4.0",
       url: "https://creativecommons.org/licenses/by/4.0/",
       source: "https://freemusicarchive.org/music/mark-wilson-x/dark-thoughts/",
-      attribution: "Mark Wilson X — Dark Thoughts (Mark Wilson X (auto-publicado), 2023). Licenciado sob CC BY 4.0.",
+      attribution: "Mark Wilson X — Dark Thoughts (Mark Wilson X (self-released), 2023). Licensed under CC BY 4.0.",
       redistributable: true,
       cover: {
         license: "Unsplash License",
-        credit: "Foto de Riccardo Pelati (Unsplash)",
+        credit: "Photo by Riccardo Pelati (Unsplash)",
         source: "https://markwilsonx.bandcamp.com/album/dark-thoughts-cc-by"
       },
       verifiedAt: "2026-08-18",
       changes: [
-        "Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
-        "Capa recortada em quadrado central e reamostrada para 1024 px WebP."
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
       ]
     },
-    label: "Mark Wilson X (auto-publicado)",
-    note: "Crédito exigido pelo autor: “[TÍTULO] © 2023 by Mark Wilson X is licensed under CC BY 4.0”."
+    label: "Mark Wilson X (self-released)",
+    note: "Credit required by the author: “[TITLE] © 2023 by Mark Wilson X is licensed under CC BY 4.0”."
   },
   {
     id: "darin-wilson-impromptu",
@@ -576,20 +576,20 @@ export const CURATION: CuratedAlbum[] = [
       name: "CC BY-SA 4.0",
       url: "https://creativecommons.org/licenses/by-sa/4.0/",
       source: "https://darinwilson.bandcamp.com/album/impromptu",
-      attribution: "Darin Wilson — Impromptu (Darin Wilson (auto-publicado), 2012). Licenciado sob CC BY-SA 4.0.",
+      attribution: "Darin Wilson — Impromptu (Darin Wilson (self-released), 2012). Licensed under CC BY-SA 4.0.",
       redistributable: true,
       cover: {
-        license: "Não declarada",
+        license: "Not declared",
         source: "https://darinwilson.bandcamp.com/album/impromptu"
       },
       verifiedAt: "2026-08-18",
       changes: [
-        "Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
-        "Capa recortada em quadrado central e reamostrada para 1024 px WebP."
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
       ]
     },
-    label: "Darin Wilson (auto-publicado)",
-    note: "Não é o álbum originalmente aguardado (Meanderings, H—007, ainda pendente): os arquivos fornecidos correspondem a Impromptu, cinco standards de jazz em piano solo. Licença é CC BY-SA 4.0 (Attribution-ShareAlike), não CC BY 4.0 — a obrigação extra de compartilhar a adaptação (o áudio recodificado) sob a mesma BY-SA se aplica a este álbum e é diferente do resto da coleção."
+    label: "Darin Wilson (self-released)",
+    note: "Not the album originally expected (Meanderings, H—007, still pending): the files provided correspond to Impromptu, five jazz standards on solo piano. The licence is CC BY-SA 4.0 (Attribution-ShareAlike), not CC BY 4.0 — the extra obligation to share the adaptation (the re-encoded audio) under the same BY-SA applies to this album and differs from the rest of the collection."
   },
   {
     id: "zero-project-e-world",
@@ -767,7 +767,7 @@ export const CURATION: CuratedAlbum[] = [
       name: "CC BY 4.0",
       url: "https://creativecommons.org/licenses/by/4.0/",
       source: "https://www.zero-project.gr/music/albums/e-world/",
-      attribution: "zero-project — e-world (zero-project, 2011). Licenciado sob CC BY 4.0.",
+      attribution: "zero-project — e-world (zero-project, 2011). Licensed under CC BY 4.0.",
       redistributable: true,
       cover: {
         license: "CC BY 4.0 (mesma da obra)",
@@ -775,8 +775,8 @@ export const CURATION: CuratedAlbum[] = [
       },
       verifiedAt: "2026-08-18",
       changes: [
-        "Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
-        "Capa recortada em quadrado central e reamostrada para 1024 px WebP."
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
       ]
     },
     label: "zero-project"
@@ -877,7 +877,7 @@ export const CURATION: CuratedAlbum[] = [
       name: "CC BY 4.0",
       url: "https://creativecommons.org/licenses/by/4.0/",
       source: "https://archive.org/details/tranz060TaleTwist-WryWay",
-      attribution: "Tale Twist — Wry Way (Tranzmitter Netlabel, 2016). Licenciado sob CC BY 4.0.",
+      attribution: "Tale Twist — Wry Way (Tranzmitter Netlabel, 2016). Licensed under CC BY 4.0.",
       redistributable: true,
       cover: {
         license: "CC BY 4.0 (mesma do item no Internet Archive)",
@@ -885,8 +885,8 @@ export const CURATION: CuratedAlbum[] = [
       },
       verifiedAt: "2026-08-18",
       changes: [
-        "Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
-        "Capa recortada em quadrado central e reamostrada para 1024 px WebP."
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
       ]
     },
     originalCat: "TRANZ060",
@@ -948,7 +948,7 @@ export const CURATION: CuratedAlbum[] = [
       name: "CC BY 4.0",
       url: "https://creativecommons.org/licenses/by/4.0/",
       source: "https://archive.org/details/MadKen001A",
-      attribution: "Madison Kenny — All Systems Go (Madison Kenny (auto-publicado), 2006). Licenciado sob CC BY 4.0.",
+      attribution: "Madison Kenny — All Systems Go (Madison Kenny (self-released), 2006). Licensed under CC BY 4.0.",
       redistributable: true,
       cover: {
         license: "CC BY 4.0 (mesma do item no Internet Archive)",
@@ -956,12 +956,12 @@ export const CURATION: CuratedAlbum[] = [
       },
       verifiedAt: "2026-08-18",
       changes: [
-        "Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
-        "Capa recortada em quadrado central e reamostrada para 1024 px WebP."
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
       ]
     },
     originalCat: "MadKen001A",
-    label: "Madison Kenny (auto-publicado)"
+    label: "Madison Kenny (self-released)"
   },
   {
     id: "meho-mkultra",
@@ -1039,7 +1039,7 @@ export const CURATION: CuratedAlbum[] = [
       name: "CC BY 4.0",
       url: "https://creativecommons.org/licenses/by/4.0/",
       source: "https://archive.org/details/Meho-Mkultracz015",
-      attribution: "Meho — MKUltra (Cezanne Records, 2015). Licenciado sob CC BY 4.0.",
+      attribution: "Meho — MKUltra (Cezanne Records, 2015). Licensed under CC BY 4.0.",
       redistributable: true,
       cover: {
         license: "CC BY 4.0 (mesma do item no Internet Archive)",
@@ -1047,8 +1047,8 @@ export const CURATION: CuratedAlbum[] = [
       },
       verifiedAt: "2026-08-18",
       changes: [
-        "Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
-        "Capa recortada em quadrado central e reamostrada para 1024 px WebP."
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
       ]
     },
     originalCat: "cz015",
@@ -1110,7 +1110,7 @@ export const CURATION: CuratedAlbum[] = [
       name: "CC BY 4.0",
       url: "https://creativecommons.org/licenses/by/4.0/",
       source: "https://archive.org/details/Session17-20jajceSessionscz012",
-      attribution: "Mescaline Sessions — Jajce Sessions (Cezanne Records, 2014). Licenciado sob CC BY 4.0.",
+      attribution: "Mescaline Sessions — Jajce Sessions (Cezanne Records, 2014). Licensed under CC BY 4.0.",
       redistributable: true,
       cover: {
         license: "CC BY 4.0 (mesma do item no Internet Archive)",
@@ -1118,8 +1118,8 @@ export const CURATION: CuratedAlbum[] = [
       },
       verifiedAt: "2026-08-18",
       changes: [
-        "Áudio recodificado para AAC 96 kbps (.m4a) para entrega web; sem edição de conteúdo.",
-        "Capa recortada em quadrado central e reamostrada para 1024 px WebP."
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
       ]
     },
     originalCat: "cz012",
@@ -1133,7 +1133,7 @@ export const BLOCKED: BlockedAlbum[] = [
     artist: "WIDDER",
     title: "shadows of WIDDER",
     source: "https://widder-music.bandcamp.com/album/shadows-of-widder",
-    reason: "Licença contraditória na própria página: o selo Creative Commons aponta para by-sa/4.0 enquanto o texto afirma “Attribution 4.0 International”. BY-SA e BY impõem obrigações diferentes; escolher uma seria presumir. Precisa de confirmação do artista.",
+    reason: "Contradictory licence on the page itself: the Creative Commons badge points to by-sa/4.0 while the text states “Attribution 4.0 International”. BY-SA and BY impose different obligations; picking one would be presuming. Needs confirmation from the artist.",
     verifiedAt: "2026-08-18"
   },
   {
@@ -1141,7 +1141,7 @@ export const BLOCKED: BlockedAlbum[] = [
     artist: "Noctilia Grah",
     title: "Background Music For Video Essays About Video Games",
     source: "https://noctiliagrah.bandcamp.com/",
-    reason: "Sem licença Creative Commons verificável. O subdomínio noctiliagrah.bandcamp.com não existe (o Bandcamp o oferece para cadastro). A única declaração encontrada é um termo próprio, “free to use in noncommercial works, with credit”, que não é CC e é incompatível com hospedar o arquivo num projeto potencialmente comercial.",
+    reason: "No verifiable Creative Commons licence. The subdomain noctiliagrah.bandcamp.com does not exist (Bandcamp offers it for registration). The only statement found is a bespoke term, “free to use in noncommercial works, with credit”, which is not CC and is incompatible with hosting the file in a potentially commercial project.",
     verifiedAt: "2026-08-18"
   },
   {
@@ -1149,7 +1149,7 @@ export const BLOCKED: BlockedAlbum[] = [
     artist: "ApophysiA",
     title: "From The Universe To The Past",
     source: "https://apophysia.bandcamp.com/album/from-the-universe-to-the-past",
-    reason: "Licença contraditória na própria página, mesmo padrão que já excluiu WIDDER: o selo estruturado do Bandcamp aponta para creativecommons.org/licenses/by-nc-nd/4.0 (NonCommercial-NoDerivatives) enquanto o texto do artista afirma “is licensed under a Creative Commons Attribution 4.0 International License” (CC BY puro, sem NC nem ND). Duas licenças incompatíveis declaradas no mesmo lançamento; escolher uma seria presumir. Verificado a pedido do usuário como possível substituto; rejeitado antes de qualquer download.",
+    reason: "Contradictory licence on the page itself, the same pattern that already excluded WIDDER: Bandcamp's structured badge points to creativecommons.org/licenses/by-nc-nd/4.0 (NonCommercial-NoDerivatives) while the artist's text states “is licensed under a Creative Commons Attribution 4.0 International License” (plain CC BY, no NC, no ND). Two incompatible licences declared on the same release; picking one would be presuming. Checked at the user's request as a possible replacement; rejected before any download.",
     verifiedAt: "2026-08-18"
   },
   {
@@ -1157,7 +1157,7 @@ export const BLOCKED: BlockedAlbum[] = [
     artist: "ApophysiA",
     title: "Compilations and other Stories",
     source: "https://apophysia.bandcamp.com/album/compilations-and-other-stories",
-    reason: "CC BY-NC-ND 4.0 — selo estruturado do Bandcamp, sem nenhuma declaração textual do artista que a contradiga ou abrande (ao contrário de From The Universe To The Past, H—014, que ao menos tinha um texto conflitante). NoDerivatives proíbe a recodificação que este projeto sempre faz; NonCommercial é uma segunda restrição incompatível. Verificado a pedido do usuário como possível substituto; rejeitado antes de qualquer download.",
+    reason: "CC BY-NC-ND 4.0 — Bandcamp's structured badge, with no textual statement from the artist contradicting or softening it (unlike From The Universe To The Past, H—014, which at least had conflicting text). NoDerivatives forbids the re-encoding this project always performs; NonCommercial is a second incompatible restriction. Checked at the user's request as a possible replacement; rejected before any download.",
     verifiedAt: "2026-08-18"
   },
   {
@@ -1165,7 +1165,7 @@ export const BLOCKED: BlockedAlbum[] = [
     artist: "Stellardrone",
     title: "On A Beam Of Light",
     source: "https://archive.org/details/OnABeamOfLight",
-    reason: "Licença confirmada em archive.org (mirror com metadados estruturados do lançamento original no Jamendo): CC BY-NC-ND 3.0. A cláusula NoDerivatives proíbe a adaptação que este projeto sempre faz (recodificar para AAC) — mesmo motivo que já havia excluído tranz023Holocaos. NonCommercial adiciona uma segunda restrição incompatível com um projeto que pode vir a ser comercial. Verificado a pedido do usuário como possível substituto; rejeitado pela mesma regra aplicada a todo o resto da curadoria.",
+    reason: "Licence confirmed on archive.org (a mirror carrying structured metadata from the original Jamendo release): CC BY-NC-ND 3.0. The NoDerivatives clause forbids the adaptation this project always performs (re-encoding to AAC) — the same reason that already excluded tranz023Holocaos. NonCommercial adds a second restriction incompatible with a project that may become commercial. Checked at the user's request as a possible replacement; rejected under the same rule applied to the rest of the curation.",
     verifiedAt: "2026-08-18"
   },
   {
@@ -1173,7 +1173,7 @@ export const BLOCKED: BlockedAlbum[] = [
     artist: "Ivan Duch",
     title: "Sand",
     source: "https://ivanduch.com/albums/sand/",
-    reason: "Não é CC BY. É um pack comercial de US$ 4,00 sob “licença não-exclusiva que exige atribuição” — termo proprietário do autor, sem permissão de redistribuição. A biblioteca CC BY 4.0 do Ivan Duch existe, mas Sand não faz parte dela.",
+    reason: "Not CC BY. It is a commercial US$ 4.00 pack under a “non-exclusive licence requiring attribution” — the author's own proprietary term, with no redistribution permission. Ivan Duch's CC BY 4.0 library does exist, but Sand is not part of it.",
     verifiedAt: "2026-08-18"
   },
 ];

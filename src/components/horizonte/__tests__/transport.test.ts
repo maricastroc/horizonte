@@ -21,13 +21,13 @@ const playing = (over: Partial<FieldState> = {}) =>
 const kinds = (effects: AudioEffect[]) => effects.map((e) => e.kind);
 
 describe("enterAlbum", () => {
-  it("leva a scale do álbum e alinha a navegação", () => {
+  it("takes the album scale and aligns navigation", () => {
     const s = state();
     expect(T.enterAlbum(s, catalog, 2)).toEqual([]);
     expect(s).toMatchObject({ alb: 2, navT: 2, scale: "album", zoomT: 1 });
   });
 
-  it("arredonda e satura dentro do acervo", () => {
+  it("rounds and saturates inside the catalogue", () => {
     const s = state();
     T.enterAlbum(s, catalog, 9);
     expect(s.alb).toBe(2);
@@ -37,21 +37,21 @@ describe("enterAlbum", () => {
     expect(s.alb).toBe(2);
   });
 
-  it("entrar no álbum que toca seleciona a faixa em curso", () => {
+  it("entering the playing album selects the current track", () => {
     const s = state({ playAlb: 1, trk: 2 });
     T.enterAlbum(s, catalog, 1);
     expect(s.sel).toBe(2);
   });
 
-  it("entrar em outro álbum começa da primeira faixa", () => {
+  it("entering another album starts from the first track", () => {
     const s = state({ playAlb: 1, trk: 2 });
     T.enterAlbum(s, catalog, 0);
     expect(s.sel).toBe(0);
   });
 });
 
-describe("enterAlbum — a escuta atravessa a troca de disco", () => {
-  it("parado, entrar num álbum continua em silêncio", () => {
+describe("enterAlbum — listening survives the record swap", () => {
+  it("at rest, entering an album stays silent", () => {
     const s = state();
     expect(T.enterAlbum(s, catalog, 2)).toEqual([]);
     expect(s.playAlb).toBe(-1);
@@ -59,7 +59,7 @@ describe("enterAlbum — a escuta atravessa a troca de disco", () => {
     expect(s.scale).toBe("album");
   });
 
-  it("tocando, entrar noutro álbum abre pela primeira faixa", () => {
+  it("while playing, entering another album opens on the first track", () => {
     const s = playing();
     const effects = T.enterAlbum(s, catalog, 2);
 
@@ -70,18 +70,18 @@ describe("enterAlbum — a escuta atravessa a troca de disco", () => {
     expect(s.dur).toBe(catalog.trackDuration(2, 0));
   });
 
-  it("a troca de disco é emenda, não cerimônia: o mundo se apresenta uma vez só", () => {
+  it("swapping records is a splice, not a ceremony: the world introduces itself once", () => {
     const s = playing({ seqT: 9 });
     T.enterAlbum(s, catalog, 2);
 
     expect(s.mode).toBe("playing");
     expect(s.segueT).toBe(0);
-    expect(s.seqT, "nenhuma cerimônia foi armada").toBe(9);
+    expect(s.seqT, "no ceremony was armed").toBe(9);
     expect(s.mix).toBe(0);
     expect(s.waveR).toBeLessThan(0);
   });
 
-  it("depois da troca o transporte pausa em vez de recomeçar", () => {
+  it("after the swap the transport pauses instead of restarting", () => {
     const s = playing();
     T.enterAlbum(s, catalog, 2);
 
@@ -90,14 +90,14 @@ describe("enterAlbum — a escuta atravessa a troca de disco", () => {
     expect(s.trk).toBe(0);
   });
 
-  it("pausado, entrar noutro álbum respeita a pausa", () => {
+  it("while paused, entering another album respects the pause", () => {
     const s = playing({ mode: "paused" });
     expect(T.enterAlbum(s, catalog, 2)).toEqual([]);
     expect(s.playAlb).toBe(1);
     expect(s.mode).toBe("paused");
   });
 
-  it("entrar no disco que já toca não reinicia a faixa", () => {
+  it("entering the record already playing does not restart the track", () => {
     const s = playing({ trk: 2, sel: 2 });
     expect(T.enterAlbum(s, catalog, 1)).toEqual([]);
     expect(s.trk).toBe(2);
@@ -105,7 +105,7 @@ describe("enterAlbum — a escuta atravessa a troca de disco", () => {
     expect(s.mode).toBe("playing");
   });
 
-  it("a navegação acompanha o disco em qualquer caminho", () => {
+  it("navigation follows the record along every path", () => {
     const s = playing({ navT: 1 });
     T.enterAlbum(s, catalog, 2);
     expect(s.navT).toBe(s.alb);
@@ -122,7 +122,7 @@ describe("enterAlbum — a escuta atravessa a troca de disco", () => {
 });
 
 describe("playTrack", () => {
-  it("colapsa para a faixa e pede o carregamento", () => {
+  it("collapses to the track and asks for the load", () => {
     const s = state({ alb: 2 });
     const effects = T.playTrack(s, catalog, 2, 3);
     expect(effects).toEqual([{ kind: "load", alb: 2, trk: 3 }]);
@@ -132,20 +132,20 @@ describe("playTrack", () => {
     expect(s.dur).toBe(catalog.trackDuration(2, 3));
   });
 
-  it("pedir a faixa que já toca alterna o transporte", () => {
+  it("asking for the track already playing toggles the transport", () => {
     const s = playing();
     expect(kinds(T.playTrack(s, catalog, 1, 1))).toEqual(["pause"]);
     expect(s.mode).toBe("paused");
   });
 
-  it("outra faixa com o disco engajado funde em vez de recomeçar", () => {
+  it("another track with the record engaged fuses instead of restarting", () => {
     const s = playing();
     expect(T.playTrack(s, catalog, 1, 2)).toEqual([]);
     expect(s).toMatchObject({ mode: "fusion", fuseAlb: 1, fuseB: 2 });
     expect(s.trk).toBe(1);
   });
 
-  it("fora da scale de faixa, sempre recomeça", () => {
+  it("outside the track scale, it always restarts", () => {
     const s = state({ scale: "album", mode: "playing", playAlb: 1, alb: 1, trk: 1 });
     expect(kinds(T.playTrack(s, catalog, 1, 2))).toEqual(["load"]);
     expect(s.mode).toBe("collapse");
@@ -153,31 +153,31 @@ describe("playTrack", () => {
 });
 
 describe("transport", () => {
-  it("sem faixa carregada, toca a seleção", () => {
+  it("with no loaded track, it plays the selection", () => {
     const s = state({ scale: "album", alb: 2, sel: 3 });
     expect(kinds(T.transport(s, catalog))).toEqual(["load"]);
     expect(s).toMatchObject({ playAlb: 2, trk: 3 });
   });
 
-  it("tocando vira pausa", () => {
+  it("playing becomes paused", () => {
     const s = playing();
     expect(kinds(T.transport(s, catalog))).toEqual(["pause"]);
     expect(s.mode).toBe("paused");
   });
 
-  it("o colapso também pode ser interrompido", () => {
+  it("the collapse can be interrupted too", () => {
     const s = playing({ mode: "collapse" });
     expect(kinds(T.transport(s, catalog))).toEqual(["pause"]);
     expect(s.mode).toBe("paused");
   });
 
-  it("pausado volta a tocar", () => {
+  it("paused, it plays again", () => {
     const s = playing({ mode: "paused" });
     expect(kinds(T.transport(s, catalog))).toEqual(["play"]);
     expect(s.mode).toBe("playing");
   });
 
-  it("durante a fusão o transporte não responde", () => {
+  it("during the fusion the transport does not respond", () => {
     const s = playing({ mode: "fusion" });
     expect(T.transport(s, catalog)).toEqual([]);
     expect(s.mode).toBe("fusion");
@@ -185,25 +185,25 @@ describe("transport", () => {
 });
 
 describe("back", () => {
-  it("da faixa volta ao álbum", () => {
+  it("from the track it returns to the album", () => {
     const s = playing();
     T.back(s);
     expect(s).toMatchObject({ scale: "album", zoomT: 1 });
   });
 
-  it("do álbum volta à coleção e solta o hover", () => {
+  it("from the album it returns to the collection and releases the hover", () => {
     const s = state({ scale: "album", hover: 3 });
     T.back(s);
     expect(s).toMatchObject({ scale: "collection", zoomT: 0, hover: -1 });
   });
 
-  it("na coleção não há para onde voltar", () => {
+  it("in the collection there is nowhere to go back to", () => {
     const s = state();
     T.back(s);
     expect(s.scale).toBe("collection");
   });
 
-  it("voltar não interrompe a reprodução", () => {
+  it("going back does not interrupt playback", () => {
     const s = playing();
     T.back(s);
     T.back(s);
@@ -213,31 +213,31 @@ describe("back", () => {
 });
 
 describe("goScale", () => {
-  it("a coleção é sempre alcançável", () => {
+  it("the collection is always reachable", () => {
     const s = playing({ hover: 2 });
     T.goScale(s, catalog, "collection");
     expect(s).toMatchObject({ scale: "collection", zoomT: 0, hover: -1 });
   });
 
-  it("da coleção, o álbum é o que está sob a navegação", () => {
+  it("from the collection, the album is whatever navigation sits on", () => {
     const s = state({ nav: 1.6 });
     T.goScale(s, catalog, "album");
     expect(s).toMatchObject({ scale: "album", alb: 2 });
   });
 
-  it("da faixa, o álbum é só uma mudança de scale", () => {
+  it("from the track, the album is only a change of scale", () => {
     const s = playing();
     T.goScale(s, catalog, "album");
     expect(s).toMatchObject({ scale: "album", zoomT: 1, alb: 1 });
   });
 
-  it("a faixa volta para o disco que está tocando", () => {
+  it("the track returns to the record that is playing", () => {
     const s = state({ scale: "collection", playAlb: 2, trk: 1, alb: 0 });
     expect(T.goScale(s, catalog, "track")).toEqual([]);
     expect(s).toMatchObject({ scale: "track", alb: 2 });
   });
 
-  it("sem nada tocando, a faixa começa a seleção atual", () => {
+  it("with nothing playing, the track starts the current selection", () => {
     const s = state({ scale: "album", alb: 2, sel: 3 });
     expect(kinds(T.goScale(s, catalog, "track"))).toEqual(["load"]);
     expect(s).toMatchObject({ playAlb: 2, trk: 3 });
@@ -245,31 +245,31 @@ describe("goScale", () => {
 });
 
 describe("primary", () => {
-  it("na coleção, entra no álbum sob a navegação", () => {
+  it("in the collection, it enters the album under navigation", () => {
     const s = state({ nav: 2.4 });
     T.primary(s, catalog);
     expect(s).toMatchObject({ scale: "album", alb: 2 });
   });
 
-  it("no álbum, toca a seleção", () => {
+  it("in the album, it plays the selection", () => {
     const s = state({ scale: "album", alb: 2, sel: 1 });
     expect(kinds(T.primary(s, catalog))).toEqual(["load"]);
   });
 
-  it("na faixa, alterna o transporte", () => {
+  it("on the track, it toggles the transport", () => {
     const s = playing();
     expect(kinds(T.primary(s, catalog))).toEqual(["pause"]);
   });
 });
 
 describe("stepSel", () => {
-  it("na coleção não há seleção para mover", () => {
+  it("in the collection there is no selection to move", () => {
     const s = state();
     expect(T.stepSel(s, catalog, 1)).toEqual([]);
     expect(s.sel).toBe(0);
   });
 
-  it("circula dentro do álbum nos dois sentidos", () => {
+  it("cycles inside the album in both directions", () => {
     const s = state({ scale: "album", alb: 2, sel: 3 });
     T.stepSel(s, catalog, 1);
     expect(s.sel).toBe(0);
@@ -277,13 +277,13 @@ describe("stepSel", () => {
     expect(s.sel).toBe(3);
   });
 
-  it("com o disco engajado, mover a seleção funde", () => {
+  it("with the record engaged, moving the selection fuses", () => {
     const s = playing({ alb: 1, sel: 1 });
     T.stepSel(s, catalog, 1);
     expect(s).toMatchObject({ mode: "fusion", fuseB: 2, fuseAlb: 1 });
   });
 
-  it("no álbum, mover a seleção não mexe no áudio", () => {
+  it("in the album, moving the selection does not touch the audio", () => {
     const s = state({ scale: "album", mode: "playing", playAlb: 1, alb: 1, sel: 0 });
     expect(T.stepSel(s, catalog, 1)).toEqual([]);
     expect(s.mode).toBe("playing");
@@ -291,13 +291,13 @@ describe("stepSel", () => {
 });
 
 describe("skip", () => {
-  it("na coleção sem nada tocando, atravessa os discos", () => {
+  it("in the collection with nothing playing, it crosses the records", () => {
     const s = state({ nav: 0.4 });
     T.skip(s, catalog, 1);
     expect(s.navT).toBe(1);
   });
 
-  it("na coleção, para nas bordas do acervo", () => {
+  it("in the collection, it stops at the catalogue's edges", () => {
     const s = state({ nav: 0 });
     T.skip(s, catalog, -1);
     expect(s.navT).toBe(0);
@@ -306,59 +306,59 @@ describe("skip", () => {
     expect(s.navT).toBe(2);
   });
 
-  it("com faixa em curso, funde para a próxima", () => {
+  it("with a track running, it fuses to the next", () => {
     const s = playing({ alb: 1, trk: 1 });
     T.skip(s, catalog, 1);
     expect(s).toMatchObject({ mode: "fusion", fuseAlb: 1, fuseB: 2 });
   });
 
-  it("circula no fim do disco", () => {
+  it("cycles at the record's end", () => {
     const s = playing({ alb: 1, trk: 2 });
     T.skip(s, catalog, 1);
     expect(s.fuseB).toBe(0);
   });
 
-  it("anterior na primeira faixa vai para a última", () => {
+  it("previous on the first track goes to the last", () => {
     const s = playing({ alb: 1, trk: 0 });
     T.skip(s, catalog, -1);
     expect(s.fuseB).toBe(2);
   });
 
-  it("durante o colapso também funde", () => {
+  it("during the collapse it fuses too", () => {
     const s = playing({ mode: "collapse", alb: 1, trk: 0 });
     T.skip(s, catalog, 1);
     expect(s.mode).toBe("fusion");
   });
 
-  it("folheando o disco que toca, pular ainda troca a faixa", () => {
+  it("browsing the playing record, skipping still swaps the track", () => {
     const s = state({ scale: "album", alb: 2, sel: 0, playAlb: 2, mode: "playing" });
     expect(T.skip(s, catalog, 1)).toEqual([]);
     expect(s).toMatchObject({ mode: "fusion", fuseAlb: 2, fuseB: 1 });
   });
 
-  it("folheando outro disco, pular só move a seleção", () => {
+  it("browsing another record, skipping only moves the selection", () => {
     const s = state({ scale: "album", alb: 0, sel: 0, playAlb: 2, trk: 3, mode: "playing" });
     expect(T.skip(s, catalog, 1)).toEqual([]);
     expect(s).toMatchObject({ sel: 1, mode: "playing", playAlb: 2, trk: 3 });
   });
 });
 
-describe("fusão", () => {
-  it("uma fusão em curso não é interrompida por outra", () => {
+describe("fusion", () => {
+  it("a fusion in progress is not interrupted by another", () => {
     const s = playing();
     T.fuseTo(s, 1, 2);
     T.fuseTo(s, 0, 0);
     expect(s).toMatchObject({ fuseAlb: 1, fuseB: 2 });
   });
 
-  it("a fusão nasce com o áudio ainda não trocado", () => {
+  it("the fusion is born with the audio not yet swapped", () => {
     const s = playing();
     T.fuseTo(s, 1, 2);
     expect(s.fuseLoaded).toBe(false);
     expect(s.mix).toBe(0);
   });
 
-  it("a troca de áudio acontece uma vez só", () => {
+  it("the audio swap happens exactly once", () => {
     const s = playing();
     T.fuseTo(s, 1, 2);
     expect(T.commitFusion(s, catalog)).toEqual([{ kind: "load", alb: 1, trk: 2 }]);
@@ -366,14 +366,14 @@ describe("fusão", () => {
     expect(T.commitFusion(s, catalog)).toEqual([]);
   });
 
-  it("uma faixa inexistente não gera carregamento", () => {
+  it("a nonexistent track triggers no load", () => {
     const s = playing();
     T.fuseTo(s, 1, 99);
     expect(T.commitFusion(s, catalog)).toEqual([]);
     expect(s.fuseLoaded).toBe(true);
   });
 
-  it("encerrar promove o alvo a faixa em curso", () => {
+  it("ending promotes the target to the current track", () => {
     const s = playing({ alb: 1, trk: 0 });
     T.fuseTo(s, 2, 3);
     T.endFusion(s, catalog, 0);
@@ -384,14 +384,14 @@ describe("fusão", () => {
     expect(s.dur).toBe(catalog.trackDuration(2, 3));
   });
 
-  it("a duração real do arquivo tem precedência sobre a do catálogo", () => {
+  it("the file's real duration takes precedence over the catalogue's", () => {
     const s = playing();
     T.fuseTo(s, 2, 3);
     T.endFusion(s, catalog, 321.5);
     expect(s.dur).toBe(321.5);
   });
 
-  it("encerrar no álbum não arrasta a scale para a faixa", () => {
+  it("ending on the album does not drag the scale to the track", () => {
     const s = state({ scale: "album", mode: "fusion", fuseAlb: 2, fuseB: 1 });
     T.endFusion(s, catalog, 0);
     expect(s.scale).toBe("album");
@@ -399,50 +399,50 @@ describe("fusão", () => {
 });
 
 describe("seekFraction", () => {
-  it("sem duração conhecida não busca", () => {
+  it("with no known duration it does not seek", () => {
     const s = playing({ dur: 0 });
     expect(T.seekFraction(s, 0.5)).toEqual([]);
   });
 
-  it("converte a fração em segundos", () => {
+  it("converts the fraction into seconds", () => {
     const s = playing({ dur: 200 });
     expect(T.seekFraction(s, 0.25)).toEqual([{ kind: "seek", seconds: 50 }]);
   });
 
-  it("satura a fração nas bordas da faixa", () => {
+  it("saturates the fraction at the track's edges", () => {
     const s = playing({ dur: 200 });
     expect(T.seekFraction(s, -3)).toEqual([{ kind: "seek", seconds: 0 }]);
     expect(T.seekFraction(s, 9)).toEqual([{ kind: "seek", seconds: 200 }]);
   });
 });
 
-describe("fim natural da faixa", () => {
-  it("emenda na próxima sem cerimônia de fusão", () => {
+describe("the track's natural end", () => {
+  it("splices into the next with no fusion ceremony", () => {
     const s = playing({ playAlb: 1, trk: 0 });
     expect(T.trackEnded(s, catalog)).toEqual([{ kind: "load", alb: 1, trk: 1 }]);
     expect(s).toMatchObject({ mode: "playing", trk: 1, sel: 1, pos: 0, segueT: 0 });
     expect(s.dur).toBe(catalog.trackDuration(1, 1));
   });
 
-  it("a emenda não desloca a escala nem o álbum em foco", () => {
+  it("the splice moves neither the scale nor the focused album", () => {
     const s = playing({ playAlb: 1, trk: 0, alb: 2, scale: "album", sel: 1 });
     T.trackEnded(s, catalog);
     expect(s).toMatchObject({ scale: "album", alb: 2, sel: 1, trk: 1 });
   });
 
-  it("volta ao começo do disco depois da última", () => {
+  it("returns to the start of the record after the last", () => {
     const s = playing({ playAlb: 1, trk: 2 });
     T.trackEnded(s, catalog);
     expect(s.trk).toBe(0);
   });
 
-  it("sem disco em curso, não há emenda", () => {
+  it("with no record running, there is no splice", () => {
     const s = state();
     expect(T.trackEnded(s, catalog)).toEqual([]);
     expect(s.mode).toBe("stopped");
   });
 
-  it("durante uma fusão, o fim da faixa não atropela a cerimônia", () => {
+  it("during a fusion, the track's end does not trample the ceremony", () => {
     const s = playing({ playAlb: 1, trk: 0 });
     T.fuseTo(s, 1, 2);
     expect(T.trackEnded(s, catalog)).toEqual([]);
@@ -450,8 +450,8 @@ describe("fim natural da faixa", () => {
   });
 });
 
-describe("a fusão não sequestra o álbum em foco", () => {
-  it("navegar durante a fusão mantém o álbum escolhido pelo usuário", () => {
+describe("the fusion does not hijack the focused album", () => {
+  it("navigating during the fusion keeps the album the user chose", () => {
     const s = playing({ alb: 1, trk: 0 });
     T.fuseTo(s, 1, 1);
     T.enterAlbum(s, catalog, 2);
@@ -460,7 +460,7 @@ describe("a fusão não sequestra o álbum em foco", () => {
     expect(s).toMatchObject({ alb: 2, scale: "album", playAlb: 1, trk: 1 });
   });
 
-  it("sem navegar, o alvo continua sendo promovido", () => {
+  it("without navigating, the target is still promoted", () => {
     const s = playing({ alb: 1, trk: 0 });
     T.fuseTo(s, 2, 3);
     T.endFusion(s, catalog, 0);

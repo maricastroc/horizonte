@@ -122,7 +122,7 @@ function trackLabels(
   const N = A.tracks.length;
   const bounds = boundsOf(A.signature, N);
   const flatten = m.flatten;
-  const mudo = L.ringLabels === "nenhum";
+  const silent = L.ringLabels === "none";
   x.save();
   x.textBaseline = "middle";
   ls(x, "0.2em");
@@ -134,9 +134,9 @@ function trackLabels(
     const px = Math.max(W * 0.055, Math.min(W * 0.62, bx + Math.cos(a) * reach));
     const py = Math.max(H * 0.09, Math.min(H * 0.84, by + Math.sin(a) * reach * flatten));
     const on = k === s.sel || (s.playAlb === s.alb && k === s.trk);
-    if (L.ringLabels !== "todos" && !on) continue;
+    if (L.ringLabels !== "all" && !on) continue;
 
-    if (!mudo) {
+    if (!silent) {
       const hidden = Math.cos(a) > 0.3 || (py > H * 0.6 && px < W * 0.46);
       if (hidden && !on) continue;
 
@@ -151,7 +151,7 @@ function trackLabels(
     }
 
     const tick = outerAt(m, t) * R;
-    const far = mudo ? tick * 1.3 : reach - R * 0.05;
+    const far = silent ? tick * 1.3 : reach - R * 0.05;
     x.globalAlpha = s.fadeSel * (on ? 0.6 : 0.18);
     x.strokeStyle = on ? rgba(A.inkA, 1) : COLOR.dust;
     x.lineWidth = 1;
@@ -247,7 +247,7 @@ export function drawBack(
     x.globalAlpha = a * (i === s.hoverBody ? 0.95 : 0.5);
     x.font = `500 ${W * 0.0092}px ${fonts.mono}`;
     x.fillText(
-      `${ALBUMS[i].cat} · ${ALBUMS[i].tracks.length} FAIXAS`,
+      `${ALBUMS[i].cat} · ${ALBUMS[i].tracks.length} TRACKS`,
       nx,
       ny + br + M * 0.105 * p.depth,
     );

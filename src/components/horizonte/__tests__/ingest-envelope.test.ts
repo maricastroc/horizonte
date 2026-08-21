@@ -78,11 +78,11 @@ const rawEnvelopesOfAlbum = (slug: string, shift: number) =>
 
 const ONE_SAMPLE = 1;
 
-describe.skipIf(!has)("estabilidade do envelope do álbum", () => {
+describe.skipIf(!has)("album envelope stability", () => {
   const CHAOTIC = "zero-project-e-world";
   const STABLE = "meho-mkultra";
 
-  it("uma amostra de deslocamento (45 µs) já reescreve o envelope de um disco longo", () => {
+  it("a one-sample shift (45 µs) already rewrites a long record's envelope", () => {
     const base = envelopeOfAlbum(CHAOTIC, 0);
     const shifted = envelopeOfAlbum(CHAOTIC, ONE_SAMPLE);
     let maxDelta = 0;
@@ -93,7 +93,7 @@ describe.skipIf(!has)("estabilidade do envelope do álbum", () => {
     expect(maxDelta).toBeGreaterThan(40);
   }, 120_000);
 
-  it("o envelope bruto, antes da decimação, é estável sob o mesmo deslocamento", () => {
+  it("the raw envelope, before decimation, is stable under the same shift", () => {
     const base = rawEnvelopesOfAlbum(CHAOTIC, 0);
     const shifted = rawEnvelopesOfAlbum(CHAOTIC, ONE_SAMPLE);
     expect(base).toHaveLength(shifted.length);
@@ -103,7 +103,7 @@ describe.skipIf(!has)("estabilidade do envelope do álbum", () => {
     });
   }, 120_000);
 
-  it("um disco de envelope lento atravessa a decimação sem se mexer", () => {
+  it("a record with a slow envelope crosses decimation without moving", () => {
     const base = envelopeOfAlbum(STABLE, 0);
     const shifted = envelopeOfAlbum(STABLE, ONE_SAMPLE);
     let maxDelta = 0;
@@ -114,7 +114,7 @@ describe.skipIf(!has)("estabilidade do envelope do álbum", () => {
     expect(maxDelta).toBeLessThanOrEqual(2);
   }, 120_000);
 
-  it("a decimação do acervo é agressiva o bastante para permitir aliasing", () => {
+  it("the catalogue's decimation is aggressive enough to allow aliasing", () => {
     const sig = SIGNATURES[CHAOTIC];
     expect(sig.measured.durationS / ENV_WIN / 512).toBeGreaterThan(40);
     expect(SR * ENV_WIN).toBe(4410);

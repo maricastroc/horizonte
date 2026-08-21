@@ -57,7 +57,7 @@ todos os escalares. É o que `__tests__/ingest-parity.test.ts` verifica
 
 ### O decode não é idêntico — e por quê
 
-Medindo os mesmos `.m4a` de ponta a ponta no navegador (`/aferir` em
+Medindo os mesmos `.m4a` de ponta a ponta no navegador (`/parity` em
 desenvolvimento), a divergência inicial em volume era de **20,5%**. A causa não
 era o DSP:
 
@@ -326,12 +326,12 @@ de ingestão, que continua dominado pelo decode.
 
 ## Aferir
 
-Em desenvolvimento, `/aferir` mede os álbuns curados pelo caminho do navegador e
+Em desenvolvimento, `/parity` mede os álbuns curados pelo caminho do navegador e
 compara com `signature.generated.ts`: escalares, envelope, spans, normalizados,
 constantes do campo, viés por faixa e tempos. A rota não existe em produção.
 
 ```bash
-npm run dev            # e abrir /aferir
+npm run dev            # e abrir /parity
 npx vitest run src/components/horizonte/__tests__/ingest-parity.test.ts
 PARITY_STRICT=1 npx vitest run src/components/horizonte/__tests__/ingest-parity.test.ts
 ```

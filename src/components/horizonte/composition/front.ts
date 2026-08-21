@@ -120,7 +120,7 @@ export function drawFront(
   x.fillStyle = COLOR.inkText2;
   const sub = (
     s.scale === "collection"
-      ? [A.year, `${A.tracks.length} FAIXAS`, A.cat]
+      ? [A.year, `${A.tracks.length} TRACKS`, A.cat]
       : [A.artist, A.title, A.year]
   )
     .filter(Boolean)

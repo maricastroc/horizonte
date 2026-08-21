@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const gl = vi.hoisted(() => ({ renders: 0 }));
 
-vi.mock("../fieldMaterial", async (importarReal) => {
-  const real = await importarReal<typeof import("../fieldMaterial")>();
+vi.mock("../fieldMaterial", async (importReal) => {
+  const real = await importReal<typeof import("../fieldMaterial")>();
   return {
     ...real,
     createFieldGL: () => ({
@@ -51,8 +51,8 @@ afterEach(() => {
   env.restore();
 });
 
-describe("fluxo: da coleção até a faixa soando", () => {
-  it("percorre coleção, álbum e reprodução", () => {
+describe("flow: from the collection to a sounding track", () => {
+  it("walks collection, album and playback", () => {
     world();
     expect(engine.getSnapshot().scale).toBe("collection");
 
@@ -75,7 +75,7 @@ describe("fluxo: da coleção até a faixa soando", () => {
     expect(snap.announce).toContain(ALBUMS[2].tracks[1].title);
   });
 
-  it("o áudio sai do rest e ganha energia quando toca", () => {
+  it("the audio leaves rest and gains energy when it plays", () => {
     world();
     run(1);
     const stopped = engine.st.energy;
@@ -87,8 +87,8 @@ describe("fluxo: da coleção até a faixa soando", () => {
   });
 });
 
-describe("fluxo: emenda entre faixas", () => {
-  it("o fim natural emenda na próxima e troca o arquivo, sem cerimônia", () => {
+describe("flow: the splice between tracks", () => {
+  it("the natural end splices into the next and swaps the file, without ceremony", () => {
     world();
     engine.playTrack(0, 0);
     run(3);
@@ -105,7 +105,7 @@ describe("fluxo: emenda entre faixas", () => {
     expect(engine.st.waveR).toBe(-1);
   });
 
-  it("depois da última faixa, volta para a primeira", () => {
+  it("after the last track, it returns to the first", () => {
     world();
     const last = ALBUMS[0].tracks.length - 1;
     engine.playTrack(0, last);
@@ -116,7 +116,7 @@ describe("fluxo: emenda entre faixas", () => {
     expect(engine.st.trk).toBe(0);
   });
 
-  it("pular durante a reprodução troca o arquivo uma vez só", () => {
+  it("skipping during playback swaps the file exactly once", () => {
     world();
     engine.playTrack(0, 0);
     run(3);
@@ -130,8 +130,8 @@ describe("fluxo: emenda entre faixas", () => {
   });
 });
 
-describe("fluxo: transporte", () => {
-  it("pausar e retomar acompanham o elemento de áudio", () => {
+describe("flow: transport", () => {
+  it("pause and resume follow the audio element", () => {
     world();
     engine.playTrack(0, 0);
     run(3);
@@ -147,7 +147,7 @@ describe("fluxo: transporte", () => {
     expect(engine.bus.playing).toBe(true);
   });
 
-  it("buscar move o arquivo e a posição do world", () => {
+  it("seeking moves the file and the world's position", () => {
     world();
     engine.playTrack(0, 0);
     run(3);
@@ -160,7 +160,7 @@ describe("fluxo: transporte", () => {
     expect(engine.st.pos).toBeCloseTo(50, 1);
   });
 
-  it("navegar entre scales não interrompe a reprodução", () => {
+  it("navigating between scales does not interrupt playback", () => {
     world();
     engine.playTrack(1, 0);
     run(3);
@@ -178,22 +178,22 @@ describe("fluxo: transporte", () => {
   });
 });
 
-describe("fluxo: gesto chega ao world", () => {
-  it("a roda atravessa a coleção", () => {
+describe("flow: gesture reaches the world", () => {
+  it("the wheel crosses the collection", () => {
     world();
     env.fire("wheel", { deltaY: 625, deltaX: 0 });
     run(2);
     expect(engine.st.alb).toBe(1);
   });
 
-  it("a seta avança um disco", () => {
+  it("the arrow advances one record", () => {
     world();
     env.fire("keydown", { key: "ArrowRight", code: "ArrowRight" });
     run(2);
     expect(engine.st.alb).toBe(1);
   });
 
-  it("um toque no corpo do disco abre o álbum", () => {
+  it("a tap on the record's body opens the album", () => {
     world();
     const x = GEO.anchorCollection.x * 1280;
     const y = GEO.anchorCollection.y * 800;
@@ -204,7 +204,7 @@ describe("fluxo: gesto chega ao world", () => {
     expect(engine.st.scale).toBe("album");
   });
 
-  it("o arraste move a navegação e encaixa ao soltar", () => {
+  it("dragging moves navigation and snaps on release", () => {
     world();
     env.fire("pointerdown", { clientX: 900, clientY: 400, pointerType: "mouse" });
     env.fire("pointermove", { clientX: 600, clientY: 400, pointerType: "mouse" });
@@ -214,7 +214,7 @@ describe("fluxo: gesto chega ao world", () => {
     expect(Number.isInteger(engine.st.navT)).toBe(true);
   });
 
-  it("Escape recua uma scale", () => {
+  it("Escape steps back one scale", () => {
     world();
     engine.enterAlbum(3);
     run(0.5);
@@ -223,7 +223,7 @@ describe("fluxo: gesto chega ao world", () => {
     expect(engine.st.scale).toBe("collection");
   });
 
-  it("parar o motor desliga as escutas", () => {
+  it("stopping the engine detaches the listeners", () => {
     world();
     engine.stop();
     const before = engine.st.navT;
@@ -232,15 +232,15 @@ describe("fluxo: gesto chega ao world", () => {
   });
 });
 
-describe("fluxo: movimento reduced", () => {
-  it("o colapso resolve na versão curta", () => {
+describe("flow: reduced motion", () => {
+  it("the collapse resolves in its short version", () => {
     world({ reduced: true });
     engine.playTrack(0, 0);
     run(SEQ.reduced + 0.2);
     expect(engine.st.mode).toBe("playing");
   });
 
-  it("a fusão também resolve na versão curta e troca o arquivo", () => {
+  it("the fusion also resolves in its short version and swaps the file", () => {
     world({ reduced: true });
     engine.playTrack(0, 0);
     run(1);
@@ -252,7 +252,7 @@ describe("fluxo: movimento reduced", () => {
     expect(currentSource()).not.toBe(before);
   });
 
-  it("a preferência ligada em tempo real desliga a perturbação", () => {
+  it("the preference switched on at runtime turns off the perturbation", () => {
     world({ reduced: false });
     run(1);
     env.setMotion(true);
@@ -262,8 +262,8 @@ describe("fluxo: movimento reduced", () => {
   });
 });
 
-describe("fluxo: um disco por vez", () => {
-  it("tocar um segundo disco funde e o primeiro sai de cena", () => {
+describe("flow: one record at a time", () => {
+  it("playing a second record fuses and the first leaves the stage", () => {
     world();
     engine.playTrack(0, 0);
     run(3);
@@ -275,7 +275,7 @@ describe("fluxo: um disco por vez", () => {
     expect(engine.getSnapshot().announce).toContain(ALBUMS[4].artist);
   });
 
-  it("todo disco do acervo pode ser aberto e tocado", () => {
+  it("every record in the catalogue can be opened and played", () => {
     world();
     for (let i = 0; i < ALBUMS.length; i++) {
       engine.enterAlbum(i);

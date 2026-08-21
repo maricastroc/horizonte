@@ -6,8 +6,8 @@ const gl = vi.hoisted(() => ({
   discards: 0,
 }));
 
-vi.mock("../fieldMaterial", async (importarReal) => {
-  const real = await importarReal<typeof import("../fieldMaterial")>();
+vi.mock("../fieldMaterial", async (importReal) => {
+  const real = await importReal<typeof import("../fieldMaterial")>();
   return {
     ...real,
     createFieldGL: () => ({
@@ -72,27 +72,27 @@ afterEach(() => {
   env.restore();
 });
 
-describe("ciclo de vida", () => {
-  it("abre na coleção com o primeiro disco em foco", () => {
+describe("lifecycle", () => {
+  it("opens on the collection with the first record focused", () => {
     expect(engine.st.scale).toBe("collection");
     expect(engine.st.mode).toBe("stopped");
     expect(engine.getSnapshot().navAlb).toBe(0);
   });
 
-  it("desenha um quadro por animação pedida", () => {
+  it("draws one frame per requested animation", () => {
     env.advance();
     env.advance();
     expect(gl.renders).toBe(2);
   });
 
-  it("parar solta o contexto gráfico e o áudio", () => {
+  it("stopping releases the graphics context and the audio", () => {
     engine.stop();
     expect(gl.discards).toBe(1);
     env.advance();
     expect(gl.renders).toBe(0);
   });
 
-  it("cria uma partícula por unidade declarada", () => {
+  it("creates one particle per declared unit", () => {
     let parts = 0;
     run(0.1);
     parts = PARTICLES;
@@ -100,8 +100,8 @@ describe("ciclo de vida", () => {
   });
 });
 
-describe("integração do estado", () => {
-  it("a navegação persegue o alvo sem ultrapassá-lo", () => {
+describe("state integration", () => {
+  it("navigation chases the target without overshooting it", () => {
     engine.st.navT = 3;
     const visited: number[] = [];
     for (let i = 0; i < 120; i++) {
@@ -112,7 +112,7 @@ describe("integração do estado", () => {
     expect(engine.st.nav).toBeCloseTo(3, 2);
   });
 
-  it("o alvo de navegação nunca sai do acervo", () => {
+  it("the navigation target never leaves the catalogue", () => {
     engine.st.navT = 99;
     run(0.5);
     expect(engine.st.navT).toBeLessThanOrEqual(ALBUMS.length - 1);
@@ -122,13 +122,13 @@ describe("integração do estado", () => {
     expect(engine.st.navT).toBeGreaterThanOrEqual(0);
   });
 
-  it("na coleção o álbum em foco acompanha a navegação", () => {
+  it("in the collection the focused album follows navigation", () => {
     engine.st.navT = 4;
     run(2);
     expect(engine.st.alb).toBe(4);
   });
 
-  it("o zoom persegue a scale", () => {
+  it("zoom chases the scale", () => {
     engine.enterAlbum(2);
     run(2);
     expect(engine.st.zoom).toBeCloseTo(1, 2);
@@ -138,7 +138,7 @@ describe("integração do estado", () => {
     expect(engine.st.zoom).toBeCloseTo(0, 2);
   });
 
-  it("as partículas ficam em raio positivo e limitado", () => {
+  it("the particles stay at a positive, bounded radius", () => {
     run(4);
     engine.playTrack(0, 0);
     run(4);
@@ -150,13 +150,13 @@ describe("integração do estado", () => {
     }
   });
 
-  it("a energia fica entre o rest e o teto", () => {
+  it("the energy stays between rest and the ceiling", () => {
     run(3);
     expect(engine.st.energy).toBeGreaterThan(0);
     expect(engine.st.energy).toBeLessThanOrEqual(1);
   });
 
-  it("o relógio do world avança com o tempo", () => {
+  it("the world's clock advances with time", () => {
     const before = engine.st.t;
     run(1);
     expect(engine.st.t).toBeGreaterThan(before);
@@ -164,8 +164,8 @@ describe("integração do estado", () => {
   });
 });
 
-describe("sequência de colapso", () => {
-  it("tocar entra em colapso e resolve em reprodução", () => {
+describe("collapse sequence", () => {
+  it("play enters a collapse and resolves into playback", () => {
     engine.playTrack(0, 0);
     expect(engine.st.mode).toBe("collapse");
 
@@ -174,7 +174,7 @@ describe("sequência de colapso", () => {
     expect(engine.st.scale).toBe("track");
   });
 
-  it("o colapso passa por um vale escuro antes de reacender", () => {
+  it("the collapse passes through a dark valley before relighting", () => {
     engine.playTrack(0, 0);
     const fades: number[] = [];
     for (let i = 0; i < 160; i++) {
@@ -185,7 +185,7 @@ describe("sequência de colapso", () => {
     expect(engine.st.fade).toBeGreaterThan(0.8);
   });
 
-  it("o jato só aparece na saída do colapso", () => {
+  it("the jet only appears on the collapse's exit", () => {
     engine.playTrack(0, 0);
     run(0.5);
     const inValley = engine.st.jet;
@@ -194,8 +194,8 @@ describe("sequência de colapso", () => {
   });
 });
 
-describe("sequência de fusão", () => {
-  it("pular durante a reprodução funde e promove a faixa alvo", () => {
+describe("fusion sequence", () => {
+  it("skipping during playback fuses and promotes the target track", () => {
     engine.playTrack(0, 0);
     run(3);
     engine.skip(1);
@@ -207,7 +207,7 @@ describe("sequência de fusão", () => {
     expect(engine.st.playAlb).toBe(0);
   });
 
-  it("a mistura sobe de zero a um ao longo da fusão", () => {
+  it("the mix rises from zero to one across the fusion", () => {
     engine.playTrack(0, 0);
     run(3);
     engine.skip(1);
@@ -221,7 +221,7 @@ describe("sequência de fusão", () => {
     expect(engine.st.mix).toBe(0);
   });
 
-  it("a onda de choque dispara e se apaga", () => {
+  it("the shockwave fires and fades out", () => {
     engine.playTrack(0, 0);
     run(3);
     engine.skip(1);
@@ -235,7 +235,7 @@ describe("sequência de fusão", () => {
     expect(engine.st.waveR).toBe(-1);
   });
 
-  it("a faixa nova é entregue ao áudio uma vez só", () => {
+  it("the new track is handed to the audio exactly once", () => {
     engine.playTrack(0, 0);
     run(3);
     engine.skip(1);
@@ -246,15 +246,15 @@ describe("sequência de fusão", () => {
   });
 });
 
-describe("instantâneo para o React", () => {
-  it("mantém a identidade enquanto nada discreto muda", () => {
+describe("snapshot for React", () => {
+  it("keeps identity while nothing discrete changes", () => {
     run(0.5);
     const a = engine.getSnapshot();
     run(0.5);
     expect(engine.getSnapshot()).toBe(a);
   });
 
-  it("troca de identidade quando a scale muda", () => {
+  it("changes identity when the scale changes", () => {
     const a = engine.getSnapshot();
     engine.enterAlbum(1);
     env.advance();
@@ -262,7 +262,7 @@ describe("instantâneo para o React", () => {
     expect(engine.getSnapshot().scale).toBe("album");
   });
 
-  it("avisa os inscritos só nas mudanças discretas", () => {
+  it("notifies subscribers only on discrete changes", () => {
     run(0.5);
     let warnings = 0;
     const cancel = engine.subscribe(() => warnings++);
@@ -279,7 +279,7 @@ describe("instantâneo para o React", () => {
     expect(warnings).toBe(1);
   });
 
-  it("anuncia a faixa em curso para leitores de tela", () => {
+  it("announces the current track to screen readers", () => {
     engine.playTrack(1, 2);
     env.advance();
     const announcement = engine.getSnapshot().announce;
@@ -288,11 +288,11 @@ describe("instantâneo para o React", () => {
     expect(announcement).toContain(ALBUMS[1].artist);
   });
 
-  it("anuncia a coleção quando nada toca", () => {
+  it("announces the collection when nothing is playing", () => {
     expect(engine.getSnapshot().announce).toContain(String(ALBUMS.length));
   });
 
-  it("o rest liga depois do silêncio e desliga ao primeiro gesto", () => {
+  it("rest switches on after stillness and off at the first gesture", () => {
     const clock = vi.spyOn(performance, "now");
     clock.mockReturnValue(performance.now() + IDLE_MS + 1000);
     env.advance();
@@ -305,8 +305,8 @@ describe("instantâneo para o React", () => {
   });
 });
 
-describe("quadro contínuo", () => {
-  it("entrega progresso, posição e duração a cada quadro", () => {
+describe("continuous frame", () => {
+  it("delivers progress, position and duration every frame", () => {
     const frames: { progress: number; position: number; duration: number }[] = [];
     engine.onFrame((f) => frames.push({ ...f }));
     engine.playTrack(0, 0);
@@ -319,7 +319,7 @@ describe("quadro contínuo", () => {
     expect(lastOne.progress).toBeLessThanOrEqual(1);
   });
 
-  it("cancelar o registro para a entrega", () => {
+  it("cancelling the registration for delivery", () => {
     let n = 0;
     const cancel = engine.onFrame(() => n++);
     env.advance();
@@ -330,10 +330,10 @@ describe("quadro contínuo", () => {
   });
 });
 
-describe("contrato de uniformes", () => {
+describe("uniform contract", () => {
   const u = () => (engine as unknown as { gl: { uniforms: Record<string, { value: never }> } }).gl.uniforms;
 
-  it("a massa principal segue a posição do álbum em foco", () => {
+  it("the primary mass follows the focused album's position", () => {
     engine.enterAlbum(2);
     run(2);
     env.advance();
@@ -351,7 +351,7 @@ describe("contrato de uniformes", () => {
     expect(m0.w).toBeCloseTo(engine.st.m0h, 6);
   });
 
-  it("a ink do campo é a do álbum em foco", () => {
+  it("the field's ink is the focused album's", () => {
     engine.enterAlbum(3);
     run(1);
     env.advance();
@@ -359,7 +359,7 @@ describe("contrato de uniformes", () => {
     expect([ink.x, ink.y, ink.z]).toEqual(ALBUMS[3].inkA);
   });
 
-  it("a dureza do rim oscila em torno da constante, dentro do teto do disco", () => {
+  it("the rim hardness oscillates around the constant, inside the record's ceiling", () => {
     engine.enterAlbum(5);
     run(2);
     env.advance();
@@ -372,7 +372,7 @@ describe("contrato de uniformes", () => {
     expect(deviation).toBeLessThanOrEqual(c.reactionCap * 0.5 + 1e-9);
   });
 
-  it("o fade nunca é negativo", () => {
+  it("the fade is never negative", () => {
     engine.playTrack(0, 0);
     for (let i = 0; i < 200; i++) {
       env.advance();
@@ -380,23 +380,23 @@ describe("contrato de uniformes", () => {
     }
   });
 
-  it("na coleção a segunda massa aponta para o vizinho, com o peso dele", () => {
+  it("in the collection the second mass points at the neighbour, with its weight", () => {
     engine.st.navT = 2;
     run(2);
     env.advance();
 
     const s = engine.st;
     const dir = s.nav - Math.round(s.nav) >= 0 ? 1 : -1;
-    const vizinho = Math.max(0, Math.min(ALBUMS.length - 1, Math.round(s.nav) + dir));
-    const c = fieldConstantsOf(ALBUMS[vizinho].signature);
-    const mm = morphologyOf(ALBUMS[vizinho].signature, ALBUMS[vizinho].tracks.length);
+    const neighbour = Math.max(0, Math.min(ALBUMS.length - 1, Math.round(s.nav) + dir));
+    const c = fieldConstantsOf(ALBUMS[neighbour].signature);
+    const mm = morphologyOf(ALBUMS[neighbour].signature, ALBUMS[neighbour].tracks.length);
 
     const m1 = u().uM1.value as unknown as { z: number; w: number };
     expect(m1.z).toBeCloseTo(SECOND_MASS.k * c.massScale, 4);
     expect(m1.w).toBeCloseTo(SECOND_MASS.h * (mm.coreRatio / MORPH.coreRef) * mm.circuit, 4);
   });
 
-  it("o tempo do shader acompanha o relógio do world", () => {
+  it("the shader's time follows the world's clock", () => {
     run(1);
     env.advance();
     expect(u().uTime.value as unknown as number).toBeCloseTo(engine.st.t, 6);
@@ -404,7 +404,7 @@ describe("contrato de uniformes", () => {
 });
 
 describe("qualidade adaptativa", () => {
-  it("rebaixa a composição depois de três janelas lentas seguidas", () => {
+  it("steps the composition down after three consecutive slow windows", () => {
     const before = gl.sizes.length;
     for (let win = 0; win < 3; win++) {
       for (let i = 0; i < 12; i++) env.advance(50);
@@ -414,7 +414,7 @@ describe("qualidade adaptativa", () => {
     expect(COMPOSITION_FALLBACK_W).toBeLessThan(COMPOSITION_MAX_W);
   });
 
-  it("não rebaixa quando os quadros chegam no ritmo", () => {
+  it("does not step down when the frames arrive on time", () => {
     const before = gl.sizes.length;
     for (let win = 0; win < 4; win++) {
       for (let i = 0; i < 70; i++) env.advance(14);
@@ -424,8 +424,8 @@ describe("qualidade adaptativa", () => {
   });
 });
 
-describe("janela", () => {
-  it("o redimensionamento reconfigura a composição e o layout", () => {
+describe("window", () => {
+  it("resizing reconfigures the composition and the layout", () => {
     env.resize(500, 900);
     engine.resize();
     env.advance();
@@ -438,8 +438,8 @@ describe("janela", () => {
   });
 });
 
-describe("o anel parado é a forma do disco (P13)", () => {
-  it("sem nada tocando, a rotação não se acumula", () => {
+describe("the ring at rest is the record's shape (P13)", () => {
+  it("with nothing playing, the rotation does not accumulate", () => {
     engine.enterAlbum(3);
     run(4);
     const early = engine.st.ringRot;
@@ -447,13 +447,13 @@ describe("o anel parado é a forma do disco (P13)", () => {
     expect(Math.abs(engine.st.ringRot - early)).toBeLessThan(0.001);
   });
 
-  it("repousa na orientação canônica", () => {
+  it("rests in the canonical orientation", () => {
     engine.enterAlbum(3);
     run(6);
     expect(engine.st.ringRot).toBeCloseTo(RING.anchor, 3);
   });
 
-  it("entrar duas vezes no mesmo disco mostra o mesmo anel", () => {
+  it("entering the same record twice shows the same ring", () => {
     engine.enterAlbum(3);
     run(6);
     const first = engine.st.ringRot;
@@ -464,7 +464,7 @@ describe("o anel parado é a forma do disco (P13)", () => {
     expect(engine.st.ringRot).toBeCloseTo(first, 6);
   });
 
-  it("tocando, o anel gira no sentido do disco", () => {
+  it("while playing, the ring turns in the record's direction", () => {
     engine.playTrack(0, 1);
     run(4);
     const early = engine.st.ringRot;
@@ -473,7 +473,7 @@ describe("o anel parado é a forma do disco (P13)", () => {
   });
 });
 
-describe("identidade por faixa no campo (P11)", () => {
+describe("per-track identity in the field (P11)", () => {
   const heavy = (alb: number) => {
     const bias = trackBiasOf(ALBUMS[alb].signature, ALBUMS[alb].tracks.length);
     let best = 0;
@@ -483,7 +483,7 @@ describe("identidade por faixa no campo (P11)", () => {
     return best;
   };
 
-  it("a faixa em curso desloca a massa do mundo", () => {
+  it("the current track shifts the world's mass", () => {
     const alb = 0;
     const alta = heavy(alb);
     const baixa = trackBiasOf(ALBUMS[alb].signature, ALBUMS[alb].tracks.length)
@@ -491,14 +491,14 @@ describe("identidade por faixa no campo (P11)", () => {
 
     engine.playTrack(alb, alta);
     run(6);
-    const forte = engine.st.m0k;
+    const strong = engine.st.m0k;
 
     engine.playTrack(alb, baixa);
     run(6);
-    expect(engine.st.m0k).toBeLessThan(forte);
+    expect(engine.st.m0k).toBeLessThan(strong);
   });
 
-  it("na coleção o disco volta às constantes do álbum, seja qual for a faixa", () => {
+  it("in the collection the record returns to the album constants, whatever the track", () => {
     const alb = 0;
     const bias = trackBiasOf(ALBUMS[alb].signature, ALBUMS[alb].tracks.length);
     const alta = heavy(alb);
@@ -508,32 +508,32 @@ describe("identidade por faixa no campo (P11)", () => {
     run(6);
     engine.goScale("collection");
     run(8);
-    const comFaixaAlta = engine.st.m0k;
+    const withHighBand = engine.st.m0k;
 
     engine.playTrack(alb, baixa);
     run(6);
     engine.goScale("collection");
     run(8);
 
-    expect(engine.st.m0k).toBeCloseTo(comFaixaAlta, 6);
+    expect(engine.st.m0k).toBeCloseTo(withHighBand, 6);
   });
 });
 
-describe("a luz atravessa a faixa (P12)", () => {
+describe("the light crosses the track (P12)", () => {
   const uniforms = () =>
     (engine as unknown as { gl: { uniforms: Record<string, { value: never }> } }).gl.uniforms;
   const light = () => uniforms().uLight.value as unknown as { x: number; y: number };
   const element = () =>
     (engine as unknown as { bus: { current: { el: FakeAudio } | null } }).bus.current!.el;
 
-  it("parada, a luz fica na direção base", () => {
+  it("at rest, the light stays in the base direction", () => {
     run(2);
     env.advance();
     expect(light().x).toBeCloseTo(-0.7, 3);
     expect(light().y).toBeCloseTo(0.71, 3);
   });
 
-  it("a direção varre conforme a faixa avança", () => {
+  it("the direction sweeps as the track advances", () => {
     engine.playTrack(0, 0);
     run(4);
     env.advance();
@@ -549,43 +549,43 @@ describe("a luz atravessa a faixa (P12)", () => {
   });
 });
 
-describe("experimento: o campo antecipa (desligado por padrão)", () => {
-  it("nasce desligado", () => {
+describe("experiment: the field anticipates (off by default)", () => {
+  it("is born switched off", () => {
     expect(engine.experiments.anticipation).toBe(false);
   });
 
-  it("desligado, o sinal de antecipação fica em zero mesmo tocando", () => {
+  it("switched off, the anticipation signal stays at zero even while playing", () => {
     engine.playTrack(0, 1);
     run(8);
     expect(engine.lead).toBe(0);
   });
 
-  it("desligado, o mundo é idêntico ao de antes do experimento", () => {
+  it("switched off, the world is identical to the pre-experiment one", () => {
     engine.playTrack(0, 1);
     run(8);
-    const semExperimento = { m0h: engine.st.m0h, fade: engine.st.fade };
+    const withoutExperiment = { m0h: engine.st.m0h, fade: engine.st.fade };
 
     engine.experiments.anticipation = true;
     run(8);
     engine.experiments.anticipation = false;
     run(8);
 
-    expect(engine.st.m0h).toBeCloseTo(semExperimento.m0h, 6);
-    expect(engine.st.fade).toBeCloseTo(semExperimento.fade, 6);
+    expect(engine.st.m0h).toBeCloseTo(withoutExperiment.m0h, 6);
+    expect(engine.st.fade).toBeCloseTo(withoutExperiment.fade, 6);
   });
 
-  it("ligado, o horizonte se desloca dentro do teto de reação do disco", () => {
+  it("switched on, the horizon shifts inside the record's reaction ceiling", () => {
     engine.experiments.anticipation = true;
     engine.playTrack(0, 1);
     run(10);
 
     const c = fieldConstantsOf(ALBUMS[0].signature);
     expect(Math.abs(engine.lead)).toBeLessThanOrEqual(1);
-    const desvio = Math.abs(engine.lead) * c.reactionCap;
-    expect(desvio).toBeLessThanOrEqual(c.reactionCap + 1e-9);
+    const deviation = Math.abs(engine.lead) * c.reactionCap;
+    expect(deviation).toBeLessThanOrEqual(c.reactionCap + 1e-9);
   });
 
-  it("reduced-motion zera a amplitude do experimento", () => {
+  it("reduced-motion zeroes the experiment's amplitude", () => {
     on({ reduced: true });
     engine.experiments.anticipation = true;
     engine.playTrack(0, 1);
@@ -596,7 +596,7 @@ describe("experimento: o campo antecipa (desligado por padrão)", () => {
   });
 });
 
-describe("apontar tem peso (P14)", () => {
+describe("pointing has weight (P14)", () => {
   const u2 = () =>
     (engine as unknown as { gl: { uniforms: Record<string, { value: never }> } }).gl.uniforms;
   const m1 = () => u2().uM1.value as unknown as { x: number; y: number; z: number; w: number };
@@ -605,23 +605,23 @@ describe("apontar tem peso (P14)", () => {
     return res.x / res.y;
   };
 
-  const posDe = (alb: number) => albPos(alb, engine.st, layoutFor("desktop"));
+  const posOf = (alb: number) => albPos(alb, engine.st, layoutFor("desktop"));
 
-  const soltar = () => {
+  const release = () => {
     engine.setRailAlb(-1);
     engine.teleportTo(0.95, 0.95);
     run(3);
     env.advance();
   };
 
-  const apontarCorpo = (alb: number) => {
-    const p = posDe(alb);
+  const pointAtBody = (alb: number) => {
+    const p = posOf(alb);
     engine.teleportTo(p.x, p.y);
     run(3);
     env.advance();
   };
 
-  const apontarRegua = (alb: number) => {
+  const pointAtRail = (alb: number) => {
     engine.teleportTo(0.95, 0.95);
     engine.setRailAlb(alb);
     run(3);
@@ -631,81 +631,81 @@ describe("apontar tem peso (P14)", () => {
   beforeEach(() => {
     engine.st.navT = 0;
     run(2);
-    soltar();
+    release();
   });
 
-  it("apontar um corpo leva a segunda massa até ele", () => {
-    apontarCorpo(1);
-    const p = posDe(1);
+  it("pointing at a body carries the second mass to it", () => {
+    pointAtBody(1);
+    const p = posOf(1);
     expect(m1().x).toBeCloseTo((p.x - 0.5) * aspect(), 2);
     expect(m1().y).toBeCloseTo(0.5 - p.y, 2);
   });
 
-  it("o peso que se sente é o do disco apontado, não um valor fixo", () => {
-    apontarRegua(7);
-    const pesado = m1().z;
-    apontarRegua(1);
-    const leve = m1().z;
+  it("the weight felt is the pointed record's, not a fixed value", () => {
+    pointAtRail(7);
+    const heavy = m1().z;
+    pointAtRail(1);
+    const light = m1().z;
 
     const c7 = fieldConstantsOf(ALBUMS[7].signature);
     const c1 = fieldConstantsOf(ALBUMS[1].signature);
     expect(c7.massScale).toBeGreaterThan(c1.massScale);
-    expect(pesado).toBeGreaterThan(leve);
-    expect(pesado / leve).toBeCloseTo(c7.massScale / c1.massScale, 2);
+    expect(heavy).toBeGreaterThan(light);
+    expect(heavy / light).toBeCloseTo(c7.massScale / c1.massScale, 2);
   });
 
-  it("apontar pesa mais que o vizinho passivo", () => {
-    const passivo = m1().z;
-    apontarRegua(1);
-    expect(m1().z).toBeGreaterThan(passivo);
-    expect(m1().z / passivo).toBeCloseTo(SECOND_MASS.pointGain, 1);
+  it("pointing weighs more than the passive neighbour", () => {
+    const passive = m1().z;
+    pointAtRail(1);
+    expect(m1().z).toBeGreaterThan(passive);
+    expect(m1().z / passive).toBeCloseTo(SECOND_MASS.pointGain, 1);
   });
 
-  it("apontar o disco em foco não cria uma segunda lente sobre ele", () => {
-    const antes = { ...m1() };
-    apontarRegua(0);
-    expect(m1().x).toBeCloseTo(antes.x, 3);
-    expect(m1().z).toBeCloseTo(antes.z, 4);
+  it("pointing at the focused record does not create a second lens over it", () => {
+    const before = { ...m1() };
+    pointAtRail(0);
+    expect(m1().x).toBeCloseTo(before.x, 3);
+    expect(m1().z).toBeCloseTo(before.z, 4);
   });
 
-  it("o horizonte do corpo apontado é o dele, sem ganho", () => {
-    apontarRegua(7);
+  it("the pointed body's horizon is its own, with no gain", () => {
+    pointAtRail(7);
     const mm = morphologyOf(ALBUMS[7].signature, ALBUMS[7].tracks.length);
     expect(m1().w).toBeCloseTo(SECOND_MASS.h * (mm.coreRatio / MORPH.coreRef) * mm.circuit, 4);
   });
 
-  it("a massa chega com inércia, não teleporta", () => {
-    const partida = m1().x;
+  it("the mass arrives with inertia, it does not teleport", () => {
+    const start = m1().x;
     engine.teleportTo(0.95, 0.95);
     engine.setRailAlb(4);
     env.advance();
-    const umQuadro = m1().x;
+    const oneFrame = m1().x;
     run(3);
-    const chegada = m1().x;
+    const arrival = m1().x;
 
-    expect(Math.abs(chegada - partida)).toBeGreaterThan(0.01);
-    expect(Math.abs(umQuadro - partida)).toBeLessThan(Math.abs(chegada - partida));
+    expect(Math.abs(arrival - start)).toBeGreaterThan(0.01);
+    expect(Math.abs(oneFrame - start)).toBeLessThan(Math.abs(arrival - start));
   });
 
-  it("fora da coleção, apontar não mexe na segunda massa", () => {
+  it("outside the collection, pointing does not touch the second mass", () => {
     engine.enterAlbum(2);
     run(3);
-    const antes = { ...m1() };
-    apontarRegua(6);
-    expect(m1().z).toBeCloseTo(antes.z, 6);
-    expect(m1().w).toBeCloseTo(antes.w, 6);
+    const before = { ...m1() };
+    pointAtRail(6);
+    expect(m1().z).toBeCloseTo(before.z, 6);
+    expect(m1().w).toBeCloseTo(before.w, 6);
   });
 
-  it("reduced-motion mantém o peso do disco mas tira o ganho de apontar", () => {
+  it("reduced-motion keeps the record's weight but removes the pointing gain", () => {
     on({ reduced: true });
     engine.st.navT = 0;
     run(2);
-    apontarRegua(7);
+    pointAtRail(7);
     const c = fieldConstantsOf(ALBUMS[7].signature);
     expect(m1().z).toBeCloseTo(SECOND_MASS.k * c.massScale, 4);
   });
 
-  const apontarEntrada = (on: boolean) => {
+  const pointAtIntake = (on: boolean) => {
     engine.teleportTo(0.95, 0.95);
     engine.setRailAlb(-1);
     engine.setIntake(on);
@@ -713,45 +713,45 @@ describe("apontar tem peso (P14)", () => {
     env.advance();
   };
 
-  it("apontar a entrada abre um lugar: menos massa, mais horizonte", () => {
-    const repouso = { ...m1() };
-    apontarEntrada(true);
+  it("pointing at the intake opens a place: less mass, more horizon", () => {
+    const rest = { ...m1() };
+    pointAtIntake(true);
 
-    expect(m1().z).toBeLessThan(repouso.z);
-    expect(m1().w).toBeGreaterThan(repouso.w);
-    expect(m1().z / repouso.z).toBeCloseTo(INTAKE.mass, 1);
+    expect(m1().z).toBeLessThan(rest.z);
+    expect(m1().w).toBeGreaterThan(rest.w);
+    expect(m1().z / rest.z).toBeCloseTo(INTAKE.mass, 1);
     expect(m1().w).toBeCloseTo(SECOND_MASS.h * INTAKE.horizon, 4);
   });
 
-  it("a entrada não desloca a segunda massa — o lugar é aqui, não fora da tela", () => {
-    const repouso = { ...m1() };
-    apontarEntrada(true);
-    expect(m1().x).toBeCloseTo(repouso.x, 3);
-    expect(m1().y).toBeCloseTo(repouso.y, 3);
+  it("the intake does not shift the second mass — the place is here, not off-screen", () => {
+    const rest = { ...m1() };
+    pointAtIntake(true);
+    expect(m1().x).toBeCloseTo(rest.x, 3);
+    expect(m1().y).toBeCloseTo(rest.y, 3);
   });
 
-  it("é o oposto de apontar um disco: um pesa, o outro alivia", () => {
-    apontarRegua(7);
-    const disco = m1().z;
-    soltar();
-    const repouso = m1().z;
-    apontarEntrada(true);
-    const entrada = m1().z;
+  it("it is the opposite of pointing at a record: one weighs, the other lightens", () => {
+    pointAtRail(7);
+    const record = m1().z;
+    release();
+    const rest = m1().z;
+    pointAtIntake(true);
+    const intake = m1().z;
 
-    expect(disco).toBeGreaterThan(repouso);
-    expect(entrada).toBeLessThan(repouso);
+    expect(record).toBeGreaterThan(rest);
+    expect(intake).toBeLessThan(rest);
   });
 
-  it("soltar a entrada devolve o campo ao vizinho", () => {
-    const repouso = { ...m1() };
-    apontarEntrada(true);
-    apontarEntrada(false);
-    expect(m1().z).toBeCloseTo(repouso.z, 3);
-    expect(m1().w).toBeCloseTo(repouso.w, 3);
+  it("releasing the intake gives the field back to the neighbour", () => {
+    const rest = { ...m1() };
+    pointAtIntake(true);
+    pointAtIntake(false);
+    expect(m1().z).toBeCloseTo(rest.z, 3);
+    expect(m1().w).toBeCloseTo(rest.w, 3);
   });
 
-  it("apontar a entrada ignora um disco que tenha ficado apontado na régua", () => {
-    apontarRegua(7);
+  it("pointing at the intake ignores a record left pointed in the rail", () => {
+    pointAtRail(7);
     engine.setIntake(true);
     run(4);
     const c = fieldConstantsOf(ALBUMS[7].signature);
@@ -759,14 +759,14 @@ describe("apontar tem peso (P14)", () => {
   });
 });
 
-describe("uma faixa que não carrega para de fingir que toca", () => {
+describe("a track that fails to load stops pretending to play", () => {
   const fault = (kind: "source" | "blocked") => {
     engine.bus.onFault?.(kind);
     run(2);
     env.advance();
   };
 
-  it("a falha tira o mundo do ar em vez de resolver em reprodução", () => {
+  it("the fault takes the world off air instead of resolving into playback", () => {
     engine.playTrack(0, 0);
     expect(engine.st.mode).toBe("collapse");
     fault("source");
@@ -775,19 +775,19 @@ describe("uma faixa que não carrega para de fingir que toca", () => {
     expect(engine.st.mode).toBe("paused");
   });
 
-  it("o motivo chega à camada de instrumentos", () => {
+  it("the reason reaches the instruments layer", () => {
     engine.playTrack(0, 0);
     fault("source");
     expect(engine.getSnapshot().fault).toBe("source");
   });
 
-  it("o bloqueio do navegador é um motivo diferente do arquivo quebrado", () => {
+  it("the browser's block is a different reason from a broken file", () => {
     engine.playTrack(0, 0);
     fault("blocked");
     expect(engine.getSnapshot().fault).toBe("blocked");
   });
 
-  it("pedir de novo limpa a falha antes de tentar", () => {
+  it("asking again clears the fault before trying", () => {
     engine.playTrack(0, 0);
     fault("source");
     expect(engine.getSnapshot().fault).toBe("source");
@@ -798,7 +798,7 @@ describe("uma faixa que não carrega para de fingir que toca", () => {
     expect(engine.getSnapshot().fault).toBe(null);
   });
 
-  it("a falha não derruba a faixa em foco: dá para ver qual falhou", () => {
+  it("the fault does not drop the focused track: you can see which one failed", () => {
     engine.playTrack(2, 1);
     fault("source");
     expect(engine.st.playAlb).toBe(2);
@@ -807,19 +807,19 @@ describe("uma faixa que não carrega para de fingir que toca", () => {
   });
 });
 
-describe("o cursor sabe o que está sob ele", () => {
+describe("the cursor knows what is under it", () => {
   const uReach = () =>
     (engine as unknown as { gl: { uniforms: { uReach: { value: number } } } }).gl.uniforms.uReach
       .value;
 
-  const apontar = (x: number, y: number, naUi = false) => {
+  const pointAt = (x: number, y: number, naUi = false) => {
     engine.teleportTo(x, y);
     engine.pointTo(x, y, naUi);
     run(4);
     env.advance();
   };
 
-  const corpo = () => {
+  const body = () => {
     const L = layoutFor("desktop");
     const alb = engine.st.alb;
     const mm = morphologyOf(ALBUMS[alb].signature, ALBUMS[alb].tracks.length);
@@ -828,48 +828,48 @@ describe("o cursor sabe o que está sob ele", () => {
     return [g.cx / size.W, g.cy / size.H] as const;
   };
 
-  it("na coleção, sobre um corpo o anel fecha", () => {
-    apontar(...corpo());
+  it("in the collection, over a body the ring closes", () => {
+    pointAt(...body());
     expect(engine.reach).toBe("enter");
     expect(uReach()).toBeGreaterThan(0.5);
   });
 
-  it("na coleção, o vazio não promete nada — clicar ali não faz nada", () => {
-    apontar(0.02, 0.95);
+  it("in the collection, the void promises nothing — clicking there does nothing", () => {
+    pointAt(0.02, 0.95);
     expect(engine.reach).toBe("none");
     expect(Math.abs(uReach())).toBeLessThan(0.1);
   });
 
-  it("dentro do álbum, o vazio abre o anel: é ele que devolve uma escala", () => {
+  it("inside the album, the void opens the ring: it is what gives a scale back", () => {
     engine.enterAlbum(0);
     run(3);
-    apontar(0.03, 0.96);
+    pointAt(0.03, 0.96);
     expect(engine.reach).toBe("leave");
     expect(uReach()).toBeLessThan(-0.5);
   });
 
-  it("entrar e sair têm sinais opostos, não intensidades diferentes do mesmo", () => {
+  it("entering and leaving have opposite signs, not different intensities of the same", () => {
     engine.enterAlbum(0);
     run(3);
-    apontar(...corpo());
-    const dentro = uReach();
-    apontar(0.03, 0.96);
-    const fora = uReach();
-    expect(dentro).toBeGreaterThan(0);
-    expect(fora).toBeLessThan(0);
+    pointAt(...body());
+    const inside = uReach();
+    pointAt(0.03, 0.96);
+    const outside = uReach();
+    expect(inside).toBeGreaterThan(0);
+    expect(outside).toBeLessThan(0);
   });
 
-  it("sobre um controle o anel some: aquele clique não é do mundo", () => {
+  it("over a control the ring vanishes: that click is not the world's", () => {
     engine.enterAlbum(0);
     run(3);
-    apontar(0.03, 0.96, true);
+    pointAt(0.03, 0.96, true);
     expect(engine.reach).toBe("none");
   });
 
-  it("durante a cerimônia o anel some: não é hora de apontar", () => {
+  it("during the ceremony the ring vanishes: it is not the time to point", () => {
     engine.enterAlbum(0);
     run(3);
-    const [x, y] = corpo();
+    const [x, y] = body();
     engine.teleportTo(x, y);
     engine.pointTo(x, y, false);
     run(0.5);
@@ -882,7 +882,7 @@ describe("o cursor sabe o que está sob ele", () => {
     expect(engine.reach).toBe("none");
   });
 
-  it("no toque não há anel: não existe cursor pairando", () => {
+  it("on touch there is no ring: no cursor hovers", () => {
     engine.stop();
     on({ coarse: true });
     engine.enterAlbum(0);
@@ -895,7 +895,7 @@ describe("o cursor sabe o que está sob ele", () => {
 });
 
 describe("volume", () => {
-  it("o motor guarda o nível e o mudo sem perder um no outro", () => {
+  it("the engine keeps the level and the mute without losing one in the other", () => {
     engine.setVolume(0.4);
     expect(engine.volume).toBeCloseTo(0.4, 5);
     engine.setMuted(true);
@@ -905,7 +905,7 @@ describe("volume", () => {
     expect(engine.volume).toBeCloseTo(0.4, 5);
   });
 
-  it("mexer no volume conta como presença: a camada não some na mão da pessoa", () => {
+  it("touching the volume counts as presence: the layer does not vanish under the person's hand", () => {
     const clock = vi.spyOn(performance, "now");
     clock.mockReturnValue(performance.now() + IDLE_MS + 1000);
     env.advance();

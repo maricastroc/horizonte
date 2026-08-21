@@ -47,7 +47,7 @@ beforeEach(() => {
 
 afterEach(() => env.restore());
 
-describe("contrato do shader", () => {
+describe("shader contract", () => {
   const declared = (source: string) => {
     const names = new Set<string>();
     for (const m of source.matchAll(/uniform\s+\w+\s+([^;]+);/g)) {
@@ -56,63 +56,63 @@ describe("contrato do shader", () => {
     return names;
   };
 
-  it("todo uniforme do shader existe no lado TypeScript", () => {
+  it("every shader uniform exists on the TypeScript side", () => {
     const uniforms = createFieldUniforms();
     const missing = [...declared(frag), ...declared(vert)].filter((n) => !(n in uniforms));
     expect(missing).toEqual([]);
   });
 
-  it("todo uniforme declarado em TypeScript é consumido por algum shader", () => {
+  it("every uniform declared in TypeScript is consumed by some shader", () => {
     const inShader = new Set([...declared(frag), ...declared(vert)]);
     const leftover = Object.keys(createFieldUniforms()).filter((n) => !inShader.has(n));
     expect(leftover).toEqual([]);
   });
 
-  it("o atributo de geometria do shader é o que o material declara", () => {
+  it("the shader's geometry attribute is what the material declares", () => {
     expect(vert).toContain("aP");
   });
 });
 
 describe("frontTitle", () => {
-  it("na coleção mostra o nome do disco", () => {
+  it("in the collection it shows the record's name", () => {
     expect(frontTitle(state({ alb: 2 }))).toBe(ALBUMS[2].title);
   });
 
-  it("no álbum mostra a faixa selecionada", () => {
+  it("in the album it shows the selected track", () => {
     expect(frontTitle(state({ scale: "album", alb: 2, sel: 1 }))).toBe(ALBUMS[2].tracks[1].title);
   });
 
-  it("na faixa mostra a que está tocando", () => {
+  it("in the track it shows the one playing", () => {
     const s = state({ scale: "track", mode: "playing", alb: 2, trk: 3, sel: 0 });
     expect(frontTitle(s)).toBe(ALBUMS[2].tracks[3].title);
   });
 
-  it("durante o colapso ainda mostra a seleção que originou o gesto", () => {
+  it("during the collapse it still shows the selection that started the gesture", () => {
     const s = state({ scale: "track", mode: "collapse", alb: 2, trk: 3, sel: 1 });
     expect(frontTitle(s)).toBe(ALBUMS[2].tracks[1].title);
   });
 
-  it("passada a metade da fusão, o título já é o do destino", () => {
+  it("past the fusion's midpoint, the title is already the destination's", () => {
     const s = state({ scale: "track", mode: "fusion", alb: 0, trk: 0, mix: 0.6, fuseAlb: 3, fuseB: 2 });
     expect(frontTitle(s)).toBe(ALBUMS[3].tracks[2].title);
   });
 
-  it("antes da metade da fusão, ainda é o da origem", () => {
+  it("before the fusion's midpoint, it is still the origin's", () => {
     const s = state({ scale: "track", mode: "fusion", alb: 0, trk: 1, mix: 0.4, fuseAlb: 3, fuseB: 2 });
     expect(frontTitle(s)).toBe(ALBUMS[0].tracks[1].title);
   });
 
-  it("índice fora do disco cai no nome do álbum", () => {
+  it("an index outside the record falls back to the album name", () => {
     expect(frontTitle(state({ scale: "album", alb: 0, sel: 999 }))).toBe(ALBUMS[0].title);
   });
 });
 
-describe("pintura de fundo", () => {
+describe("back painting", () => {
   const scales: Scale[] = ["collection", "album", "track"];
   const modes: Mode[] = ["stopped", "collapse", "playing", "paused", "fusion"];
   const variants: Variant[] = ["desktop", "tablet", "mobile"];
 
-  it("atravessa toda a matriz de scale, modo e variante sem quebrar", () => {
+  it("crosses the whole scale/mode/variant matrix without breaking", () => {
     for (const scale of scales) {
       for (const mode of modes) {
         for (const variant of variants) {
@@ -130,20 +130,20 @@ describe("pintura de fundo", () => {
     }
   });
 
-  it("pinta o fundo antes de qualquer corpo", () => {
+  it("paints the background before any body", () => {
     const reg = paintContext();
     drawBack(reg.ctx, 1400, 900, state(), layoutFor("desktop"), backDeps());
     expect(reg.calls[0]).toBe("fillRect");
   });
 
-  it("usa o peso tipográfico que o motor derivou, não recalcula", () => {
+  it("uses the type weight the engine derived, it does not recompute", () => {
     const reg = paintContext();
     const deps = { ...backDeps(), weights: ALBUMS.map(() => 777) };
     drawBack(reg.ctx, 1400, 900, state({ nav: 0 }), layoutFor("desktop"), deps);
     expect(reg.sources.some((f) => f.startsWith("777 "))).toBe(true);
   });
 
-  it("o nome do artista encolhe quando não cabe na largura útil", () => {
+  it("the artist name shrinks when it does not fit the usable width", () => {
     const L = layoutFor("desktop");
     const s = state({ alb: 0 });
 
@@ -160,7 +160,7 @@ describe("pintura de fundo", () => {
     expect(size(long)).toBeGreaterThan(0);
   });
 
-  it("o peso é aplicado antes do ajuste de largura", () => {
+  it("the weight is applied before the width fit", () => {
     const reg = paintContext(100_000);
     const deps = { ...backDeps(), C: fieldConstantsOf(ALBUMS[7].signature) };
     drawBack(reg.ctx, 1400, 900, state({ alb: 7 }), layoutFor("desktop"), deps);
@@ -169,14 +169,14 @@ describe("pintura de fundo", () => {
     for (const f of fromSource.slice(-2)) expect(f.startsWith(`${targetWeight} `)).toBe(true);
   });
 
-  it("no mobile o nome também é ajustado à largura, senão sai da tela", () => {
+  it("on mobile the name is fitted to width too, otherwise it leaves the screen", () => {
     expect(layoutFor("mobile").fitCollection).toBeGreaterThan(0);
     expect(layoutFor("mobile").fitAlbum).toBeGreaterThan(0);
     const reg = paintContext(100_000);
     expect(() => drawBack(reg.ctx, 400, 900, state(), layoutFor("mobile"), backDeps())).not.toThrow();
   });
 
-  it("no mobile um nome largo demais encolhe, como no desktop", () => {
+  it("on mobile an over-wide name shrinks, as on desktop", () => {
     const L = layoutFor("mobile");
     const s = state({ alb: 0 });
 
@@ -193,15 +193,15 @@ describe("pintura de fundo", () => {
     expect(size(long)).toBeGreaterThan(0);
   });
 
-  it("mede o texto uma vez por quadro quando o ajuste está ligado", () => {
+  it("measures the text once per frame when fitting is on", () => {
     const reg = paintContext(10);
     drawBack(reg.ctx, 1400, 900, state(), layoutFor("desktop"), backDeps());
     expect(reg.calls.filter((c) => c === "measureText")).toHaveLength(1);
   });
 });
 
-describe("pintura de frente", () => {
-  it("atravessa as scales sem quebrar", () => {
+describe("front painting", () => {
+  it("crosses the scales without breaking", () => {
     for (const scale of ["collection", "album", "track"] as Scale[]) {
       const reg = paintContext();
       const s = state({ scale, alb: 1, sel: 1, trk: 1, play: 0.4 });
@@ -210,13 +210,13 @@ describe("pintura de frente", () => {
     }
   });
 
-  it("limpa a camada antes de escrever", () => {
+  it("clears the layer before writing", () => {
     const reg = paintContext();
     drawFront(reg.ctx, 1400, 900, state(), layoutFor("desktop"), { fonts: FONTS, covers });
     expect(reg.calls[0]).toBe("clearRect");
   });
 
-  it("escreve o título em Bodoni e o subtítulo em mono", () => {
+  it("writes the title in Bodoni and the subtitle in mono", () => {
     const reg = paintContext();
     drawFront(reg.ctx, 1400, 900, state(), layoutFor("desktop"), { fonts: FONTS, covers });
     expect(reg.sources.some((f) => f.includes("Bodoni"))).toBe(true);
@@ -224,8 +224,8 @@ describe("pintura de frente", () => {
   });
 });
 
-describe("partículas", () => {
-  it("nascem em quantidade declarada e dentro do disco", () => {
+describe("particles", () => {
+  it("they are born in the declared quantity and inside the record", () => {
     const parts = makeParticles();
     expect(parts).toHaveLength(PARTICLES);
     for (const q of parts) {
@@ -237,7 +237,7 @@ describe("partículas", () => {
     }
   });
 
-  it("giram nos dois sentidos", () => {
+  it("they spin in both directions", () => {
     const parts = makeParticles();
     expect(parts.some((q) => q.s > 0)).toBe(true);
     expect(parts.some((q) => q.s < 0)).toBe(true);
@@ -245,28 +245,28 @@ describe("partículas", () => {
 });
 
 describe("RingBakery", () => {
-  it("as fronteiras do ring são as da signature do disco", () => {
+  it("the ring boundaries are the record signature's", () => {
     for (let i = 0; i < ALBUMS.length; i++) {
       expect(rings.bounds(i)).toEqual(boundsOf(ALBUMS[i].signature, ALBUMS[i].tracks.length));
     }
   });
 
-  it("as fronteiras vêm memoizadas entre quadros", () => {
+  it("the boundaries come memoized across frames", () => {
     expect(rings.bounds(2)).toBe(rings.bounds(2));
   });
 
-  it("o arco de cada disco é horneado uma vez e reaproveitado", () => {
+  it("each record's arc is baked once and reused", () => {
     const a = rings.arc(1);
     expect(rings.arc(1)).toBe(a);
   });
 
-  it("uma capa nova invalida o arco horneado", () => {
+  it("a new cover invalidates the baked arc", () => {
     const a = rings.arc(1);
     covers[1].version++;
     expect(rings.arc(1)).not.toBe(a);
   });
 
-  it("o setor devolve sempre o mesmo buffer de saída", () => {
+  it("the sector always returns the same output buffer", () => {
     const s = rings.seg(0, 0, -1, -1, 0, "rgba(0,0,0,1)");
     expect(rings.seg(0, 1, -1, -1, 0, "rgba(0,0,0,1)")).toBe(s);
   });

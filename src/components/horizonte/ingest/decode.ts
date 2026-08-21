@@ -13,7 +13,7 @@ function offlineCtor(): OfflineCtor {
   };
   const g = globalThis as W;
   const Ctor = g.OfflineAudioContext ?? g.webkitOfflineAudioContext;
-  if (!Ctor) throw new Error("OfflineAudioContext indisponível neste navegador");
+  if (!Ctor) throw new Error("OfflineAudioContext unavailable in this browser");
   return Ctor;
 }
 
@@ -60,14 +60,14 @@ export interface DecodeResult {
 
 export async function decodeToMono(file: File): Promise<DecodeResult> {
   if (file.size > MAX_FILE_BYTES) {
-    throw new Error(`arquivo grande demais (${Math.round(file.size / 1048576)} MB)`);
+    throw new Error(`file too large (${Math.round(file.size / 1048576)} MB)`);
   }
   const Ctor = offlineCtor();
   const ctx = new Ctor(1, 1, SR);
   const buffer = await decodeAudioData(ctx, await file.arrayBuffer());
   const seconds = buffer.length / buffer.sampleRate;
   if (seconds > MAX_TRACK_SECONDS) {
-    throw new Error(`faixa longa demais (${Math.round(seconds / 60)} min)`);
+    throw new Error(`track too long (${Math.round(seconds / 60)} min)`);
   }
 
   if (buffer.sampleRate === SR) {

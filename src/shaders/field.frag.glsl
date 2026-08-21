@@ -5,38 +5,14 @@ uniform vec4 uM0, uM1;
 uniform vec3 uCur;
 uniform vec3 uWave;
 uniform float uSpin, uBlur, uTime, uFade, uGrain, uDisp, uJet;
-// Alcance do cursor: +1 sobre um alvo, -1 sobre o vazio que devolve uma escala.
-// O anel fecha ou abre — mesma gramática da entrada de ingestão, sem palavra alguma.
 uniform float uReach;
-// Dureza do fio de luz rasante: brilho de timbre vira dureza de luz.
-// Constante por álbum (centróide medido), perturbada de leve pelo trecho.
 uniform float uRim;
-// Direção da luz rasante. Varre um arco ao longo da faixa: a posição do
-// playhead vira a hora do dia, e a duração vira a velocidade da varredura.
 uniform vec2 uLight;
 uniform vec3 uInk;
-// Lobos do corpo: os harmônicos 2..4 do envelope do álbum viram a forma do
-// horizonte. A macroforma do disco — como ele sobe e desce ao longo da
-// duração — deixa de ser espessura de anel e passa a ser o contorno da massa.
-// uLobeA = (a2,b2,a3,b3) · uLobeB = (a4,b4,amplitude,rotação)
 uniform vec4 uLobeA;
 uniform vec4 uLobeB;
-// Achatamento do corpo. O núcleo e a coroa compartilham um ângulo de visada:
-// sem isto, um disco escuro (coroa muito achatada) deixa o núcleo escapar por
-// cima e por baixo, e o mundo se parte em dois objetos.
 uniform float uFlat;
-// Escala do mundo em unidades de tela. O campo é medido pelo eixo menor, mas o
-// shader trabalha num espaço normalizado pela altura: num telefone o mesmo
-// m0k desviava três vezes mais fração de largura que no desktop, e a tipografia
-// saía da viewport. A lente passa a medir distância e desvio em unidades de
-// mundo, e não em unidades de viewport.
 uniform float uWorld;
-// Contrato de camadas. A lente é um fenômeno do palco: acima do chão do palco
-// ela deforma tudo, abaixo dele decai para um resíduo. É o que deixa a
-// identidade, a lista e o transporte legíveis sem tirá-los do mundo — eles
-// continuam recebendo interferência, só que leve. No desktop uGuard.z = 1 e
-// esta função é a identidade.
-// uGuard = (chão do palco em p.y · maciez · resíduo)
 uniform vec3 uGuard;
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(41.71, 289.13))) * 43758.5453); }

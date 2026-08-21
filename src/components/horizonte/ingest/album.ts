@@ -8,7 +8,7 @@ import type { LocalGroupDraft, LocalTrackDraft } from "./types";
 const collator = new Intl.Collator("pt", { numeric: true, sensitivity: "base" });
 
 export const FALLBACK_ARTIST = "Disco local";
-export const FALLBACK_TITLE = "Sem título";
+export const FALLBACK_TITLE = "Untitled";
 
 const stripExtension = (name: string) => {
   const i = name.lastIndexOf(".");
@@ -124,9 +124,9 @@ export const LOCAL_LICENSE: License = {
   name: "Arquivo local",
   url: "",
   source: "",
-  attribution: "Arquivo do seu dispositivo. Nada foi enviado a nenhum servidor.",
+  attribution: "A file from your device. Nothing was sent to any server.",
   redistributable: false,
-  cover: { license: "Do próprio arquivo" },
+  cover: { license: "From the file itself" },
   verifiedAt: "",
   changes: [],
 };

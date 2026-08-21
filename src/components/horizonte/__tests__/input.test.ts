@@ -33,35 +33,35 @@ afterEach(() => {
   win.restore();
 });
 
-describe("ciclo de vida das escutas", () => {
-  it("registra todas as escutas de uma vez", () => {
+describe("listener lifecycle", () => {
+  it("registers every listener at once", () => {
     expect(win.registered()).toBe(8);
   });
 
-  it("desliga tudo o que ligou", () => {
+  it("detaches everything it attached", () => {
     off();
     expect(win.registered()).toBe(0);
   });
 
-  it("desligar duas vezes não quebra", () => {
+  it("detaching twice does not break", () => {
     off();
     expect(() => off()).not.toThrow();
   });
 });
 
 describe("cursor", () => {
-  it("normaliza a posição pela janela", () => {
+  it("normalizes the position by the window", () => {
     move(500, 400);
     expect(rec.last("pointTo")?.args).toEqual([0.5, 0.5, false]);
   });
 
-  it("segue o cursor mesmo sobre a camada de instruments", () => {
+  it("follows the cursor even over the instruments layer", () => {
     fromUi = true;
     move(250, 200);
     expect(rec.last("pointTo")?.args).toEqual([0.25, 0.25, true]);
   });
 
-  it("avisa o world quando o ponteiro está sobre um controle", () => {
+  it("tells the world when the pointer is over a control", () => {
     move(500, 400);
     expect(rec.last("pointTo")?.args[2]).toBe(false);
     fromUi = true;
@@ -69,25 +69,25 @@ describe("cursor", () => {
     expect(rec.last("pointTo")?.args[2]).toBe(true);
   });
 
-  it("um toque nasce onde o dedo encostou, sem trajeto", () => {
+  it("a tap is born where the finger landed, with no path", () => {
     down(500, 400, "touch");
     expect(rec.last("teleportTo")?.args).toEqual([0.5, 0.5]);
   });
 
-  it("o mouse não teleporta: ele chega andando", () => {
+  it("the mouse does not teleport: it arrives walking", () => {
     down(500, 400, "mouse");
     expect(rec.count("teleportTo")).toBe(0);
   });
 });
 
 describe("arraste", () => {
-  it("não arrasta sem o ponteiro pressionado", () => {
+  it("does not drag without the pointer held down", () => {
     move(500, 400);
     move(300, 400);
     expect(rec.count("panBy")).toBe(0);
   });
 
-  it("informa o passo, o total e a largura da janela", () => {
+  it("reports the step, the total and the window width", () => {
     down(800, 400);
     move(700, 400);
     expect(rec.last("panBy")?.args).toEqual([-100, -100, W]);
@@ -95,27 +95,27 @@ describe("arraste", () => {
     expect(rec.last("panBy")?.args).toEqual([-50, -150, W]);
   });
 
-  it("abre o arraste antes de qualquer passo", () => {
+  it("opens the drag before any step", () => {
     down(800, 400);
     expect(rec.calledNames()).toContain("beginPan");
     expect(rec.count("panBy")).toBe(0);
   });
 
-  it("um toque parado é toque, não arraste", () => {
+  it("a still touch is a tap, not a drag", () => {
     down(500, 400);
     move(503, 400);
     up(503, 400);
     expect(rec.last("endPan")?.args).toEqual([true]);
   });
 
-  it("passar do limiar vira arraste", () => {
+  it("crossing the threshold becomes a drag", () => {
     down(500, 400);
     move(492, 400);
     up(492, 400);
     expect(rec.last("endPan")?.args).toEqual([false]);
   });
 
-  it("vai e volta ainda é arraste: a distância é acumulada em módulo", () => {
+  it("there and back is still a drag: distance accumulates in magnitude", () => {
     down(500, 400);
     move(495, 400);
     move(500, 400);
@@ -123,18 +123,18 @@ describe("arraste", () => {
     expect(rec.last("endPan")?.args).toEqual([false]);
   });
 
-  it("pointercancel encerra como pointerup", () => {
+  it("pointercancel ends like pointerup", () => {
     down(500, 400);
     win.dispatch("pointercancel", { clientX: 500, clientY: 400 });
     expect(rec.last("endPan")?.args).toEqual([true]);
   });
 
-  it("soltar sem ter pressionado não encerra nada", () => {
+  it("a release without a press ends nothing", () => {
     up(500, 400);
     expect(rec.count("endPan")).toBe(0);
   });
 
-  it("um segundo soltar não encerra de novo", () => {
+  it("a second release does not end it again", () => {
     down(500, 400);
     up(500, 400);
     rec.clear();
@@ -143,8 +143,8 @@ describe("arraste", () => {
   });
 });
 
-describe("camada de instruments", () => {
-  it("não começa arraste a partir de um controle", () => {
+describe("instruments layer", () => {
+  it("does not start a drag from a control", () => {
     fromUi = true;
     down(800, 400);
     move(600, 400);
@@ -152,7 +152,7 @@ describe("camada de instruments", () => {
     expect(rec.count("panBy")).toBe(0);
   });
 
-  it("soltar sobre um controle abandona o arraste sem encerrá-lo", () => {
+  it("releasing over a control abandons the drag without ending it", () => {
     down(800, 400);
     move(600, 400);
     fromUi = true;
@@ -160,7 +160,7 @@ describe("camada de instruments", () => {
     expect(rec.count("endPan")).toBe(0);
   });
 
-  it("ignora a roda sobre um controle, sem bloquear a rolagem dele", () => {
+  it("ignores the wheel over a control, without blocking its own scroll", () => {
     fromUi = true;
     let blocked = false;
     win.dispatch("wheel", { deltaY: 100, deltaX: 0, preventDefault: () => (blocked = true) });
@@ -170,7 +170,7 @@ describe("camada de instruments", () => {
 });
 
 describe("roda", () => {
-  it("repassa os dois eixos e bloqueia a rolagem da página", () => {
+  it("forwards both axes and blocks the page scroll", () => {
     let blocked = false;
     win.dispatch("wheel", { deltaY: 120, deltaX: -30, preventDefault: () => (blocked = true) });
     expect(rec.last("wheelBy")?.args).toEqual([120, -30]);
@@ -185,24 +185,24 @@ describe("teclado", () => {
     return () => blocked;
   };
 
-  it("Espaço e Enter acionam a ação principal", () => {
+  it("Space and Enter trigger the primary action", () => {
     key({ code: "Space" });
     key({ key: "Enter" });
     expect(rec.count("primary")).toBe(2);
   });
 
-  it("Escape volta uma scale", () => {
+  it("Escape steps back one scale", () => {
     key({ key: "Escape" });
     expect(rec.count("back")).toBe(1);
   });
 
-  it("Escape volta mesmo com o foco dentro dos instruments", () => {
+  it("Escape goes back even with focus inside the instruments", () => {
     fromUi = true;
     key({ key: "Escape" });
     expect(rec.count("back")).toBe(1);
   });
 
-  it("as setas movem o foco um passo", () => {
+  it("the arrows move focus one step", () => {
     key({ key: "ArrowRight" });
     key({ key: "ArrowDown" });
     expect(rec.calls.filter((c) => c.label === "stepFocus").map((c) => c.args)).toEqual([[1], [1]]);
@@ -212,7 +212,7 @@ describe("teclado", () => {
     expect(rec.calls.filter((c) => c.label === "stepFocus").map((c) => c.args)).toEqual([[-1], [-1]]);
   });
 
-  it("deixa as setas e o Espaço para o controle quando o foco está nele", () => {
+  it("leaves arrows and Space to the control when focus is on it", () => {
     fromUi = true;
     key({ key: "ArrowRight" });
     key({ code: "Space" });
@@ -220,15 +220,15 @@ describe("teclado", () => {
     expect(rec.count("primary")).toBe(0);
   });
 
-  it("não sequestra teclas que não são do world", () => {
+  it("does not hijack keys that are not the world's", () => {
     const blocked = key({ key: "Tab" });
     expect(blocked()).toBe(false);
     expect(rec.calledNames().filter((n) => n !== "markIntent")).toEqual([]);
   });
 });
 
-describe("intenção e ambiente", () => {
-  it("qualquer gesto conta como presença do usuário", () => {
+describe("intent and ambience", () => {
+  it("any gesture counts as user presence", () => {
     move(1, 1);
     expect(rec.count("markIntent")).toBe(1);
     down(1, 1);
@@ -239,18 +239,18 @@ describe("intenção e ambiente", () => {
     expect(rec.count("markIntent")).toBe(4);
   });
 
-  it("marca presença mesmo em evento que nasce num controle", () => {
+  it("marks presence even for an event born on a control", () => {
     fromUi = true;
     down(1, 1);
     expect(rec.count("markIntent")).toBe(1);
   });
 
-  it("repassa o redimensionamento da janela", () => {
+  it("forwards the window resize", () => {
     win.dispatch("resize");
     expect(rec.count("resize")).toBe(1);
   });
 
-  it("acompanha a preferência de movimento reduced nos dois sentidos", () => {
+  it("follows the reduced-motion preference in both directions", () => {
     win.setMotion(true);
     expect(rec.last("setReducedMotion")?.args).toEqual([true]);
     win.setMotion(false);

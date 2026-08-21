@@ -26,15 +26,15 @@ function report(title: string, r: PerceptionReport) {
   const far = worstDistant(r);
   process.stdout.write(
     [
-      `\n── ${title}  (sigma ${r.sigma.toFixed(2)} px de grade · ${r.variant})`,
-      `   média de relance  ${r.mean.toFixed(3)}`,
-      `   pior par          ${r.worst.score.toFixed(3)}   ${short(r.worst.a)} / ${short(r.worst.b)}`,
-      `   par mais distinto ${r.best.score.toFixed(3)}   ${short(r.best.a)} / ${short(r.best.b)}`,
-      `   tinta invariável  ${(r.invariant * 100).toFixed(1)}%`,
-      `   segue a música    ${r.tracking.toFixed(3)}`,
+      `\n── ${title}  (sigma ${r.sigma.toFixed(2)} px de grid · ${r.variant})`,
+      `   mean at a glance  ${r.mean.toFixed(3)}`,
+      `   worst pair       ${r.worst.score.toFixed(3)}   ${short(r.worst.a)} / ${short(r.worst.b)}`,
+      `   most distinct    ${r.best.score.toFixed(3)}   ${short(r.best.a)} / ${short(r.best.b)}`,
+      `   invariant ink    ${(r.invariant * 100).toFixed(1)}%`,
+      `   tracks the music ${r.tracking.toFixed(3)}`,
       far
-        ? `   pior par musicalmente distante  ${far.score.toFixed(3)}   ${short(far.a)} / ${short(far.b)}`
-        : "   nenhum par musicalmente distante",
+        ? `   worst distant pair  ${far.score.toFixed(3)}   ${short(far.a)} / ${short(far.b)}`
+        : "   no musically distant pair",
       "",
     ].join("\n"),
   );
@@ -45,26 +45,26 @@ function axes() {
     const m = morphologyOf(a.signature, a.tracks.length);
     return {
       id: a.id,
-      circuito: m.circuit,
-      achatamento: m.flatten,
-      nucleo: m.coreRatio,
-      relevo: m.relief,
-      camadas: m.strata,
-      excentr: Math.hypot(m.eccX, m.eccY),
-      falha: m.fragment,
-      corpos: m.satellites.filter((x) => x.weight > 0.02).length,
+      circuit: m.circuit,
+      flatten: m.flatten,
+      core: m.coreRatio,
+      relief: m.relief,
+      strata: m.strata,
+      ecc: Math.hypot(m.eccX, m.eccY),
+      fragment: m.fragment,
+      bodies: m.satellites.filter((x) => x.weight > 0.02).length,
     };
   });
   const keys = [
-    "circuito",
-    "achatamento",
-    "nucleo",
-    "relevo",
-    "camadas",
-    "excentr",
-    "falha",
+    "circuit",
+    "flatten",
+    "core",
+    "relief",
+    "strata",
+    "ecc",
+    "fragment",
   ] as const;
-  const head = ["album".padEnd(30), ...keys.map((k) => k.slice(0, 8).padStart(11)), "  corpos"].join(
+  const head = ["album".padEnd(30), ...keys.map((k) => k.slice(0, 8).padStart(11)), "  bodies"].join(
     "",
   );
   const body = rows
@@ -72,7 +72,7 @@ function axes() {
       [
         r.id.padEnd(30),
         ...keys.map((k) => r[k].toFixed(3).padStart(11)),
-        String(r.corpos).padStart(8),
+        String(r.bodies).padStart(8),
       ].join(""),
     )
     .join("\n");
@@ -84,46 +84,46 @@ function axes() {
       return `   ${k.padEnd(12)} ${lo.toFixed(3)} → ${hi.toFixed(3)}   ${(hi / Math.max(lo, 1e-6)).toFixed(2)}×`;
     })
     .join("\n");
-  process.stdout.write(`\n── eixos morfológicos\n${head}\n${body}\n\n── amplitude\n${span}\n`);
+  process.stdout.write(`\n── morphological axes\n${head}\n${body}\n\n── span\n${span}\n`);
 }
 
-describe("distância perceptual entre álbuns", () => {
-  const atual = VARIANTS.map((variant) => measure(SUBJECTS, { variant }));
-  const anterior = measure(SUBJECTS, { morphOf: (s) => legacyMorphologyOf(s.signature) });
+describe("perceptual distance between albums", () => {
+  const current = VARIANTS.map((variant) => measure(SUBJECTS, { variant }));
+  const previous = measure(SUBJECTS, { morphOf: (s) => legacyMorphologyOf(s.signature) });
 
-  it("publica a medição do acervo", () => {
-    report("referência anterior", anterior);
-    atual.forEach((r) => report("morfologia atual", r));
+  it("publishes the catalogue measurement", () => {
+    report("previous reference", previous);
+    current.forEach((r) => report("current morphology", r));
     axes();
-    expect(atual[0].pairs.length).toBe((SUBJECTS.length * (SUBJECTS.length - 1)) / 2);
+    expect(current[0].pairs.length).toBe((SUBJECTS.length * (SUBJECTS.length - 1)) / 2);
   });
 
-  for (const r of atual) {
-    it(`${r.variant}: nenhum disco converge para a macroforma dos outros`, () => {
+  for (const r of current) {
+    it(`${r.variant}: no record converges on the others' macro-shape`, () => {
       expect(r.mean).toBeLessThanOrEqual(GUARDRAIL.mean);
       expect(r.worst.score, `${r.worst.a} / ${r.worst.b}`).toBeLessThanOrEqual(GUARDRAIL.worst);
       expect(r.invariant).toBeLessThanOrEqual(GUARDRAIL.invariant);
     });
 
-    it(`${r.variant}: discos musicalmente distantes divergem de verdade`, () => {
+    it(`${r.variant}: musically distant records genuinely diverge`, () => {
       const far = worstDistant(r);
-      expect(far, `nenhum par com distância musical ≥ ${DISTANT}`).toBeTruthy();
+      expect(far, `no pair with musical distance ≥ ${DISTANT}`).toBeTruthy();
       expect(far!.score, `${far!.a} / ${far!.b}`).toBeLessThanOrEqual(GUARDRAIL.worstDistant);
     });
 
-    it(`${r.variant}: a distância visual segue a distância musical`, () => {
+    it(`${r.variant}: visual distance follows musical distance`, () => {
       expect(r.tracking).toBeGreaterThanOrEqual(GUARDRAIL.tracking);
     });
   }
 
-  it("o guardrail reprovaria a composição anterior", () => {
-    expect(anterior.mean).toBeGreaterThan(GUARDRAIL.mean);
-    expect(anterior.worst.score).toBeGreaterThan(GUARDRAIL.worst);
-    expect(anterior.invariant).toBeGreaterThan(GUARDRAIL.invariant);
-    expect(worstDistant(anterior)!.score).toBeGreaterThan(GUARDRAIL.worstDistant);
+  it("the guardrail would fail the previous composition", () => {
+    expect(previous.mean).toBeGreaterThan(GUARDRAIL.mean);
+    expect(previous.worst.score).toBeGreaterThan(GUARDRAIL.worst);
+    expect(previous.invariant).toBeGreaterThan(GUARDRAIL.invariant);
+    expect(worstDistant(previous)!.score).toBeGreaterThan(GUARDRAIL.worstDistant);
   });
 
-  it("a medição não depende da resolução do rasterizador", () => {
+  it("the measurement does not depend on the rasterizer's resolution", () => {
     const grids = [216, 288, 384].map((gw) =>
       measure(SUBJECTS, { gw, gh: Math.round((gw * 900) / 1440) }),
     );

@@ -67,7 +67,7 @@ const draftOf = (names: string[]) =>
   names.map((name, order) => ({ file: file(name), title: name, disc: 1, track: 0, order }));
 
 describe("FFT real", () => {
-  it("acha a raia certa de uma senoide", () => {
+  it("finds the right bin of a sine", () => {
     const fft = new RealFFT(FFT);
     const frame = new Float64Array(FFT);
     const bin = 64;
@@ -79,7 +79,7 @@ describe("FFT real", () => {
     expect(mag[bin]).toBeGreaterThan(FFT / 4);
   });
 
-  it("respeita Parseval dentro do erro numérico", () => {
+  it("respects Parseval within numerical error", () => {
     const fft = new RealFFT(FFT);
     const frame = new Float64Array(FFT);
     let s = 7;
@@ -95,13 +95,13 @@ describe("FFT real", () => {
     expect(freq / FFT / time).toBeCloseTo(1, 6);
   });
 
-  it("recusa tamanhos que não são potência de dois", () => {
+  it("refuses sizes that are not a power of two", () => {
     expect(() => new RealFFT(1000)).toThrow();
   });
 });
 
-describe("invariantes numéricos da medição", () => {
-  it("percentil segue a interpolação linear do numpy", () => {
+describe("numerical invariants of the measurement", () => {
+  it("the percentile follows numpy's linear interpolation", () => {
     const v = [1, 2, 3, 4];
     expect(percentile(v, 0)).toBe(1);
     expect(percentile(v, 100)).toBe(4);
@@ -109,14 +109,14 @@ describe("invariantes numéricos da medição", () => {
     expect(percentile(v, 10)).toBeCloseTo(1.3, 12);
   });
 
-  it("arredonda para par no empate, como o numpy", () => {
+  it("rounds half to even on ties, like numpy", () => {
     expect(round(0.5, 0)).toBe(0);
     expect(round(1.5, 0)).toBe(2);
     expect(round(2.5, 0)).toBe(2);
     expect(round(-14.365, 2)).toBeCloseTo(-14.36, 10);
   });
 
-  it("normaliza contra âncoras absolutas e satura nas pontas", () => {
+  it("normalizes against absolute anchors and saturates at the ends", () => {
     expect(norm(-32, "loudness")).toBe(0);
     expect(norm(-12, "loudness")).toBe(1);
     expect(norm(-40, "loudness")).toBe(0);
@@ -124,7 +124,7 @@ describe("invariantes numéricos da medição", () => {
     expect(norm(2600, "brightness", true)).toBe(1);
   });
 
-  it("faz downmix de energia constante e corta em ±1, como o afconvert", () => {
+  it("downmixes at constant energy and clips at ±1, like afconvert", () => {
     const l = new Float32Array([1, -1, 0.5]);
     const r = new Float32Array([1, -1, 0.5]);
     const out = downmix([l, r]);
@@ -133,7 +133,7 @@ describe("invariantes numéricos da medição", () => {
     expect(out[2]).toBeCloseTo(1 / Math.SQRT2, 6);
   });
 
-  it("fonte mono não ganha nem perde nível, só o corte de escala cheia", () => {
+  it("a mono source neither gains nor loses level, only the full-scale clip", () => {
     const out = downmix([new Float32Array([0.3, -0.4, 1.6])]);
     expect(out[0]).toBeCloseTo(0.3, 6);
     expect(out[1]).toBeCloseTo(-0.4, 6);
@@ -141,8 +141,8 @@ describe("invariantes numéricos da medição", () => {
   });
 });
 
-describe("análise de faixa", () => {
-  it("mede uma faixa sintética sem produzir NaN nem Infinity", () => {
+describe("track analysis", () => {
+  it("measures a synthetic track without producing NaN or Infinity", () => {
     const a = analyzeTrackPcm(noise(3));
     expect(a.frames).toBeGreaterThan(4);
     expect(a.durationS).toBeCloseTo(3, 6);
@@ -156,14 +156,14 @@ describe("análise de faixa", () => {
     }
   });
 
-  it("faixa curta demais não gera quadros, mas ainda tem duração", () => {
+  it("a too-short track produces no frames, but still has duration", () => {
     const a = analyzeTrackPcm(new Float32Array(FFT + HOP));
     expect(a.frames).toBe(0);
     expect(a.envelope.length).toBe(1);
     expect(a.durationS).toBeGreaterThan(0);
   });
 
-  it("silêncio absoluto não vira NaN em lugar nenhum", () => {
+  it("absolute silence never becomes NaN anywhere", () => {
     const a = analyzeTrackPcm(new Float32Array(SR * 2));
     const m = composeAlbum([a]);
     for (const v of [m.loudnessDb, m.dynamicsDb, m.brightnessHz, m.rolloffHz, m.bassRatio]) {
@@ -172,21 +172,21 @@ describe("análise de faixa", () => {
     expect([...m.envelopeBytes].every((b) => b >= 0 && b <= 255)).toBe(true);
   });
 
-  it("um tom agudo mede mais brilho que um grave", () => {
+  it("a high tone measures brighter than a low one", () => {
     const low = composeAlbum([analyzeTrackPcm(tone(2, 120))]);
     const high = composeAlbum([analyzeTrackPcm(tone(2, 4000))]);
     expect(high.brightnessHz).toBeGreaterThan(low.brightnessHz * 3);
     expect(low.bassRatio).toBeGreaterThan(high.bassRatio);
   });
 
-  it("um sinal mais alto mede mais volume", () => {
+  it("a louder signal measures more loudness", () => {
     const quiet = composeAlbum([analyzeTrackPcm(tone(2, 440, 0.05))]);
     const loud = composeAlbum([analyzeTrackPcm(tone(2, 440, 0.5))]);
     expect(loud.loudnessDb - quiet.loudnessDb).toBeCloseTo(20, 0);
   });
 });
 
-describe("composição do álbum", () => {
+describe("album composition", () => {
   const album = () =>
     composeAlbum([
       analyzeTrackPcm(tone(4, 300, 0.4)),
@@ -194,7 +194,7 @@ describe("composição do álbum", () => {
       analyzeTrackPcm(tone(2, 1200, 0.2)),
     ]);
 
-  it("spans são proporcionais à duração e somam 1", () => {
+  it("spans are proportional to duration and sum to 1", () => {
     const m = album();
     expect(m.spans).toHaveLength(3);
     expect(m.spans.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 4);
@@ -202,7 +202,7 @@ describe("composição do álbum", () => {
     expect(m.spans[0]).toBeGreaterThan(m.spans[2]);
   });
 
-  it("o envelope tem 512 bytes e percorre o range", () => {
+  it("the envelope has 512 bytes and spans the range", () => {
     const m = album();
     expect(m.envelopeBytes).toHaveLength(ENVELOPE_N);
     expect(Math.max(...m.envelopeBytes)).toBe(255);
@@ -210,7 +210,7 @@ describe("composição do álbum", () => {
     expect(encodeEnvelope(m.envelopeBytes)).toHaveLength(Math.ceil(ENVELOPE_N / 3) * 4);
   });
 
-  it("as âncoras p10/p90 saem ordenadas e dentro do domínio", () => {
+  it("the p10/p90 anchors come out ordered and inside the domain", () => {
     const m = album();
     for (const key of ["bass", "mid", "treb"] as const) {
       const [lo, hi] = m.reference[key];
@@ -221,12 +221,12 @@ describe("composição do álbum", () => {
     expect(m.reference.rms[0]).toBeLessThanOrEqual(m.reference.rms[1]);
   });
 
-  it("recusa um álbum sem áudio analisável", () => {
+  it("refuses an album with no analysable audio", () => {
     expect(() => composeAlbum([])).toThrow();
     expect(() => composeAlbum([analyzeTrackPcm(new Float32Array(64))])).toThrow();
   });
 
-  it("uma faixa curta demais não some do álbum: entra no span e no envelope", () => {
+  it("a too-short track does not vanish from the album: it enters the span and the envelope", () => {
     const m = composeAlbum([
       analyzeTrackPcm(tone(4, 300, 0.4)),
       analyzeTrackPcm(new Float32Array(128)),
@@ -236,7 +236,7 @@ describe("composição do álbum", () => {
   });
 });
 
-describe("um disco local alimenta os mesmos contratos sensoriais", () => {
+describe("a local record feeds the same sensory contracts", () => {
   const measurement = composeAlbum([
     analyzeTrackPcm(tone(5, 200, 0.45)),
     analyzeTrackPcm(noise(9, 11)),
@@ -244,7 +244,7 @@ describe("um disco local alimenta os mesmos contratos sensoriais", () => {
   ]);
   const signature = signatureOf(measurement, [0.4, 0.3, 0.6], [0.7, 0.4, 0.2]);
 
-  it("produz uma AlbumSignature com a mesma forma da curada", () => {
+  it("produces an AlbumSignature with the same shape as the curated one", () => {
     const curated = SIGNATURES["meho-mkultra"];
     expect(Object.keys(signature).sort()).toEqual(
       expect.arrayContaining(Object.keys(curated).sort()),
@@ -253,14 +253,14 @@ describe("um disco local alimenta os mesmos contratos sensoriais", () => {
     expect(Object.keys(signature.reference).sort()).toEqual(Object.keys(curated.reference).sort());
   });
 
-  it("os quatro descritores caem em 0..1", () => {
+  it("the four descriptors fall in 0..1", () => {
     for (const key of ["loudness", "dynamics", "brightness", "duration"] as const) {
       expect(signature[key]).toBeGreaterThanOrEqual(0);
       expect(signature[key]).toBeLessThanOrEqual(1);
     }
   });
 
-  it("P1–P8: as constantes do campo ficam dentro dos guardrails", () => {
+  it("P1–P8: the field constants stay inside the guardrails", () => {
     const c = fieldConstantsOf(signature);
     for (const key of Object.keys(RANGE) as (keyof typeof RANGE)[]) {
       const [a, b] = RANGE[key];
@@ -273,7 +273,7 @@ describe("um disco local alimenta os mesmos contratos sensoriais", () => {
     expect(finite(heftOf(signature))).toBe(true);
   });
 
-  it("P9: os setores do anel vêm das durações medidas", () => {
+  it("P9: the ring sectors come from the measured durations", () => {
     const bounds = boundsOf(signature, 3);
     expect(bounds).toHaveLength(4);
     expect(bounds[0]).toBe(0);
@@ -281,13 +281,13 @@ describe("um disco local alimenta os mesmos contratos sensoriais", () => {
     expect(bounds[2] - bounds[1]).toBeGreaterThan(bounds[1] - bounds[0]);
   });
 
-  it("P5/P10: o envelope é legível pelo motor", () => {
+  it("P5/P10: the envelope is readable by the engine", () => {
     const env = envelopeOf(signature);
     expect(env).toHaveLength(ENVELOPE_N);
     expect([...env].every((v) => v >= 0 && v <= 1)).toBe(true);
   });
 
-  it("P11: a identidade por faixa se move e tem viés médio nulo", () => {
+  it("P11: the per-track identity moves and has zero mean bias", () => {
     const bias = trackBiasOf(signature, 3);
     expect(bias).toHaveLength(3);
     expect(bias.every((b) => finite(b.loudness) && finite(b.dynamics))).toBe(true);
@@ -301,21 +301,21 @@ describe("um disco local alimenta os mesmos contratos sensoriais", () => {
     expect(Math.abs(weighted)).toBeLessThan(0.02);
   });
 
-  it("P12/P13: luz e rotação leem a posição sem estourar", () => {
+  it("P12/P13: light and rotation read the position without overflowing", () => {
     for (const p of [0, 0.5, 1]) expect(finite(lightSweepOf(p))).toBe(true);
     const bounds = boundsOf(signature, 3);
     expect(albumProgressOf(bounds, 1, 0.5)).toBeGreaterThan(bounds[1]);
     expect(albumProgressOf(bounds, 1, 0.5)).toBeLessThan(bounds[2]);
   });
 
-  it("a antecipação funciona sobre um envelope medido no navegador", () => {
+  it("anticipation works on an envelope measured in the browser", () => {
     const lead = leadOf(signature, 0.2, signature.measured.durationS);
     expect(finite(lead)).toBe(true);
     expect(Math.abs(lead)).toBeLessThanOrEqual(1);
     expect(leadOf(signature, 0.2, 0)).toBe(0);
   });
 
-  it("o motor não distingue disco local de curado pela assinatura", () => {
+  it("the engine cannot tell a local record from a curated one by its signature", () => {
     const local = fieldConstantsOf(signature);
     const curated = fieldConstantsOf(SIGNATURES["darin-wilson-impromptu"]);
     expect(Object.keys(local)).toEqual(Object.keys(curated));
@@ -426,7 +426,7 @@ function flac(comments: string[]): Uint8Array {
 }
 
 describe("metadata embutida", () => {
-  it("lê ID3v2.3 de um MP3, com capa", async () => {
+  it("reads ID3v2.3 from an MP3, with artwork", async () => {
     const bytes = id3v3(
       [
         ["TIT2", "Nancy Holiday"],
@@ -448,7 +448,7 @@ describe("metadata embutida", () => {
     expect(tags.artwork?.type).toBe("image/png");
   });
 
-  it("lê átomos de um M4A", async () => {
+  it("reads atoms from an M4A", async () => {
     const trkn = atom("trkn", atom("data", join(new Uint8Array(8), new Uint8Array([0, 0, 0, 5, 0, 9, 0, 0]))));
     const bytes = m4a([
       ilstText("©nam", "Le Hall"),
@@ -465,7 +465,7 @@ describe("metadata embutida", () => {
     expect(tags.track).toBe(5);
   });
 
-  it("lê comentários Vorbis de um FLAC", async () => {
+  it("reads Vorbis comments from a FLAC", async () => {
     const bytes = flac([
       "TITLE=Blue in Green",
       "ARTIST=Darin Wilson",
@@ -480,20 +480,20 @@ describe("metadata embutida", () => {
     expect(tags.year).toBe("2018");
   });
 
-  it("arquivo sem tags devolve objeto vazio, nunca inventa", async () => {
+  it("a file with no tags returns an empty object, it never invents", async () => {
     const tags = await readTags(new File([blobOf(new Uint8Array(2048))], "a.wav"));
     expect(tags).toEqual({});
   });
 
-  it("arquivo corrompido não explode", async () => {
+  it("a corrupted file does not blow up", async () => {
     const bytes = new Uint8Array(600).fill(0xff);
     bytes.set(new TextEncoder().encode("ID3"), 0);
     await expect(readTags(new File([blobOf(bytes)], "a.mp3"))).resolves.toBeTruthy();
   });
 });
 
-describe("formar um álbum a partir de arquivos", () => {
-  it("ordena por número de faixa quando todos têm", () => {
+describe("forming an album from files", () => {
+  it("sorts by track number when they all have one", () => {
     const drafts = draftOf(["z.mp3", "a.mp3", "m.mp3"]);
     drafts[0].track = 2;
     drafts[1].track = 3;
@@ -501,7 +501,7 @@ describe("formar um álbum a partir de arquivos", () => {
     expect(orderTracks(drafts).map((d) => d.file.name)).toEqual(["m.mp3", "z.mp3", "a.mp3"]);
   });
 
-  it("ordena por disco antes de faixa", () => {
+  it("sorts by record before track", () => {
     const drafts = draftOf(["a.mp3", "b.mp3"]);
     drafts[0].disc = 2;
     drafts[0].track = 1;
@@ -510,7 +510,7 @@ describe("formar um álbum a partir de arquivos", () => {
     expect(orderTracks(drafts).map((d) => d.file.name)).toEqual(["b.mp3", "a.mp3"]);
   });
 
-  it("sem número de faixa usa ordem natural do nome, não lexicográfica", () => {
+  it("with no track number it uses the name's natural order, not lexicographic", () => {
     const drafts = draftOf(["10 dez.mp3", "2 dois.mp3", "1 um.mp3"]);
     expect(orderTracks(drafts).map((d) => d.file.name)).toEqual([
       "1 um.mp3",
@@ -519,7 +519,7 @@ describe("formar um álbum a partir de arquivos", () => {
     ]);
   });
 
-  it("numeração parcial cai para o nome, e não mistura os dois critérios", () => {
+  it("partial numbering falls back to the name, and does not mix the two criteria", () => {
     const drafts = draftOf(["03 c.mp3", "01 a.mp3", "02 b.mp3"]);
     drafts[0].track = 3;
     expect(orderTracks(drafts).map((d) => d.file.name)).toEqual([
@@ -529,12 +529,12 @@ describe("formar um álbum a partir de arquivos", () => {
     ]);
   });
 
-  it("empate total preserva a ordem de seleção", () => {
+  it("a full tie preserves the selection order", () => {
     const drafts = draftOf(["x.mp3", "x.mp3", "x.mp3"]);
     expect(orderTracks(drafts).map((d) => d.order)).toEqual([0, 1, 2]);
   });
 
-  it("limpa o número do começo do nome do arquivo", () => {
+  it("strips the leading number from the file name", () => {
     expect(titleFromFilename("01 - Le Manoir.m4a")).toBe("Le Manoir");
     expect(titleFromFilename("01-hypnosis.m4a")).toBe("hypnosis");
     expect(titleFromFilename("07_Poursuivi.mp3")).toBe("Poursuivi");
@@ -544,7 +544,7 @@ describe("formar um álbum a partir de arquivos", () => {
     expect(titleFromFilename("1984 remaster.mp3")).toBe("1984 remaster");
   });
 
-  it("agrupa por álbum declarado nas tags", async () => {
+  it("groups by the album declared in the tags", async () => {
     const a = file("a.mp3", id3v3([["TALB", "Um"], ["TPE1", "Artista"], ["TIT2", "A"]]));
     const b = file("b.mp3", id3v3([["TALB", "Um"], ["TPE1", "Artista"], ["TIT2", "B"]]));
     const c = file("c.mp3", id3v3([["TALB", "Dois"], ["TPE1", "Artista"], ["TIT2", "C"]]));
@@ -555,22 +555,22 @@ describe("formar um álbum a partir de arquivos", () => {
     expect(groups[1].title).toBe("Dois");
   });
 
-  it("sem tag de álbum tudo vira um disco só, sem inventar nome", async () => {
+  it("with no album tag everything becomes a single record, without inventing a name", async () => {
     const groups = await groupFiles([file("um.mp3"), file("dois.mp3")]);
     expect(groups).toHaveLength(1);
     expect(groups[0].artist).toBe(FALLBACK_ARTIST);
     expect(groups[0].tracks.map((t) => t.title)).toEqual(["dois", "um"]);
-    expect(groups[0].title).toBe("Sem título");
+    expect(groups[0].title).toBe("Untitled");
   });
 
-  it("uma faixa só vira um álbum de uma faixa, com o título dela", async () => {
+  it("a single track becomes a one-track album, with its own title", async () => {
     const groups = await groupFiles([file("04 - Solar.mp3")]);
     expect(groups).toHaveLength(1);
     expect(groups[0].title).toBe("Solar");
     expect(groups[0].tracks).toHaveLength(1);
   });
 
-  it("monta um Album completo com fontes de arquivo", () => {
+  it("assembles a complete Album with file sources", () => {
     const m = composeAlbum([analyzeTrackPcm(tone(3, 440, 0.3)), analyzeTrackPcm(noise(4, 5))]);
     const signature = signatureOf(m, [0.4, 0.3, 0.6], [0.7, 0.4, 0.2]);
     const album = assembleAlbum({
@@ -578,7 +578,7 @@ describe("formar um álbum a partir de arquivos", () => {
       cat: "L—001",
       draft: {
         key: "k",
-        artist: "Alguém",
+        artist: "Someone",
         title: "Disco",
         year: "",
         artwork: null,
@@ -594,12 +594,12 @@ describe("formar um álbum a partir de arquivos", () => {
     expect(album.tracks[0].source).toEqual({ kind: "file", url: "blob:a", name: "a.mp3" });
     expect(album.tracks[1].dur).toBe(4);
     expect(album.license.source).toBe("");
-    expect(album.license.attribution).toMatch(/Nada foi enviado/);
+    expect(album.license.attribution).toMatch(/Nothing was sent/);
   });
 });
 
-describe("tinta do disco local", () => {
-  it("cai no corredor oklch da coleção", () => {
+describe("local record ink", () => {
+  it("falls into the collection's oklch corridor", () => {
     for (const seed of ["a", "outro", "terceiro"]) {
       const [a, b] = inkFromAudio(Math.random(), Math.random(), Math.random());
       void seed;
@@ -613,7 +613,7 @@ describe("tinta do disco local", () => {
     }
   });
 
-  it("discos escuros e brilhantes recebem matizes distantes", () => {
+  it("dark and bright records get distant hues", () => {
     const [dark] = inkFromAudio(0.1, 0.1, 0.9);
     const [bright] = inkFromAudio(0.95, 0.95, 0.1);
     expect(oklch(dark[0], dark[1], dark[2])[2]).not.toBeCloseTo(
@@ -622,22 +622,22 @@ describe("tinta do disco local", () => {
     );
   });
 
-  it("a matiz de reserva é determinística e não depende da posição na lista", () => {
-    expect(stableHue("disco")).toBe(stableHue("disco"));
-    expect(stableHue("disco")).not.toBe(stableHue("outro"));
-    expect(forceRange(stableHue("disco"))).toEqual(forceRange(stableHue("disco")));
+  it("the fallback hue is deterministic and does not depend on position in the list", () => {
+    expect(stableHue("record")).toBe(stableHue("record"));
+    expect(stableHue("record")).not.toBe(stableHue("outro"));
+    expect(forceRange(stableHue("record"))).toEqual(forceRange(stableHue("record")));
   });
 });
 
-describe("regressão do catálogo curado", () => {
+describe("curated catalogue regression", () => {
   beforeEach(() => resetCatalog());
 
-  it("o acervo curado continua íntegro", () => {
+  it("the curated catalogue remains intact", () => {
     expect(ALBUMS).toHaveLength(CURATED_COUNT);
     expect(ALBUMS.every((a) => a.provider === "curated")).toBe(true);
   });
 
-  it("registrar um disco local não altera assinatura de nenhum curado", () => {
+  it("registering a local record does not alter any curated signature", () => {
     const before = ALBUMS.map((a) => JSON.stringify(a.signature));
     const m = composeAlbum([analyzeTrackPcm(noise(4, 21))]);
     registerAlbum({
@@ -665,7 +665,7 @@ describe("regressão do catálogo curado", () => {
     );
   });
 
-  it("resetCatalog devolve o acervo ao estado curado", () => {
+  it("resetCatalog returns the catalogue to its curated state", () => {
     const m = composeAlbum([analyzeTrackPcm(noise(4, 22))]);
     registerAlbum({
       ...assembleAlbum({
@@ -689,7 +689,7 @@ describe("regressão do catálogo curado", () => {
     expect(ALBUMS).toHaveLength(CURATED_COUNT);
   });
 
-  it("a assinatura neutra continua sendo o piso, não o caminho local", () => {
+  it("the neutral signature remains the floor, not the local path", () => {
     const m = composeAlbum([analyzeTrackPcm(noise(5, 31))]);
     const local = signatureOf(m, [0.4, 0.3, 0.6], [0.7, 0.4, 0.2]);
     expect(local.envelope).not.toBe(NEUTRAL_SIGNATURE.envelope);

@@ -217,7 +217,7 @@ npm test
 
 The parity tests between the in-browser analysis and the offline pipeline need the
 WAV cache that `analyze-audio.py` leaves in `.cache/analysis`; without it they skip
-themselves. In development, `/aferir` runs the same comparison in the browser.
+themselves. In development, `/parity` runs the same comparison in the browser.
 
 > Type-check and lint:
 

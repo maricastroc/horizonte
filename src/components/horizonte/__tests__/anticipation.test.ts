@@ -5,39 +5,39 @@ import { LOOKAHEAD_S, leadOf } from "../audio/anticipation";
 import { NEUTRAL_SIGNATURE } from "../content/signature";
 import { encodeEnvelope, signature } from "./fixtures";
 
-const subida = Array.from({ length: 512 }, (_, i) => Math.round((i / 511) * 255));
-const rampa = signature(0.5, 0.5, 0.5, 0.5, [], encodeEnvelope(subida));
+const rise = Array.from({ length: 512 }, (_, i) => Math.round((i / 511) * 255));
+const ramp = signature(0.5, 0.5, 0.5, 0.5, [], encodeEnvelope(rise));
 
-describe("leadOf — o campo lê à frente", () => {
-  it("num trecho que cresce, o sinal é positivo", () => {
-    expect(leadOf(rampa, 0.1, 100, 20)).toBeGreaterThan(0);
+describe("leadOf — the field reads ahead", () => {
+  it("on a rising passage, the signal is positive", () => {
+    expect(leadOf(ramp, 0.1, 100, 20)).toBeGreaterThan(0);
   });
 
-  it("num trecho que cai, o sinal é negativo", () => {
-    const queda = signature(0.5, 0.5, 0.5, 0.5, [], encodeEnvelope([...subida].reverse()));
-    expect(leadOf(queda, 0.1, 100, 20)).toBeLessThan(0);
+  it("on a falling passage, the signal is negative", () => {
+    const fall = signature(0.5, 0.5, 0.5, 0.5, [], encodeEnvelope([...rise].reverse()));
+    expect(leadOf(fall, 0.1, 100, 20)).toBeLessThan(0);
   });
 
-  it("sem envelope medido, não antecipa nada", () => {
+  it("with no measured envelope, it anticipates nothing", () => {
     expect(leadOf(NEUTRAL_SIGNATURE, 0.3, 2400)).toBe(0);
   });
 
-  it("sem duração conhecida, não antecipa nada", () => {
-    expect(leadOf(rampa, 0.3, 0)).toBe(0);
-    expect(leadOf(rampa, 0.3, NaN)).toBe(0);
+  it("with no known duration, it anticipates nothing", () => {
+    expect(leadOf(ramp, 0.3, 0)).toBe(0);
+    expect(leadOf(ramp, 0.3, NaN)).toBe(0);
   });
 
-  it("no fim do disco não há o que antecipar", () => {
-    expect(leadOf(rampa, 1, 100, 20)).toBe(0);
+  it("at the end of the record there is nothing to anticipate", () => {
+    expect(leadOf(ramp, 1, 100, 20)).toBe(0);
   });
 
-  it("horizonte maior enxerga mais longe", () => {
-    expect(Math.abs(leadOf(rampa, 0.1, 100, 40))).toBeGreaterThan(
-      Math.abs(leadOf(rampa, 0.1, 100, 10)),
+  it("a wider horizon sees further", () => {
+    expect(Math.abs(leadOf(ramp, 0.1, 100, 40))).toBeGreaterThan(
+      Math.abs(leadOf(ramp, 0.1, 100, 10)),
     );
   });
 
-  it("fica sempre dentro de [-1, 1] em todo o acervo", () => {
+  it("always stays within [-1, 1] across the catalogue", () => {
     for (const album of CURATION) {
       const sig = SIGNATURES[album.id];
       for (let i = 0; i <= 200; i++) {
@@ -47,14 +47,14 @@ describe("leadOf — o campo lê à frente", () => {
     }
   });
 
-  it("todo disco do acervo tem estrutura suficiente para o sinal existir", () => {
+  it("every record in the catalogue has enough structure for the signal to exist", () => {
     for (const album of CURATION) {
       const sig = SIGNATURES[album.id];
-      let maior = 0;
+      let larger = 0;
       for (let i = 0; i <= 500; i++) {
-        maior = Math.max(maior, Math.abs(leadOf(sig, i / 500, sig.measured.durationS)));
+        larger = Math.max(larger, Math.abs(leadOf(sig, i / 500, sig.measured.durationS)));
       }
-      expect(maior, album.id).toBeGreaterThan(0.1);
+      expect(larger, album.id).toBeGreaterThan(0.1);
     }
   });
 });

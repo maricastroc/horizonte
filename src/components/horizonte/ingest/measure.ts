@@ -102,14 +102,14 @@ export class Measurer {
         try {
           decoded = await (this.deps.decode ?? decodeToMono)(files[i]);
         } catch (e) {
-          throw new Error(`não consegui ler "${files[i].name}": ${(e as Error).message}`);
+          throw new Error(`could not read "${files[i].name}": ${(e as Error).message}`);
         }
         decodeMs += performance.now() - t0;
         this.guard();
 
         albumSeconds += decoded.seconds;
         if (albumSeconds > MAX_ALBUM_SECONDS) {
-          throw new Error("disco longo demais para medir de uma vez");
+          throw new Error("record too long to measure in one pass");
         }
         durations.push(decoded.seconds);
         hooks.onDecoded?.(i, decoded.seconds);

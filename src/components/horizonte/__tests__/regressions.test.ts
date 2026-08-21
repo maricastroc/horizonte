@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const gl = vi.hoisted(() => ({ renders: 0 }));
 
-vi.mock("../fieldMaterial", async (importarReal) => {
-  const real = await importarReal<typeof import("../fieldMaterial")>();
+vi.mock("../fieldMaterial", async (importReal) => {
+  const real = await importReal<typeof import("../fieldMaterial")>();
   return {
     ...real,
     createFieldGL: () => ({
@@ -52,11 +52,11 @@ afterEach(() => {
   engine = null;
 });
 
-describe("aba estrangulada não pula fases da sequência", () => {
+describe("a throttled tab does not skip phases of the sequence", () => {
   const source = () =>
     (m() as unknown as { bus: { current: { el: FakeAudio } } }).bus.current.el.src;
 
-  it("o passo de integração é limitado, por longo que seja o intervalo real", () => {
+  it("the integration step is clamped, however long the real interval is", () => {
     world();
     m().playTrack(0, 0);
     const before = m().st.seqT;
@@ -64,7 +64,7 @@ describe("aba estrangulada não pula fases da sequência", () => {
     expect(m().st.seqT - before).toBeLessThanOrEqual(0.05 + 1e-9);
   });
 
-  it("a fusão troca o arquivo mesmo com quadros de cinco segundos", () => {
+  it("the fusion swaps the file even with five-second frames", () => {
     world();
     m().playTrack(0, 0);
     for (let i = 0; i < 80; i++) a().advance(16);
@@ -78,7 +78,7 @@ describe("aba estrangulada não pula fases da sequência", () => {
     expect(source()).not.toBe(before);
   });
 
-  it("o colapso também chega ao fim, só que em câmera lenta", () => {
+  it("the collapse also reaches its end, only in slow motion", () => {
     world();
     m().playTrack(0, 0);
     for (let i = 0; i < 60; i++) a().advance(5000);
@@ -86,7 +86,7 @@ describe("aba estrangulada não pula fases da sequência", () => {
   });
 });
 
-describe("discos de uma faixa só", () => {
+describe("single-track records", () => {
   const aTrack: Catalog = {
     size: 1,
     trackCount: () => 1,
@@ -94,14 +94,14 @@ describe("discos de uma faixa só", () => {
     hasTrack: (alb, trk) => alb === 0 && trk === 0,
   };
 
-  it("pular circula sobre a própria faixa sem estourar", () => {
+  it("skipping cycles over the track itself without overflowing", () => {
     const s = { ...initialState(), scale: "track" as const, mode: "playing" as const, playAlb: 0, trk: 0 };
     T.skip(s, aTrack, 1);
     expect(s.fuseB).toBe(0);
     expect(s.mode).toBe("fusion");
   });
 
-  it("mover a seleção não sai do disco", () => {
+  it("moving the selection never leaves the record", () => {
     const s = { ...initialState(), scale: "album" as const };
     T.stepSel(s, aTrack, 1);
     expect(s.sel).toBe(0);
@@ -109,7 +109,7 @@ describe("discos de uma faixa só", () => {
     expect(s.sel).toBe(0);
   });
 
-  it("o ring de uma faixa é a volta inteira", () => {
+  it("a single track's ring is the whole turn", () => {
     const bounds = [0, 1];
     expect(sectorAt(bounds, 0)).toBe(0);
     expect(sectorAt(bounds, 0.999)).toBe(0);
@@ -117,8 +117,8 @@ describe("discos de uma faixa só", () => {
   });
 });
 
-describe("janela degenerada", () => {
-  it("uma tela minúscula não produz medidas inválidas", () => {
+describe("degenerate window", () => {
+  it("a tiny screen does not produce invalid measurements", () => {
     world({ innerWidth: 1, innerHeight: 1 });
     for (let i = 0; i < 30; i++) a().advance(16);
 
@@ -127,15 +127,15 @@ describe("janela degenerada", () => {
     }
   });
 
-  it("o hit-test sobrevive a dimensões degeneradas", () => {
+  it("the hit-test survives degenerate dimensions", () => {
     const s = { ...initialState(), scale: "album" as const };
     const h = hitTest(0.5, 0.5, 2, 2, s, layoutFor("desktop"), () => [0, 1], 1, () => NEUTRAL_MORPHOLOGY);
     expect(["body", "track", "empty"]).toContain(h.kind);
   });
 });
 
-describe("invariantes de estado", () => {
-  it("nenhum campo numérico vira NaN durante uma sessão longa", () => {
+describe("state invariants", () => {
+  it("no numeric field becomes NaN during a long session", () => {
     world();
     m().enterAlbum(3);
     for (let i = 0; i < 40; i++) a().advance(16);
@@ -157,7 +157,7 @@ describe("invariantes de estado", () => {
     }
   });
 
-  it("o índice do álbum nunca escapa do acervo", () => {
+  it("the album index never escapes the catalogue", () => {
     world();
     for (const target of [-50, 0, 4, 99, 2]) {
       m().st.navT = target;
@@ -167,7 +167,7 @@ describe("invariantes de estado", () => {
     }
   });
 
-  it("a seleção nunca aponta para fora do disco aberto", () => {
+  it("the selection never points outside the open record", () => {
     world();
     for (let i = 0; i < ALBUMS.length; i++) {
       m().enterAlbum(i);
@@ -179,8 +179,8 @@ describe("invariantes de estado", () => {
   });
 });
 
-describe("signature sensorial nas bordas", () => {
-  it("as fronteiras do ring somam a volta em todo o acervo", () => {
+describe("sensory signature at the edges", () => {
+  it("the ring boundaries sum to a full turn across the catalogue", () => {
     for (const a of ALBUMS) {
       const b = boundsOf(a.signature, a.tracks.length);
       expect(b[0]).toBe(0);
@@ -188,7 +188,7 @@ describe("signature sensorial nas bordas", () => {
     }
   });
 
-  it("um disco saturado no brilho continua dentro dos limites de pintura", () => {
+  it("a record saturated in brightness stays within the painting limits", () => {
     const saturated = ALBUMS.find((a) => a.signature.brightness === 1);
     expect(saturated).toBeDefined();
     world();

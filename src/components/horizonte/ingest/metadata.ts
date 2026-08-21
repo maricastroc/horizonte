@@ -232,9 +232,7 @@ function applyVorbisComment(bytes: Uint8Array, tags: TagData) {
         for (let k = 0; k < bin.length; k++) pic[k] = bin.charCodeAt(k);
         const art = flacPicture(pic);
         if (art) tags.artwork = art;
-      } catch {
-        /* comentário corrompido: ignora */
-      }
+      } catch {}
     }
   }
 }

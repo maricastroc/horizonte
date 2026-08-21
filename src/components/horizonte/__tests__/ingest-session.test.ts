@@ -67,7 +67,7 @@ const file = (name: string, bytes = 4096) =>
 const decoder =
   (seconds: Record<string, number>, failOn?: string) =>
   async (f: File): Promise<DecodeResult> => {
-    if (failOn && f.name === failOn) throw new Error("formato ilegível");
+    if (failOn && f.name === failOn) throw new Error("unreadable format");
     const s = seconds[f.name] ?? 3;
     return { pcm: noise(s, f.name.length), seconds: s, sourceRate: 44100, resampled: true };
   };
@@ -118,8 +118,8 @@ const track = <T,>() => {
   return { seen, sink } as { seen: IngestStatus[]; sink: (s: IngestStatus) => void; _?: T };
 };
 
-describe("ingestão de um disco local", () => {
-  it("mede, monta e registra o álbum", async () => {
+describe("ingesting a local record", () => {
+  it("measures, assembles and registers the album", async () => {
     const { seen, sink } = track();
     const session = new IngestSession(sink, deps(decoder({ "a.mp3": 4, "b.mp3": 7 })));
     const { indices, rejected } = await session.run([file("a.mp3"), file("b.mp3")]);
@@ -147,7 +147,7 @@ describe("ingestão de um disco local", () => {
     expect(seen.every((s) => s.progress >= 0 && s.progress <= 1)).toBe(true);
   });
 
-  it("o progresso avança monotonicamente", async () => {
+  it("progress advances monotonically", async () => {
     const { seen, sink } = track();
     const session = new IngestSession(sink, deps(decoder({ "a.mp3": 5, "b.mp3": 5, "c.mp3": 5 })));
     await session.run([file("a.mp3"), file("b.mp3"), file("c.mp3")]);
@@ -157,7 +157,7 @@ describe("ingestão de um disco local", () => {
     }
   });
 
-  it("dois álbuns em uma seleção viram dois corpos", async () => {
+  it("two albums in one selection become two bodies", async () => {
     const id3 = (album: string) => {
       const encoded = new TextEncoder().encode(album);
       const body = new Uint8Array(1 + encoded.length);
@@ -195,7 +195,7 @@ describe("ingestão de um disco local", () => {
     expect(ALBUMS[CURATED_COUNT + 1].cat).toBe("L—002");
   });
 
-  it("recusa formatos que o navegador não lê, sem quebrar", async () => {
+  it("refuses formats the browser cannot read, without breaking", async () => {
     const { seen, sink } = track();
     const session = new IngestSession(sink, deps(decoder({})));
     const { indices, rejected } = await session.run([file("a.wma"), file("b.ra")]);
@@ -207,7 +207,7 @@ describe("ingestão de um disco local", () => {
     expect(seen.at(-1)?.error).toMatch(/MP3/);
   });
 
-  it("um erro de decode falha nomeando o arquivo e não registra nada", async () => {
+  it("a decode error fails naming the file and registers nothing", async () => {
     const { seen, sink } = track();
     const session = new IngestSession(sink, deps(decoder({}, "b.mp3")));
     const { indices } = await session.run([file("a.mp3"), file("b.mp3")]);
@@ -218,14 +218,14 @@ describe("ingestão de um disco local", () => {
     expect(seen.at(-1)?.error).toContain("b.mp3");
   });
 
-  it("erro de decode devolve as URLs já criadas", async () => {
+  it("a decode error gives back the URLs already created", async () => {
     const { sink } = track();
     const session = new IngestSession(sink, deps(decoder({}, "b.mp3")));
     await session.run([file("a.mp3"), file("b.mp3")]);
     expect(revoked.length).toBe(created.length);
   });
 
-  it("cancelar no meio interrompe, limpa e não registra", async () => {
+  it("cancelling midway stops, cleans up and registers nothing", async () => {
     const { seen, sink } = track();
     const holder: { session?: IngestSession } = {};
     const decode = async (f: File): Promise<DecodeResult> => {
@@ -243,7 +243,7 @@ describe("ingestão de um disco local", () => {
     expect(FakeWorker.made.every((w) => w.terminated)).toBe(true);
   });
 
-  it("depois de cancelada, a sessão não fala mais", async () => {
+  it("once cancelled, the session speaks no more", async () => {
     const { seen, sink } = track();
     const holder: { session?: IngestSession } = {};
     const decode = async (f: File): Promise<DecodeResult> => {
@@ -259,7 +259,7 @@ describe("ingestão de um disco local", () => {
     expect(seen.slice(cancelledAt + 1)).toEqual([]);
   });
 
-  it("descartar a sessão a cala sem emitir nada", async () => {
+  it("disposing the session silences it without emitting anything", async () => {
     const { seen, sink } = track();
     const session = new IngestSession(sink, deps(decoder({})));
     session.dispose();
@@ -269,14 +269,14 @@ describe("ingestão de um disco local", () => {
     expect(seen.filter((s) => s.phase === "done")).toEqual([]);
   });
 
-  it("o worker é encerrado ao fim de qualquer caminho", async () => {
+  it("the worker is terminated at the end of every path", async () => {
     const { sink } = track();
     await new IngestSession(sink, deps(decoder({}))).run([file("a.mp3")]);
     expect(FakeWorker.made).toHaveLength(1);
     expect(FakeWorker.made[0].terminated).toBe(true);
   });
 
-  it("as URLs do álbum registrado sobrevivem, as demais não", async () => {
+  it("the registered album's URLs survive, the rest do not", async () => {
     const { sink } = track();
     const session = new IngestSession(sink, deps(decoder({ "a.mp3": 4 })));
     await session.run([file("a.mp3")]);
@@ -285,7 +285,7 @@ describe("ingestão de um disco local", () => {
     for (const url of kept) expect(revoked).not.toContain(url);
   });
 
-  it("dispose depois do fim não revoga o que o álbum ainda usa", async () => {
+  it("disposing after the end does not revoke what the album still uses", async () => {
     const { sink } = track();
     const session = new IngestSession(sink, deps(decoder({ "a.mp3": 4 })));
     await session.run([file("a.mp3")]);
@@ -296,7 +296,7 @@ describe("ingestão de um disco local", () => {
     }
   });
 
-  it("o PCM não fica retido: o buffer é transferido para o worker", async () => {
+  it("the PCM is not retained: the buffer is transferred to the worker", async () => {
     const { sink } = track();
     const kept: Float32Array[] = [];
     const decode = async (f: File): Promise<DecodeResult> => {
@@ -310,7 +310,7 @@ describe("ingestão de um disco local", () => {
     expect(kept[0].length).toBeGreaterThan(0);
   });
 
-  it("uma seleção só de arquivos ilegíveis não deixa o catálogo sujo", async () => {
+  it("a selection of only unreadable files leaves no dirt in the catalogue", async () => {
     const { sink } = track();
     await new IngestSession(sink, deps(decoder({}, "a.mp3"))).run([file("a.mp3")]);
     expect(ALBUMS).toHaveLength(CURATED_COUNT);

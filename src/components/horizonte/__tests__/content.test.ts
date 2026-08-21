@@ -4,20 +4,20 @@ import { mediaUrl, needsCors } from "../content/assets";
 import { CURATION } from "../content/curation.generated";
 import { SIGNATURES } from "../content/signature.generated";
 
-describe("mediaUrl sem base remota", () => {
-  it("mantém caminhos locais como caminhos locais", () => {
+describe("mediaUrl without a remote base", () => {
+  it("keeps local paths as local paths", () => {
     expect(mediaUrl("/music/a/01.m4a")).toBe("/music/a/01.m4a");
   });
 
-  it("garante a barra inicial", () => {
+  it("guarantees the leading slash", () => {
     expect(mediaUrl("music/a/01.m4a")).toBe("/music/a/01.m4a");
   });
 
-  it("não mexe em caminho vazio", () => {
+  it("leaves an empty path alone", () => {
     expect(mediaUrl("")).toBe("");
   });
 
-  it("deixa passar URL absoluta e data URI", () => {
+  it("lets absolute URLs and data URIs through", () => {
     expect(mediaUrl("https://cdn.exemplo/a.m4a")).toBe("https://cdn.exemplo/a.m4a");
     expect(mediaUrl("//cdn.exemplo/a.m4a")).toBe("//cdn.exemplo/a.m4a");
     expect(mediaUrl("data:audio/mp4;base64,AAA")).toBe("data:audio/mp4;base64,AAA");
@@ -25,7 +25,7 @@ describe("mediaUrl sem base remota", () => {
 });
 
 describe("needsCors", () => {
-  it("só exige CORS para origem externa", () => {
+  it("only requires CORS for an external origin", () => {
     expect(needsCors("/music/a.m4a")).toBe(false);
     expect(needsCors("https://cdn.exemplo/a.m4a")).toBe(true);
     expect(needsCors("//cdn.exemplo/a.m4a")).toBe(true);
@@ -33,7 +33,7 @@ describe("needsCors", () => {
   });
 });
 
-describe("mediaUrl com base remota", () => {
+describe("mediaUrl with a remote base", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.resetModules();
@@ -45,44 +45,44 @@ describe("mediaUrl com base remota", () => {
     return (await import("../content/assets")).mediaUrl;
   };
 
-  it("prefixa os caminhos locais", async () => {
+  it("prefixes local paths", async () => {
     const url = await withBase("https://blob.exemplo");
     expect(url("/music/a/01.m4a")).toBe("https://blob.exemplo/music/a/01.m4a");
   });
 
-  it("tolera barra sobrando na base", async () => {
+  it("tolerates a trailing slash on the base", async () => {
     const url = await withBase("https://blob.exemplo///");
     expect(url("/music/a/01.m4a")).toBe("https://blob.exemplo/music/a/01.m4a");
   });
 
-  it("não prefixa o que já é absoluto", async () => {
+  it("does not prefix what is already absolute", async () => {
     const url = await withBase("https://blob.exemplo");
     expect(url("https://outro.exemplo/a.m4a")).toBe("https://outro.exemplo/a.m4a");
   });
 });
 
-describe("integridade do acervo", () => {
-  it("todo álbum curado tem signature medida", () => {
+describe("catalogue integrity", () => {
+  it("every curated album has a measured signature", () => {
     const sem = CURATION.filter((a) => !SIGNATURES[a.id]).map((a) => a.id);
     expect(sem).toEqual([]);
   });
 
-  it("nenhum álbum caiu na signature neutra", () => {
+  it("no album fell back to the neutral signature", () => {
     const neutral = ALBUMS.filter((a) => a.signature === NEUTRAL_SIGNATURE).map((a) => a.id);
     expect(neutral).toEqual([]);
   });
 
-  it("os identificadores são únicos", () => {
+  it("the identifiers are unique", () => {
     const ids = CURATION.map((a) => a.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("os catálogos são únicos", () => {
+  it("the catalogue numbers are unique", () => {
     const cats = CURATION.map((a) => a.cat);
     expect(new Set(cats).size).toBe(cats.length);
   });
 
-  it("as inks são RGB normalizado", () => {
+  it("the inks are normalized RGB", () => {
     for (const a of ALBUMS) {
       for (const ink of [a.inkA, a.inkB]) {
         expect(ink, a.id).toHaveLength(3);
@@ -94,14 +94,14 @@ describe("integridade do acervo", () => {
     }
   });
 
-  it("a signature sobrepõe a ink da curadoria quando a mediu", () => {
+  it("the signature overrides the curated ink when it measured one", () => {
     for (const a of ALBUMS) {
       if (a.signature.inkA) expect(a.inkA, a.id).toEqual(a.signature.inkA);
       if (a.signature.inkB) expect(a.inkB, a.id).toEqual(a.signature.inkB);
     }
   });
 
-  it("todo álbum tem faixas com duração positiva e fonte local", () => {
+  it("every album has tracks with positive duration and a local source", () => {
     for (const a of ALBUMS) {
       expect(a.tracks.length, a.id).toBeGreaterThan(0);
       for (const t of a.tracks) {
@@ -111,7 +111,7 @@ describe("integridade do acervo", () => {
     }
   });
 
-  it("os descritores normalizados ficam em [0, 1]", () => {
+  it("the normalized descriptors stay in [0, 1]", () => {
     for (const a of ALBUMS) {
       for (const k of ["loudness", "dynamics", "brightness", "duration"] as const) {
         expect(a.signature[k], `${a.id}.${k}`).toBeGreaterThanOrEqual(0);
@@ -120,7 +120,7 @@ describe("integridade do acervo", () => {
     }
   });
 
-  it("os spans de faixa, quando medidos, cobrem o álbum inteiro", () => {
+  it("the track spans, when measured, cover the whole album", () => {
     for (const a of ALBUMS) {
       const spans = a.signature.spans;
       if (!spans.length) continue;
@@ -130,7 +130,7 @@ describe("integridade do acervo", () => {
     }
   });
 
-  it("as âncoras de referência ao vivo são intervalos crescentes", () => {
+  it("the live reference anchors are increasing ranges", () => {
     for (const a of ALBUMS) {
       const r = a.signature.reference;
       for (const k of ["bass", "mid", "treb", "rms"] as const) {
@@ -139,7 +139,7 @@ describe("integridade do acervo", () => {
     }
   });
 
-  it("toda licença declara origem, atribuição e verificação", () => {
+  it("every licence declares source, attribution and verification", () => {
     for (const a of ALBUMS) {
       expect(a.license.name, a.id).toBeTruthy();
       expect(a.license.source, a.id).toMatch(/^https?:\/\//);
@@ -150,7 +150,7 @@ describe("integridade do acervo", () => {
     }
   });
 
-  it("as capas e faixas apontam para dentro da pasta do álbum", () => {
+  it("covers and tracks point inside the album folder", () => {
     for (const a of ALBUMS) {
       expect(a.cover, a.id).toContain(`/music/${a.id}/`);
       for (const t of a.tracks) {

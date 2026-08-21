@@ -75,7 +75,7 @@ export default function Parity() {
       let response = await fetch(track.source.src);
       if (!response.ok) response = await fetch(mediaUrl(track.source.src));
       const blob = await response.blob();
-      files.push(new File([blob], track.source.src.split("/").pop() ?? "faixa.m4a"));
+      files.push(new File([blob], track.source.src.split("/").pop() ?? "track.m4a"));
     }
     const fetchMs = performance.now() - t0;
 
@@ -236,14 +236,14 @@ export default function Parity() {
 
   return (
     <main className="min-h-dvh overflow-auto bg-void p-8 font-mono text-[11px] text-ink-text">
-      <h1 className="mb-4 uppercase tracking-[.2em]">Aferição — browser vs pipeline offline</h1>
+      <h1 className="mb-4 uppercase tracking-[.2em]">Parity — browser vs offline pipeline</h1>
       <div className="mb-6 flex flex-wrap gap-3">
         <button
           type="button"
           className="cursor-pointer border border-rule px-3 py-1.5 uppercase tracking-[.2em]"
           onClick={() => void runAll(CURATION.map((a) => a.id))}
         >
-          Medir os {CURATION.length}
+          Measure all {CURATION.length}
         </button>
         {CURATION.map((a) => (
           <button
@@ -257,7 +257,7 @@ export default function Parity() {
         ))}
       </div>
 
-      {busy && <p className="mb-4 text-ink-mute">medindo {busy}…</p>}
+      {busy && <p className="mb-4 text-ink-mute">measuring {busy}…</p>}
 
       <pre id="parity-output" className="whitespace-pre-wrap text-ink-text-2">
         {JSON.stringify(rows, null, 1)}

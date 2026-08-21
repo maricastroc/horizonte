@@ -24,7 +24,7 @@ const DEFAULT_SNAPSHOT: Snapshot = {
   hoverAlb: -1,
   idle: false,
   variant: "desktop",
-  announce: `Coleção · ${ALBUMS.length} corpos`,
+  announce: `Collection · ${ALBUMS.length} bodies`,
   fault: null,
 };
 
@@ -32,9 +32,9 @@ const noop = () => () => {};
 const getDefault = () => DEFAULT_SNAPSHOT;
 
 const LEVELS: { key: Scale; label: string }[] = [
-  { key: "collection", label: "Coleção" },
-  { key: "album", label: "Álbum" },
-  { key: "track", label: "Faixa" },
+  { key: "collection", label: "Collection" },
+  { key: "album", label: "Album" },
+  { key: "track", label: "Track" },
 ];
 
 const ROW = "h-[26px] items-center gap-[10px] cursor-pointer " +
@@ -54,8 +54,8 @@ const SEEK_STEPS = 1000;
 const SEEK_KEY_S = 5;
 
 const FAULT: Record<Fault, string> = {
-  source: "Não consegui carregar esta faixa.",
-  blocked: "O navegador bloqueou o som — peça de novo.",
+  source: "Could not load this track.",
+  blocked: "The browser blocked the sound — ask again.",
 };
 
 const pct = (v: number) => `${(v * 100).toFixed(3)}%`;
@@ -114,10 +114,10 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       seek.style.setProperty("--fill", `${progress * 100}%`);
       seek.value = String(Math.round(progress * SEEK_STEPS));
 
-      const agora = performance.now();
-      if (agora - ariaAt > ARIA_MS) {
-        ariaAt = agora;
-        seek.setAttribute("aria-valuetext", `${timecode(position)} de ${timecode(duration)}`);
+      const now = performance.now();
+      if (now - ariaAt > ARIA_MS) {
+        ariaAt = now;
+        seek.setAttribute("aria-valuetext", `${timecode(position)} of ${timecode(duration)}`);
       }
     });
   }, [engine, snap.variant]);
@@ -183,34 +183,34 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
 
   const shownVolume = muted ? 0 : volume;
 
-  const credito = [album.license.attribution, album.note].filter(Boolean).join(" — ");
+  const credit = [album.license.attribution, album.note].filter(Boolean).join(" — ");
 
-  const contexto = compact
+  const context = compact
     ? snap.scale === "collection"
       ? `${snap.navAlb + 1}/${ALBUMS.length}`
-      : `${album.tracks.length} faixas`
+      : `${album.tracks.length} tracks`
     : snap.scale === "collection"
-      ? `Coleção · ${snap.navAlb + 1}/${ALBUMS.length}`
-      : `${album.cat} · ${album.tracks.length} faixas`;
+      ? `Collection · ${snap.navAlb + 1}/${ALBUMS.length}`
+      : `${album.cat} · ${album.tracks.length} tracks`;
 
-  const licenca = album.license.source ? (
+  const licenseLink = album.license.source ? (
     <a
       href={album.license.source}
       target="_blank"
       rel="noreferrer"
-      title={credito}
+      title={credit}
       className="cursor-pointer whitespace-nowrap text-ink-mute hover:text-ink-text"
     >
       {album.license.name}
     </a>
   ) : (
-    <span title={credito} className="whitespace-nowrap text-ink-mute">
+    <span title={credit} className="whitespace-nowrap text-ink-mute">
       {album.license.name}
     </span>
   );
 
   const breadcrumb = (
-    <nav aria-label="Escala">
+    <nav aria-label="Scale">
       <ol className="flex items-center gap-2.5">
         {LEVELS.map((lvl, i) => {
           const cur = LEVELS.findIndex((l) => l.key === snap.scale);
@@ -299,7 +299,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           dragging ? "text-ink-text" : "text-ink-text-2",
         ].join(" ")}
       >
-        <span className="truncate">{dragging ? "Solte para medir" : "Trazer um disco"}</span>
+        <span className="truncate">{dragging ? "Drop to measure" : "Bring a record"}</span>
         <span
           aria-hidden
           className={[
@@ -382,7 +382,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             : "flex-none cursor-pointer whitespace-nowrap hover:text-ink-text"
         }
       >
-        ◂◂ Anterior
+        ◂◂ Previous
       </button>
       <button
         type="button"
@@ -396,10 +396,10 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         ].join(" ")}
       >
         {snap.mode === "playing"
-          ? "❙❙ Pausar"
+          ? "❙❙ Pause"
           : snap.playAlb >= 0 && snap.scale === "track"
-            ? "▸ Retomar"
-            : "▸ Tocar"}
+            ? "▸ Resume"
+            : "▸ Play"}
       </button>
       <button
         type="button"
@@ -410,7 +410,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             : "flex-none cursor-pointer whitespace-nowrap hover:text-ink-text"
         }
       >
-        Próxima ▸▸
+        Next ▸▸
       </button>
     </>
   );
@@ -423,8 +423,8 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       max={SEEK_STEPS}
       step={1}
       defaultValue={0}
-      aria-label="Posição na faixa"
-      aria-valuetext="00:00 de 00:00"
+      aria-label="Position in track"
+      aria-valuetext="00:00 of 00:00"
       onChange={onSeek}
       onKeyDown={onSeekKey}
       onPointerDown={() => {
@@ -441,7 +441,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     />
   );
 
-  const falha = snap.fault && (
+  const fault = snap.fault && (
     <p role="status" className="normal-case tracking-[.08em] text-ink-text-2">
       {FAULT[snap.fault]}
     </p>
@@ -482,7 +482,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           <div className="flex items-baseline justify-between gap-3">
             <h1 className="text-ink-text">Horizonte</h1>
             <span className="whitespace-nowrap text-ink-mute">
-              {contexto} · {licenca}
+              {context} · {licenseLink}
             </span>
           </div>
           <div className="flex items-center justify-between gap-3">
@@ -491,19 +491,19 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               <button
                 type="button"
                 aria-expanded={railOpen}
-                aria-controls="regua-albuns"
+                aria-controls="album-rail"
                 onClick={() => setRailOpen((v) => !v)}
                 className={`${TAP} text-ink-text`}
               >
-                {railOpen ? "Fechar" : "Álbuns"}
+                {railOpen ? "Close" : "Albums"}
               </button>
             )}
           </div>
         </div>
 
         <nav
-          id="regua-albuns"
-          aria-label="Álbuns"
+          id="album-rail"
+          aria-label="Albums"
           aria-hidden={!albumRailOn}
           className={[
             "absolute flex flex-col border-t border-rule",
@@ -527,7 +527,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         </nav>
 
         <nav
-          aria-label={`Faixas de ${album.title}`}
+          aria-label={`Tracks of ${album.title}`}
           aria-hidden={!trackRailOn}
           className={[
             "absolute border-t border-rule",
@@ -549,7 +549,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           className="pointer-events-auto absolute flex flex-col justify-between pt-1 pb-2"
           style={{ left: gut, right: gut, top: pct(b.list), bottom: 0 }}
         >
-          {falha}
+          {fault}
           {seek(true)}
           <div className="flex min-h-[32px] items-center justify-between gap-3 text-ink-mute">
             <span className="whitespace-nowrap tabular-nums">
@@ -565,7 +565,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
                 muted ? "text-ink-text" : ""
               }`}
             >
-              {muted ? "Mudo" : "Som"}
+              {muted ? "Mute" : "Sound"}
             </button>
           </div>
           <div className="flex min-h-[44px] items-center justify-between">{transport(true)}</div>
@@ -583,8 +583,8 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
 
       <div className="absolute right-8.5 top-14 bottom-37.5 flex flex-col items-end gap-6.5">
         <nav
-          id="regua-albuns"
-          aria-label="Álbuns"
+          id="album-rail"
+          aria-label="Albums"
           aria-hidden={!albumRailOn}
           className={[
             "flex min-h-0 shrink flex-col w-53.5 border-t border-rule",
@@ -599,7 +599,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         </nav>
 
         <nav
-          aria-label={`Faixas de ${album.title}`}
+          aria-label={`Tracks of ${album.title}`}
           aria-hidden={!trackRailOn}
           className={[
             "w-65.5 border-t border-rule",
@@ -618,7 +618,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
 
       <div className="pointer-events-auto absolute bottom-6.5 left-8.5 flex w-150 flex-col gap-2.75">
         {seek(false)}
-        {falha}
+        {fault}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
           {transport(false)}
           <div className="flex flex-none items-center gap-2.5">
@@ -628,7 +628,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               onClick={toggleMute}
               className="cursor-pointer whitespace-nowrap hover:text-ink-text"
             >
-              {muted ? "Mudo" : "Som"}
+              {muted ? "Mute" : "Sound"}
             </button>
             <input
               type="range"
@@ -663,10 +663,10 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             snap.scale === "collection" ? "pointer-events-none opacity-0" : "opacity-100",
           ].join(" ")}
         >
-          ◂ Voltar
+          ◂ Back
         </button>
-        <span className="whitespace-nowrap text-ink-faint">{contexto}</span>
-        {licenca}
+        <span className="whitespace-nowrap text-ink-faint">{context}</span>
+        {licenseLink}
       </div>
     </>,
   );
