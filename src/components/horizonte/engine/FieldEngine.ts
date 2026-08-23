@@ -36,20 +36,11 @@ import {
   type TrackBias,
 } from "../content";
 import {
-  clearWatermark,
-  emptyWatermark,
-  observe,
-  watermarkField,
-  type Watermark,
-} from "../composition/watermark";
-import {
   amplitudeOf,
-  clearStrain,
   complianceOf,
   emptyStrain,
   loadOf,
   strainStep,
-  STRAIN_BINS,
   type Strain,
 } from "../composition/strain";
 import {
@@ -161,13 +152,8 @@ export class FieldEngine implements InputActions {
   readonly experiments = {
     anticipation: false,
     anticipationGain: 1,
-    watermark: false,
-    strain: false,
   };
-  readonly watermark: Watermark = emptyWatermark();
   readonly strain: Strain = emptyStrain();
-  private markField = new Float32Array(STRAIN_BINS);
-  private markVersion = -1;
   lead = 0;
   private railAlb = -1;
   private railTrk = -1;
@@ -207,8 +193,6 @@ export class FieldEngine implements InputActions {
 
     this.audioState = this.bus.update(0);
     this.experiments.anticipation = readExperiment("anticipate");
-    this.experiments.watermark = readExperiment("watermark");
-    this.experiments.strain = readExperiment("strain");
     this.reduced = prefersReducedMotion();
     this.coarse = hasCoarsePointer();
     this.snap = this.buildSnapshot(true);
@@ -597,7 +581,7 @@ export class FieldEngine implements InputActions {
       morph: this.M,
       morphOf: (a) => this.morphAt(a),
       field: this.deformation(),
-      fieldVersion: this.experiments.strain ? this.strain.version : this.watermark.version,
+      fieldVersion: this.strain.version,
     };
   }
 
@@ -637,7 +621,6 @@ export class FieldEngine implements InputActions {
     }
 
 
-    this.watermarkStep();
     this.strainStep(dt);
 
     const live = s.mode === "playing" || s.mode === "fusion";
@@ -754,22 +737,11 @@ export class FieldEngine implements InputActions {
   }
 
   private deformation(): Float32Array | null {
-    const alb = this.st.alb;
-    if (this.experiments.strain) return this.strain.album === alb ? this.strain.field : null;
-    if (this.watermark.album !== alb) return null;
-    if (this.markVersion !== this.watermark.version) {
-      watermarkField(this.watermark, this.markField);
-      this.markVersion = this.watermark.version;
-    }
-    return this.markField;
+    return this.strain.album === this.st.alb ? this.strain.field : null;
   }
 
   private strainStep(dt: number) {
     const s = this.st;
-    if (!this.experiments.strain) {
-      clearStrain(this.strain);
-      return;
-    }
     if (s.playAlb < 0) return;
     const album = ALBUMS[s.playAlb];
     const bounds = this.rings.bounds(s.playAlb);
@@ -782,28 +754,7 @@ export class FieldEngine implements InputActions {
     const load = live
       ? loadOf(chargeAt(album.signature, turn), complianceOf(album.signature.dynamics), amp)
       : 0;
-    strainStep(this.strain, s.playAlb, turn, load, amp, dt);
-  }
-
-  private watermarkStep() {
-    const s = this.st;
-    if (!this.experiments.watermark || this.experiments.strain) {
-      clearWatermark(this.watermark);
-      return;
-    }
-    if (s.playAlb < 0) return;
-    const album = ALBUMS[s.playAlb];
-    const bounds = this.rings.bounds(s.playAlb);
-    const trk = clamp(s.trk, 0, bounds.length - 2);
-    const turn = albumProgressOf(bounds, trk, progressOf(s));
-    observe(
-      this.watermark,
-      s.playAlb,
-      trk,
-      turn,
-      chargeAt(album.signature, turn),
-      bounds[trk + 1] - bounds[trk],
-    );
+    strainStep(this.strain, s.playAlb, turn, load, amp, dt, live);
   }
 
   private anticipation(dt: number) {

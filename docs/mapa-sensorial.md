@@ -574,13 +574,15 @@ a 288 px em 0,3 s — **+18%**, com auto-similaridade 0,869, *abaixo* do piso de
 0,880 que a carga tinha de respeitar. O piso era conservador; quem protege a
 identidade é a não-convergência, que passou com folga em toda a varredura.
 
-## Experimento aberto — a marca d'água no circuito
+## Hipótese encerrada — a marca d'água no circuito
 
-**Entra desligado.** Ligue com `?x=watermark` na URL ou
-`__horizonte.experiments.watermark = true` no console. Desligado, a memória é
-zerada no mesmo quadro e o mundo é o de antes.
+**Removida do código.** Foi substituída pela coroa como material (seção
+seguinte), que a contém como caso particular: a marca d'água era o resíduo sem o
+processo que o produz. `composition/watermark.ts`, seus testes e os tokens
+`WATERMARK` não existem mais. O registro abaixo fica porque é a evidência de por
+que a substituição aconteceu.
 
-A hipótese, escrita como uma frase só: **acontecimentos musicais relevantes
+A hipótese era, escrita como uma frase só: **acontecimentos musicais relevantes
 deixam marcas locais e persistentes no espaço já atravessado, enquanto o resto
 permanece como referência visual intacta.**
 
@@ -596,21 +598,11 @@ apoiadas na borda externa medida por `shellsAt`, com perfil em corcova. Ele
 acompanha o relevo do disco em vez de ser um círculo por cima dele, e não existe
 contorno contínuo acompanhando o playhead: só de duas a quatro corcovas isoladas.
 
-| Propriedade | Valor |
-| --- | --- |
-| Gatilho | máximo corrido, `step` 0,15 acima do pico, piso 0,10 |
-| Patamares | 3 · profundidade 0,032 → 0,072 do raio (5 → 19 px em 1280×800) |
-| Largura | 34% do setor, entre 0,009 e 0,028 de volta (33 → 54 px de arco) |
-| Fusão | eventos a menos de 0,007 de volta viram uma marca só, guardando a maior |
-| Teto | 24 marcas por visita |
-| Custo | ~26 `drawImage` por marca dentro do recomposite que `seg()` já fazia |
-
-**Semântica de escuta** (`__tests__/watermark.test.ts`, 19 casos, mais 8 no
-motor): pausa não escreve nada; pular para frente deixa a lacuna, porque aquele
-trecho não foi ouvido; voltar não duplica; reouvir preserva o máximo existente;
-trocar de faixa guarda as marcas e recomeça o teto; trocar de disco limpa a
-visita. O estado é a lista de intervalos efetivamente ouvidos — nenhuma
-simulação de quadros anteriores é necessária.
+**Semântica de escuta:** pausa não escreve nada; pular para frente deixa a
+lacuna, porque aquele trecho não foi ouvido; voltar não duplica; reouvir preserva
+o máximo existente; trocar de faixa guarda as marcas; trocar de disco limpa a
+visita. Essas garantias sobreviveram à substituição — hoje valem para a cicatriz,
+e estão testadas em `__tests__/strain.test.ts` e no motor.
 
 **Densidade medida** numa escuta inteira de cada faixa do acervo: mediana **2**
 marcas por faixa, de 0 a 4, e **17 de 80 faixas ficam sem marca nenhuma** —
@@ -682,17 +674,17 @@ primeiro quarto, 13 no segundo e **zero** na metade final.
 O priming existe para impedir uma marca aos 0:00, que era um problema real. A
 tensão entre as duas coisas é estrutural e ainda não está resolvida.
 
-## Experimento aberto — a coroa como material: elástico e plástico
+## A coroa como material: elástico e plástico
 
-**Entra desligado.** Ligue com `?x=strain`. Ele **substitui** `?x=watermark` (se as
-duas estiverem ligadas, a marca d'água é apagada): não são dois efeitos, são dois
-regimes do mesmo material.
+**É o comportamento padrão.** Não há flag: a coroa deforma sempre que um disco
+toca. Foi promovida depois de três rodadas de teste visual — âncora, fluência e a
+medição que separou o evento do acúmulo.
 
-A hipótese: enquanto a música atravessa uma região da coroa, o material sofre
+O princípio: enquanto a música atravessa uma região da coroa, o material sofre
 **deformação reversível**. Quando a perturbação diminui, ele tende a voltar à
 morfologia-base. Onde o escoamento foi excedido, parte não volta e fica como
-**cicatriz**. H1 deixa de ser algo que aparece na coroa e passa a ser o resíduo de
-um processo que se viu acontecer.
+**cicatriz**. A memória deixa de ser algo que aparece na coroa e passa a ser o
+resíduo de um processo que se viu acontecer.
 
 ### Um material, uma equação
 
@@ -710,6 +702,7 @@ escoamento, uma fração fica.
 | `rise` / `relax` | 6 s / 26 s | a resposta atrasa e a recuperação é visível |
 | `yield` | 0,030 R | **seleciona** quais acontecimentos deixam marca |
 | `harden` | 0,55 | **profundidade** do que fica |
+| `creep` | 12 min de reprodução | por quanto tempo o que ficou continua ali |
 
 **A tração e a compressão escoam igual.** Foi a correção decisiva: a carga
 negativa — o disco caindo abaixo do próprio hábito recente — é tão musical quanto
@@ -740,16 +733,17 @@ acontecimentos estacionários: o mesmo lugar sobe, para de subir e desce, e o qu
 é aquilo que não desceu, sob o lugar onde se viu subir. Amplitude, τ, escoamento,
 endurecimento, zona morta e desenho continuam os mesmos.
 
-### O que isso conserta de H1
+### O que isso consertou da marca d'água
 
 * **O artefato de priming morre por construção.** O escoamento é absoluto, não
-  relativo ao valor de entrada. *La Salle de Torture*, que H1 silenciava apesar de
-  atingir carga 0,89, agora deforma desde o primeiro segundo e cicatriza aos 0:02,
+  relativo ao valor de entrada. *La Salle de Torture*, que a marca d'água
+  silenciava apesar de atingir carga 0,89, deforma desde o primeiro segundo e
+  cicatriza aos 0:02,
   segurando +13 a +16 px de tensão pela faixa inteira. As seis faixas do tipo B
   voltam a existir.
 * **A estagnação cai por um fator de quatro.**
 
-| | H1 sozinho | H1 como resíduo do elástico |
+| | marca d'água sozinha | como resíduo do elástico |
 | --- | --: | --: |
 | Janelas de 10 s com movimento perceptível | 0% | **70%** |
 | Maior parada mediana | 2:39 | **0:40** |
@@ -779,15 +773,65 @@ de 88% para 71%, e a maior parada mediana sobe de 0:20 para 0:30.
 ### O que não fica resolvido
 
 A cicatriz continua ocupando de 16% a 54% do setor conforme o disco — os mesmos
-*e-world*, *Le Manoir* e *Dark Thoughts* que já eram marginais no diagnóstico de
-H1. A aposta da hipótese é que **ver a causa torne legível uma consequência que um
-frame isolado não explicaria**, e isso só o olho decide.
+*e-world*, *Le Manoir* e *Dark Thoughts* que já eram marginais no diagnóstico da
+marca d'água. O que fechou a questão não foi encolher a marca: foi **ver a causa**,
+com a âncora, e **limitar o acúmulo**, com a fluência.
 
-Determinismo: a parte **plástica** mantém as garantias de H1 (pausa não apaga,
-pular deixa lacuna, voltar não duplica, sair do disco limpa). A parte **elástica**
-é uma simulação com estado de verdade — seu erro se dissolve dentro de um tempo de
-relaxação (26 s), e a integração é exponencial, portanto independente da taxa de
-quadros.
+Determinismo: a parte **plástica** mantém as garantias herdadas da marca d'água
+(pausa não apaga, pular deixa lacuna, voltar não duplica, sair do disco limpa) —
+ver a fluência abaixo, que muda *quanto tempo* a marca dura sem mudar nenhuma
+delas. A parte **elástica** é uma simulação com estado de verdade — seu erro se
+dissolve dentro de um tempo de relaxação (26 s), e a integração é exponencial,
+portanto independente da taxa de quadros.
+
+### A cicatriz é escuta recente, não o arquivo da visita
+
+Com o resíduo permanente, o acúmulo tornava o presente ilegível. Medido tocando cada
+disco inteiro em ordem: **8 cicatrizes coexistindo na mediana** (p90 17), **16 ao fim
+do disco** (máximo 23), relevo cobrindo 37% do circuito, e a deformação viva sendo o
+maior relevo da coroa em apenas **46% do tempo**. Em *The journey* (*e-world* 14/16) o
+evento tem 23 px de pico com a coroa limpa **e com a coroa suja** — o que muda é que
+ele era a coisa mais alta 68% do tempo numa coroa limpa e **43%** depois das treze
+faixas anteriores, disputando com 20 marcas em vez de 2. A dificuldade não era o
+evento; era a concorrência.
+
+Nem a banda morta nem `harden` resolvem isso: a primeira não toca no acúmulo (8
+cicatrizes a `dead` 0,20 e a 0,40) e a segunda só encolhe a memória que a cicatriz
+existe para acrescentar. O resíduo agora **flui**: decai com τ de 12 minutos, contados apenas em
+tempo efetivo de reprodução.
+
+| | ∞ (antes) | τ 12 min |
+| --- | --: | --: |
+| Cicatrizes coexistindo (p50 / p90) | 8 / 17 | **4 / 8** |
+| No fim do disco (p50 / máx) | 16 / 23 | **6 / 11** |
+| Arco cicatrizado no fim | 37% | **8%** |
+| Vivo é o maior relevo | 46% | **61%** |
+| *The journey*, coroa limpa → suja | 68% → 43% | **71% → 71%** |
+| Cicatriz na faixa seguinte / duas depois | 100% / 100% | 74% / 54% |
+
+τ tem piso e teto medidos. O **piso** é a razão entre as taxas: para o assentamento
+ler como parada, a fluência precisa ser muito mais lenta que a recuperação elástica
+que a precede (2,3 px/10 s). A 2 min a razão é 2,2:1 e a cicatriz continuaria
+afundando visivelmente; a 12 min é **13:1**. O **teto** é semântico: a marca deve
+sobreviver à faixa seguinte (74%) e estar claramente indo embora duas faixas depois
+(54%), para que a unidade de memória seja *as últimas faixas* e não *a sessão*. A
+mediana das faixas do acervo é 4,1 min.
+
+**A fluência só corre tocando.** Medida em relógio de parede, uma pausa de 10 minutos
+levaria a cicatriz de 16 px para 5 px — um café apagaria a coroa e *pausa não apaga*
+morreria. Atrelada à reprodução, 16 px continuam 16 px e a unidade passa a ser tempo
+de escuta. Um seek move o disco, não o relógio: pular cinco minutos de música envelhece
+o resíduo pelo tempo real decorrido, não pelo trecho pulado.
+
+E aparece uma semântica que a permanência não tinha: como o travamento é `max` sobre a
+posição do disco, **reouvir uma passagem restaura a marca dela sem aprofundá-la**. Sob
+∞, ter ouvido uma vez e dez vezes davam a mesma coroa. Agora a coroa diz aquilo a que
+se voltou. Durante o silêncio a fluência não é perceptível: 0,28 px por janela de 10 s
+no pior caso, contra um limiar de 1,0.
+
+O contrato inteiro está em `__tests__/strain.test.ts` — os dois regimes, o sítio
+ancorado e as cinco garantias da fluência — e as garantias de escuta ponta a
+ponta estão em `__tests__/engine.test.ts`.
 
 ## Auditoria — `uJet` e `uBlur` estão fora de P4
 

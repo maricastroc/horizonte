@@ -184,19 +184,6 @@ export const CHARGE = {
   knee: 0.5,
 } as const;
 
-export const WATERMARK = {
-  step: 0.15,
-  floor: 0.1,
-  tiers: 3,
-  depth: [0.032, 0.072],
-  width: [0.009, 0.028],
-  widthOfSpan: 0.34,
-  merge: 0.007,
-  max: 24,
-  alpha: 0.95,
-  slices: 26,
-} as const;
-
 export const STRAIN = {
   dead: 0.2,
   ampRadius: 0.22,
@@ -208,6 +195,7 @@ export const STRAIN = {
   relax: 26,
   yield: 0.03,
   harden: 0.55,
+  creep: 720,
   redraw: 0.0016,
   alpha: 0.95,
   scarFloor: 0.004,

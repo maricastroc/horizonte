@@ -105,9 +105,8 @@ describe("the crown is one material with two regimes", () => {
     hold(s, 0, 200);
     const i = Math.round(AT * STRAIN_BINS);
     expect(Math.abs(s.elastic[i])).toBeLessThan(loaded * 0.02);
-    expect(s.field[i]).toBeGreaterThan(0);
-    expect(s.field[i]).toBeLessThan(loaded);
-    expect(s.field[i]).toBeCloseTo(loaded * STRAIN.harden, 2);
+    expect(s.field[i]).toBeGreaterThan(loaded * STRAIN.harden * 0.7);
+    expect(s.field[i]).toBeLessThan(loaded * STRAIN.harden);
     expect(scarCount(s)).toBe(1);
   });
 
@@ -117,15 +116,6 @@ describe("the crown is one material with two regimes", () => {
     hold(s, 0, 200);
     expect(s.field[Math.round(AT * STRAIN_BINS)]).toBeLessThan(0);
     expect(scarCount(s)).toBe(1);
-  });
-
-  it("the residue only ever deepens, never recovers", () => {
-    const s = emptyStrain();
-    hold(s, STRAIN.yield * 3, 40);
-    const deep = scar(s);
-    hold(s, 0, 120);
-    hold(s, STRAIN.yield * 1.2, 40);
-    expect(scar(s)).toBeCloseTo(deep, 6);
   });
 
   it("what is drawn is the sum of the two regimes", () => {
@@ -167,6 +157,77 @@ describe("the crown is one material with two regimes", () => {
     const version = s.version;
     for (let i = 0; i < 5; i++) strainStep(s, 0, AT, STRAIN.yield * 3, AMP, 1 / 240);
     expect(s.version).toBe(version);
+  });
+});
+
+describe("the residue is recent listening, not a permanent record", () => {
+  const STRONG = STRAIN.yield * 3;
+
+  it("fades an order of magnitude slower than the elastic recovers", () => {
+    expect(STRAIN.creep).toBeGreaterThan(STRAIN.relax * 10);
+
+    const s = emptyStrain();
+    hold(s, STRONG, 40);
+    const swell = centre(s);
+    const mark = scar(s);
+
+    hold(s, 0, STRAIN.relax);
+    expect(centre(s)).toBeLessThan(swell * 0.4);
+    expect(scar(s)).toBeGreaterThan(mark * 0.95);
+  });
+
+  it("keeps ageing through a silence inside the music", () => {
+    const s = emptyStrain();
+    hold(s, STRONG, 40);
+    const mark = scar(s);
+
+    hold(s, 0, 600);
+    expect(scar(s)).toBeCloseTo(mark * Math.exp(-600 / STRAIN.creep), 4);
+    expect(scar(s)).toBeGreaterThan(STRAIN.scarFloor);
+  });
+
+  it("does not age while the record is paused", () => {
+    const s = emptyStrain();
+    hold(s, STRONG, 40);
+    const mark = scar(s);
+
+    for (let t = 0; t < 900; t += 1 / 30) strainStep(s, 0, AT, 0, AMP, 1 / 30, false);
+    expect(scar(s)).toBe(mark);
+  });
+
+  it("ages with the clock, not with the seek", () => {
+    const s = emptyStrain();
+    hold(s, STRONG, 40);
+    const mark = scar(s);
+
+    const elsewhere = AT + 0.3;
+    for (let i = 0; i < 30; i++) strainStep(s, 0, elsewhere, 0, AMP, 1 / 30, true);
+    expect(scar(s)).toBeCloseTo(mark * Math.exp(-1 / STRAIN.creep), 5);
+  });
+
+  it("is restored by hearing the passage again, never deepened past its ceiling", () => {
+    const s = emptyStrain();
+    hold(s, STRONG, 40);
+    const born = scar(s);
+
+    hold(s, 0, 900);
+    const faded = scar(s);
+    expect(faded).toBeLessThan(born * 0.4);
+
+    hold(s, STRONG, 40);
+    expect(scar(s)).toBeGreaterThan(faded * 2);
+    expect(scar(s)).toBeCloseTo(born, 4);
+    expect(scar(s)).toBeLessThanOrEqual(STRONG * STRAIN.harden);
+  });
+
+  it("a quieter return cannot lift the mark above what it already was", () => {
+    const s = emptyStrain();
+    hold(s, STRONG, 40);
+    const born = scar(s);
+
+    hold(s, 0, 120);
+    hold(s, STRAIN.yield * 1.2, 40);
+    expect(scar(s)).toBeLessThan(born);
   });
 });
 

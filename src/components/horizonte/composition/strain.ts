@@ -61,6 +61,7 @@ export function strainStep(
   load: number,
   amplitude: number,
   dt: number,
+  playing = true,
 ): void {
   if (album < 0) return;
   if (s.album !== album) {
@@ -76,6 +77,7 @@ export function strainStep(
   const under = s.site < 0 ? at : s.site;
   const kRise = 1 - Math.exp(-dt / STRAIN.rise);
   const kRelax = 1 - Math.exp(-dt / STRAIN.relax);
+  const kCreep = playing ? Math.exp(-dt / STRAIN.creep) : 1;
 
   for (let i = 0; i < STRAIN_BINS; i++) {
     const dist = binGap(i, under);
@@ -85,6 +87,7 @@ export function strainStep(
     const k = Math.abs(target) > Math.abs(now) ? kRise : kRelax;
     const next = now + (target - now) * k;
     s.elastic[i] = next;
+    if (kCreep < 1) s.plastic[i] *= kCreep;
 
     if (next > STRAIN.yield) {
       const scar = next * STRAIN.harden;
