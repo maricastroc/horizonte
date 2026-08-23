@@ -87,6 +87,7 @@ export const MORPH = {
   satRim: 0.19,
   satArcSpan: [2.05, 4.15],
   satFalloff: 0.72,
+  satCap: 0.68,
   neighborDamp: 0.45,
 } as const;
 
@@ -173,6 +174,44 @@ export const LIGHT = {
 } as const;
 
 export const TRACK_BIAS = { blend: 0.55, cap: 0.25, lerp: 1.2 } as const;
+
+export const CHARGE = {
+  fastSeconds: 20,
+  ratio: 10,
+  stepFloor: 4,
+  spreadRank: 0.9,
+  spreadFloor: 0.02,
+  knee: 0.5,
+} as const;
+
+export const WATERMARK = {
+  step: 0.15,
+  floor: 0.1,
+  tiers: 3,
+  depth: [0.032, 0.072],
+  width: [0.009, 0.028],
+  widthOfSpan: 0.34,
+  merge: 0.007,
+  max: 24,
+  alpha: 0.95,
+  slices: 26,
+} as const;
+
+export const STRAIN = {
+  dead: 0.2,
+  ampRadius: 0.22,
+  ampBand: 0.36,
+  compliance: [0.55, 1],
+  spread: [0.01, 0.03],
+  hop: 20,
+  rise: 6,
+  relax: 26,
+  yield: 0.03,
+  harden: 0.55,
+  redraw: 0.0016,
+  alpha: 0.95,
+  scarFloor: 0.004,
+} as const;
 
 export const SECOND_MASS = { k: 0.03, h: 0.052, pointGain: 1.9, lerp: 3.5 } as const;
 

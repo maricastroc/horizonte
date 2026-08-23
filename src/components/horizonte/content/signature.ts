@@ -1,3 +1,4 @@
+import { CHARGE } from "../tokens";
 import type { Ink } from "./types";
 
 export interface AlbumSignature {
@@ -80,6 +81,7 @@ export const NEUTRAL_BIAS: TrackBias = {
 const envelopeCache = new WeakMap<AlbumSignature, Float32Array>();
 const boundsCache = new WeakMap<AlbumSignature, Map<number, number[]>>();
 const biasCache = new WeakMap<AlbumSignature, Map<number, TrackBias[]>>();
+const chargeCache = new WeakMap<AlbumSignature, Float32Array>();
 
 export function envelopeOf(sig: AlbumSignature): Float32Array {
   const hit = envelopeCache.get(sig);
@@ -153,6 +155,14 @@ function rankAt(sorted: number[], q: number): number {
   return sorted[i < 0 ? 0 : i >= sorted.length ? sorted.length - 1 : i];
 }
 
+function softKnee(value: number, cap: number, knee: number): number {
+  const linear = cap * knee;
+  const above = cap - linear;
+  const size = Math.abs(value);
+  if (size <= linear) return value;
+  return Math.sign(value) * (linear + above * Math.tanh((size - linear) / above));
+}
+
 function perTrackBias(
   values: number[] | undefined,
   gate: { floor: number; knee: number },
@@ -169,13 +179,8 @@ function perTrackBias(
   const spread = rankAt(sorted, 0.9) - rankAt(sorted, 0.1);
   const open = Math.min(1, Math.max(0, (spread - gate.floor) / gate.knee));
 
-  const linear = PER_TRACK_CAP * PER_TRACK_KNEE;
-  const above = PER_TRACK_CAP - linear;
   for (let k = 0; k < trackCount; k++) {
-    const d = (values[k] - ref) * open;
-    const a = Math.abs(d);
-    out[k] =
-      a <= linear ? d : Math.sign(d) * (linear + above * Math.tanh((a - linear) / above));
+    out[k] = softKnee((values[k] - ref) * open, PER_TRACK_CAP, PER_TRACK_KNEE);
   }
   return out;
 }
@@ -233,3 +238,50 @@ export function trackBiasOf(sig: AlbumSignature, trackCount: number): TrackBias[
   byCount.set(trackCount, bias);
   return bias;
 }
+
+export interface ChargeWindow {
+  fast: number;
+  slow: number;
+  step: number;
+}
+
+export function chargeWindowOf(sig: AlbumSignature): ChargeWindow {
+  const seconds = sig.measured.durationS;
+  const step = seconds > 0 ? seconds / (ENVELOPE_N - 1) : 0;
+  const fast = Math.max(CHARGE.fastSeconds, CHARGE.stepFloor * step);
+  return { fast, slow: fast * CHARGE.ratio, step };
+}
+
+export function chargeOf(sig: AlbumSignature): Float32Array {
+  const hit = chargeCache.get(sig);
+  if (hit) return hit;
+
+  const out = new Float32Array(ENVELOPE_N);
+  const window = chargeWindowOf(sig);
+  if (!sig.envelope || window.step <= 0) {
+    chargeCache.set(sig, out);
+    return out;
+  }
+
+  const env = envelopeOf(sig);
+  const kFast = Math.exp(-window.step / window.fast);
+  const kSlow = Math.exp(-window.step / window.slow);
+  const raw = new Float32Array(ENVELOPE_N);
+  let fast = env[0];
+  let slow = env[0];
+  for (let i = 0; i < ENVELOPE_N; i++) {
+    fast = fast * kFast + env[i] * (1 - kFast);
+    slow = slow * kSlow + env[i] * (1 - kSlow);
+    raw[i] = fast - slow;
+  }
+
+  const magnitude = Array.from(raw, Math.abs).sort((a, b) => a - b);
+  const spread = Math.max(CHARGE.spreadFloor, rankAt(magnitude, CHARGE.spreadRank));
+  for (let i = 0; i < ENVELOPE_N; i++) out[i] = softKnee(raw[i] / spread, 1, CHARGE.knee);
+
+  chargeCache.set(sig, out);
+  return out;
+}
+
+export const chargeAt = (sig: AlbumSignature, albumPosition: number) =>
+  sampleEnvelope(chargeOf(sig), albumPosition);

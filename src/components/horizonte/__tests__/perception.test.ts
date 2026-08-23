@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ALBUMS } from "../content";
-import { morphologyOf } from "../morphology";
+import { morphologyOf, satRadiusOf } from "../morphology";
+import { MORPH } from "../tokens";
 import { legacyMorphologyOf } from "../perception/legacy";
 import {
   GUARDRAIL,
@@ -131,5 +132,40 @@ describe("perceptual distance between albums", () => {
     const worst = grids.map((g) => g.worst.score);
     expect(Math.max(...means) - Math.min(...means)).toBeLessThan(0.02);
     expect(Math.max(...worst) - Math.min(...worst)).toBeLessThan(0.02);
+  });
+});
+
+describe("the satellite stays subordinate to the body", () => {
+  const visible = (m: ReturnType<typeof morphologyOf>) =>
+    m.satellites.filter((s) => s.weight > 0.02);
+
+  it("no record draws a satellite as wide as its own core", () => {
+    for (const a of ALBUMS) {
+      const m = morphologyOf(a.signature, a.tracks.length);
+      for (const s of visible(m)) {
+        expect(satRadiusOf(m, s), a.id).toBeLessThanOrEqual(m.coreRatio * MORPH.satCap + 1e-9);
+      }
+    }
+  });
+
+  it("the cap scales the whole orbit, so each satellite stays smaller than the previous one", () => {
+    for (const a of ALBUMS) {
+      const m = morphologyOf(a.signature, a.tracks.length);
+      const radii = visible(m).map((s) => satRadiusOf(m, s));
+      for (let i = 1; i < radii.length; i++) {
+        expect(radii[i], `${a.id} · satellite ${i}`).toBeLessThan(radii[i - 1]);
+      }
+    }
+  });
+
+  it("duration still reads in how many bodies orbit", () => {
+    const count = ALBUMS.map((a) => ({
+      duration: a.signature.duration,
+      bodies: visible(morphologyOf(a.signature, a.tracks.length)).length,
+    }));
+    const longest = count.reduce((a, b) => (b.duration > a.duration ? b : a));
+    const shortest = count.reduce((a, b) => (b.duration < a.duration ? b : a));
+    expect(longest.bodies).toBeGreaterThan(shortest.bodies);
+    expect(shortest.bodies).toBe(0);
   });
 });

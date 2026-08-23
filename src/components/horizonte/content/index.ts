@@ -54,9 +54,12 @@ export {
   NEUTRAL_BIAS,
   NEUTRAL_SIGNATURE,
   boundsOf,
+  chargeAt,
+  chargeOf,
+  chargeWindowOf,
   envelopeOf,
   sampleEnvelope,
   trackBiasOf,
 } from "./signature";
-export type { AlbumSignature, TrackBias } from "./signature";
+export type { AlbumSignature, ChargeWindow, TrackBias } from "./signature";
 export type { Album, Track, AudioSource, License, ProviderId, Ink } from "./types";

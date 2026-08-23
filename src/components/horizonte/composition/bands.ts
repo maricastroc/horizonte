@@ -1,6 +1,6 @@
 import { clamp, lerp } from "../math";
-import { BAND } from "../tokens";
-import type { AlbumMorphology } from "../morphology";
+import { BAND, MORPH } from "../tokens";
+import { satRadiusOf, type AlbumMorphology } from "../morphology";
 
 export interface Bands {
   top: number;
@@ -62,7 +62,7 @@ export function extentOf(m: AlbumMorphology): Extent {
   let y1 = m.rMax;
   for (const sat of m.satellites) {
     if (sat.weight <= 0.02) continue;
-    const r = sat.size * (0.4 + 0.6 * sat.weight) * (1 + 0.5 * 0.19);
+    const r = satRadiusOf(m, sat) * (1 + 0.5 * MORPH.satRim);
     const cx = Math.cos(sat.angle) * sat.dist;
     const cy = Math.sin(sat.angle) * sat.dist;
     x0 = Math.min(x0, cx - r);

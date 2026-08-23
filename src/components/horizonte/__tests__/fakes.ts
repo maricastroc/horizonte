@@ -368,8 +368,8 @@ export function engineHarness({
   }
 
   const images: EngineHarness["images"] = [];
-  const audios: FakeAudio[] = [];
   const audio = audioEnv();
+  const audios = audio.created;
   const audioWindow = (globalThis as { window?: { AudioContext?: unknown } }).window;
 
   let pending: ((t: number) => void) | null = null;

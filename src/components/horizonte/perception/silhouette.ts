@@ -8,7 +8,7 @@ import {
 } from "../composition/layout";
 import { bandsOf, stageBox } from "../composition/bands";
 import { clamp } from "../math";
-import { morphologyOf, shellsAt, type AlbumMorphology } from "../morphology";
+import { morphologyOf, satRadiusOf, shellsAt, type AlbumMorphology } from "../morphology";
 import { MORPH, RING } from "../tokens";
 import type { Variant } from "../types";
 
@@ -85,7 +85,7 @@ export function silhouetteOf(
     .map((s) => ({
       x: g.cx + Math.cos(s.angle) * s.dist * g.R,
       y: g.cy + Math.sin(s.angle) * s.dist * g.R * g.flatten,
-      r: s.size * g.R * (0.4 + 0.6 * s.weight),
+      r: satRadiusOf(m, s) * g.R,
       w: s.weight,
     }));
 

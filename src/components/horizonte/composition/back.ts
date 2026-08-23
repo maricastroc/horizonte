@@ -1,6 +1,6 @@
 import { ALBUMS, boundsOf } from "../content";
 import type { FieldConstants } from "../field";
-import { neighborScale, outerAt, type AlbumMorphology } from "../morphology";
+import { neighborScale, outerAt, satRadiusOf, type AlbumMorphology } from "../morphology";
 import { isEngaged, progressOf } from "../state";
 import { COLOR, GEO, MORPH, PARTICLES, RING, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
@@ -26,6 +26,8 @@ export interface BackDeps {
   C: FieldConstants;
   morph: AlbumMorphology;
   morphOf: (alb: number) => AlbumMorphology;
+  field?: Float32Array | null;
+  fieldVersion?: number;
 }
 
 export function makeParticles(): Particle[] {
@@ -79,7 +81,7 @@ function drawSatellites(
     if (sat.weight <= 0.02) continue;
     const px = bx + Math.cos(sat.angle) * sat.dist * R;
     const py = by + Math.sin(sat.angle) * sat.dist * R * m.flatten;
-    const r = sat.size * R * (0.4 + 0.6 * sat.weight);
+    const r = satRadiusOf(m, sat) * R;
     const a = fade * sat.weight;
 
     x.globalAlpha = a * 0.95;
@@ -188,6 +190,8 @@ export function drawBack(
 ) {
   const x = ctx as Ctx;
   const { fonts, covers, rings, weights, parts, C, morph, morphOf } = deps;
+  const field = deps.field ?? null;
+  const fieldVersion = deps.fieldVersion ?? 0;
   const A = ALBUMS[s.alb];
   const inkA = (a: number) => rgba(A.inkA, a);
   const inkB = (a: number) => rgba(A.inkB, a);
@@ -276,7 +280,7 @@ export function drawBack(
         ? s.trk
         : -1;
     const prog = progressOf(s);
-    const seg = rings.seg(s.alb, s.sel, s.hover, activeTrk, prog, inkA(1));
+    const seg = rings.seg(s.alb, s.sel, s.hover, activeTrk, prog, inkA(1), field, fieldVersion);
     drawRing(x, seg, bx, by, R, s.ringRot, s.fadeSel * (1 - s.mix * 0.6), morph.flatten);
 
     if (s.mix > 0) {

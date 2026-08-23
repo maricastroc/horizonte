@@ -1,7 +1,8 @@
 import { ALBUMS, boundsOf } from "../content";
 import { clamp } from "../math";
 import { crownAt, morphologyOf, shellsAt, type AlbumMorphology } from "../morphology";
-import { RING } from "../tokens";
+import { STRAIN_BINS } from "./strain";
+import { RING, STRAIN } from "../tokens";
 import type { CoverAsset } from "./cover";
 import { COVER_SIZE } from "./cover";
 
@@ -136,6 +137,49 @@ function bakeSectors(
   return { canvas: c, sectors };
 }
 
+function drawDeformation(
+  x: CanvasRenderingContext2D,
+  cover: HTMLCanvasElement,
+  m: AlbumMorphology,
+  field: Float32Array,
+) {
+  const { unitR } = RING;
+  const arcPx = (2 * Math.PI * unitR) / STRAIN_BINS;
+  const colW = Math.ceil(COVER_SIZE / STRAIN_BINS) + 2;
+
+  x.save();
+  for (let i = 0; i < STRAIN_BINS; i++) {
+    const rise = field[i] * unitR;
+    if (Math.abs(rise) < 0.4) continue;
+    const t = i / STRAIN_BINS;
+    const shells = shellsAt(m, t);
+    const base = shells[shells.length - 1].outer * unitR;
+    x.save();
+    x.rotate(t * 6.2832);
+    if (rise > 0) {
+      x.globalAlpha = STRAIN.alpha;
+      x.globalCompositeOperation = "source-over";
+      x.drawImage(
+        cover,
+        Math.floor(t * COVER_SIZE),
+        0,
+        colW,
+        COVER_SIZE,
+        base - 1,
+        -arcPx * 1.6,
+        rise + 1,
+        arcPx * 3.2,
+      );
+    } else {
+      x.globalCompositeOperation = "destination-out";
+      x.fillStyle = "#000";
+      x.fillRect(base + rise, -arcPx * 1.6, -rise + 1, arcPx * 3.2);
+    }
+    x.restore();
+  }
+  x.restore();
+}
+
 interface SegCacheKey {
   alb: number;
   version: number;
@@ -152,6 +196,7 @@ export class RingBakery {
   private segSectors: SectorGeometry[] = [];
   private segOut = buffer();
   private segProgress = -1;
+  private segMarks = -1;
 
   constructor(private covers: CoverAsset[]) {
     this.arcs = covers.map(() => null);
@@ -196,6 +241,8 @@ export class RingBakery {
     active: number,
     progress: number,
     ink: string,
+    field: Float32Array | null = null,
+    fieldVersion = 0,
   ): HTMLCanvasElement {
     const cover = this.covers[alb];
     const key: SegCacheKey = { alb, version: cover.version, sel, hover, active };
@@ -221,12 +268,21 @@ export class RingBakery {
       this.segKey = key;
     }
 
-    if (!stale && Math.abs(progress - this.segProgress) < 0.0008) return this.segOut;
+    const moved = Math.abs(progress - this.segProgress) >= 0.0008;
+    if (!stale && !moved && fieldVersion === this.segMarks) return this.segOut;
     this.segProgress = progress;
+    this.segMarks = fieldVersion;
 
     const x = this.segOut.getContext("2d")!;
     x.clearRect(0, 0, RING.buffer, RING.buffer);
     x.drawImage(this.segSlices!, 0, 0);
+
+    if (field) {
+      x.save();
+      x.translate(C, C);
+      drawDeformation(x, cover.canvas, this.morph(alb), field);
+      x.restore();
+    }
 
     x.save();
     x.translate(C, C);

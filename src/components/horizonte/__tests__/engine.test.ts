@@ -31,6 +31,7 @@ import { FieldEngine } from "../engine/FieldEngine";
 import { albPos, bodyGeom, layoutFor } from "../composition/layout";
 import { fieldConstantsOf, reduceMotion } from "../field";
 import { morphologyOf } from "../morphology";
+import { peakOf, scarCount } from "../composition/strain";
 import {
   IDLE_MS,
   PARTICLES,
@@ -593,6 +594,200 @@ describe("experiment: the field anticipates (off by default)", () => {
 
     const c = reduceMotion(fieldConstantsOf(ALBUMS[0].signature));
     expect(c.reactionCap).toBe(0);
+  });
+});
+
+describe("experiment: the circuit keeps a watermark (off by default)", () => {
+  const seconds = () => ALBUMS[1].tracks[0].dur;
+
+  const airborne = () => {
+    engine.playTrack(1, 0);
+    run(1);
+    const el = env.audios[env.audios.length - 1];
+    el.duration = seconds();
+    return el;
+  };
+
+  const hear = (el: FakeAudio, from: number, to: number, stepSeconds = 1) => {
+    for (let t = from; t <= to; t += stepSeconds) {
+      el.currentTime = t;
+      run(0.05);
+    }
+  };
+
+  it("is born switched off and the circuit stays clean", () => {
+    expect(engine.experiments.watermark).toBe(false);
+    const el = airborne();
+    hear(el, 0, seconds());
+    expect(engine.watermark.marks).toHaveLength(0);
+  });
+
+  it("switched on, listening leaves marks and they belong to the record", () => {
+    engine.experiments.watermark = true;
+    const el = airborne();
+    hear(el, 0, seconds());
+    expect(engine.watermark.marks.length).toBeGreaterThan(0);
+    expect(engine.watermark.album).toBe(1);
+  });
+
+  it("the world starts as the original: nothing is written in the first seconds", () => {
+    engine.experiments.watermark = true;
+    const el = airborne();
+    hear(el, 0, 5, 0.5);
+    expect(engine.watermark.marks).toHaveLength(0);
+  });
+
+  it("pausing writes nothing further", () => {
+    engine.experiments.watermark = true;
+    const el = airborne();
+    hear(el, 0, 90);
+    const held = engine.watermark.marks.length;
+    const version = engine.watermark.version;
+
+    engine.transport();
+    run(40);
+    expect(engine.watermark.marks).toHaveLength(held);
+    expect(engine.watermark.version).toBe(version);
+  });
+
+  it("skipping forward leaves the gap unwritten", () => {
+    engine.experiments.watermark = true;
+    const el = airborne();
+    hear(el, 0, 40);
+    const early = engine.watermark.marks.length;
+
+    el.currentTime = seconds() * 0.9;
+    hear(el, seconds() * 0.9, seconds());
+    const skipped = engine.watermark.marks;
+
+    const full = (() => {
+      on();
+      engine.experiments.watermark = true;
+      const other = airborne();
+      hear(other, 0, seconds());
+      return engine.watermark.marks.length;
+    })();
+
+    expect(early).toBeGreaterThanOrEqual(0);
+    expect(skipped.length).toBeLessThanOrEqual(full);
+  });
+
+  it("going back over what was heard does not double the marks", () => {
+    engine.experiments.watermark = true;
+    const el = airborne();
+    hear(el, 0, 120);
+    const forward = engine.watermark.marks.length;
+
+    hear(el, 0, 120);
+    expect(engine.watermark.marks).toHaveLength(forward);
+  });
+
+  it("leaving for another record wipes the visit", () => {
+    engine.experiments.watermark = true;
+    const el = airborne();
+    hear(el, 0, 120);
+    expect(engine.watermark.marks.length).toBeGreaterThan(0);
+
+    engine.playTrack(5, 0);
+    run(4);
+    const other = env.audios[env.audios.length - 1];
+    other.duration = ALBUMS[5].tracks[0].dur;
+    hear(other, 0, 5, 0.5);
+    expect(engine.watermark.album).toBe(5);
+    expect(engine.watermark.marks).toHaveLength(0);
+  });
+
+  it("switching the experiment off clears the circuit in the same frame", () => {
+    engine.experiments.watermark = true;
+    const el = airborne();
+    hear(el, 0, 120);
+    expect(engine.watermark.marks.length).toBeGreaterThan(0);
+
+    engine.experiments.watermark = false;
+    env.advance(16);
+    expect(engine.watermark.marks).toHaveLength(0);
+    expect(engine.watermark.album).toBe(-1);
+  });
+});
+
+describe("experiment: the crown deforms and remembers (off by default)", () => {
+  const seconds = () => ALBUMS[1].tracks[0].dur;
+
+  const airborne = () => {
+    engine.playTrack(1, 0);
+    run(1);
+    const el = env.audios[env.audios.length - 1];
+    el.duration = seconds();
+    return el;
+  };
+
+  const hear = (el: FakeAudio, from: number, to: number, stepSeconds = 1) => {
+    for (let t = from; t <= to; t += stepSeconds) {
+      el.currentTime = t;
+      run(0.4);
+    }
+  };
+
+  it("is born switched off and the crown is the base morphology", () => {
+    expect(engine.experiments.strain).toBe(false);
+    const el = airborne();
+    hear(el, 0, 120);
+    expect(peakOf(engine.strain.field)).toBe(0);
+  });
+
+  it("switched on, the material takes load and keeps a residue", () => {
+    engine.experiments.strain = true;
+    const el = airborne();
+    hear(el, 0, seconds());
+    expect(peakOf(engine.strain.field)).toBeGreaterThan(0);
+    expect(scarCount(engine.strain)).toBeGreaterThan(0);
+    expect(engine.strain.album).toBe(1);
+  });
+
+  it("it replaces the watermark instead of stacking on it", () => {
+    engine.experiments.watermark = true;
+    engine.experiments.strain = true;
+    const el = airborne();
+    hear(el, 0, seconds());
+    expect(engine.watermark.marks).toHaveLength(0);
+    expect(scarCount(engine.strain)).toBeGreaterThan(0);
+  });
+
+  it("pausing lets the material relax but never erases the scars", () => {
+    engine.experiments.strain = true;
+    const el = airborne();
+    hear(el, 0, 150);
+    const scars = scarCount(engine.strain);
+    expect(scars).toBeGreaterThan(0);
+
+    engine.transport();
+    run(240);
+    expect(peakOf(engine.strain.elastic)).toBeLessThan(0.002);
+    expect(scarCount(engine.strain)).toBe(scars);
+  });
+
+  it("leaving for another record wipes the material", () => {
+    engine.experiments.strain = true;
+    const el = airborne();
+    hear(el, 0, 150);
+    expect(peakOf(engine.strain.field)).toBeGreaterThan(0);
+
+    engine.playTrack(5, 0);
+    run(4);
+    expect(engine.strain.album).not.toBe(1);
+    expect(peakOf(engine.strain.plastic)).toBe(0);
+  });
+
+  it("switching off clears the material in the same frame", () => {
+    engine.experiments.strain = true;
+    const el = airborne();
+    hear(el, 0, 150);
+    expect(peakOf(engine.strain.field)).toBeGreaterThan(0);
+
+    engine.experiments.strain = false;
+    env.advance(16);
+    expect(peakOf(engine.strain.field)).toBe(0);
+    expect(engine.strain.album).toBe(-1);
   });
 });
 

@@ -99,7 +99,7 @@ desenho — que fazem dez mundos diferentes continuarem sendo o mesmo produto:
 | M6 | Espectro do envelope (harmônicos 2–7) | Distribuição dos lobos | curvas quase ortogonais entre discos (r = 0,007) | A macroforma do disco — como ele sobe e desce ao longo da duração inteira — vira a forma do corpo. É o sinal mais distintivo que o acervo tem, e antes era gasto num tremor de espessura. | Normalizado por álbum: a *distribuição* dos lobos é a identidade, a *amplitude* pertence a M4. Sem isso, o eixo correlacionaria −0,77 com o brilho. |
 | M7 | Harmônico 1 do envelope | Excentricidade do corpo | 0,018 → 0,240 (13,2×) | Um disco que cresce ou decai ao longo da duração tem a massa deslocada para o lado onde a energia está. | Amortecida por `zoom`: na coleção o corpo volta à âncora, senão dez corpos deslocados viram ruído. |
 | M8 | Pulso | Estratificação em camadas | 0,052 → 0,824 (15,9×) | Periodicidade é repetição; repetição no espaço são camadas. As conchas também **expandem** a coroa, senão a estratificação seria só alta frequência e sumiria de relance. | Mesmo fato musical de P15 (giro do campo) em outro registro — um é campo, o outro é forma. Máximo de três conchas. |
-| M9 | Duração | Dispersão e satélites | 0 → 4 corpos | Um disco extenso é território: o mundo se espalha em corpos secundários em vez de crescer. Contagem contínua por peso, nunca discreta. | Arco permitido de −2,6 a +2,0 rad, para que nenhum satélite caia sobre o lockup. |
+| M9 | Duração | Dispersão e satélites | 0 → 4 corpos | Um disco extenso é território: o mundo se espalha em corpos secundários em vez de crescer. Contagem contínua por peso, nunca discreta. | Arco permitido de −2,6 a +2,0 rad, para que nenhum satélite caia sobre o lockup. Nenhum satélite passa de 0,68 do núcleo (`MORPH.satCap`): acima disso a cena lê dois corpos disputando o centro, não um corpo com satélite. O teto reescala a órbita inteira de uma vez, preservando a hierarquia de M11 entre os satélites. |
 | M10 | Heterogeneidade de pulso entre faixas | Fragmentação da coroa | 0,175 → 0,879 (5,0×) | Um disco cujas faixas não compartilham grade se estilhaça; um disco coeso é banda contínua. **Eixo novo, e o mais independente do conjunto**: máximo \|r\| = 0,35 contra os cinco descritores de álbum. | Combina-se com M5, que responde à dinâmica. |
 | M11 | Heterogeneidade de nível entre faixas | Desigualdade entre os corpos | 0,072 → 0,476 (6,6×) | Um disco de peças desiguais tem um corpo dominante e satélites pequenos; um disco parelho tem corpos comparáveis. Máximo \|r\| = 0,31 contra os cinco descritores. | Só a hierarquia; a contagem pertence a M9. |
 | M12 | Nível médio da faixa | Espessura da placa do setor | 0,52 → 1,34 da banda | Cada faixa é uma placa de espessura própria. Constante dentro do setor: é o que separa morfologia de waveform. | Substitui a modulação contínua de P5, que produzia serrilhado na borda interna. |
@@ -487,6 +487,355 @@ P4 (ganho 1):
 horizonte se move tipicamente 1–3% — pode ficar abaixo do limiar de percepção.
 Passar disso exige romper o teto de P4 conscientemente, e essa decisão não foi
 tomada. Desligado, o sinal é exatamente zero e o mundo é idêntico ao de antes.
+
+## Experimento aberto — o campo guarda carga
+
+**Entra desligado.** Ligue com `?x=charge` na URL ou
+`__horizonte.experiments.charge = true` no console; a amplitude se varre com
+`experiments.chargeGain`. Desligado, `st.charge` é exatamente 0 em todo quadro e
+o mundo é bit a bit o de antes.
+
+A ideia: **a constante de tempo mais longa de todo o sistema em execução é 1,2 s**
+— o `SLOW_TAU` do operador de accent. Acima disso não existe nenhuma variável
+musical: ou é constante de álbum, ou é função do relógio (P12, P13). Uma faixa
+inteira passa e o estado em `t = 180 s` é inteiramente previsível a partir de
+`t = 0` mais o relógio. A cena é *animada*; não é *transformada*.
+
+A carga preenche essa oitava vazia com **o operador que o projeto já tem, uma
+escala acima**. `analysis.ts` calcula `accent = (banda − média lenta da banda) /
+espalhamento`, com τ de 0,12 s e 1,2 s. A carga é o mesmo operador com τ de
+**20 s e 200 s**, calculado sobre o `envelope` já publicado em vez de sobre o
+FFT: onde o accent mede "esta banda está acima do próprio hábito recente", a
+carga mede "este trecho está acima do hábito recente do disco".
+
+**Nenhum dado novo.** `chargeOf` deriva uma curva de 512 amostras do mesmo
+envelope, em cache por `WeakMap`, como `envelopeOf`. Em execução o motor faz uma
+amostragem e um lerp por quadro. Zero uniforme novo, zero textura, zero mudança
+no shader, zero paridade Python/TS nova.
+
+**Onde ela escreve.** Em nada, por enquanto. A carga é a **camada de sinal**;
+quem a consome é um experimento separado.
+
+| Propriedade | Valor |
+| --- | --- |
+| τ rápido / lento | `max(20 s, 4 · dt) / ×10` — piso de resolução: 35 s em *e-world*, 31 s em *MKUltra* |
+| Normalização | p90 do próprio \|raw\|, com o **mesmo joelho suave de P16/P17** |
+| Estado | nenhum: `carga = f(posição no álbum)`, reconstruída analiticamente |
+
+**A causalidade, medida.** Qualquer acumulador que só cresce é monotônico e
+portanto indistinguível do relógio. Medido sobre o acervo, faixa a faixa, |r|
+contra o progresso linear:
+
+| Mecanismo | \|r\| com o relógio | Excursão na faixa |
+| --- | --: | --: |
+| Erosão (∫\|Δenv\|) | 0,996 | 0,163 |
+| Sedimento escalar | 0,977 | 0,107 |
+| Integral assinada | 0,913 | 0,366 |
+| Memória com vazamento τ 45 s | 0,776 | 0,359 |
+| **Carga (rápido − lento)** | **0,512** | **1,413** |
+
+E 136 pares de faixas do acervo com durações a menos de 4% de distância
+correlacionam **0,324** na trajetória de carga: duas faixas de mesma duração
+escrevem histórias diferentes por medição.
+
+## Reprovado — a carga como escala do mundo
+
+**A primeira aplicação da carga foi deslocar `ringR` em ±5%, e foi reprovada em
+teste perceptual manual.** Fica registrado porque o resultado negativo é o
+achado mais útil desta linha inteira.
+
+Rasterizando a silhueta e contando quantos pixels trocam de classe entre matéria
+e vazio:
+
+| Mudança | NCC de relance | Pixels que trocam de classe |
+| --- | --: | --: |
+| Escala +5% | 0,983–0,988 | 0,9–3,3% |
+| Escala +12% | 0,909–0,935 | 2,1–5,9% |
+| Falhas 3× mais largas | 0,986–0,999 | 0,05–1,1% |
+| Coroa 15% mais grossa | 0,995–0,996 | 0,26–1,7% |
+
+Com ganho até **5,4** — banda inteira, saturada quase o tempo todo — a mudança
+continuou imperceptível. Uma dilatação que inverte até 5,9% dos pixels do quadro
+não é vista, porque **não deixa nada parado ao lado dela para servir de régua**:
+coroa, núcleo e satélites se movem juntos, e a visão reinterpreta a cena como a
+mesma cena.
+
+Duas consequências que valem para qualquer camada temporal futura:
+
+1. **Uma mudança só é legível num olhar frio se criar uma descontinuidade local
+   contra um vizinho que não mudou.** 22 px de dilatação uniforme somem; 7 px de
+   degrau numa linha contínua não.
+2. **Identidade e perceptibilidade param de competir** assim que a mudança é
+   local: o NCC global mal se move (0,986–0,9996 acima) enquanto a anomalia é
+   plenamente visível. O impasse entre ±5% e ±12% era artefato de um canal afim.
+
+Registro de calibração, para não se repetir: apertar play já leva o raio de 244
+a 288 px em 0,3 s — **+18%**, com auto-similaridade 0,869, *abaixo* do piso de
+0,880 que a carga tinha de respeitar. O piso era conservador; quem protege a
+identidade é a não-convergência, que passou com folga em toda a varredura.
+
+## Experimento aberto — a marca d'água no circuito
+
+**Entra desligado.** Ligue com `?x=watermark` na URL ou
+`__horizonte.experiments.watermark = true` no console. Desligado, a memória é
+zerada no mesmo quadro e o mundo é o de antes.
+
+A hipótese, escrita como uma frase só: **acontecimentos musicais relevantes
+deixam marcas locais e persistentes no espaço já atravessado, enquanto o resto
+permanece como referência visual intacta.**
+
+**A regra.** A cada quadro o motor lê `chargeAt(assinatura, posição no álbum)` e
+mantém um **máximo corrido**, reiniciado a cada faixa a partir do valor de
+entrada — por isso nada é escrito nos primeiros segundos. Quando a carga supera
+esse máximo em `step`, e está acima de `floor`, um **depósito** é registrado no
+ângulo em que aconteceu. A profundidade é quantizada em **três patamares**: a
+geometria nunca reproduz o envelope.
+
+O depósito é desenhado como matéria da própria coroa — as mesmas fatias da capa,
+apoiadas na borda externa medida por `shellsAt`, com perfil em corcova. Ele
+acompanha o relevo do disco em vez de ser um círculo por cima dele, e não existe
+contorno contínuo acompanhando o playhead: só de duas a quatro corcovas isoladas.
+
+| Propriedade | Valor |
+| --- | --- |
+| Gatilho | máximo corrido, `step` 0,15 acima do pico, piso 0,10 |
+| Patamares | 3 · profundidade 0,032 → 0,072 do raio (5 → 19 px em 1280×800) |
+| Largura | 34% do setor, entre 0,009 e 0,028 de volta (33 → 54 px de arco) |
+| Fusão | eventos a menos de 0,007 de volta viram uma marca só, guardando a maior |
+| Teto | 24 marcas por visita |
+| Custo | ~26 `drawImage` por marca dentro do recomposite que `seg()` já fazia |
+
+**Semântica de escuta** (`__tests__/watermark.test.ts`, 19 casos, mais 8 no
+motor): pausa não escreve nada; pular para frente deixa a lacuna, porque aquele
+trecho não foi ouvido; voltar não duplica; reouvir preserva o máximo existente;
+trocar de faixa guarda as marcas e recomeça o teto; trocar de disco limpa a
+visita. O estado é a lista de intervalos efetivamente ouvidos — nenhuma
+simulação de quadros anteriores é necessária.
+
+**Densidade medida** numa escuta inteira de cada faixa do acervo: mediana **2**
+marcas por faixa, de 0 a 4, e **17 de 80 faixas ficam sem marca nenhuma** —
+porque a carga é normalizada pelo álbum e essas faixas nunca sobem acima do
+hábito do próprio disco. Isso é o descritor funcionando: a faixa discreta existe
+por medição, não por decisão.
+
+**Folga no mobile:** o depósito acrescenta 0,054 a 0,065 do raio, contra 0,111
+de folga deixada por `BAND.fill`. Nenhum disco sai do palco.
+
+### Diagnóstico do teste visual
+
+Confirmado a olho nu: **a transformação é perceptível sem A/B** — o critério que
+a carga como escala nunca alcançou. Duas perguntas ficaram abertas, e as duas
+foram medidas sem mexer em nenhum parâmetro.
+
+**A marca é distinguível da morfologia?** Depende do disco, e dois eixos
+explicam quais. O primeiro é o **contraste de rugosidade**: `z` = altura da marca
+sobre o desvio-padrão da ondulação do próprio contorno na escala da marca. O
+segundo é a **ocupação do setor**: a largura da marca é limitada em 0,028 de
+volta, então num disco de setores curtos ela deixa de ser um evento dentro de um
+arco intacto.
+
+| Álbum | Setores | `z` (patamar 3) | Marca / setor | Leitura |
+| --- | --: | --: | --: | --- |
+| Jajce | 4 | 3,4 | 9% | legível |
+| All Systems Go | 4 | 5,5 | 11% | legível |
+| Impromptu | 5 | 2,0 | 14% | legível |
+| MKUltra | 6 | 3,3 | 15% | legível |
+| 0p | 7 | 2,8 | 20% | legível |
+| Wry Way | 8 | 3,1 | 21% | legível |
+| Le Manoir | 11 | 3,2 | 34% | marginal — ocupa o setor |
+| e-world | 16 | 2,5 | 34% | marginal — ocupa o setor |
+| Dark Thoughts | 10 | 1,8 | 27% | absorvida |
+| lebar | 9 | 1,2 | 27% | absorvida |
+
+Os limites (`z` ≥ 2,0 e marca/setor ≤ 25%) foram calibrados contra duas leituras
+manuais — *Impromptu* legível, *Dark Thoughts* absorvida — e devem ser tratados
+como hipótese, não como lei.
+
+**A frequência das marcas resolve a estagnação? Não.**
+
+| Medida | Acervo |
+| --- | --: |
+| Tempo até a primeira marca | mediana 1:04 · p90 3:25 |
+| Intervalo entre marcas | mediana 0:15 · máximo 5:54 |
+| **Maior vazio sem nenhum estado novo** | **mediana 2:39** · p90 5:04 · máximo 11:18 |
+| Fração da faixa após a última marca | mediana 44% |
+| Faixas com vazio > 60 s | 73 de 80 (91%) |
+| Faixas com vazio > 120 s | 58 de 80 (73%) |
+| **Tempo de escuta dentro de um vazio > 60 s** | **85%** |
+
+E isso **não é calibração**: um máximo corrido sobre uma série estacionária tem
+probabilidade de novo recorde decrescente por construção — os intervalos entre
+recordes crescem geometricamente. Baixar `step` adiciona marcas no começo, não no
+fim. A distribuição por quartil confirma: *Impromptu* escreve 7 marcas no
+primeiro quarto, 13 no segundo e **zero** na metade final.
+
+**As 15 faixas sem marca, decompostas:**
+
+* **Tipo A — 9 faixas (11%):** a carga nunca cruza o piso. Viés de nível médio
+  −0,046 contra +0,009 das faixas com marca: são medidamente mais baixas que o
+  próprio disco. **Fato musical legítimo.**
+* **Tipo B — 6 faixas (8%):** a carga sobe, mas a faixa **entra no próprio pico**
+  e nunca o supera por `step`. *La Salle de Torture* chega a 0,89 — a maior carga
+  entre todas as mudas — e tem viés de nível **positivo** (+0,159). **Artefato da
+  regra de priming**, não da música.
+
+O priming existe para impedir uma marca aos 0:00, que era um problema real. A
+tensão entre as duas coisas é estrutural e ainda não está resolvida.
+
+## Experimento aberto — a coroa como material: elástico e plástico
+
+**Entra desligado.** Ligue com `?x=strain`. Ele **substitui** `?x=watermark` (se as
+duas estiverem ligadas, a marca d'água é apagada): não são dois efeitos, são dois
+regimes do mesmo material.
+
+A hipótese: enquanto a música atravessa uma região da coroa, o material sofre
+**deformação reversível**. Quando a perturbação diminui, ele tende a voltar à
+morfologia-base. Onde o escoamento foi excedido, parte não volta e fica como
+**cicatriz**. H1 deixa de ser algo que aparece na coroa e passa a ser o resíduo de
+um processo que se viu acontecer.
+
+### Um material, uma equação
+
+Um campo de 512 posições no contorno externo da coroa. A cada quadro, a carga é
+aplicada em torno de um **sítio** com alcance proporcional à própria carga; o
+material sobe com τ 6 s e relaxa com τ 26 s; onde o deslocamento passa do
+escoamento, uma fração fica.
+
+| Constante | Valor | Papel |
+| --- | --- | --- |
+| `dead` | 0,20 | abaixo disso a música não pressiona: o material fica em repouso |
+| `ampRadius` / `ampBand` | 0,22 R / 0,36 da banda | quanto o material pode ceder — limitado pela matéria disponível |
+| `compliance` | 0,55 → 1,00 pela **dinâmica** | um disco comprimido cede menos que um dinâmico |
+| `hop` | 20 bins / 14° | quanto o playhead pode se afastar antes de a carga procurar outro sítio |
+| `rise` / `relax` | 6 s / 26 s | a resposta atrasa e a recuperação é visível |
+| `yield` | 0,030 R | **seleciona** quais acontecimentos deixam marca |
+| `harden` | 0,55 | **profundidade** do que fica |
+
+**A tração e a compressão escoam igual.** Foi a correção decisiva: a carga
+negativa — o disco caindo abaixo do próprio hábito recente — é tão musical quanto
+a positiva, e estava sendo descartada. Tração deixa saliência, compressão deixa
+reentrância. Com o escoamento simétrico, as faixas mudas caem de **15/80 para
+9/80** e a leitura deixa de ser um cursor, porque nenhum cursor se inverte.
+
+### O sítio ancorado
+
+A primeira versão aplicava a carga **em torno do playhead**, que se move. Medido
+sobre as curvas reais: o playhead percorre 0,21 bin/s, então um ponto fixo da coroa
+permanece dentro do lóbulo por **54 s** (p10 33 s, p90 137 s) — muito acima de τ 6 s
+e τ 26 s. O campo ficava em equilíbrio quase-estático com o envelope, e o que se via
+era `load × reach` transladando: ataque de 25 s e relaxamento de 43 s, ambos ditados
+pelo trânsito e não pelo material. A cicatriz, travada enquanto a crista passava,
+saía como **rastro** colado à crista viva, com largura dada pela duração do evento.
+
+Uma carga que viaja não produz acontecimento local. Cada ponto sobe e desce, mas os
+vizinhos fazem o mesmo poucos segundos fora de fase, e a soma é um envelope que
+translada — leitura de corpo que muda, nunca de corpo que responde. O sinal causal
+já estava inteiro nos dados: a queda mediana era de 15 px, 63% do pico, em 72 s.
+Estava apenas dissolvido no espaço.
+
+A carga agora **fixa um sítio** quando sai da zona morta e o mantém enquanto durar o
+evento; solta no repouso. `hop` reancora se o playhead se afastar demais, para que um
+evento muito longo não congele um ponto. A onda viajante vira um conjunto de
+acontecimentos estacionários: o mesmo lugar sobe, para de subir e desce, e o que fica
+é aquilo que não desceu, sob o lugar onde se viu subir. Amplitude, τ, escoamento,
+endurecimento, zona morta e desenho continuam os mesmos.
+
+### O que isso conserta de H1
+
+* **O artefato de priming morre por construção.** O escoamento é absoluto, não
+  relativo ao valor de entrada. *La Salle de Torture*, que H1 silenciava apesar de
+  atingir carga 0,89, agora deforma desde o primeiro segundo e cicatriza aos 0:02,
+  segurando +13 a +16 px de tensão pela faixa inteira. As seis faixas do tipo B
+  voltam a existir.
+* **A estagnação cai por um fator de quatro.**
+
+| | H1 sozinho | H1 como resíduo do elástico |
+| --- | --: | --: |
+| Janelas de 10 s com movimento perceptível | 0% | **70%** |
+| Maior parada mediana | 2:39 | **0:40** |
+| Faixas com parada > 60 s | 73/80 | **30/80** |
+| Faixas com parada > 120 s | 58/80 | **15/80** |
+| Cicatrizes por faixa (mediana) | 2 | 2 |
+| Faixas sem nenhuma memória | 15/80 | **9/80** |
+
+### O risco de virar cursor, medido
+
+Um cursor está sempre presente, tem tamanho fixo e não inverte. Este não:
+
+* fica **em repouso 13% a 62% do tempo** conforme o disco (mediana 26%);
+* o alcance cresce com a carga, de 3,6° a 10,8° de meia-largura;
+* deforma para fora **e para dentro**;
+* deixa resíduo, que um indicador não deixa;
+* **não acompanha o playhead**: fica no lugar que foi pressionado e se afasta dele
+  com o giro do anel.
+
+E não vira barra de progresso: o maior trecho **contínuo** de cicatriz é **8,4° na
+mediana**, p90 12°, com o pior caso em 28°. O arco cicatrizado total é 4,7% do
+circuito.
+
+O custo da âncora é estagnação: janelas de 10 s com deslocamento acima de 1 px caem
+de 88% para 71%, e a maior parada mediana sobe de 0:20 para 0:30.
+
+### O que não fica resolvido
+
+A cicatriz continua ocupando de 16% a 54% do setor conforme o disco — os mesmos
+*e-world*, *Le Manoir* e *Dark Thoughts* que já eram marginais no diagnóstico de
+H1. A aposta da hipótese é que **ver a causa torne legível uma consequência que um
+frame isolado não explicaria**, e isso só o olho decide.
+
+Determinismo: a parte **plástica** mantém as garantias de H1 (pausa não apaga,
+pular deixa lacuna, voltar não duplica, sair do disco limpa). A parte **elástica**
+é uma simulação com estado de verdade — seu erro se dissolve dentro de um tempo de
+relaxação (26 s), e a integração é exponencial, portanto independente da taxa de
+quadros.
+
+## Auditoria — `uJet` e `uBlur` estão fora de P4
+
+Não é uma exceção deliberada: é uma migração que não aconteceu. O handoff de
+direção de arte especifica, literalmente, `jet = 0.10 + bass*0.22` tocando —
+escrito antes de P4 existir. Quando o teto por disco chegou, `m0k` e `spin`
+foram migrados para `curvature()`; `uJet` e `uBlur` ficaram para trás.
+
+Medido em reprodução real, refazendo o caminho do analisador sobre o PCM em cache:
+
+| Faixa | p05 | p50 | p90 | p99 | máx | máx/base |
+| --- | --: | --: | --: | --: | --: | --: |
+| *lebar* · nirlaba (mais dinâmico) | 0,088 | 0,132 | 0,175 | 0,220 | 0,264 | 4,41× |
+| *All Systems Go* · Nancy Holiday (mais comprimido) | 0,107 | 0,165 | 0,205 | 0,238 | 0,272 | 4,53× |
+| *Dark Thoughts* · Ritual (meio) | 0,076 | 0,139 | 0,184 | 0,210 | 0,236 | 3,93× |
+
+**O problema não é a amplitude — é a ordem.** `reactionCap` separa *lebar* de
+*All Systems Go* por 3,5× (0,186 contra 0,053), e é o canal mais expressivo da
+assinatura. No jato, o disco mais comprimido do acervo oscila **4,53×** e o mais
+dinâmico **4,41×**: a ordem se inverte. `flux` já é normalizado contra as âncoras
+p10/p90 do próprio disco, então multiplicá-lo por um 0,22 fixo equaliza todos os
+discos — exatamente o que o teto existe para impedir.
+
+Excursão visual, a 1280×800, com a tinta de *Le Morte d'Abby* sobre um vazio de 0,027:
+
+| `uJet` | Origem | Pico somado | Largura visível | Contraste |
+| --: | --- | --: | --: | --: |
+| 0,020 | pausa | 0,039 | 0 px | 1,4× |
+| 0,060 | base tocando | 0,116 | 49 px | 4,3× |
+| 0,128 | p50 medido | 0,249 | 68 px | 9,2× |
+| 0,200 | p90 medido | 0,388 | 76 px | 14,4× |
+| 0,340 | teto teórico | 0,660 | 86 px | 24,4× |
+| 1,100 | pico do colapso | 2,136 | 103 px | 79,1× |
+
+Contra 1,46× de excursão da lente e 1,21× da dureza do rim, o jato é **o único
+canal ao vivo cuja modulação é visível como mudança de luz numa área grande** —
+cerca de 7,6% do quadro. É ele que impede a reprodução de parecer completamente
+parada, o que torna a decisão delicada: prendê-lo a P4 reduziria a excursão de
+4,4× para 1,19× e apagaria a última pista viva, justamente o problema que a
+carga tenta resolver.
+
+O colapso (`sin(...)·1,1`) e a fusão (0,1 fixo) são coreografia escrita e não
+passam pela fórmula de reprodução: **qualquer mudança aqui afeta só o playback
+normal.**
+
+`uBlur` tem a mesma origem e o mesmo estado: `bass * 0.12`, de 0 a 0,12, razão
+infinita, também sem teto — efeito secundário (alarga as amostras de `samp`),
+mas pela mesma porta.
 
 ## Descoberta — o cursor sabe o que está sob ele
 

@@ -106,6 +106,11 @@ function lobeSum(cos: number[], sin: number[], turn: number): number {
   return v;
 }
 
+const satGain = (weight: number) => 0.4 + 0.6 * weight;
+
+export const satRadiusOf = (m: AlbumMorphology, s: Satellite) =>
+  Math.min(s.size * satGain(s.weight), m.coreRatio * MORPH.satCap);
+
 export function lobeAt(m: AlbumMorphology, turn: number): number {
   return lobeSum(m.lobeCos, m.lobeSin, turn);
 }
@@ -258,6 +263,17 @@ export function morphologyOf(sig: AlbumSignature, trackCount: number): AlbumMorp
         Math.pow(1 - hierN * MORPH.satFalloff, i),
       weight,
     });
+  }
+
+  let satPeak = 0;
+  for (const s of satellites) {
+    if (s.weight <= 0.02) continue;
+    satPeak = Math.max(satPeak, s.size * satGain(s.weight));
+  }
+  const satCeiling = coreRatio * MORPH.satCap;
+  if (satPeak > satCeiling) {
+    const k = satCeiling / satPeak;
+    for (const s of satellites) s.size *= k;
   }
 
   let rMin = Number.POSITIVE_INFINITY;
