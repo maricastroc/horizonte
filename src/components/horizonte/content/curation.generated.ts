@@ -1,11 +1,19 @@
+// GERADO por scripts/fetch-curation.py — não editar à mão.
+//
+// Curadoria Horizonte. Cada álbum registra origem, licença do áudio, licença da
+// capa, atribuição exigida, alterações feitas no arquivo original e a data em
+// que a licença foi verificada na fonte.
 import type { Album } from "./types";
 
 export interface CuratedAlbum extends Album {
+  /** Número de catálogo da edição original, quando existe. */
   originalCat?: string;
   label?: string;
+  /** Observação de licenciamento relevante para esta obra. */
   note?: string;
 }
 
+/** Itens da curadoria desejada que NÃO podem ser usados, e por quê. */
 export interface BlockedAlbum {
   cat: string;
   artist: string;
@@ -17,83 +25,83 @@ export interface BlockedAlbum {
 
 export const CURATION: CuratedAlbum[] = [
   {
-    id: "dust-time-gravity",
+    id: "le-morte-dabby-0p",
     provider: "curated",
-    artist: "The Ghost of an Alien",
-    title: "Dust. Time.. Gravity",
-    year: "2016",
-    cat: "H—017",
-    cover: "/music/dust-time-gravity/cover.webp",
-    inkA: [0.321, 0.471, 0.082],
-    inkB: [0.3, 0.532, 0.826],
+    artist: "Le Morte d'Abby",
+    title: "0p",
+    year: "2022",
+    cat: "H—003",
+    cover: "/music/le-morte-dabby-0p/cover.webp",
+    inkA: [0.231, 0.443, 0.807],
+    inkB: [0.731, 0.296, 0.268],
     tracks: [
       {
-        id: "dust-time-gravity/01-deep-within-the-shadows",
-        title: "Deep Within The Shadows",
-        dur: 351.15,
+        id: "le-morte-dabby-0p/01-0pvi",
+        title: "0pVI",
+        dur: 283.24,
         source: {
           kind: "local",
-          src: "/music/dust-time-gravity/01-deep-within-the-shadows.m4a",
+          src: "/music/le-morte-dabby-0p/01-0pvi.m4a",
           mime: "audio/mp4"
         }
       },
       {
-        id: "dust-time-gravity/02-thy-kingdom-of-au",
-        title: "Thy Kingdom Of Au",
-        dur: 440.0,
+        id: "le-morte-dabby-0p/02-0pvii",
+        title: "0pVII",
+        dur: 304.0,
         source: {
           kind: "local",
-          src: "/music/dust-time-gravity/02-thy-kingdom-of-au.m4a",
+          src: "/music/le-morte-dabby-0p/02-0pvii.m4a",
           mime: "audio/mp4"
         }
       },
       {
-        id: "dust-time-gravity/03-dust-time-gravity",
-        title: "Dust Time Gravity",
-        dur: 323.35,
+        id: "le-morte-dabby-0p/03-0pviii",
+        title: "0pVIII",
+        dur: 420.0,
         source: {
           kind: "local",
-          src: "/music/dust-time-gravity/03-dust-time-gravity.m4a",
+          src: "/music/le-morte-dabby-0p/03-0pviii.m4a",
           mime: "audio/mp4"
         }
       },
       {
-        id: "dust-time-gravity/04-polar-distance-displaced",
-        title: "Polar Distance Displaced",
-        dur: 518.83,
+        id: "le-morte-dabby-0p/04-0pix",
+        title: "0pIX",
+        dur: 384.0,
         source: {
           kind: "local",
-          src: "/music/dust-time-gravity/04-polar-distance-displaced.m4a",
+          src: "/music/le-morte-dabby-0p/04-0pix.m4a",
           mime: "audio/mp4"
         }
       },
       {
-        id: "dust-time-gravity/05-space-junk-in-the-trunk",
-        title: "Space Junk In The Trunk",
-        dur: 840.0,
+        id: "le-morte-dabby-0p/05-0px",
+        title: "0pX",
+        dur: 395.29,
         source: {
           kind: "local",
-          src: "/music/dust-time-gravity/05-space-junk-in-the-trunk.m4a",
+          src: "/music/le-morte-dabby-0p/05-0px.m4a",
           mime: "audio/mp4"
         }
       },
       {
-        id: "dust-time-gravity/06-always-looking-up",
-        title: "Always Looking Up",
-        dur: 554.67,
+        id: "le-morte-dabby-0p/06-0pxi",
+        title: "0pXI",
+        dur: 580.59,
         source: {
           kind: "local",
-          src: "/music/dust-time-gravity/06-always-looking-up.m4a",
+          src: "/music/le-morte-dabby-0p/06-0pxi.m4a",
           mime: "audio/mp4"
         }
       },
       {
-        id: "dust-time-gravity/07-drifting-further-and-further",
-        title: "Drifting Further And Further",
-        dur: 609.98,
+        id: "le-morte-dabby-0p/07-0pxii",
+        title: "0pXII",
+        dur: 344.0,
         source: {
           kind: "local",
-          src: "/music/dust-time-gravity/07-drifting-further-and-further.m4a",
+          src: "/music/le-morte-dabby-0p/07-0pxii.m4a",
           mime: "audio/mp4"
         }
       }
@@ -101,20 +109,20 @@ export const CURATION: CuratedAlbum[] = [
     license: {
       name: "CC BY 4.0",
       url: "https://creativecommons.org/licenses/by/4.0/",
-      source: "https://archive.org/details/Dust-Time-Gravity",
-      attribution: "The Ghost of an Alien — Dust. Time.. Gravity (The Ghost of an Alien (self-released), 2016). Licensed under CC BY 4.0.",
+      source: "https://lemortedabby.bandcamp.com/album/0p",
+      attribution: "Le Morte d'Abby — 0p (Le Morte d'Abby (self-released), 2022). Licensed under CC BY 4.0.",
       redistributable: true,
       cover: {
-        license: "CC BY 4.0 (same as the Internet Archive item)",
-        source: "https://archive.org/details/Dust-Time-Gravity"
+        license: "Not declared",
+        source: "https://lemortedabby.bandcamp.com/album/0p"
       },
-      verifiedAt: "2026-08-27",
+      verifiedAt: "2026-08-18",
       changes: [
         "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
         "Cover cropped to a centre square and resampled to 1024 px WebP."
       ]
     },
-    label: "The Ghost of an Alien (self-released)"
+    label: "Le Morte d'Abby (self-released)"
   },
   {
     id: "tristan-lohengrin-le-manoir",
@@ -377,106 +385,6 @@ export const CURATION: CuratedAlbum[] = [
       ]
     },
     label: "Sangat Records"
-  },
-  {
-    id: "le-morte-dabby-0p",
-    provider: "curated",
-    artist: "Le Morte d'Abby",
-    title: "0p",
-    year: "2022",
-    cat: "H—003",
-    cover: "/music/le-morte-dabby-0p/cover.webp",
-    inkA: [0.231, 0.443, 0.807],
-    inkB: [0.731, 0.296, 0.268],
-    tracks: [
-      {
-        id: "le-morte-dabby-0p/01-0pvi",
-        title: "0pVI",
-        dur: 283.24,
-        source: {
-          kind: "local",
-          src: "/music/le-morte-dabby-0p/01-0pvi.m4a",
-          mime: "audio/mp4"
-        }
-      },
-      {
-        id: "le-morte-dabby-0p/02-0pvii",
-        title: "0pVII",
-        dur: 304.0,
-        source: {
-          kind: "local",
-          src: "/music/le-morte-dabby-0p/02-0pvii.m4a",
-          mime: "audio/mp4"
-        }
-      },
-      {
-        id: "le-morte-dabby-0p/03-0pviii",
-        title: "0pVIII",
-        dur: 420.0,
-        source: {
-          kind: "local",
-          src: "/music/le-morte-dabby-0p/03-0pviii.m4a",
-          mime: "audio/mp4"
-        }
-      },
-      {
-        id: "le-morte-dabby-0p/04-0pix",
-        title: "0pIX",
-        dur: 384.0,
-        source: {
-          kind: "local",
-          src: "/music/le-morte-dabby-0p/04-0pix.m4a",
-          mime: "audio/mp4"
-        }
-      },
-      {
-        id: "le-morte-dabby-0p/05-0px",
-        title: "0pX",
-        dur: 395.29,
-        source: {
-          kind: "local",
-          src: "/music/le-morte-dabby-0p/05-0px.m4a",
-          mime: "audio/mp4"
-        }
-      },
-      {
-        id: "le-morte-dabby-0p/06-0pxi",
-        title: "0pXI",
-        dur: 580.59,
-        source: {
-          kind: "local",
-          src: "/music/le-morte-dabby-0p/06-0pxi.m4a",
-          mime: "audio/mp4"
-        }
-      },
-      {
-        id: "le-morte-dabby-0p/07-0pxii",
-        title: "0pXII",
-        dur: 344.0,
-        source: {
-          kind: "local",
-          src: "/music/le-morte-dabby-0p/07-0pxii.m4a",
-          mime: "audio/mp4"
-        }
-      }
-    ],
-    license: {
-      name: "CC BY 4.0",
-      url: "https://creativecommons.org/licenses/by/4.0/",
-      source: "https://lemortedabby.bandcamp.com/album/0p",
-      attribution: "Le Morte d'Abby — 0p (Le Morte d'Abby (self-released), 2022). Licensed under CC BY 4.0.",
-      redistributable: true,
-      cover: {
-        license: "Not declared",
-        source: "https://lemortedabby.bandcamp.com/album/0p"
-      },
-      verifiedAt: "2026-08-18",
-      changes: [
-        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
-        "Cover cropped to a centre square and resampled to 1024 px WebP."
-      ]
-    },
-    label: "Le Morte d'Abby (self-released)"
   },
   {
     id: "mark-wilson-x-dark-thoughts",
@@ -1224,6 +1132,106 @@ export const CURATION: CuratedAlbum[] = [
     },
     originalCat: "cz012",
     label: "Cezanne Records"
+  },
+  {
+    id: "dust-time-gravity",
+    provider: "curated",
+    artist: "The Ghost of an Alien",
+    title: "Dust. Time.. Gravity",
+    year: "2016",
+    cat: "H—017",
+    cover: "/music/dust-time-gravity/cover.webp",
+    inkA: [0.321, 0.471, 0.082],
+    inkB: [0.3, 0.532, 0.826],
+    tracks: [
+      {
+        id: "dust-time-gravity/01-deep-within-the-shadows",
+        title: "Deep Within The Shadows",
+        dur: 351.15,
+        source: {
+          kind: "local",
+          src: "/music/dust-time-gravity/01-deep-within-the-shadows.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "dust-time-gravity/02-thy-kingdom-of-au",
+        title: "Thy Kingdom Of Au",
+        dur: 440.0,
+        source: {
+          kind: "local",
+          src: "/music/dust-time-gravity/02-thy-kingdom-of-au.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "dust-time-gravity/03-dust-time-gravity",
+        title: "Dust Time Gravity",
+        dur: 323.35,
+        source: {
+          kind: "local",
+          src: "/music/dust-time-gravity/03-dust-time-gravity.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "dust-time-gravity/04-polar-distance-displaced",
+        title: "Polar Distance Displaced",
+        dur: 518.83,
+        source: {
+          kind: "local",
+          src: "/music/dust-time-gravity/04-polar-distance-displaced.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "dust-time-gravity/05-space-junk-in-the-trunk",
+        title: "Space Junk In The Trunk",
+        dur: 840.0,
+        source: {
+          kind: "local",
+          src: "/music/dust-time-gravity/05-space-junk-in-the-trunk.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "dust-time-gravity/06-always-looking-up",
+        title: "Always Looking Up",
+        dur: 554.67,
+        source: {
+          kind: "local",
+          src: "/music/dust-time-gravity/06-always-looking-up.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "dust-time-gravity/07-drifting-further-and-further",
+        title: "Drifting Further And Further",
+        dur: 609.98,
+        source: {
+          kind: "local",
+          src: "/music/dust-time-gravity/07-drifting-further-and-further.m4a",
+          mime: "audio/mp4"
+        }
+      }
+    ],
+    license: {
+      name: "CC BY 4.0",
+      url: "https://creativecommons.org/licenses/by/4.0/",
+      source: "https://archive.org/details/Dust-Time-Gravity",
+      attribution: "The Ghost of an Alien — Dust. Time.. Gravity (The Ghost of an Alien (self-released), 2016). Licensed under CC BY 4.0.",
+      redistributable: true,
+      cover: {
+        license: "CC BY 4.0 (same as the Internet Archive item)",
+        source: "https://archive.org/details/Dust-Time-Gravity"
+      },
+      verifiedAt: "2026-08-27",
+      changes: [
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
+      ]
+    },
+    label: "The Ghost of an Alien (self-released)"
   },
   {
     id: "smert-v-letnjuju-polnoch-chajka",

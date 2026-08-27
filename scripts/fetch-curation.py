@@ -39,15 +39,14 @@ def tl(pairs):
 CURATION = [
     # ============================================ abertura: primeiro da coleção
     dict(
-        kind="archive", cat="H—017", slug="dust-time-gravity",
-        identifier="Dust-Time-Gravity",
-        verify_url="https://archive.org/details/Dust-Time-Gravity",
-        artist="The Ghost of an Alien", title="Dust. Time.. Gravity", year="2016",
-        label="The Ghost of an Alien (self-released)",
-        cover_file="Dust Time Gravity Front.jpg",
-        license=CC_BY, verified="2026-08-27",
-        cover=dict(license="CC BY 4.0 (same as the Internet Archive item)",
-                   source="https://archive.org/details/Dust-Time-Gravity"),
+        kind="manual", cat="H—003", slug="le-morte-dabby-0p",
+        artist="Le Morte d'Abby", title="0p", year="2022",
+        label="Le Morte d'Abby (self-released)",
+        verify_url="https://lemortedabby.bandcamp.com/album/0p",
+        expect_license_url=CC_BY_4_ALT, license=CC_BY, verified="2026-08-18",
+        cover=dict(license="Not declared", source="https://lemortedabby.bandcamp.com/album/0p"),
+        tracks=tl([("0pVI", 283), ("0pVII", 304), ("0pVIII", 420), ("0pIX", 384),
+                   ("0pX", 395), ("0pXI", 580), ("0pXII", 344)]),
     ),
     # =========================================================== curadoria nova
     dict(
@@ -75,16 +74,6 @@ CURATION = [
                    ("liat tanah, tanah liat", 257), ("jika dan hanya jika", 169),
                    ("mungkin hanya cinta yang akan mencintai", 249),
                    ("pergantian siang ke malam", 110), ("kebun bunga matahari", 187)]),
-    ),
-    dict(
-        kind="manual", cat="H—003", slug="le-morte-dabby-0p",
-        artist="Le Morte d'Abby", title="0p", year="2022",
-        label="Le Morte d'Abby (self-released)",
-        verify_url="https://lemortedabby.bandcamp.com/album/0p",
-        expect_license_url=CC_BY_4_ALT, license=CC_BY, verified="2026-08-18",
-        cover=dict(license="Not declared", source="https://lemortedabby.bandcamp.com/album/0p"),
-        tracks=tl([("0pVI", 283), ("0pVII", 304), ("0pVIII", 420), ("0pIX", 384),
-                   ("0pX", 395), ("0pXI", 580), ("0pXII", 344)]),
     ),
     dict(
         kind="manual", cat="H—004", slug="mark-wilson-x-dark-thoughts",
@@ -298,6 +287,17 @@ CURATION = [
         cover_file="CoverJajce.jpg", license=CC_BY, verified="2026-08-18",
         cover=dict(license="CC BY 4.0 (mesma do item no Internet Archive)",
                    source="https://archive.org/details/Session17-20jajceSessionscz012"),
+    ),
+    dict(
+        kind="archive", cat="H—017", slug="dust-time-gravity",
+        identifier="Dust-Time-Gravity",
+        verify_url="https://archive.org/details/Dust-Time-Gravity",
+        artist="The Ghost of an Alien", title="Dust. Time.. Gravity", year="2016",
+        label="The Ghost of an Alien (self-released)",
+        cover_file="Dust Time Gravity Front.jpg",
+        license=CC_BY, verified="2026-08-27",
+        cover=dict(license="CC BY 4.0 (same as the Internet Archive item)",
+                   source="https://archive.org/details/Dust-Time-Gravity"),
     ),
     dict(
         kind="archive", cat="H—018", slug="smert-v-letnjuju-polnoch-chajka",

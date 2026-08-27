@@ -18,10 +18,9 @@ confirmada. `--strict` também falha nas entradas ainda sem arquivos.
 
 | Artista | Álbum | Faixas | Licença áudio | Licença capa | Fonte | Status |
 | --- | --- | --: | --- | --- | --- | --- |
-| The Ghost of an Alien | Dust. Time.. Gravity | 7 | CC BY 4.0 | CC BY 4.0 (same as the Internet Archive item) | archive.org | APROVADO |
+| Le Morte d'Abby | 0p | 7 | CC BY 4.0 | Not declared | lemortedabby.bandcamp.com | APROVADO |
 | Tristan Lohengrin | Le Manoir | 11 | CC BY 4.0 | Not declared by the author | tristanlohengrin.bandcamp.com | APROVADO |
 | Jono Terbakar | lebar | 9 | CC BY 4.0 | Not declared | jonoterbakar.bandcamp.com | APROVADO |
-| Le Morte d'Abby | 0p | 7 | CC BY 4.0 | Not declared | lemortedabby.bandcamp.com | APROVADO |
 | Mark Wilson X | Dark Thoughts | 10 | CC BY 4.0 | Unsplash License | freemusicarchive.org | APROVADO |
 | Darin Wilson | Impromptu | 5 | CC BY-SA 4.0 | Not declared | darinwilson.bandcamp.com | APROVADO |
 | zero-project | e-world | 16 | CC BY 4.0 | CC BY 4.0 (mesma da obra) | zero-project.gr | APROVADO |
@@ -29,6 +28,7 @@ confirmada. `--strict` também falha nas entradas ainda sem arquivos.
 | Madison Kenny | All Systems Go | 4 | CC BY 4.0 | CC BY 4.0 (mesma do item no Internet Archive) | archive.org | APROVADO |
 | Meho | MKUltra | 6 | CC BY 4.0 | CC BY 4.0 (mesma do item no Internet Archive) | archive.org | APROVADO |
 | Mescaline Sessions | Jajce Sessions | 4 | CC BY 4.0 | CC BY 4.0 (mesma do item no Internet Archive) | archive.org | APROVADO |
+| The Ghost of an Alien | Dust. Time.. Gravity | 7 | CC BY 4.0 | CC BY 4.0 (same as the Internet Archive item) | archive.org | APROVADO |
 | смерть в летнюю полночь | где же твои крылья, Чайка | 6 | CC BY 4.0 | CC BY 4.0 (same as the Internet Archive item) | archive.org | APROVADO |
 | Grove of Whispers | The Sheltering Sky | 3 | CC BY 4.0 | CC BY 4.0 (same as the Internet Archive item) | archive.org | APROVADO |
 | Awake In The Dew | Sounds To Ascension | 7 | CC BY-SA 4.0 | CC BY-SA 4.0 (same as the Internet Archive item) | archive.org | APROVADO |
@@ -44,16 +44,16 @@ confirmada. `--strict` também falha nas entradas ainda sem arquivos.
 
 ## Aprovados — hospedados em `public/music/`
 
-### The Ghost of an Alien — *Dust. Time.. Gravity* · `H—017`
+### Le Morte d'Abby — *0p* · `H—003`
 
-- **Fonte**: The Ghost of an Alien (self-released)
-- **URL de origem**: https://archive.org/details/Dust-Time-Gravity
+- **Fonte**: Le Morte d'Abby (self-released)
+- **URL de origem**: https://lemortedabby.bandcamp.com/album/0p
 - **Licença do áudio**: CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/
-- **Licença/proveniência da capa**: CC BY 4.0 (same as the Internet Archive item) · https://archive.org/details/Dust-Time-Gravity
-- **Atribuição exigida**: The Ghost of an Alien — Dust. Time.. Gravity (The Ghost of an Alien (self-released), 2016). Licensed under CC BY 4.0.
+- **Licença/proveniência da capa**: Not declared · https://lemortedabby.bandcamp.com/album/0p
+- **Atribuição exigida**: Le Morte d'Abby — 0p (Le Morte d'Abby (self-released), 2022). Licensed under CC BY 4.0.
 - **Alterações no original**: Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing. Cover cropped to a centre square and resampled to 1024 px WebP.
-- **Data da verificação**: 2026-08-27
-- **Ano · faixas**: 2016 · 7
+- **Data da verificação**: 2026-08-18
+- **Ano · faixas**: 2022 · 7
 
 ### Tristan Lohengrin — *Le Manoir* · `H—001`
 
@@ -77,17 +77,6 @@ confirmada. `--strict` também falha nas entradas ainda sem arquivos.
 - **Alterações no original**: Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing. Cover cropped to a centre square and resampled to 1024 px WebP.
 - **Data da verificação**: 2026-08-18
 - **Ano · faixas**: 2023 · 9
-
-### Le Morte d'Abby — *0p* · `H—003`
-
-- **Fonte**: Le Morte d'Abby (self-released)
-- **URL de origem**: https://lemortedabby.bandcamp.com/album/0p
-- **Licença do áudio**: CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/
-- **Licença/proveniência da capa**: Not declared · https://lemortedabby.bandcamp.com/album/0p
-- **Atribuição exigida**: Le Morte d'Abby — 0p (Le Morte d'Abby (self-released), 2022). Licensed under CC BY 4.0.
-- **Alterações no original**: Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing. Cover cropped to a centre square and resampled to 1024 px WebP.
-- **Data da verificação**: 2026-08-18
-- **Ano · faixas**: 2022 · 7
 
 ### Mark Wilson X — *Dark Thoughts* · `H—004`
 
@@ -167,6 +156,17 @@ confirmada. `--strict` também falha nas entradas ainda sem arquivos.
 - **Alterações no original**: Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing. Cover cropped to a centre square and resampled to 1024 px WebP.
 - **Data da verificação**: 2026-08-18
 - **Ano · faixas**: 2014 · 4
+
+### The Ghost of an Alien — *Dust. Time.. Gravity* · `H—017`
+
+- **Fonte**: The Ghost of an Alien (self-released)
+- **URL de origem**: https://archive.org/details/Dust-Time-Gravity
+- **Licença do áudio**: CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/
+- **Licença/proveniência da capa**: CC BY 4.0 (same as the Internet Archive item) · https://archive.org/details/Dust-Time-Gravity
+- **Atribuição exigida**: The Ghost of an Alien — Dust. Time.. Gravity (The Ghost of an Alien (self-released), 2016). Licensed under CC BY 4.0.
+- **Alterações no original**: Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing. Cover cropped to a centre square and resampled to 1024 px WebP.
+- **Data da verificação**: 2026-08-27
+- **Ano · faixas**: 2016 · 7
 
 ### смерть в летнюю полночь — *где же твои крылья, Чайка* · `H—018`
 
