@@ -17,6 +17,11 @@ import { LIGHT } from "../tokens";
 import { signature } from "./fixtures";
 
 const CONTRACT = {
+  "dust-time-gravity": {
+    weight: 624, lens: 1.02, cap: 0.123,
+     rim: 3.85, nav: 5.04,
+    sectors: [7, 32, 83.1],
+  },
   "tristan-lohengrin-le-manoir": {
     weight: 551, lens: 0.92, cap: 0.086,
      rim: 4.09, nav: 6.02,
@@ -66,6 +71,21 @@ const CONTRACT = {
     weight: 663, lens: 1.01, cap: 0.089,
      rim: 3.3, nav: 5.73,
     sectors: [4, 36.7, 129.3],
+  },
+  "smert-v-letnjuju-polnoch-chajka": {
+    weight: 744, lens: 1.07, cap: 0.088,
+     rim: 4.42, nav: 5.7,
+    sectors: [6, 48.9, 74.4],
+  },
+  "grove-of-whispers-the-sheltering-sky": {
+    weight: 570, lens: 0.97, cap: 0.107,
+     rim: 4.06, nav: 5.26,
+    sectors: [3, 58, 218.1],
+  },
+  "awake-in-the-dew-sounds-to-ascension": {
+    weight: 777, lens: 1.09, cap: 0.112,
+     rim: 4.15, nav: 5.65,
+    sectors: [7, 38.7, 61.6],
   },
 } as const;
 

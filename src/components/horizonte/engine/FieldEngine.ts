@@ -53,7 +53,7 @@ import {
 } from "../field";
 import { createFieldGL, type FieldGL } from "../fieldMaterial";
 import { clamp } from "../math";
-import { albumProgressOf, initialState, isEngaged, progressOf } from "../state";
+import { albumProgressOf, initialState, isEngaged, progressOf, tideAt } from "../state";
 import * as T from "./transport";
 import type { AudioEffect, Catalog } from "./transport";
 import type { FrameOut, FrameSink } from "./frame";
@@ -68,7 +68,10 @@ import {
   COMPOSITION_FALLBACK_W,
   COMPOSITION_MAX_W,
   GUARD,
+  EXPLORED_KEY,
+  HINT_MS,
   IDLE_MS,
+  TIDE,
   LERP,
   INTAKE,
   MORPH,
@@ -159,6 +162,12 @@ export class FieldEngine implements InputActions {
   private railTrk = -1;
   private intake = false;
   private intent = 0;
+
+  private explored = false;
+
+  private tideT = 0;
+
+  private tideGain = 0;
   private faultKind: PlaybackFault | null = null;
   reach: Reach = "none";
   private reachAmp = 0;
@@ -195,6 +204,11 @@ export class FieldEngine implements InputActions {
     this.experiments.anticipation = readExperiment("anticipate");
     this.reduced = prefersReducedMotion();
     this.coarse = hasCoarsePointer();
+    try {
+      this.explored = window.localStorage.getItem(EXPLORED_KEY) === "1";
+    } catch {
+      this.explored = false;
+    }
     this.snap = this.buildSnapshot(true);
 
     this.bus.onEnded = () => this.run(T.trackEnded(this.st, CATALOG));
@@ -311,6 +325,7 @@ export class FieldEngine implements InputActions {
     } else {
       s.navT -= stepPx / (viewportW * PAN.desktopWidth);
     }
+    if (Math.abs(s.navT - this.dragNav) > 0.01) this.markExplored();
   }
 
   endPan(tap: boolean) {
@@ -329,14 +344,47 @@ export class FieldEngine implements InputActions {
 
   wheelBy(deltaY: number, deltaX: number) {
     const s = this.st;
-    if (s.scale === "collection") s.navT += deltaY * PAN.wheel + deltaX * PAN.wheel;
-    else this.stepSel(deltaY > 0 ? 1 : -1);
+    if (s.scale === "collection") {
+      s.navT += deltaY * PAN.wheel + deltaX * PAN.wheel;
+      this.markExplored();
+    } else this.stepSel(deltaY > 0 ? 1 : -1);
   }
 
   stepFocus(dir: number) {
     const s = this.st;
-    if (s.scale === "collection") s.navT += dir;
-    else this.stepSel(dir);
+    if (s.scale === "collection") {
+      s.navT += dir;
+      this.markExplored();
+    } else this.stepSel(dir);
+  }
+
+  private markExplored() {
+    if (this.explored) return;
+    this.explored = true;
+    try {
+      window.localStorage.setItem(EXPLORED_KEY, "1");
+    } catch {
+      //
+    }
+  }
+
+  private tideStep(dt: number) {
+    const s = this.st;
+    const settled = Math.abs(s.navT - s.nav) < 1e-3;
+    const quiet = performance.now() - this.intent > IDLE_MS;
+    const on =
+      quiet && settled && !this.reduced && s.scale === "collection" && ALBUMS.length > 1;
+
+    if (on) {
+      this.tideGain = Math.min(1, this.tideGain + dt / TIDE.ramp);
+      this.tideT += dt;
+    } else {
+      this.tideGain = Math.max(0, this.tideGain - dt * TIDE.release);
+      if (this.tideGain <= 0) this.tideT = 0;
+    }
+
+    const dir = Math.round(s.nav) < ALBUMS.length - 1 ? 1 : -1;
+    s.tide = dir * TIDE.amp * this.tideGain * tideAt(this.tideT);
   }
 
   markIntent() {
@@ -508,6 +556,7 @@ export class FieldEngine implements InputActions {
   }
 
   enterAlbum(i: number) {
+    if (this.st.scale === "collection" && i !== this.st.alb) this.markExplored();
     this.run(T.enterAlbum(this.st, CATALOG, i));
   }
 
@@ -681,6 +730,9 @@ export class FieldEngine implements InputActions {
     this.ringRotation(dt);
     this.lightAngle(dt);
     s.fadeSel += ((s.scale === "collection" ? 0 : 1) - s.fadeSel) * Math.min(1, dt * 4);
+    s.form +=
+      ((s.scale === "collection" ? MORPH.collectionForm : 1) - s.form) * Math.min(1, dt * 4);
+    this.tideStep(dt);
 
     const k = Math.min(1, dt * LERP.field);
     s.m0k += (tgt.m0k - s.m0k) * k;
@@ -953,7 +1005,7 @@ export class FieldEngine implements InputActions {
         const sy = (geo.cy + Math.sin(sat.angle) * sat.dist * geo.R * geo.flatten) / this.H;
         m1x = (sx - 0.5) * aspect;
         m1y = 0.5 - sy;
-        m1k = SECOND_MASS.k * this.C.massScale * sat.weight * s.fadeSel;
+        m1k = SECOND_MASS.k * this.C.massScale * sat.weight * s.form;
         m1h = ((sat.size * geo.R) / this.H) * (0.4 + 0.6 * sat.weight);
       }
     }
@@ -969,10 +1021,10 @@ export class FieldEngine implements InputActions {
     u.uLobeB.value.set(
       this.M.lobeCos[2] ?? 0,
       this.M.lobeSin[2] ?? 0,
-      lobeAmp * s.fadeSel,
+      lobeAmp * s.form,
       -s.ringRot,
     );
-    u.uFlat.value = 1 + (this.M.flatten - 1) * s.fadeSel;
+    u.uFlat.value = 1 + (this.M.flatten - 1) * s.form;
     u.uWorld.value = this.worldUnit();
     this.guard(u.uGuard.value as THREE.Vector3);
     u.uM0.value.set(mx, my, s.m0k, s.m0h);
@@ -998,8 +1050,15 @@ export class FieldEngine implements InputActions {
 
   private buildSnapshot(force = false): Snapshot {
     const s = this.st;
-    const idle = !this.coarse && performance.now() - this.intent > IDLE_MS;
+    const quiet = performance.now() - this.intent;
+    const idle = !this.coarse && quiet > IDLE_MS;
     const navAlb = Math.round(s.nav);
+    const hint =
+      !this.explored && s.scale === "collection" && quiet > HINT_MS
+        ? this.coarse
+          ? ("swipe" as const)
+          : ("drag" as const)
+        : null;
     const next: Snapshot = {
       scale: s.scale,
       bands: this.L.staged ? bandsOf(this.W, this.H, s.zoomT) : FULL_BANDS,
@@ -1012,6 +1071,8 @@ export class FieldEngine implements InputActions {
       hoverTrk: s.hover,
       hoverAlb: s.hoverBody,
       idle,
+      hint,
+      hintDir: navAlb < ALBUMS.length - 1 ? 1 : -1,
       variant: this.L.variant,
       fault: this.faultKind,
       announce:
@@ -1034,6 +1095,8 @@ export class FieldEngine implements InputActions {
       prev.hoverTrk === next.hoverTrk &&
       prev.hoverAlb === next.hoverAlb &&
       prev.idle === next.idle &&
+      prev.hint === next.hint &&
+      prev.hintDir === next.hintDir &&
       prev.variant === next.variant &&
       prev.fault === next.fault &&
       sameBands(prev.bands, next.bands) &&

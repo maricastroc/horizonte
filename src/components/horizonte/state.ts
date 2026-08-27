@@ -1,5 +1,5 @@
 import { clamp } from "./math";
-import { SEQ } from "./tokens";
+import { MORPH, SEQ, TIDE } from "./tokens";
 import type { FieldState, Mode } from "./types";
 
 export function initialState(): FieldState {
@@ -43,8 +43,26 @@ export function initialState(): FieldState {
     segueT: SEQ.segue.total,
     ringRot: 0,
     fadeSel: 0,
+    form: MORPH.collectionForm,
+    tide: 0,
     treb: 0,
   };
+}
+
+export const TIDE_PERIOD = TIDE.out + TIDE.hold + TIDE.back + TIDE.rest;
+
+export function tideAt(t: number): number {
+  const phase = ((t % TIDE_PERIOD) + TIDE_PERIOD) % TIDE_PERIOD;
+  if (phase < TIDE.out) {
+    const u = phase / TIDE.out;
+    return 1 - (1 - u) ** 3;
+  }
+  if (phase < TIDE.out + TIDE.hold) return 1;
+  if (phase < TIDE.out + TIDE.hold + TIDE.back) {
+    const u = (phase - TIDE.out - TIDE.hold) / TIDE.back;
+    return 1 - (u < 0.5 ? 4 * u ** 3 : 1 - (-2 * u + 2) ** 3 / 2);
+  }
+  return 0;
 }
 
 export const progressOf = (s: Pick<FieldState, "pos" | "dur">) =>

@@ -21,6 +21,8 @@ const BASE: Snapshot = {
   hoverTrk: -1,
   hoverAlb: -1,
   idle: false,
+  hint: null,
+  hintDir: 1,
   variant: "desktop",
   announce: "",
   fault: null,

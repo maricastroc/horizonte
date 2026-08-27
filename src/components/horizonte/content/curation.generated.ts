@@ -17,6 +17,106 @@ export interface BlockedAlbum {
 
 export const CURATION: CuratedAlbum[] = [
   {
+    id: "dust-time-gravity",
+    provider: "curated",
+    artist: "The Ghost of an Alien",
+    title: "Dust. Time.. Gravity",
+    year: "2016",
+    cat: "H—017",
+    cover: "/music/dust-time-gravity/cover.webp",
+    inkA: [0.321, 0.471, 0.082],
+    inkB: [0.3, 0.532, 0.826],
+    tracks: [
+      {
+        id: "dust-time-gravity/01-deep-within-the-shadows",
+        title: "Deep Within The Shadows",
+        dur: 351.15,
+        source: {
+          kind: "local",
+          src: "/music/dust-time-gravity/01-deep-within-the-shadows.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "dust-time-gravity/02-thy-kingdom-of-au",
+        title: "Thy Kingdom Of Au",
+        dur: 440.0,
+        source: {
+          kind: "local",
+          src: "/music/dust-time-gravity/02-thy-kingdom-of-au.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "dust-time-gravity/03-dust-time-gravity",
+        title: "Dust Time Gravity",
+        dur: 323.35,
+        source: {
+          kind: "local",
+          src: "/music/dust-time-gravity/03-dust-time-gravity.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "dust-time-gravity/04-polar-distance-displaced",
+        title: "Polar Distance Displaced",
+        dur: 518.83,
+        source: {
+          kind: "local",
+          src: "/music/dust-time-gravity/04-polar-distance-displaced.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "dust-time-gravity/05-space-junk-in-the-trunk",
+        title: "Space Junk In The Trunk",
+        dur: 840.0,
+        source: {
+          kind: "local",
+          src: "/music/dust-time-gravity/05-space-junk-in-the-trunk.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "dust-time-gravity/06-always-looking-up",
+        title: "Always Looking Up",
+        dur: 554.67,
+        source: {
+          kind: "local",
+          src: "/music/dust-time-gravity/06-always-looking-up.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "dust-time-gravity/07-drifting-further-and-further",
+        title: "Drifting Further And Further",
+        dur: 609.98,
+        source: {
+          kind: "local",
+          src: "/music/dust-time-gravity/07-drifting-further-and-further.m4a",
+          mime: "audio/mp4"
+        }
+      }
+    ],
+    license: {
+      name: "CC BY 4.0",
+      url: "https://creativecommons.org/licenses/by/4.0/",
+      source: "https://archive.org/details/Dust-Time-Gravity",
+      attribution: "The Ghost of an Alien — Dust. Time.. Gravity (The Ghost of an Alien (self-released), 2016). Licensed under CC BY 4.0.",
+      redistributable: true,
+      cover: {
+        license: "CC BY 4.0 (same as the Internet Archive item)",
+        source: "https://archive.org/details/Dust-Time-Gravity"
+      },
+      verifiedAt: "2026-08-27",
+      changes: [
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
+      ]
+    },
+    label: "The Ghost of an Alien (self-released)"
+  },
+  {
     id: "tristan-lohengrin-le-manoir",
     provider: "curated",
     artist: "Tristan Lohengrin",
@@ -1124,6 +1224,261 @@ export const CURATION: CuratedAlbum[] = [
     },
     originalCat: "cz012",
     label: "Cezanne Records"
+  },
+  {
+    id: "smert-v-letnjuju-polnoch-chajka",
+    provider: "curated",
+    artist: "смерть в летнюю полночь",
+    title: "где же твои крылья, Чайка",
+    year: "2015",
+    cat: "H—018",
+    cover: "/music/smert-v-letnjuju-polnoch-chajka/cover.webp",
+    inkA: [0.289, 0.529, 0.069],
+    inkB: [0.25, 0.446, 0.785],
+    tracks: [
+      {
+        id: "smert-v-letnjuju-polnoch-chajka/01-kogda-zhe-eto-bylo-chajka",
+        title: "когда же это было, Чайка",
+        dur: 432.7,
+        source: {
+          kind: "local",
+          src: "/music/smert-v-letnjuju-polnoch-chajka/01-kogda-zhe-eto-bylo-chajka.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "smert-v-letnjuju-polnoch-chajka/02-po-kom-stuchit-tvoe-serdce-chajka",
+        title: "по ком стучит твоё сердце, Чайка",
+        dur: 293.14,
+        source: {
+          kind: "local",
+          src: "/music/smert-v-letnjuju-polnoch-chajka/02-po-kom-stuchit-tvoe-serdce-chajka.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "smert-v-letnjuju-polnoch-chajka/03-gde-zhe-tvoi-krylja-chajka",
+        title: "где же твои крылья, Чайка",
+        dur: 316.3,
+        source: {
+          kind: "local",
+          src: "/music/smert-v-letnjuju-polnoch-chajka/03-gde-zhe-tvoi-krylja-chajka.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "smert-v-letnjuju-polnoch-chajka/04-chto-v-temnote-tvoih-glaz-chajka",
+        title: "что в темноте твоих глаз, Чайка",
+        dur: 392.26,
+        source: {
+          kind: "local",
+          src: "/music/smert-v-letnjuju-polnoch-chajka/04-chto-v-temnote-tvoih-glaz-chajka.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "smert-v-letnjuju-polnoch-chajka/05-otchego-tvoja-dusha-bolit-chajka",
+        title: "отчего твоя душа болит, Чайка",
+        dur: 284.41,
+        source: {
+          kind: "local",
+          src: "/music/smert-v-letnjuju-polnoch-chajka/05-otchego-tvoja-dusha-bolit-chajka.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "smert-v-letnjuju-polnoch-chajka/06-pochemu-nashi-puti-razoshlis-chajka",
+        title: "почему наши пути разошлись, Чайка",
+        dur: 374.01,
+        source: {
+          kind: "local",
+          src: "/music/smert-v-letnjuju-polnoch-chajka/06-pochemu-nashi-puti-razoshlis-chajka.m4a",
+          mime: "audio/mp4"
+        }
+      }
+    ],
+    license: {
+      name: "CC BY 4.0",
+      url: "https://creativecommons.org/licenses/by/4.0/",
+      source: "https://archive.org/details/SCL174",
+      attribution: "смерть в летнюю полночь — где же твои крылья, Чайка (Southern City's Lab, 2015). Licensed under CC BY 4.0.",
+      redistributable: true,
+      cover: {
+        license: "CC BY 4.0 (same as the Internet Archive item)",
+        source: "https://archive.org/details/SCL174"
+      },
+      verifiedAt: "2026-08-27",
+      changes: [
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
+      ]
+    },
+    originalCat: "SCL174",
+    label: "Southern City's Lab",
+    note: "Six tracks, all from the verified CC BY 4.0 item. A seventh bonus track circulating elsewhere was deliberately left out: it is not part of that item and its licence could not be confirmed at the source."
+  },
+  {
+    id: "grove-of-whispers-the-sheltering-sky",
+    provider: "curated",
+    artist: "Grove of Whispers",
+    title: "The Sheltering Sky",
+    year: "2014",
+    cat: "H—019",
+    cover: "/music/grove-of-whispers-the-sheltering-sky/cover.webp",
+    inkA: [0.697, 0.446, 0.009],
+    inkB: [0.012, 0.527, 0.756],
+    tracks: [
+      {
+        id: "grove-of-whispers-the-sheltering-sky/01-light-and-shadow",
+        title: "Light and Shadow",
+        dur: 505.87,
+        source: {
+          kind: "local",
+          src: "/music/grove-of-whispers-the-sheltering-sky/01-light-and-shadow.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "grove-of-whispers-the-sheltering-sky/02-black-star",
+        title: "Black Star",
+        dur: 730.62,
+        source: {
+          kind: "local",
+          src: "/music/grove-of-whispers-the-sheltering-sky/02-black-star.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "grove-of-whispers-the-sheltering-sky/03-mimouna",
+        title: "Mimouna",
+        dur: 1901.36,
+        source: {
+          kind: "local",
+          src: "/music/grove-of-whispers-the-sheltering-sky/03-mimouna.m4a",
+          mime: "audio/mp4"
+        }
+      }
+    ],
+    license: {
+      name: "CC BY 4.0",
+      url: "https://creativecommons.org/licenses/by/4.0/",
+      source: "https://archive.org/details/bof060",
+      attribution: "Grove of Whispers — The Sheltering Sky (Buddhist On Fire, 2014). Licensed under CC BY 4.0.",
+      redistributable: true,
+      cover: {
+        license: "CC BY 4.0 (same as the Internet Archive item)",
+        source: "https://archive.org/details/bof060"
+      },
+      verifiedAt: "2026-08-27",
+      changes: [
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
+      ]
+    },
+    originalCat: "bof060",
+    label: "Buddhist On Fire"
+  },
+  {
+    id: "awake-in-the-dew-sounds-to-ascension",
+    provider: "curated",
+    artist: "Awake In The Dew",
+    title: "Sounds To Ascension",
+    year: "2018",
+    cat: "H—020",
+    cover: "/music/awake-in-the-dew-sounds-to-ascension/cover.webp",
+    inkA: [0.344, 0.333, 0.695],
+    inkB: [0.707, 0.47, 0.028],
+    tracks: [
+      {
+        id: "awake-in-the-dew-sounds-to-ascension/01-fractal",
+        title: "Fractal",
+        dur: 292.82,
+        source: {
+          kind: "local",
+          src: "/music/awake-in-the-dew-sounds-to-ascension/01-fractal.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "awake-in-the-dew-sounds-to-ascension/02-waves-of-cosmic-fire",
+        title: "Waves Of Cosmic Fire",
+        dur: 295.68,
+        source: {
+          kind: "local",
+          src: "/music/awake-in-the-dew-sounds-to-ascension/02-waves-of-cosmic-fire.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "awake-in-the-dew-sounds-to-ascension/03-the-light-hope",
+        title: "The Light Hope",
+        dur: 375.51,
+        source: {
+          kind: "local",
+          src: "/music/awake-in-the-dew-sounds-to-ascension/03-the-light-hope.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "awake-in-the-dew-sounds-to-ascension/04-infinite-ways-to-fly",
+        title: "Infinite Ways To Fly",
+        dur: 236.14,
+        source: {
+          kind: "local",
+          src: "/music/awake-in-the-dew-sounds-to-ascension/04-infinite-ways-to-fly.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "awake-in-the-dew-sounds-to-ascension/05-burning-the-violet-flame",
+        title: "Burning The Violet Flame",
+        dur: 342.48,
+        source: {
+          kind: "local",
+          src: "/music/awake-in-the-dew-sounds-to-ascension/05-burning-the-violet-flame.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "awake-in-the-dew-sounds-to-ascension/06-light-in-the-shadows",
+        title: "Light In The Shadows",
+        dur: 328.02,
+        source: {
+          kind: "local",
+          src: "/music/awake-in-the-dew-sounds-to-ascension/06-light-in-the-shadows.m4a",
+          mime: "audio/mp4"
+        }
+      },
+      {
+        id: "awake-in-the-dew-sounds-to-ascension/07-children-of-the-sun",
+        title: "Children Of The Sun",
+        dur: 324.01,
+        source: {
+          kind: "local",
+          src: "/music/awake-in-the-dew-sounds-to-ascension/07-children-of-the-sun.m4a",
+          mime: "audio/mp4"
+        }
+      }
+    ],
+    license: {
+      name: "CC BY-SA 4.0",
+      url: "https://creativecommons.org/licenses/by-sa/4.0/",
+      source: "https://archive.org/details/tranz068AwakeInTheDew-SoundsToAscension",
+      attribution: "Awake In The Dew — Sounds To Ascension (Tranzmitter Netlabel, 2018). Licensed under CC BY-SA 4.0.",
+      redistributable: true,
+      cover: {
+        license: "CC BY-SA 4.0 (same as the Internet Archive item)",
+        source: "https://archive.org/details/tranz068AwakeInTheDew-SoundsToAscension"
+      },
+      verifiedAt: "2026-08-27",
+      changes: [
+        "Audio re-encoded to AAC 96 kbps (.m4a) for web delivery; no content editing.",
+        "Cover cropped to a centre square and resampled to 1024 px WebP."
+      ]
+    },
+    originalCat: "TRANZ068",
+    label: "Tranzmitter Netlabel",
+    note: "The licence is CC BY-SA 4.0 (Attribution-ShareAlike), not CC BY 4.0 — the extra obligation to share the adaptation (the re-encoded audio) under the same BY-SA applies to this album, as it does to Darin Wilson's Impromptu."
   },
 ];
 

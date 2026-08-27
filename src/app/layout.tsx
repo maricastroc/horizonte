@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { archivo, bodoni, mono } from "./fonts";
+import { archivo, bodoni, inter, mono, playfair } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${archivo.variable} ${bodoni.variable} ${mono.variable}`}
+      className={`${archivo.variable} ${bodoni.variable} ${mono.variable} ${playfair.variable} ${inter.variable}`}
     >
       <body>{children}</body>
     </html>

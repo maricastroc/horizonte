@@ -57,6 +57,8 @@ export interface FieldState {
   segueT: number;
   ringRot: number;
   fadeSel: number;
+  form: number;
+  tide: number;
 
   treb: number;
 }
@@ -75,6 +77,8 @@ export interface Snapshot {
   hoverTrk: number;
   hoverAlb: number;
   idle: boolean;
+  hint: "drag" | "swipe" | null;
+  hintDir: number;
   variant: Variant;
   announce: string;
   fault: Fault | null;

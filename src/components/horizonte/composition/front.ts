@@ -96,13 +96,14 @@ export function drawFront(
     x.save();
     const scrimTop = lk.ty - lk.tsize * 0.95;
     const scrimBottom = lk.my + lk.msize * 1.6;
-    const scrimWidth = W * 0.62;
-    const scrimGrad = x.createLinearGradient(0, 0, scrimWidth, 0);
+    const scrimY = (scrimTop + scrimBottom) / 2;
+    const scrimR = Math.max(W * 0.6, (scrimBottom - scrimTop) * 1.5);
+    const scrimGrad = x.createRadialGradient(0, scrimY, 0, 0, scrimY, scrimR);
     scrimGrad.addColorStop(0, "rgba(0,0,0,0.34)");
-    scrimGrad.addColorStop(0.75, "rgba(0,0,0,0.16)");
+    scrimGrad.addColorStop(0.62, "rgba(0,0,0,0.15)");
     scrimGrad.addColorStop(1, "rgba(0,0,0,0)");
     x.fillStyle = scrimGrad;
-    x.fillRect(0, scrimTop, scrimWidth, scrimBottom - scrimTop);
+    x.fillRect(0, scrimY - scrimR, scrimR, scrimR * 2);
     x.restore();
   }
 

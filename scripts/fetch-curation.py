@@ -1,28 +1,3 @@
-"""
-Monta a Curadoria Horizonte a partir de obras com licença verificada na fonte.
-
-Três tipos de fonte:
-
-  archive  Internet Archive — licença lida do JSON de metadados (`licenseurl`).
-  direct   site do próprio autor, com download anônimo e URLs previsíveis.
-  manual   a licença é verificável por rede, mas o único download legítimo é
-           um fluxo humano (Bandcamp "name your price", que pede e-mail). Você
-           baixa e coloca os arquivos em .cache/manual/<slug>/; o script valida
-           licença, tracklist e durações antes de aceitar.
-
-  blocked  registrado e NUNCA baixado — a licença não permite, ou não pôde ser
-           confirmada. Fica documentado em CURADORIA.md.
-
-O script falha explicitamente quando:
-  * a licença encontrada na fonte não corresponde à esperada;
-  * um download esperado não está mais disponível (HTTP != 200);
-  * metadados essenciais não podem ser confirmados (tracklist, durações, capa).
-
-    python3 scripts/fetch-curation.py [--only <slug>] [--force] [--strict]
-
-`--strict` também falha nas entradas `manual` cujos arquivos ainda não foram
-fornecidos (útil em CI); sem ela, essas entradas são reportadas como PENDENTE.
-"""
 import argparse
 import json
 import math
@@ -62,6 +37,18 @@ def tl(pairs):
 
 
 CURATION = [
+    # ============================================ abertura: primeiro da coleção
+    dict(
+        kind="archive", cat="H—017", slug="dust-time-gravity",
+        identifier="Dust-Time-Gravity",
+        verify_url="https://archive.org/details/Dust-Time-Gravity",
+        artist="The Ghost of an Alien", title="Dust. Time.. Gravity", year="2016",
+        label="The Ghost of an Alien (self-released)",
+        cover_file="Dust Time Gravity Front.jpg",
+        license=CC_BY, verified="2026-08-27",
+        cover=dict(license="CC BY 4.0 (same as the Internet Archive item)",
+                   source="https://archive.org/details/Dust-Time-Gravity"),
+    ),
     # =========================================================== curadoria nova
     dict(
         kind="manual", cat="H—001", slug="tristan-lohengrin-le-manoir",
@@ -312,6 +299,45 @@ CURATION = [
         cover=dict(license="CC BY 4.0 (mesma do item no Internet Archive)",
                    source="https://archive.org/details/Session17-20jajceSessionscz012"),
     ),
+    dict(
+        kind="archive", cat="H—018", slug="smert-v-letnjuju-polnoch-chajka",
+        identifier="SCL174",
+        verify_url="https://archive.org/details/SCL174",
+        artist="смерть в летнюю полночь", title="где же твои крылья, Чайка",
+        year="2015", label="Southern City's Lab", original_cat="SCL174",
+        cover_file="cover.jpg",
+        license=CC_BY, verified="2026-08-27",
+        cover=dict(license="CC BY 4.0 (same as the Internet Archive item)",
+                   source="https://archive.org/details/SCL174"),
+        note=("Six tracks, all from the verified CC BY 4.0 item. A seventh bonus track "
+              "circulating elsewhere was deliberately left out: it is not part of that item "
+              "and its licence could not be confirmed at the source."),
+    ),
+    dict(
+        kind="archive", cat="H—019", slug="grove-of-whispers-the-sheltering-sky",
+        identifier="bof060",
+        verify_url="https://archive.org/details/bof060",
+        artist="Grove of Whispers", title="The Sheltering Sky", year="2014",
+        label="Buddhist On Fire", original_cat="bof060",
+        cover_file="Grove_of_Whispers-The_Sheltering_Sky.png",
+        license=CC_BY, verified="2026-08-27",
+        cover=dict(license="CC BY 4.0 (same as the Internet Archive item)",
+                   source="https://archive.org/details/bof060"),
+    ),
+    dict(
+        kind="archive", cat="H—020", slug="awake-in-the-dew-sounds-to-ascension",
+        identifier="tranz068AwakeInTheDew-SoundsToAscension",
+        verify_url="https://archive.org/details/tranz068AwakeInTheDew-SoundsToAscension",
+        artist="Awake In The Dew", title="Sounds To Ascension", year="2018",
+        label="Tranzmitter Netlabel", original_cat="TRANZ068",
+        cover_file="001.TRANZ068-Cover-Front.png",
+        license=CC_BY_SA, verified="2026-08-27",
+        cover=dict(license="CC BY-SA 4.0 (same as the Internet Archive item)",
+                   source="https://archive.org/details/tranz068AwakeInTheDew-SoundsToAscension"),
+        note=("The licence is CC BY-SA 4.0 (Attribution-ShareAlike), not CC BY 4.0 — the extra "
+              "obligation to share the adaptation (the re-encoded audio) under the same BY-SA "
+              "applies to this album, as it does to Darin Wilson's Impromptu."),
+    ),
 ]
 
 
@@ -519,7 +545,23 @@ def duration_of(path, slug):
     return round(float(m.group(1)), 2)
 
 
+CIRILICO = {
+    "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "e",
+    "ж": "zh", "з": "z", "и": "i", "й": "j", "к": "k", "л": "l", "м": "m",
+    "н": "n", "о": "o", "п": "p", "р": "r", "с": "s", "т": "t", "у": "u",
+    "ф": "f", "х": "h", "ц": "c", "ч": "ch", "ш": "sh", "щ": "shch",
+    "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "ju", "я": "ja",
+}
+
+
+def romaniza(s):
+    """Cirílico -> latino, no mesmo esquema que a própria netlabel usa nos
+    arquivos do Internet Archive (ж=zh, й=j, ч=ch, ю=ju, ь mudo)."""
+    return "".join(CIRILICO.get(c, CIRILICO.get(c.lower(), c)) for c in s)
+
+
 def slugify(s):
+    s = romaniza(s)
     s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
     return re.sub(r"[^a-zA-Z0-9]+", "-", s).strip("-").lower() or "faixa"
 
@@ -583,8 +625,11 @@ def build_archive(entry, index, force):
         http_get(f"https://archive.org/metadata/{ident}", path, slug)
     meta = json.load(open(path))
     md = meta.get("metadata", {})
-    if md.get("licenseurl") not in (CC_BY_4, CC_BY_4_ALT):
-        raise Falha(slug, f"licença na fonte é {md.get('licenseurl')!r}, esperado CC BY 4.0")
+    esperada = entry["license"]["url"]
+    aceitas = {esperada, esperada.replace("https://", "http://", 1)}
+    if md.get("licenseurl") not in aceitas:
+        raise Falha(slug, f"licença na fonte é {md.get('licenseurl')!r}, "
+                          f"esperado {entry['license']['name']} ({esperada})")
 
     out_dir = os.path.join(MUSIC, slug)
     os.makedirs(out_dir, exist_ok=True)

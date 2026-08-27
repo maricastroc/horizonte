@@ -99,7 +99,10 @@ void main(){
     col += uInk * exp(-axis * axis * 900.0) * along * uJet * 2.4;
   }
 
-  vec2 fOff = offUv * 0.34;
+  float fMag = length(offUv);
+  vec2 fOff = fMag > 1e-6
+    ? (offUv / fMag) * (fMag / (1.0 + fMag * 18.0)) * 0.85
+    : vec2(0.0);
   vec3 fCol = samp(uFront, uv, fOff, uBlur * 0.6);
   float fA = texture2D(uFront, uv + fOff).a;
   col = mix(col, fCol, clamp(fA * 1.6, 0.0, 1.0));

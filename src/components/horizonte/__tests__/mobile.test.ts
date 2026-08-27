@@ -220,10 +220,20 @@ describe("album identity on mobile", () => {
     }
   });
 
-  it("on mobile the name has a scale ceiling; on desktop it is free", () => {
+  it("both variants cap the name, and the desktop title clears the album rail", () => {
     const high = lockup(390, 2000, album(0), MOBILE);
     expect(high.size).toBeLessThan(390 * 0.105);
-    expect(lockup(1440, 900, album(0), DESKTOP).size).toBeCloseTo(1440 * 0.115 - 1440 * 0.018, 6);
+
+    const wide = lockup(2560, 900, album(0), DESKTOP);
+    expect(wide.size).toBeLessThanOrEqual(900 * 0.175);
+
+    const RAIL_PX = 248;
+    for (const w of [1280, 1440, 1920, 2560]) {
+      const lk = lockup(w, 900, album(0), DESKTOP);
+      expect(lk.widthTitle, `${w}`).toBeGreaterThan(0);
+      expect(lk.widthMeta, `${w}`).toBeGreaterThan(0);
+      expect(lk.marginTitle + lk.widthTitle, `${w}`).toBeLessThan(w - RAIL_PX);
+    }
   });
 });
 

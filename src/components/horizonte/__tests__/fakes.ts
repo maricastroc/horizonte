@@ -347,6 +347,7 @@ export interface EngineHarness {
   resize(w: number, h: number): void;
   images: { src: string; onload: (() => void) | null; onerror: (() => void) | null }[];
   audios: FakeAudio[];
+  storage: Map<string, string>;
   restore(): void;
 }
 
@@ -379,11 +380,17 @@ export function engineHarness({
 
   const listeners = new Map<string, Set<(e: unknown) => void>>();
   const motion = new Set<(e: unknown) => void>();
+  const store = new Map<string, string>();
 
   const win = {
     innerWidth,
     innerHeight,
     devicePixelRatio: 1,
+    localStorage: {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+      removeItem: (k: string) => void store.delete(k),
+    },
     AudioContext: audioWindow?.AudioContext,
     matchMedia: (query: string) => ({
       matches: query.includes("reduced-motion")
@@ -440,6 +447,7 @@ export function engineHarness({
     },
     frames: () => counted,
     now: () => t,
+    storage: store,
     resize(w, h) {
       win.innerWidth = w;
       win.innerHeight = h;

@@ -23,6 +23,8 @@ const DEFAULT_SNAPSHOT: Snapshot = {
   hoverTrk: -1,
   hoverAlb: -1,
   idle: false,
+  hint: null,
+  hintDir: 1,
   variant: "desktop",
   announce: `Collection · ${ALBUMS.length} bodies`,
   fault: null,
@@ -441,6 +443,37 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     />
   );
 
+  const hint = snap.scale === "collection" && (
+    <p
+      aria-hidden
+      className={[
+        "pointer-events-none absolute select-none whitespace-nowrap",
+        "font-mono uppercase text-ink-text-2",
+        compact ? "text-[10.5px] tracking-[.14em]" : "text-[10.5px] tracking-[.2em]",
+        "transition-opacity duration-500 ease-out motion-reduce:transition-none",
+        snap.hint ? "opacity-100" : "opacity-0",
+      ].join(" ")}
+      style={
+        compact
+          ? {
+              [snap.hintDir > 0 ? "right" : "left"]: pct(b.gutter),
+              top: pct(b.top + 0.05),
+            }
+          : { [snap.hintDir > 0 ? "right" : "left"]: snap.hintDir > 0 ? "264px" : "34px", top: "15%" }
+      }
+    >
+      {snap.hintDir > 0 ? (
+        <>
+          {snap.hint === "swipe" ? "Swipe" : "Drag"} to explore <span className="ml-1">&#8594;</span>
+        </>
+      ) : (
+        <>
+          <span className="mr-1">&#8592;</span> {snap.hint === "swipe" ? "Swipe" : "Drag"} to explore
+        </>
+      )}
+    </p>
+  );
+
   const fault = snap.fault && (
     <p role="status" className="normal-case tracking-[.08em] text-ink-text-2">
       {FAULT[snap.fault]}
@@ -448,6 +481,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   );
 
   const shell = (children: React.ReactNode) => (
+    <>
     <div
       data-instruments=""
       style={focusStyle}
@@ -469,6 +503,8 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         {snap.announce}
       </p>
     </div>
+    {hint}
+    </>
   );
 
   if (compact) {
@@ -587,11 +623,20 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           aria-label="Albums"
           aria-hidden={!albumRailOn}
           className={[
-            "flex min-h-0 shrink flex-col w-53.5 border-t border-rule",
+            "isolate relative flex min-h-0 flex-col w-53.5 border-t border-rule",
+            trackRailOn ? "flex-1 basis-0" : "shrink",
             "pointer-events-auto tablet:w-47.5",
-            "backdrop-blur-sm bg-void/55 -mx-2 px-2",
+            "-mx-3 px-3 pt-2 pb-1",
           ].join(" ")}
         >
+          <div
+            aria-hidden
+            className={[
+              "pointer-events-none absolute inset-0 -z-10 bg-void/78 backdrop-blur-md",
+              "[mask-image:linear-gradient(to_right,transparent,black_2.5rem)]",
+            ].join(" ")}
+          />
+          <p className="pb-1.5 text-ink-faint">{ALBUMS.length} albums</p>
           <ul className="rail-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {albumRows}
           </ul>
@@ -616,7 +661,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         </nav>
       </div>
 
-      <div className="pointer-events-auto absolute bottom-6.5 left-8.5 flex w-150 flex-col gap-2.75">
+      <div className="pointer-events-auto absolute bottom-11 left-8.5 flex w-150 flex-col gap-2.75">
         {seek(false)}
         {fault}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
@@ -652,7 +697,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         </div>
       </div>
 
-      <div className="pointer-events-auto absolute bottom-6.5 right-8.5 flex items-center gap-3.5">
+      <div className="pointer-events-auto absolute bottom-11 right-8.5 flex items-center gap-3.5">
         <button
           type="button"
           onClick={() => engine?.back()}

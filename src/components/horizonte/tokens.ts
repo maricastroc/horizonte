@@ -56,6 +56,7 @@ export const RING = {
 export const RING_UNIT = RING.unitR / RING.buffer;
 
 export const MORPH = {
+  collectionForm: 0.4,
   massAnchor: [0.1, 0.95],
   circuit: [0.56, 0.94],
   spreadAnchor: [0.02, 0.8],
@@ -114,8 +115,8 @@ export const GUARD = { soft: 0.05, residual: 0.22 } as const;
 
 export const LOCKUP = {
   desktop: {
-    size: 0.115,
-    sizeCap: 1,
+    size: 0.098,
+    sizeCap: 0.175,
     play: 0.045,
     zoom: 0.018,
     title: 0.53,
@@ -124,13 +125,13 @@ export const LOCKUP = {
     margin: 0.028,
     marginTitle: 0.032,
     marginMeta: 0.034,
-    baseline: 0.555,
+    baseline: 0.6,
     baselinePlay: 0.03,
-    titleGap: 0.5,
+    titleGap: 0.6,
     metaGap: 0.24,
-    fitTitle: 0,
-    fitMeta: 0,
-    floor: 0.55,
+    fitTitle: 0.62,
+    fitMeta: 0.62,
+    floor: 0.4,
     metaAlpha: 0.75,
   },
   mobile: {
@@ -218,6 +219,19 @@ export const LERP = {
   lead: 1.6,
   reach: 8,
 } as const;
+
+export const TIDE = {
+  amp: 0.014,
+  ramp: 0.9,
+  out: 1.15,
+  hold: 0.35,
+  back: 2.7,
+  rest: 1.5,
+  release: 6,
+} as const;
+
+export const HINT_MS = 1800;
+export const EXPLORED_KEY = "horizonte:explored";
 
 export const IDLE_MS = 2600;
 export const IDLE_OPACITY = 0.32;

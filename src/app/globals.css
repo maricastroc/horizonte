@@ -31,8 +31,8 @@
   --color-rule-2: rgba(232, 228, 220, 0.08);
   --color-chevron: #332f2b;
 
-  --font-archivo: var(--font-archivo-src);
-  --font-bodoni: var(--font-bodoni-src);
+  --font-archivo: var(--font-archivo-src), var(--font-inter-src);
+  --font-bodoni: var(--font-bodoni-src), var(--font-playfair-src);
   --font-mono: var(--font-mono-src);
 
   --radius-none: 0px;

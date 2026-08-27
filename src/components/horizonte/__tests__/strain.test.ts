@@ -300,7 +300,7 @@ describe("the catalogue under strain", () => {
   }, 300_000);
 
   it("a track that opens under tension is no longer silenced", () => {
-    const a = 0;
+    const a = ALBUMS.findIndex((x) => x.id === "tristan-lohengrin-le-manoir");
     const k = ALBUMS[a].tracks.findIndex((t) => t.title === "La Salle de Torture");
     expect(k).toBeGreaterThanOrEqual(0);
     expect(scarCount(listen(a, k).s)).toBeGreaterThan(0);

@@ -27,6 +27,7 @@ vi.mock("../fieldMaterial", async (importReal) => {
 });
 
 import { ALBUMS } from "../content";
+import { EXPLORED_KEY, HINT_MS, TIDE } from "../tokens";
 import { FieldEngine } from "../engine/FieldEngine";
 import { albPos, bodyGeom, layoutFor } from "../composition/layout";
 import { fieldConstantsOf, reduceMotion } from "../field";
@@ -291,6 +292,98 @@ describe("snapshot for React", () => {
 
   it("announces the collection when nothing is playing", () => {
     expect(engine.getSnapshot().announce).toContain(String(ALBUMS.length));
+  });
+
+  it("the hint waits for stillness, names the gesture, and points where there is room", () => {
+    const clock = vi.spyOn(performance, "now");
+    expect(engine.getSnapshot().hint).toBe(null);
+
+    clock.mockReturnValue(performance.now() + HINT_MS + 200);
+    env.advance();
+    expect(engine.getSnapshot().hint).toBe("drag");
+    expect(engine.getSnapshot().hintDir).toBe(1);
+
+    engine.markIntent();
+    clock.mockRestore();
+    env.advance();
+    expect(engine.getSnapshot().hint).toBe(null);
+  });
+
+  it("the arrow turns back on the last record", () => {
+    const clock = vi.spyOn(performance, "now");
+    engine.st.nav = ALBUMS.length - 1;
+    engine.st.navT = ALBUMS.length - 1;
+    clock.mockReturnValue(performance.now() + HINT_MS + 200);
+    env.advance();
+    expect(engine.getSnapshot().hintDir).toBe(-1);
+    clock.mockRestore();
+  });
+
+  it("the hint never returns once the gesture has been found, and that is remembered", () => {
+    const clock = vi.spyOn(performance, "now");
+    clock.mockReturnValue(performance.now() + HINT_MS + 200);
+    env.advance();
+    expect(engine.getSnapshot().hint).toBe("drag");
+
+    engine.stepFocus(1);
+    expect(env.storage.get(EXPLORED_KEY)).toBe("1");
+
+    clock.mockReturnValue(performance.now() + HINT_MS * 10);
+    env.advance();
+    expect(engine.getSnapshot().hint).toBe(null);
+    clock.mockRestore();
+  });
+
+  it("on a touch device the hint asks for a swipe, not a drag", () => {
+    engine.stop();
+    env.restore();
+    on({ coarse: true });
+    const clock = vi.spyOn(performance, "now");
+    clock.mockReturnValue(performance.now() + HINT_MS + 200);
+    env.advance();
+    expect(engine.getSnapshot().hint).toBe("swipe");
+    expect(engine.getSnapshot().idle).toBe(false);
+    clock.mockRestore();
+  });
+
+  it("the hint stays out of an album", () => {
+    const clock = vi.spyOn(performance, "now");
+    engine.enterAlbum(0);
+    clock.mockReturnValue(performance.now() + HINT_MS * 10);
+    env.advance();
+    expect(engine.getSnapshot().hint).toBe(null);
+    clock.mockRestore();
+  });
+
+  it("the tide drifts the field toward the next record only after real stillness", () => {
+    const clock = vi.spyOn(performance, "now");
+    expect(engine.st.tide).toBe(0);
+
+    clock.mockReturnValue(performance.now() + IDLE_MS + 1000);
+    run(2);
+    const drifted = engine.st.tide;
+    expect(drifted).toBeGreaterThan(0);
+    expect(Math.abs(drifted)).toBeLessThanOrEqual(TIDE.amp);
+
+    engine.markIntent();
+    clock.mockRestore();
+    run(2);
+    expect(engine.st.tide).toBeCloseTo(0, 6);
+  });
+
+  it("the tide never runs under reduced motion, nor inside an album", () => {
+    const clock = vi.spyOn(performance, "now");
+    clock.mockReturnValue(performance.now() + IDLE_MS + 1000);
+
+    engine.setReducedMotion(true);
+    run(3);
+    expect(engine.st.tide).toBeCloseTo(0, 6);
+
+    engine.setReducedMotion(false);
+    engine.enterAlbum(0);
+    run(3);
+    expect(engine.st.tide).toBeCloseTo(0, 6);
+    clock.mockRestore();
   });
 
   it("rest switches on after stillness and off at the first gesture", () => {
@@ -598,7 +691,7 @@ describe("experiment: the field anticipates (off by default)", () => {
 });
 
 describe("the crown deforms and remembers", () => {
-  const ALB = 1;
+  const ALB = ALBUMS.findIndex((x) => x.id === "jono-terbakar-lebar");
   const seconds = () => ALBUMS[ALB].tracks[0].dur;
   const bounds = () => boundsOf(ALBUMS[ALB].signature, ALBUMS[ALB].tracks.length);
 

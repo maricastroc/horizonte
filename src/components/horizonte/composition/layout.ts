@@ -45,8 +45,8 @@ const DESKTOP: WorldLayout = {
   spreadX: GEO.spreadX,
   spreadY: GEO.spreadY,
   ringScale: 1,
-  fitCollection: 0.52,
-  fitAlbum: 0.52,
+  fitCollection: 0.5,
+  fitAlbum: 0.5,
   ringLabels: "all",
   staged: false,
   type: LOCKUP.desktop,
@@ -87,13 +87,13 @@ export function albPos(i: number, s: FieldState, L: WorldLayout) {
   const depth = 1 / (1 + Math.abs(d) * 0.8);
   const zx = L.anchorCollection.x + (L.anchorAlbum.x - L.anchorCollection.x) * s.zoom;
   const zy = L.anchorCollection.y + (L.anchorAlbum.y - L.anchorCollection.y) * s.zoom;
-  const x = zx + d * L.spreadX * (1 - s.zoom * 0.6);
+  const x = zx + d * L.spreadX * (1 - s.zoom * 0.6) - s.tide;
   const y = zy + Math.sin(d * 1.15) * L.spreadY * (1 - s.zoom);
   return { x, y, depth, d };
 }
 
 export const baseRadius = (W: number, H: number, zoom: number, play: number, L: WorldLayout) =>
-  Math.min(W, H) * (0.42 - zoom * 0.115 + play * 0.055) * L.ringScale;
+  Math.min(W, H) * (0.385 - zoom * 0.105 + play * 0.055) * L.ringScale;
 
 export const ringR = (W: number, H: number, s: FieldState, L: WorldLayout) =>
   baseRadius(W, H, s.zoom, s.play, L);
