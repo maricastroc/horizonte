@@ -248,7 +248,7 @@ Released under the [MIT License](LICENSE). You're free to use, study, fork and b
 
 The **music is not covered by this licence.** Every album in the curation is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) by its own artist, and each one requires attribution on its own terms — see [`CURADORIA.md`](CURADORIA.md) for provenance, licences and the required credit for each work.
 
-© 2025–2026 Mariana Castro
+© 2025–2026 [**Mariana Castro**](https://marianacastro.dev) · [Live demo](https://horizonte.marianacastro.dev)
 
 <br/>
 
