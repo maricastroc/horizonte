@@ -296,6 +296,8 @@ describe("snapshot for React", () => {
 
   it("the hint waits for stillness, names the gesture, and points where there is room", () => {
     const clock = vi.spyOn(performance, "now");
+    engine.markIntent();
+    env.advance();
     expect(engine.getSnapshot().hint).toBe(null);
 
     clock.mockReturnValue(performance.now() + HINT_MS + 200);
