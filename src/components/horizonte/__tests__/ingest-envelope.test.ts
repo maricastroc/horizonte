@@ -40,6 +40,7 @@ function pcmsOf(slug: string): Float32Array[] {
 }
 
 function tracksOf(slug: string): string[] {
+  if (!has) return [];
   return fs
     .readdirSync(CACHE)
     .filter((f) => f.startsWith(`${slug}--`) && f.endsWith(".wav"))

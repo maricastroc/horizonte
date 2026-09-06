@@ -1,19 +1,11 @@
-// GERADO por scripts/fetch-curation.py — não editar à mão.
-//
-// Curadoria Horizonte. Cada álbum registra origem, licença do áudio, licença da
-// capa, atribuição exigida, alterações feitas no arquivo original e a data em
-// que a licença foi verificada na fonte.
 import type { Album } from "./types";
 
 export interface CuratedAlbum extends Album {
-  /** Número de catálogo da edição original, quando existe. */
   originalCat?: string;
   label?: string;
-  /** Observação de licenciamento relevante para esta obra. */
   note?: string;
 }
 
-/** Itens da curadoria desejada que NÃO podem ser usados, e por quê. */
 export interface BlockedAlbum {
   cat: string;
   artist: string;

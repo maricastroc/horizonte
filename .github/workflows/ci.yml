@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint · build · typecheck · tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      # Build runs BEFORE typecheck on purpose: tsconfig includes `.next/types/**`,
+      # and Next generates those types during the build. On a clean checkout there is
+      # no `.next`, so running tsc first fails with "Cannot find name 'LayoutProps'".
+      # No secret is needed: BLOB_* are only read by scripts/upload-media.mjs, and
+      # NEXT_PUBLIC_MEDIA_BASE_URL falls back to public/music when unset.
+      - name: Production build
+        run: npm run build
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # 691 tests run here, including the browser↔Python conformance vector
+      # (ingest-parity-fixture), which ships its own 10 s excerpts and the numbers
+      # the offline pipeline produced from them. The full-catalogue parity suite
+      # still skips: it reads .cache/analysis, 2.1 GB and gitignored.
+      - name: Unit tests
+        run: npm run test
