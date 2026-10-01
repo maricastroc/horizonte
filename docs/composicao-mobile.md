@@ -45,6 +45,18 @@ O palco respira com a escala: `share` interpola de 0,86 na coleção (o mundo é
 assunto) para 0,46 no álbum (a lista precisa do espaço). É a mesma ideia do zoom
 do desktop, resolvida na vertical em vez da horizontal.
 
+A identidade tem piso: `BAND.identityFloor` (0,125) é medido no **lado curto** da
+tela, não na altura, e o palco cede a ele na coleção. Em retrato o piso nunca
+alcança a banda nominal e nada muda; em paisagem ele vale 0,125 · H nas duas
+escalas — antes a coleção espremia a identidade a 28 px em 844×390.
+
+No `lockup()` a linha de metadados tem chão (`metaFloor`, legibilidade) e teto
+(`metaCeil`, 0,9 do título): em paisagem o chão de 3% da largura dava 25 px, e
+3% do lado curto ainda passaria do maior título que o teto do nome permite
+(0,56 · 0,052 · H ≈ 2,9% de H). Com o teto, a hierarquia nome › título ›
+metadados vale em qualquer proporção. O encaixe na banda usa a mesma geometria
+que posiciona as linhas, incluindo o piso de glifo (`GLYPH`).
+
 ## O contrato de camadas
 
 1. **Nunca obstruído** — escala, linhas da lista, transporte, tempo.
@@ -111,8 +123,9 @@ morfologias e a correlação volta a subir.
 
 - as bandas se sucedem sem se sobrepor e nenhuma fica pequena demais para o toque;
 - corpo, coroa e satélites de todo álbum ficam dentro do palco;
-- o bloco de identidade cabe na própria banda e a linha de metadados nunca cai
-  abaixo de 9,5 px;
+- o bloco de identidade cabe na própria banda, as linhas não se tocam e a linha
+  de metadados nunca cai abaixo de 9,5 px nem passa do título — também em
+  paisagem (844×390 e 932×430), na coleção e no álbum;
 - nome, título e metadados encolhem até caber — e param num piso;
 - **o palco não nivela os discos**: o raio percorre mais de 1,35× e a ocupação
   mais de 2× entre o mais compacto e o mais extenso, e nenhum par de discos
@@ -126,8 +139,11 @@ desktop.
 
 - **Paisagem de telefone** (`h < 520`) continua usando esta composição, e ela
   encolhe até o limite: em 844×390 a lista mostra uma linha e meia e o palco fica
-  com 100 px. Nada é cortado, mas a experiência é apertada — a composição foi
-  desenhada para retrato.
+  com 92 px no álbum. A identidade sai com nome 20 px, título 11,4 px e
+  metadados 10,2 px nas duas escalas, mas o título e os metadados ficam próximos
+  em corpo — não há altura para a proporção do retrato. Com 360 px de altura
+  (740×360) os metadados caem para 9,4 px, e o transporte já fica abaixo do
+  mínimo de paisagem.
 - **Lista curta em tela alta**: um álbum de quatro faixas em 430×932 deixa ~130 px
   de campo vazio entre a última linha e o transporte. O palco não recupera essa
   sobra porque as bandas não conhecem a contagem de faixas.
