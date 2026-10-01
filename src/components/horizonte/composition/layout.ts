@@ -1,4 +1,4 @@
-import { BAND, BREAKPOINT, GEO, LOCKUP, REACH, RING, RING_UNIT, SHARD } from "../tokens";
+import { BAND, BREAKPOINT, GEO, GLYPH, LOCKUP, REACH, RING, RING_UNIT, SHARD } from "../tokens";
 import { albumProgressOf } from "../state";
 import { clamp, lerp } from "../math";
 import { neighborScale, type AlbumMorphology } from "../morphology";
@@ -219,14 +219,26 @@ export function lockup(W: number, H: number, s: FieldState, L: WorldLayout): Loc
     ay = b.stage * H + size * RISE;
   }
 
-  const ty = ay + size * t.titleGap;
+  const tsize = size * t.title;
+  const msize = L.staged ? meta(size) : W * t.meta;
+  const ty =
+    ay +
+    Math.max(
+      size * t.titleGap,
+      size * GLYPH.artist.descent + tsize * (GLYPH.title.ascent + t.titleAir),
+    );
   return {
     size,
     ay,
     ty,
-    tsize: size * t.title,
-    msize: L.staged ? meta(size) : W * t.meta,
-    my: ty + size * t.metaGap,
+    tsize,
+    msize,
+    my:
+      ty +
+      Math.max(
+        size * t.metaGap,
+        tsize * GLYPH.title.descent + msize * (GLYPH.meta.ascent + t.metaAir),
+      ),
     margin: W * t.margin,
     marginTitle: W * t.marginTitle,
     marginMeta: W * t.marginMeta,

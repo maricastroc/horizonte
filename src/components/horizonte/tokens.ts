@@ -113,6 +113,12 @@ export const BAND = {
 
 export const GUARD = { soft: 0.05, residual: 0.22 } as const;
 
+export const GLYPH = {
+  artist: { descent: 0.18 },
+  title: { ascent: 0.76, descent: 0.26 },
+  meta: { ascent: 0.78 },
+} as const;
+
 export const LOCKUP = {
   desktop: {
     size: 0.098,
@@ -129,6 +135,8 @@ export const LOCKUP = {
     baselinePlay: 0.03,
     titleGap: 0.6,
     metaGap: 0.24,
+    titleAir: 0.36,
+    metaAir: 0.6,
     fitTitle: 0.62,
     fitMeta: 0.62,
     floor: 0.4,
@@ -149,6 +157,8 @@ export const LOCKUP = {
     baselinePlay: 0,
     titleGap: 0.82,
     metaGap: 0.62,
+    titleAir: 0,
+    metaAir: 0,
     fitTitle: 0.98,
     fitMeta: 0.98,
     floor: 0.5,
