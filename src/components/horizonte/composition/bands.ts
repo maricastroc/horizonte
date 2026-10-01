@@ -34,10 +34,11 @@ export function bandsOf(W: number, H: number, zoom: number): Bands {
   const tall = tallness(W, H);
   const top = lerp(BAND.top[0], BAND.top[1], tall);
   const player = lerp(BAND.player[0], BAND.player[1], tall);
-  const identity = lerp(BAND.identity[0], BAND.identity[1], tall);
+  const floor = (BAND.identityFloor * Math.min(W, H)) / H;
+  const identity = Math.max(lerp(BAND.identity[0], BAND.identity[1], tall), floor);
   const free = Math.max(0, 1 - top - player);
   const share = lerp(BAND.shareField, BAND.shareAlbum, clamp(zoom, 0, 1));
-  const stage = top + free * share;
+  const stage = Math.min(top + free * share, 1 - player - floor);
   return {
     top,
     stage,
