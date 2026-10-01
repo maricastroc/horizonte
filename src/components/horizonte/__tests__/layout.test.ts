@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GEO, RING, RING_UNIT } from "../tokens";
+import { GEO, GLYPH, RING, RING_UNIT } from "../tokens";
 import {
   albPos,
   hitTest,
@@ -130,6 +130,30 @@ describe("ringR and lockup", () => {
     expect(stopped.ty).toBeGreaterThan(stopped.ay);
     expect(stopped.my).toBeGreaterThan(stopped.ty);
     expect(stopped.tsize).toBeLessThan(stopped.size);
+  });
+
+  it("the name, title and metadata keep air between their glyphs at every scale", () => {
+    for (const [w, h] of [
+      [1000, 580],
+      [1280, 800],
+      [1512, 982],
+      [1920, 1080],
+    ]) {
+      for (const [play, zoom] of [
+        [0, 0],
+        [0, 1],
+        [1, 1],
+      ]) {
+        const lk = lockup(w, h, baseState({ play, zoom }), layoutFor(variantFor(w, h)));
+        const where = `${w}×${h} play=${play} zoom=${zoom}`;
+        const nameToTitle =
+          lk.ty - lk.ay - lk.size * GLYPH.artist.descent - lk.tsize * GLYPH.title.ascent;
+        const titleToMeta =
+          lk.my - lk.ty - lk.tsize * GLYPH.title.descent - lk.msize * GLYPH.meta.ascent;
+        expect(nameToTitle, where).toBeGreaterThanOrEqual(lk.tsize * 0.3);
+        expect(titleToMeta, where).toBeGreaterThanOrEqual(lk.msize * 0.5);
+      }
+    }
   });
 });
 
