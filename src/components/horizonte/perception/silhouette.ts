@@ -112,7 +112,7 @@ export function silhouetteOf(
   function inkAt(x: number, y: number): number {
     const dx = x - g.cx;
     const dy = (y - g.cy) / g.flatten;
-    const rr = Math.hypot(dx, dy) / g.R;
+    const rr = Math.sqrt(dx * dx + dy * dy) / g.R;
 
     let ink = 0;
 
@@ -140,7 +140,7 @@ export function silhouetteOf(
     for (const s of sats) {
       const dxs = x - s.x;
       const dys = (y - s.y) / g.flatten;
-      const d = Math.hypot(dxs, dys);
+      const d = Math.sqrt(dxs * dxs + dys * dys);
       if (d < s.r) return INK.dark;
       if (d < s.r * (1 + MORPH.satRim)) {
         const a = Math.atan2(dys, dxs);
@@ -168,21 +168,28 @@ export function blur(src: Float32Array, gw: number, gh: number, sigma: number): 
 
   const tmp = new Float32Array(gw * gh);
   const out = new Float32Array(gw * gh);
-  for (let y = 0; y < gh; y++) {
-    for (let x = 0; x < gw; x++) {
-      let a = 0;
-      for (let i = -k; i <= k; i++) a += src[y * gw + clamp(x + i, 0, gw - 1)] * w[i + k];
-      tmp[y * gw + x] = a;
-    }
-  }
-  for (let y = 0; y < gh; y++) {
-    for (let x = 0; x < gw; x++) {
-      let a = 0;
-      for (let i = -k; i <= k; i++) a += tmp[clamp(y + i, 0, gh - 1) * gw + x] * w[i + k];
-      out[y * gw + x] = a;
-    }
-  }
+  const line = new Float32Array(Math.max(gw, gh) + 2 * k);
+  for (let y = 0; y < gh; y++) convolve(src, tmp, y * gw, 1, gw, w, line);
+  for (let x = 0; x < gw; x++) convolve(tmp, out, x, gw, gh, w, line);
   return out;
+}
+
+function convolve(
+  src: Float32Array,
+  dst: Float32Array,
+  start: number,
+  step: number,
+  n: number,
+  w: number[],
+  line: Float32Array,
+) {
+  const k = (w.length - 1) / 2;
+  for (let j = 0; j < n + 2 * k; j++) line[j] = src[start + clamp(j - k, 0, n - 1) * step];
+  for (let x = 0; x < n; x++) {
+    let a = 0;
+    for (let i = 0; i < w.length; i++) a += line[x + i] * w[i];
+    dst[start + x * step] = a;
+  }
 }
 
 export function ncc(a: Float32Array, b: Float32Array): number {

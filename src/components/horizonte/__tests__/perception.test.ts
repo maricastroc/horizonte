@@ -125,9 +125,11 @@ describe("perceptual distance between albums", () => {
   });
 
   it("the measurement does not depend on the rasterizer's resolution", () => {
-    const grids = [216, 288, 384].map((gw) =>
-      measure(SUBJECTS, { gw, gh: Math.round((gw * 900) / 1440) }),
-    );
+    const [desktop] = current;
+    const grids = [
+      desktop,
+      ...[216, 384].map((gw) => measure(SUBJECTS, { gw, gh: Math.round((gw * 900) / 1440) })),
+    ];
     const means = grids.map((g) => g.mean);
     const worst = grids.map((g) => g.worst.score);
     expect(Math.max(...means) - Math.min(...means)).toBeLessThan(0.02);
