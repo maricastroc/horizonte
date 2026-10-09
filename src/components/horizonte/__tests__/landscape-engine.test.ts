@@ -8,6 +8,7 @@ vi.mock("../fieldMaterial", async (importReal) => {
       uniforms: real.createFieldUniforms(),
       render: () => {},
       resize: (w: number, h: number) => ({ dw: w, dh: h }),
+      invalidate: () => {},
       dispose: () => {},
     }),
   };
