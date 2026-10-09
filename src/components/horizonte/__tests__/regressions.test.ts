@@ -12,6 +12,7 @@ vi.mock("../fieldMaterial", async (importReal) => {
         gl.renders++;
       },
       resize: (w: number, h: number) => ({ dw: Math.max(2, w), dh: Math.max(2, h) }),
+      invalidate: () => {},
       dispose: () => {},
     }),
   };
