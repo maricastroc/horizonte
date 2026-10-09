@@ -98,6 +98,73 @@ export const MORPH = {
   coreTilt: 0.4,
 } as const;
 
+export const SCORE = {
+  silence: -0.9,
+  minShare: 0.05,
+  maxMaterials: 4,
+  climaxSpan: 0.04,
+  climaxMaxSpan: 0.4,
+  climaxLift: 0.08,
+  rupture: 0.45,
+  pauseEdge: 1.5,
+  climaxRise: 12,
+  climaxRelease: 10,
+  levelSpan: 0.25,
+} as const;
+
+export const RELATIONS = {
+  lean: [0.03, -0.08],
+  leanSection: 0.04,
+  leanClimax: 0.05,
+  leanCalm: 0.025,
+  leanRange: [-0.16, 0.05],
+  leanDrop: 0.3,
+  reach: [0.97, 1.1],
+  reachSection: 0.07,
+  reachClimax: 0.3,
+  reachCalm: 0.04,
+  reachRange: [0.95, 1.45],
+  tau: { lean: 3.5, reach: 3, calm: 1, body: 2.2 },
+  calmLens: 0.4,
+  calmDust: 0.8,
+  wave: 0.55,
+  conjunction: { gap: 0.16 },
+  albumLean: [0.02, -0.11],
+  albumReach: [0.97, 1.08],
+  home: { arc: [-2.5, 1.9], gap: 0.32, step: 0.2, clear: 0.75, tries: 16 },
+  lens: { fade: 0.7, hold: 0.3, carry: 0.45 },
+  body: {
+    size: [0.3, 0.52],
+    cap: 0.45,
+    sounding: 0.8,
+    resting: 0.42,
+    left: 0.22,
+  },
+} as const;
+
+export const TRACK_RING = {
+  radius: 1.08,
+  band: 0.1,
+  flatten: [0.26, 0.58],
+  flattenSection: 0.15,
+  tilt: -0.42,
+  tiltTrajectory: 0.3,
+  tiltRange: [-0.75, -0.1],
+  plate: [0.6, 1.25],
+  density: 300,
+  alpha: { future: 0.5, heard: 0.9, active: 1, echo: 1 },
+  back: 1,
+  front: 1,
+  albumDim: 0.72,
+} as const;
+
+export const SECTION_LAYER = {
+  thickness: 0.13,
+  plate: [0.6, 1.3],
+  alpha: { future: 0.45, heard: 0.8, active: 1, echo: 1 },
+  gap: 0.0035,
+} as const;
+
 export const LANDSCAPE = {
   closure: [0.55, 1],
   closureRamp: [0.12, 0.8],
@@ -251,7 +318,12 @@ export const STRAIN = {
   scarFloor: 0.004,
 } as const;
 
-export const SECOND_MASS = { k: 0.03, h: 0.052, pointGain: 1.9, lerp: 3.5 } as const;
+export const SECOND_MASS = {
+  k: 0.03,
+  h: 0.052,
+  pointGain: 1.9,
+  lerp: 3.5,
+} as const;
 
 export const INTAKE = { mass: 0.45, horizon: 1.3 } as const;
 

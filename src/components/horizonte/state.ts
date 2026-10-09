@@ -45,6 +45,9 @@ export function initialState(): FieldState {
     fadeSel: 0,
     form: MORPH.collectionForm,
     tide: 0,
+    lean: 0,
+    leanY: 0,
+    reach: 1,
     treb: 0,
   };
 }

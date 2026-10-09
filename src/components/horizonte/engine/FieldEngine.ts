@@ -19,7 +19,17 @@ import {
   type WorldLayout,
 } from "../composition/layout";
 import { bandsOf, sameBands, stageBox, FULL_BANDS } from "../composition/bands";
-import { RingBakery } from "../composition/ring";
+import { RingBakery, type SectionLayer } from "../composition/ring";
+import { TrackRingBakery, type TrackRingView } from "../composition/trackRing";
+import {
+  NEUTRAL_RELATIONS,
+  albumRelationsOf,
+  approachBodies,
+  companionsAt,
+  pulledSatellites,
+  relationsAt,
+} from "../relations";
+import { albumDensityOf, isSilent, scoreOf, sectionAt, type Score } from "../score";
 import {
   coreFlattenOf,
   crownAt,
@@ -28,6 +38,7 @@ import {
   NEUTRAL_MORPHOLOGY,
   satRadiusOf,
   type AlbumMorphology,
+  type Satellite,
 } from "../morphology";
 import {
   approachState,
@@ -67,7 +78,7 @@ import {
   type FieldConstants,
 } from "../field";
 import { createFieldGL, type FieldGL } from "../fieldMaterial";
-import { clamp } from "../math";
+import { clamp, lerp } from "../math";
 import { albumProgressOf, initialState, isEngaged, progressOf, tideAt } from "../state";
 import * as T from "./transport";
 import type { AudioEffect, Catalog } from "./transport";
@@ -91,6 +102,8 @@ import {
   INTAKE,
   LANDSCAPE,
   MORPH,
+  RELATIONS,
+  TRACK_RING,
   SECOND_MASS,
   SEQ,
   TRACK_BIAS,
@@ -161,7 +174,16 @@ export class FieldEngine implements InputActions {
   private fps = 0;
   private slowWindows = 0;
 
-  private mouse = { x: 0.55, y: 0.45, tx: 0.55, ty: 0.45, v: 0, down: false, moved: 0, lx: 0 };
+  private mouse = {
+    x: 0.55,
+    y: 0.45,
+    tx: 0.55,
+    ty: 0.45,
+    v: 0,
+    down: false,
+    moved: 0,
+    lx: 0,
+  };
   private C: FieldConstants;
   private M: AlbumMorphology = NEUTRAL_MORPHOLOGY;
   private hzK = 1;
@@ -172,7 +194,23 @@ export class FieldEngine implements InputActions {
     anticipation: false,
     anticipationGain: 1,
     form: false,
+    relations: false,
+    companions: false,
+    rings: false,
+    sector: false,
   };
+  private score: Score | null = null;
+  private bodies: Satellite[] | null = null;
+  private sounding = -1;
+  private pulls: number[] = [];
+  private lens = { index: -1, mix: 0 };
+  private calm = 0;
+  private waveGain = 1;
+  private ruptureKey = "";
+  private ringsMix = 0;
+  private ringFlat: number = TRACK_RING.flatten[0];
+  private ringTurn = 0;
+  private readonly trackRings = new TrackRingBakery();
   readonly strain: Strain = emptyStrain();
   readonly trackStrain: Strain = emptyStrain();
   private landscape: Landscape | null = null;
@@ -235,6 +273,10 @@ export class FieldEngine implements InputActions {
     this.audioState = this.bus.update(0);
     this.experiments.anticipation = readExperiment("anticipate");
     this.experiments.form = readExperiment("form");
+    this.experiments.companions = readExperiment("companions");
+    this.experiments.relations = readExperiment("relations") || this.experiments.companions;
+    this.experiments.rings = readExperiment("rings");
+    this.experiments.sector = readExperiment("sector");
     this.reduced = prefersReducedMotion();
     this.coarse = hasCoarsePointer();
     try {
@@ -514,12 +556,49 @@ export class FieldEngine implements InputActions {
   }
 
   private leadSatellite() {
+    if (this.experiments.relations) {
+      const sat = this.M.satellites[this.lens.index];
+      if (!sat || sat.weight <= 0.02) return null;
+      const g = this.lens.mix * this.lens.mix * (3 - 2 * this.lens.mix);
+      return { ...sat, weight: sat.weight * g };
+    }
     let best: (typeof this.M.satellites)[number] | null = null;
     for (const sat of this.M.satellites) {
       if (sat.weight <= 0.02) continue;
       if (!best || sat.weight * sat.size > best.weight * best.size) best = sat;
     }
     return best;
+  }
+
+  private lensGoal(): number {
+    const sats = this.M.satellites;
+    const own = this.experiments.companions
+      ? sats.length - (this.bodies?.length ?? 0)
+      : sats.length;
+    let lead = -1;
+    for (let i = 0; i < own; i++) {
+      const sat = sats[i];
+      if (sat.weight <= 0.02) continue;
+      if (lead < 0 || sat.weight * sat.size > sats[lead].weight * sats[lead].size) lead = i;
+    }
+    const voice = sats[this.sounding];
+    if (!voice || voice.weight <= RELATIONS.lens.hold) return lead;
+    if (!this.experiments.companions || lead < 0 || this.sounding === lead) return this.sounding;
+    const carries =
+      satRadiusOf(this.M, voice) >= RELATIONS.lens.carry * satRadiusOf(this.M, sats[lead]);
+    return carries ? this.sounding : lead;
+  }
+
+  private lensStep(dt: number) {
+    if (!this.experiments.relations) return;
+    const goal = this.lensGoal();
+    const step = dt / RELATIONS.lens.fade;
+    if (goal !== this.lens.index) {
+      this.lens.mix = Math.max(0, this.lens.mix - step);
+      if (this.lens.mix === 0) this.lens.index = goal;
+    } else {
+      this.lens.mix = Math.min(1, this.lens.mix + step);
+    }
   }
 
   private horizonUnit(): number {
@@ -715,11 +794,18 @@ export class FieldEngine implements InputActions {
                   : 1),
             }
           : null,
+      trackRing: this.trackRingView(),
+      ringDim: 1 - (1 - TRACK_RING.albumDim) * this.ringsMix,
+      layer: this.sectionLayer(),
     };
   }
 
   private frontDeps(): FrontDeps {
-    return { fonts: this.fonts, covers: this.covers };
+    return {
+      fonts: this.fonts,
+      covers: this.covers,
+      trackRing: this.trackRingView(),
+    };
   }
 
 
@@ -731,7 +817,9 @@ export class FieldEngine implements InputActions {
     this.trackBias(dt);
     this.C = this.fieldFor();
     this.formStep(dt);
-    this.M = this.morphFor();
+    this.relationsStep(dt);
+    this.M = this.withBodies(this.morphFor());
+    this.lensStep(dt);
 
     const K = this.reduced ? 0.25 : 1;
     const m = this.mouse;
@@ -813,7 +901,7 @@ export class FieldEngine implements InputActions {
 
     if (s.waveR >= 0) {
       s.waveR += dt * 2.1;
-      s.waveA = 0.075 * Math.max(0, 1 - s.waveR / 2.3) * K;
+      s.waveA = 0.075 * this.waveGain * Math.max(0, 1 - s.waveR / 2.3) * K;
       if (s.waveR > 2.4) s.waveR = -1;
     } else {
       s.waveA = 0;
@@ -837,7 +925,12 @@ export class FieldEngine implements InputActions {
 
     const pull = s.mode === "collapse" && s.seqT < SEQ.collapse.valleyEnd;
     for (const q of this.parts) {
-      q.a += dt * q.s * (0.25 + s.energy * 0.9) * (s.mode === "playing" ? 1.5 : 1);
+      q.a +=
+        dt *
+        q.s *
+        (0.25 + s.energy * 0.9) *
+        (s.mode === "playing" ? 1.5 : 1) *
+        (1 - RELATIONS.calmDust * this.calm);
       if (pull) q.r *= 1 - dt * 1.5;
       else q.r += (0.16 + q.z * 0.62 - q.r) * dt * 1.2;
       if (s.mode === "paused") q.r -= dt * 0.012;
@@ -911,6 +1004,138 @@ export class FieldEngine implements InputActions {
         )
       : 0;
     strainStep(this.trackStrain, this.trackKey(), t, load, amp, dt, live);
+  }
+
+  private composing() {
+    const s = this.st;
+    return s.playAlb >= 0 && s.playAlb === s.alb && s.scale === "track" && !this.L.staged;
+  }
+
+  private relationsStep(dt: number) {
+    const s = this.st;
+    const album = s.playAlb >= 0 ? ALBUMS[s.playAlb] : null;
+    this.score = album ? scoreOf(s.playAlb, clamp(s.trk, 0, album.tracks.length - 1)) : null;
+    const score = this.score;
+    const t = progressOf(s);
+    const want = this.experiments.relations && this.composing() && !!score;
+    const framing =
+      this.experiments.relations && !this.L.staged && s.scale === "album" && !!ALBUMS[s.alb];
+    const target = want
+      ? relationsAt(score!, t)
+      : framing
+        ? albumRelationsOf(albumDensityOf(s.alb), ALBUMS[s.alb].signature.loudness)
+        : NEUTRAL_RELATIONS;
+    const ease = (tau: number) => 1 - Math.exp(-dt / tau);
+    s.lean += (target.lean - s.lean) * ease(RELATIONS.tau.lean);
+    s.leanY += (target.leanY - s.leanY) * ease(RELATIONS.tau.lean);
+    s.reach += (target.reach - s.reach) * ease(RELATIONS.tau.reach);
+    this.calm += (target.calm - this.calm) * ease(RELATIONS.tau.calm);
+    if (!want && !framing) {
+      if (Math.abs(s.lean) < 1e-5) s.lean = 0;
+      if (Math.abs(s.leanY) < 1e-5) s.leanY = 0;
+      if (Math.abs(s.reach - 1) < 1e-5) s.reach = 1;
+    }
+
+    if (want) {
+      const base = this.morphAt(s.playAlb);
+      const next = companionsAt(score!, t, base, this.experiments.companions);
+      const frozen = this.calm > 0.5 && !!this.bodies;
+      const goal = frozen ? this.bodies! : next.bodies;
+      if (!frozen) this.sounding = next.sounding;
+      this.bodies = this.bodies
+        ? approachBodies(this.bodies, goal, ease(RELATIONS.tau.body))
+        : goal.map((b) => ({ ...b, weight: 0 }));
+      if (!frozen) {
+        const k = ease(RELATIONS.tau.body);
+        this.pulls = next.pulls.map(
+          (p, i) => (this.pulls[i] ?? 0) + (p - (this.pulls[i] ?? 0)) * k,
+        );
+      }
+    } else if (this.bodies || this.pulls.length) {
+      this.sounding = -1;
+      this.pulls = this.pulls.map((p) => p * (1 - ease(0.6)));
+      if (this.pulls.every((p) => p < 1e-3)) this.pulls = [];
+      if (this.bodies) {
+        this.bodies = this.bodies.map((b) => ({
+          ...b,
+          weight: b.weight * (1 - ease(0.6)),
+        }));
+        if (this.bodies.every((b) => b.weight < 0.01)) this.bodies = null;
+      }
+    }
+
+    const key = `${s.playAlb}:${s.trk}`;
+    if (this.ruptureKey !== key) this.ruptureKey = "";
+    if (want && score!.rupture >= 0 && !this.reduced && score!.duration > 0) {
+      const k = sectionAt(score!, t);
+      const sec = score!.sections[k];
+      if (k === score!.rupture && this.ruptureKey !== key && (t - sec.at) * score!.duration < 2) {
+        if (s.waveR < 0) s.waveR = 0.02;
+        this.waveGain = RELATIONS.wave;
+        this.ruptureKey = key;
+      }
+    }
+
+    const ring = this.experiments.rings && this.composing() && !!score;
+    this.ringsMix += ((ring ? 1 : 0) - this.ringsMix) * Math.min(1, dt * 2);
+    if (this.ringsMix < 0.005) this.ringsMix = 0;
+    if (score && this.ringsMix > 0) {
+      const sec = score.sections[sectionAt(score, t)];
+      const flat = clamp(
+        lerp(TRACK_RING.flatten[0], TRACK_RING.flatten[1], score.articulation) +
+          TRACK_RING.flattenSection * (isSilent(sec) ? 0 : sec.articulation),
+        0.2,
+        0.75,
+      );
+      this.ringFlat += (flat - this.ringFlat) * ease(3);
+      const goal = Math.PI / 2 - 2 * Math.PI * t;
+      const d =
+        ((((goal - this.ringTurn + Math.PI) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)) -
+        Math.PI;
+      this.ringTurn += d * Math.min(1, dt * 3);
+    }
+  }
+
+  private withBodies(m: AlbumMorphology): AlbumMorphology {
+    if (!this.experiments.companions) return this.bodies ? { ...m, satellites: this.bodies } : m;
+    if (!this.bodies && !this.pulls.length) return m;
+    return {
+      ...m,
+      satellites: [...pulledSatellites(m, this.pulls), ...(this.bodies ?? [])],
+    };
+  }
+
+  private trackRingView(): TrackRingView | null {
+    const s = this.st;
+    const score = this.score;
+    if (!score || this.ringsMix <= 0 || !this.covers[s.playAlb]) return null;
+    const geo = bodyGeom(this.W, this.H, s, this.L, this.M);
+    const cover = this.covers[s.playAlb];
+    return {
+      canvas: this.trackRings.bake(
+        cover.canvas,
+        cover.version,
+        score,
+        sectionAt(score, progressOf(s)),
+      ),
+      cx: geo.cx,
+      cy: geo.cy,
+      R: geo.R * TRACK_RING.radius,
+      flatten: this.ringFlat,
+      tilt: clamp(
+        TRACK_RING.tilt + TRACK_RING.tiltTrajectory * score.trajectory,
+        TRACK_RING.tiltRange[0],
+        TRACK_RING.tiltRange[1],
+      ),
+      rot: this.ringTurn,
+      alpha: this.ringsMix,
+    };
+  }
+
+  private sectionLayer(): SectionLayer | null {
+    const score = this.score;
+    if (!this.experiments.sector || !this.composing() || !score || !score.curated) return null;
+    return { score, active: sectionAt(score, progressOf(this.st)) };
   }
 
   private formStep(dt: number) {
@@ -1088,6 +1313,7 @@ export class FieldEngine implements InputActions {
     tgt.m0k =
       curvature(0.075 * C.massScale, isPlaying ? a.accent.bass : a.accent.bass * 0.25, cap) * K;
     tgt.m0k *= 1 - LANDSCAPE.suspension.lens * this.suspend * this.formMix;
+    tgt.m0k *= 1 - RELATIONS.calmLens * this.calm;
     tgt.m0h = 0.082 * this.hzK;
     tgt.spin = isPlaying
       ? curvature(0.42 * C.swirl, a.accent.mid * 0.7 + a.flux * 0.3, cap)
@@ -1128,7 +1354,10 @@ export class FieldEngine implements InputActions {
       tgt.jet = 0.1;
     } else if (p < SEQ.fusion.total) {
       const e = (p - SEQ.fusion.wave) / 0.7;
-      if (s.waveR < 0) s.waveR = 0.02;
+      if (s.waveR < 0) {
+        s.waveR = 0.02;
+        this.waveGain = 1;
+      }
       this.commitFusion();
       s.m1k *= 0.72;
       s.m1h *= 0.8;

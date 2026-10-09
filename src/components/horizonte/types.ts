@@ -59,6 +59,9 @@ export interface FieldState {
   fadeSel: number;
   form: number;
   tide: number;
+  lean: number;
+  leanY: number;
+  reach: number;
 
   treb: number;
 }

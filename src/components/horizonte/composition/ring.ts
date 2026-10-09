@@ -10,7 +10,8 @@ import {
   type AlbumMorphology,
 } from "../morphology";
 import { STRAIN_BINS } from "./strain";
-import { RING, STRAIN } from "../tokens";
+import { RING, SECTION_LAYER, STRAIN } from "../tokens";
+import type { Score } from "../score";
 import type { CoverAsset } from "./cover";
 import { COVER_SIZE } from "./cover";
 
@@ -91,7 +92,13 @@ interface SliceOp {
   shells: { inner: number; outer: number }[];
 }
 
-class SectorBake {
+export interface BakeStyle {
+  alphaOf?: (k: number) => number;
+  columnOf?: (t: number) => number;
+  liftOf?: (k: number) => number;
+}
+
+export class SectorBake {
   readonly sectors: SectorGeometry[] = [];
   private ops: SliceOp[] = [];
   private cursor = 0;
@@ -106,6 +113,7 @@ class SectorBake {
     active: number,
     readonly canvas: HTMLCanvasElement,
     density: number,
+    style: BakeStyle = {},
   ) {
     const { alpha, unitR } = RING;
     const n = bounds.length - 1;
@@ -125,14 +133,16 @@ class SectorBake {
       const isSel = k === sel;
       const isHov = k === hover;
       const isAct = k === active;
-      const base = isAct
-        ? alpha.playing
-        : isSel
-          ? alpha.selected
-          : isHov
-            ? alpha.hover
-            : alpha.normal;
-      const lift = isSel || isAct ? RING.lift : 0;
+      const base = style.alphaOf
+        ? style.alphaOf(k)
+        : isAct
+          ? alpha.playing
+          : isSel
+            ? alpha.selected
+            : isHov
+              ? alpha.hover
+              : alpha.normal;
+      const lift = style.liftOf ? style.liftOf(k) : isSel || isAct ? RING.lift : 0;
 
       const mid = crownAt(m, (t0 + t1) / 2);
       this.sectors.push({ t0, t1, inner: (mid.inner - lift) * unitR, lift });
@@ -143,7 +153,7 @@ class SectorBake {
         const t = t0 + ((t1 - t0) * i) / SL;
         this.ops.push({
           turn: pathTurn(m, t),
-          column: Math.floor(t * COVER_SIZE),
+          column: Math.floor((style.columnOf ? style.columnOf(t) : t) * COVER_SIZE),
           alpha: base,
           lift,
           arcPx,
@@ -244,6 +254,78 @@ function drawDeformation(
   x.restore();
 }
 
+export interface SectionLayer {
+  score: Score;
+  active: number;
+}
+
+function drawSectionLayer(
+  x: CanvasRenderingContext2D,
+  cover: HTMLCanvasElement,
+  m: AlbumMorphology,
+  sector: SectorGeometry,
+  layer: SectionLayer,
+) {
+  const { unitR } = RING;
+  const span = sector.t1 - sector.t0;
+  const sections = layer.score.sections;
+  const steps = Math.max(24, Math.round(span * 900));
+  const arcPx = (2 * Math.PI * unitR * span) / steps;
+  const colW = Math.ceil(COVER_SIZE / 280) + 2;
+  x.save();
+  for (let k = 0; k < sections.length; k++) {
+    const sec = sections[k];
+    const a = sector.t0 + span * sec.at + SECTION_LAYER.gap / 2;
+    const b = sector.t0 + span * sec.end - SECTION_LAYER.gap / 2;
+    if (b <= a) continue;
+    const plate =
+      SECTION_LAYER.plate[0] +
+      (SECTION_LAYER.plate[1] - SECTION_LAYER.plate[0]) *
+        Math.min(1, Math.max(0, 0.5 + sec.level * 0.9));
+    const rise = SECTION_LAYER.thickness * plate * unitR;
+    const lift = k === layer.active ? RING.lift * unitR : 0;
+    x.globalAlpha = sectionLayerAlpha(layer, k);
+    const n = Math.max(2, Math.round(((b - a) / span) * steps));
+    for (let i = 0; i < n; i++) {
+      const t = a + ((b - a) * i) / n;
+      const u = sec.at + ((t - a) / Math.max(1e-6, b - a)) * (sec.end - sec.at);
+      const local =
+        sec.recall >= 0
+          ? sections[sec.recall].at +
+            ((u - sec.at) / Math.max(1e-6, sec.end - sec.at)) *
+              (sections[sec.recall].end - sections[sec.recall].at)
+          : u;
+      const col = sector.t0 + span * local;
+      const top = shellsAt(m, t).at(-1)!.outer * unitR + lift;
+      x.save();
+      x.rotate(pathTurn(m, t) * 6.2832);
+      x.drawImage(
+        cover,
+        Math.floor(col * COVER_SIZE),
+        0,
+        colW,
+        COVER_SIZE,
+        top + 2,
+        -arcPx * 1.7,
+        rise,
+        arcPx * 3.4,
+      );
+      x.restore();
+    }
+  }
+  x.restore();
+}
+
+function sectionLayerAlpha(layer: SectionLayer, k: number): number {
+  const { future, heard, active, echo } = SECTION_LAYER.alpha;
+  if (k === layer.active) return active;
+  if (k < layer.active) {
+    const now = layer.score.sections[layer.active];
+    return now && layer.score.sections[k].cluster === now.cluster ? echo : heard;
+  }
+  return future;
+}
+
 interface SegCacheKey {
   alb: number;
   version: number;
@@ -273,6 +355,7 @@ export class RingBakery {
   private segMarks = -1;
   private segBlend = 1;
   private job: SectorBake | null = null;
+  private layerKey = "";
   private doneAt = Number.NEGATIVE_INFINITY;
 
   constructor(private covers: CoverAsset[]) {
@@ -321,6 +404,7 @@ export class RingBakery {
     field: Float32Array | null = null,
     fieldVersion = 0,
     shape: SegShape | null = null,
+    layer: SectionLayer | null = null,
   ): HTMLCanvasElement {
     const cover = this.covers[alb];
     const m = shape ? shape.m : this.morph(alb);
@@ -376,7 +460,12 @@ export class RingBakery {
 
     const moved = Math.abs(progress - this.segProgress) * (shape?.span ?? 1) >= 0.0008;
     const fading = blend !== this.segBlend;
-    if (!stale && !swapped && !moved && !fading && fieldVersion === this.segMarks) return this.segOut;
+    const layerKey = layer ? `${layer.score.album}:${layer.score.track}:${layer.active}` : "";
+    const relayered = layerKey !== this.layerKey;
+    this.layerKey = layerKey;
+    if (!stale && !swapped && !moved && !fading && !relayered && fieldVersion === this.segMarks) {
+      return this.segOut;
+    }
     this.segProgress = progress;
     this.segMarks = fieldVersion;
     this.segBlend = blend;
@@ -397,6 +486,13 @@ export class RingBakery {
       x.save();
       x.translate(C, C);
       drawDeformation(x, cover.canvas, m, field);
+      x.restore();
+    }
+
+    if (layer && this.segSectors[active]) {
+      x.save();
+      x.translate(C, C);
+      drawSectionLayer(x, cover.canvas, m, this.segSectors[active], layer);
       x.restore();
     }
 

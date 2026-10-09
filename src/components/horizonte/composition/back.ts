@@ -2,10 +2,11 @@ import { ALBUMS, boundsOf } from "../content";
 import type { FieldConstants } from "../field";
 import { neighborScale, outerAt, pathTurn, satRadiusOf, type AlbumMorphology } from "../morphology";
 import { isEngaged, progressOf } from "../state";
-import { COLOR, GEO, MORPH, PARTICLES, RING, rgba } from "../tokens";
+import { COLOR, GEO, MORPH, PARTICLES, RING, TRACK_RING, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
-import type { RingBakery, SegShape } from "./ring";
+import type { RingBakery, SectionLayer, SegShape } from "./ring";
+import { drawTrackRingHalf, type TrackRingView } from "./trackRing";
 import { ls, type Ctx } from "./ctx";
 import { stageBox, type Bands } from "./bands";
 import {
@@ -29,6 +30,9 @@ export interface BackDeps {
   field?: Float32Array | null;
   fieldVersion?: number;
   landscape?: LandscapeView | null;
+  trackRing?: TrackRingView | null;
+  ringDim?: number;
+  layer?: SectionLayer | null;
 }
 
 export interface LandscapeView {
@@ -296,7 +300,18 @@ export function drawBack(
     const seg =
       land && land.sections
         ? rings.seg(s.alb, -1, land.hover, land.active, land.progress, inkA(1), field, fieldVersion, land.shape)
-        : rings.seg(s.alb, s.sel, s.hover, activeTrk, prog, inkA(1), field, fieldVersion, land ? land.shape : null);
+        : rings.seg(
+            s.alb,
+            s.sel,
+            s.hover,
+            activeTrk,
+            prog,
+            inkA(1),
+            field,
+            fieldVersion,
+            land ? land.shape : null,
+            deps.layer ?? null,
+          );
     drawRing(
       x,
       seg,
@@ -304,9 +319,19 @@ export function drawBack(
       by,
       R,
       s.ringRot,
-      s.fadeSel * (1 - s.mix * 0.6) * (land ? land.alpha : 1),
+      s.fadeSel * (1 - s.mix * 0.6) * (land ? land.alpha : 1) * (deps.ringDim ?? 1),
       morph.flatten,
     );
+    if (deps.trackRing) {
+      drawTrackRingHalf(
+        x,
+        deps.trackRing,
+        false,
+        W,
+        H,
+        deps.trackRing.alpha * TRACK_RING.back * (1 - s.mix),
+      );
+    }
 
     if (s.mix > 0) {
       const other = ALBUMS[s.fuseAlb] ? s.fuseAlb : s.alb;

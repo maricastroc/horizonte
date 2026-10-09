@@ -1,5 +1,6 @@
 import { ALBUMS } from "../content";
-import { COLOR } from "../tokens";
+import { COLOR, TRACK_RING } from "../tokens";
+import { drawTrackRingHalf, type TrackRingView } from "./trackRing";
 import type { FieldState, FontFamilies } from "../types";
 import type { CoverAsset } from "./cover";
 import { ls, type Ctx } from "./ctx";
@@ -8,6 +9,7 @@ import { lockup, type ShardSpec, type WorldLayout } from "./layout";
 export interface FrontDeps {
   fonts: FontFamilies;
   covers: CoverAsset[];
+  trackRing?: TrackRingView | null;
 }
 
 class FragmentCache {
@@ -105,6 +107,17 @@ export function drawFront(
     x.fillStyle = scrimGrad;
     x.fillRect(0, scrimY - scrimR, scrimR, scrimR * 2);
     x.restore();
+  }
+
+  if (deps.trackRing) {
+    drawTrackRingHalf(
+      x,
+      deps.trackRing,
+      true,
+      W,
+      H,
+      deps.trackRing.alpha * TRACK_RING.front * (1 - s.mix),
+    );
   }
 
   x.save();

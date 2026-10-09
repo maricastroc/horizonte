@@ -103,7 +103,7 @@ export const baseRadius = (W: number, H: number, zoom: number, play: number, L: 
   Math.min(W, H) * (0.385 - zoom * 0.105 + play * 0.055) * L.ringScale;
 
 export const ringR = (W: number, H: number, s: FieldState, L: WorldLayout) =>
-  baseRadius(W, H, s.zoom, s.play, L);
+  baseRadius(W, H, s.zoom, s.play, L) * s.reach;
 
 export interface BodyGeom {
   cx: number;
@@ -167,7 +167,7 @@ export function bodyGeom(
   m: AlbumMorphology,
 ): BodyGeom {
   const p = albPos(s.alb, s, L);
-  if (!L.staged) return bodyGeomAt(W, H, p.x, p.y, ringR(W, H, s, L), m, s.zoom);
+  if (!L.staged) return bodyGeomAt(W, H, p.x + s.lean, p.y + s.leanY, ringR(W, H, s, L), m, s.zoom);
   return placeInStage(
     stageBox(W, H, bandsFor(W, H, s, L)),
     m,
