@@ -905,6 +905,97 @@ que se mexa sozinho: o anel é estático e segue o cursor.
 No toque não há anel: não existe ponteiro pairando, e um anel preso no último
 ponto tocado seria ruído.
 
+## Experimento aberto — a paisagem da faixa
+
+**Entra desligado.** Ligue com `?x=form` na URL ou
+`__horizonte.experiments.form = true` no console. Desligado, a escala faixa
+desenha o mapa do álbum exatamente como antes.
+
+O diagnóstico que motivou o experimento: descontando posição, escala e rotação,
+os corpos dos discos correlacionam **0,84** de relance; duas faixas do mesmo
+disco tinham silhueta **idêntica** (a morfologia era só do álbum); e, dentro de
+uma faixa, a silhueta ficava **≥ 0,994** do começo ao fim. A música mudava a
+configuração de uma forma já decidida, não a forma.
+
+**Mapa e paisagem.** A escala álbum continua sendo o mapa — circuito fechado,
+setores apontáveis, forma estável. Na escala faixa, dentro do vale do colapso,
+o mapa cede lugar a uma paisagem construída com as medidas da própria faixa, com
+as mesmas peças (núcleo, coroa de fatias da capa, conchas, satélites, lente, luz).
+É a frase do handoff: *a composição muda de regime, não de escala*.
+
+### De onde vêm os dados
+
+`scripts/analyze-form.py` mede cada faixa no mesmo cache de WAV de
+`analyze-audio.py` e gera `content/form.generated.ts`: seções (novidade de Foote
+sobre timbre e croma, janelas de 2 s), o grupo de cada seção (uma seção que
+reencontra uma seção não vizinha é **retorno**), suspensões (12 dB abaixo da
+mediana por ≥ 2 s) e cinco descritores por faixa. Âncoras e escalas fixas, como
+na assinatura: acrescentar um disco não muda a forma de nenhuma faixa.
+
+| Descritor | Independência (\|r\| máx. contra os existentes) | Estabilidade entre metades |
+| --- | --: | --: |
+| Articulação (fluxo clareado médio) | 0,20 | 0,76 |
+| Movimento de textura | 0,41 | 0,77 |
+| Recorrência | 0,23 | 0,72 |
+| Nível da faixa | 0,91 com o volume do álbum — é da faixa, mas parecido | 0,91 |
+| Trajetória (variação de nível nos 80% centrais) | — | — (forma da faixa inteira) |
+
+Recusados: planura espectral (r 0,97 com o brilho por faixa), taxa de ataques
+(0,63 com o pulso por faixa), proporção de graves (0,62 com o brilho por faixa).
+
+### A gramática
+
+| Escala | Fato musical | Consequência |
+| --- | --- | --- |
+| Faixa | Material que volta (recorrência ou fração de retornos) | **Fechamento**: circuito fechado ↔ arco aberto (0,55–1 volta) |
+| Faixa | Articulação | **Inclinação**: disco de frente (órbita) ↔ de perfil (horizonte), achatamento 0,3–0,92 |
+| Faixa | Movimento de textura | **Coesão**: banda contínua ↔ segmentos que se separam |
+| Faixa | Nível | Massa: núcleo 0,22–0,50 |
+| Faixa | Trajetória | Espiral: a ponta final do caminho mais longe ou mais perto do centro |
+| Faixa | Pulso por faixa | Estratos (a mesma relação de M8) |
+| Seção | Nível relativo | Expansão ou contenção da coroa, com o núcleo parado |
+| Seção | Articulação relativa | Inclinação dentro da faixa |
+| Seção | Brilho relativo | Nitidez do relevo |
+| Seção | Contraste na fronteira | Ruptura: segmentos se soltam e se recompõem em ~7 s |
+| Seção | Crescendo | Estratos se separam ao longo da seção |
+| Seção | Retorno | **O estado exato da primeira ocorrência** |
+| Seção | Material novo | Acúmulo: a coroa engrossa; retornos não acumulam |
+| Acontecimento | Pausa | Suspensão: a lente relaxa e a matéria fica suspensa |
+| Acontecimento | Carga (como antes) | Deformação elástica e cicatriz, indexadas pelo caminho da faixa |
+
+O jato segue a normal do disco: diagonal numa órbita, vertical num horizonte.
+Fora da paisagem ele mantém exatamente a diagonal do handoff.
+
+Silêncio não tem timbre: numa seção muda, articulação e brilho são neutralizados
+e só o nível age. Com `prefers-reduced-motion`, os estados permanecem e o
+movimento sai — sem impulso de ruptura, transições só por dissolução.
+
+### Medido
+
+| | Mapa do álbum | Paisagem |
+| --- | --: | --: |
+| Faixas do mesmo disco (estrutura, de relance) | 1,000 | **0,832** |
+| Faixas de discos diferentes | 0,839 | **0,769** |
+| Distância visual × distância musical | 0,51 (só discos) | **0,64** |
+| Dentro da faixa, menor similaridade com a identidade (mediana) | 0,999 | **0,790** |
+| Faixas de alto contraste que passam por estados distintos (≤ 0,85) | 0% | **67%** |
+| Retorno contra a primeira ocorrência / contra seções novas | — | **0,996 / 0,923** |
+
+Os guardrails estão em `__tests__/landscape-structure.test.ts` (amostra de
+faixas contrastantes) e `__tests__/landscape.test.ts`; as folhas de contato saem
+com `HORIZONTE_TIMELINE=<dir> npx vitest run --project unidade
+src/components/horizonte/__tests__/timeline.test.ts`.
+
+**Desempenho.** Assar a coroa custa ~30 ms de uma vez. Na paisagem o assado é
+incremental — 4 ms por quadro, no máximo dois por segundo durante uma transição —
+e a troca acontece por dissolução de 0,45 s. Em regime estável o custo por quadro
+é o do mapa.
+
+**O que ainda não está resolvido.** Discos trazidos pelo usuário não têm a análise
+de forma no navegador (ganham identidade parcial e uma seção só). Faixas de capa
+escura ficam pouco visíveis quando a coroa se contrai. Os satélites do álbum
+continuam presentes na paisagem e às vezes competem com ela.
+
 ## O que não muda
 
 Colapso, cursor com massa, pausa e a camada de instrumentos ficam como estão. A
@@ -935,4 +1026,5 @@ no pior disco. Registrado em `__tests__/ingest-envelope.test.ts`.
 
 ```bash
 python3 scripts/analyze-audio.py --report
+python3 scripts/analyze-form.py --report
 ```
