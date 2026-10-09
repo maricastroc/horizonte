@@ -253,7 +253,7 @@ function suspensionAt(L: Landscape, t: number): number {
   return v;
 }
 
-export function momentAt(L: Landscape, t: number): Moment {
+export function momentAt(L: Landscape, t: number, calm = false): Moment {
   const pos = clamp(t, 0, 1);
   const k = sectionIndexAt(L, pos);
   const sec = L.sections[k];
@@ -262,7 +262,7 @@ export function momentAt(L: Landscape, t: number): Moment {
   const seconds = (pos - sec.at) * L.duration;
   const state = copyState(L.states[k]);
 
-  const rupture = k > 0 ? sec.contrast * Math.exp(-seconds / LANDSCAPE.rupture.decay) : 0;
+  const rupture = k > 0 && !calm ? sec.contrast * Math.exp(-seconds / LANDSCAPE.rupture.decay) : 0;
   state.scatter = clamp(state.scatter + LANDSCAPE.rupture.scatter * rupture, 0, 1);
   state.closure = clamp(state.closure - LANDSCAPE.rupture.closure * rupture, LANDSCAPE.closure[0], 1);
 

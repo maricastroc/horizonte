@@ -8,6 +8,8 @@ import { RingBakery } from "../composition/ring";
 import { ALBUMS } from "../content";
 import { fieldConstantsOf } from "../field";
 import { morphologyOf } from "../morphology";
+import { landscapeOf, momentAt, morphologyOfState } from "../landscape";
+import { TIMELINE_TRACKS } from "./samples";
 import { BAND, DPR_MAX } from "../tokens";
 import type { FieldState } from "../types";
 import { baseState } from "./fixtures";
@@ -117,6 +119,26 @@ describe("the world fits the stage — no morphology invades the interface", () 
           expect(g.cy + e.y1 * m.flatten * g.R, where).toBeLessThanOrEqual(box.cy + box.halfH + 0.5);
           expect(g.cy + e.y0 * m.flatten * g.R, where).toBeGreaterThanOrEqual(box.cy - box.halfH - 0.5);
           if (scene.zoom < 1) continue;
+          expect(g.cx + e.x1 * g.R, where).toBeLessThanOrEqual(box.cx + box.halfW + 0.5);
+          expect(g.cx + e.x0 * g.R, where).toBeGreaterThanOrEqual(box.cx - box.halfW - 0.5);
+        }
+      }
+    }
+  });
+
+  it("every track's landscape, at every moment, stays inside the stage", () => {
+    for (const v of CANVASES) {
+      const box = stageBox(v.w, v.h, bandsOf(v.w, v.h, 1));
+      for (const [id, track] of TIMELINE_TRACKS) {
+        const alb = ALBUMS.findIndex((a) => a.id === id);
+        const L = landscapeOf(alb, track);
+        for (const t of [0.05, 0.3, 0.55, 0.8, 0.98]) {
+          const m = morphologyOfState(L, momentAt(L, t).state);
+          const g = bodyGeom(v.w, v.h, album(alb, { scale: "track", play: 1 }), MOBILE, m);
+          const e = extentOf(m);
+          const where = `${id}/${track} @${t} · ${v.label}`;
+          expect(g.cy + e.y1 * m.flatten * g.R, where).toBeLessThanOrEqual(box.cy + box.halfH + 0.5);
+          expect(g.cy + e.y0 * m.flatten * g.R, where).toBeGreaterThanOrEqual(box.cy - box.halfH - 0.5);
           expect(g.cx + e.x1 * g.R, where).toBeLessThanOrEqual(box.cx + box.halfW + 0.5);
           expect(g.cx + e.x0 * g.R, where).toBeGreaterThanOrEqual(box.cx - box.halfW - 0.5);
         }

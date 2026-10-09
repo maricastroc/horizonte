@@ -926,13 +926,13 @@ export class FieldEngine implements InputActions {
       return;
     }
     const L = landscapeOf(s.playAlb, clamp(s.trk, 0, album.tracks.length - 1));
-    const moment = momentAt(L, progressOf(s));
+    const moment = momentAt(L, progressOf(s), this.reduced);
     this.moment = moment;
     const fresh = this.landscape !== L;
     this.landscape = L;
     const hidden =
       s.mode === "collapse" && s.seqT >= SEQ.collapse.ramp && s.seqT < SEQ.collapse.valleyEnd;
-    if (!this.formState || hidden || (fresh && this.formMix < 0.02)) {
+    if (!this.formState || hidden || this.reduced || (fresh && this.formMix < 0.02)) {
       this.formState = copyState(moment.state);
     } else {
       const tau = fresh ? LANDSCAPE.tau[0] * 0.6 : moment.tau;

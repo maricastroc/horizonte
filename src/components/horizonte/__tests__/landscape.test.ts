@@ -115,8 +115,9 @@ describe("the grammar keeps its bounds", () => {
   it("every moment of every track stays inside the ranges of the landscape", () => {
     for (const { ai, k, id } of everyTrack()) {
       const L = landscapeOf(ai, k);
-      for (let i = 0; i <= 20; i++) {
-        const m = morphologyOfState(L, momentAt(L, i / 20).state);
+      const moments = [0, 1, ...L.sections.map((s) => s.at + 0.5 / Math.max(1, L.duration))];
+      for (const t of moments) {
+        const m = morphologyOfState(L, momentAt(L, t).state);
         expect(m.closure, id).toBeGreaterThanOrEqual(LANDSCAPE.closure[0]);
         expect(m.closure, id).toBeLessThanOrEqual(1);
         expect(m.flatten, id).toBeGreaterThanOrEqual(LANDSCAPE.flatten[0]);
@@ -138,6 +139,20 @@ describe("the grammar keeps its bounds", () => {
         expect(L.states[i].sharpness).toBe(1);
       });
     }
+  });
+});
+
+describe("reduced motion keeps the states and drops the motion", () => {
+  it("a calm moment has the section's state without the rupture", () => {
+    const L = landscapeOf(idOf("jono-terbakar-lebar"), 0);
+    const k = L.sections.findIndex((s, i) => i > 0 && s.contrast > 0.3 && s.recall < 0);
+    expect(k).toBeGreaterThan(0);
+    const t = L.sections[k].at + 1 / L.duration;
+    const live = momentAt(L, t);
+    const calm = momentAt(L, t, true);
+    expect(live.state.scatter).toBeGreaterThan(calm.state.scatter);
+    expect(calm.section).toBe(live.section);
+    expect(calm.state.flatten).toBe(live.state.flatten);
   });
 });
 

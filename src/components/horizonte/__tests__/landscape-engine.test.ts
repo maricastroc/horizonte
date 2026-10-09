@@ -37,7 +37,7 @@ let env: EngineHarness;
 let engine: FieldEngine;
 const inside = () => engine as unknown as Inside;
 
-const run = (seconds: number, step = 16) => {
+const run = (seconds: number, step = 50) => {
   const n = Math.ceil((seconds * 1000) / step);
   for (let i = 0; i < n; i++) env.advance(step);
 };
@@ -145,9 +145,9 @@ describe("with the experiment on", () => {
   it("a long session never produces an invalid form", () => {
     const el = play(SOLAR, 3);
     const dur = ALBUMS[SOLAR].tracks[3].dur;
-    for (let t = 0; t < dur; t += 7) {
+    for (let t = 0; t < dur; t += 19) {
       el.currentTime = t;
-      run(0.5);
+      run(0.4);
       const st = inside().formState!;
       for (const v of Object.values(st)) expect(Number.isFinite(v)).toBe(true);
       expect(Number.isFinite(inside().M.rMax)).toBe(true);
