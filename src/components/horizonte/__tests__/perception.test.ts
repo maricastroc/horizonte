@@ -11,7 +11,10 @@ import {
   type PerceptionReport,
   type Subject,
 } from "../perception/measure";
+import { glanceOf, shapeSimilarity, topologyOf } from "../perception/structure";
 import type { Variant } from "../types";
+
+const STRUCTURE_GUARD = { albumMean: 0.86 } as const;
 
 const SUBJECTS: Subject[] = ALBUMS.map((a) => ({
   label: a.id,
@@ -169,5 +172,61 @@ describe("the satellite stays subordinate to the body", () => {
     const shortest = count.reduce((a, b) => (b.duration < a.duration ? b : a));
     expect(longest.bodies).toBeGreaterThan(shortest.bodies);
     expect(shortest.bodies).toBe(0);
+  });
+});
+
+describe("structure, once position, scale and rotation are discounted", () => {
+  const shapes = ALBUMS.map((a) => ({ id: a.id, m: morphologyOf(a.signature, a.tracks.length) }));
+  const glances = shapes.map((s) => glanceOf(s.m));
+  const pairs: { a: string; b: string; score: number }[] = [];
+  for (let i = 0; i < shapes.length; i++) {
+    for (let j = i + 1; j < shapes.length; j++) {
+      pairs.push({ a: shapes[i].id, b: shapes[j].id, score: shapeSimilarity(glances[i], glances[j]) });
+    }
+  }
+  const mean = pairs.reduce((s, p) => s + p.score, 0) / pairs.length;
+  const worst = pairs.reduce((w, p) => (p.score > w.score ? p : w));
+
+  it("publishes the structural measurement and the topology of each record", () => {
+    const rows = shapes
+      .map((s) => {
+        const t = topologyOf(s.m);
+        return `   ${s.id.slice(0, 30).padEnd(32)}${String(t.components).padStart(4)}${t.coverage.toFixed(2).padStart(9)}${t.aspect.toFixed(2).padStart(8)}${t.massVoid.toFixed(2).padStart(10)}${t.dominance.toFixed(2).padStart(11)}`;
+      })
+      .join("\n");
+    process.stdout.write(
+      [
+        "\n── structure (centered, scale-normalized, best rotation)",
+        `   mean ${mean.toFixed(3)}   worst ${worst.score.toFixed(3)}  ${short(worst.a)} / ${short(worst.b)}`,
+        `   ${"record".padEnd(32)}comp coverage  aspect  mass/void  dominance`,
+        rows,
+        "",
+      ].join("\n"),
+    );
+    expect(pairs.length).toBe((shapes.length * (shapes.length - 1)) / 2);
+  });
+
+  it("a record rotated in its own plane is the same structure", () => {
+    const m = shapes[0].m;
+    const turned = glanceOf(m, { rotate: false });
+    const self = shapeSimilarity(turned, glances[0]);
+    expect(self).toBeGreaterThan(0.999);
+  });
+
+  it("the albums do not get structurally closer than they are today", () => {
+    expect(mean).toBeLessThanOrEqual(STRUCTURE_GUARD.albumMean);
+  });
+
+  it("the measure separates the previous composition from the current one", () => {
+    const legacy = ALBUMS.map((a) => glanceOf(legacyMorphologyOf(a.signature), { rotate: false }));
+    let sum = 0;
+    let n = 0;
+    for (let i = 0; i < legacy.length; i++) {
+      for (let j = i + 1; j < legacy.length; j++) {
+        sum += shapeSimilarity(legacy[i], legacy[j]);
+        n++;
+      }
+    }
+    expect(sum / n).toBeGreaterThan(mean);
   });
 });
