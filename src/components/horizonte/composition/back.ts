@@ -5,7 +5,7 @@ import { isEngaged, progressOf } from "../state";
 import { COLOR, GEO, MORPH, PARTICLES, RING, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
-import type { RingBakery } from "./ring";
+import type { RingBakery, SegShape } from "./ring";
 import { ls, type Ctx } from "./ctx";
 import { stageBox, type Bands } from "./bands";
 import {
@@ -28,6 +28,17 @@ export interface BackDeps {
   morphOf: (alb: number) => AlbumMorphology;
   field?: Float32Array | null;
   fieldVersion?: number;
+  landscape?: LandscapeView | null;
+}
+
+export interface LandscapeView {
+  shape: SegShape;
+  sections: boolean;
+  active: number;
+  hover: number;
+  progress: number;
+  labels: number;
+  alpha: number;
 }
 
 export function makeParticles(): Particle[] {
@@ -119,6 +130,7 @@ function trackLabels(
   L: WorldLayout,
   fonts: FontFamilies,
   m: AlbumMorphology,
+  fade = 1,
 ) {
   const A = ALBUMS[s.alb];
   const N = A.tracks.length;
@@ -142,7 +154,7 @@ function trackLabels(
       const hidden = Math.cos(a) > 0.3 || (py > H * 0.6 && px < W * 0.46);
       if (hidden && !on) continue;
 
-      x.globalAlpha = s.fadeSel * (on ? 0.95 : 0.42);
+      x.globalAlpha = s.fadeSel * fade * (on ? 0.95 : 0.42);
       x.fillStyle = on ? rgba(A.inkA, 1) : COLOR.dust;
       x.textAlign = Math.cos(a) < 0 ? "right" : "left";
       x.fillText(
@@ -154,7 +166,7 @@ function trackLabels(
 
     const tick = outerAt(m, t) * R;
     const far = silent ? tick * 1.3 : reach - R * 0.05;
-    x.globalAlpha = s.fadeSel * (on ? 0.6 : 0.18);
+    x.globalAlpha = s.fadeSel * fade * (on ? 0.6 : 0.18);
     x.strokeStyle = on ? rgba(A.inkA, 1) : COLOR.dust;
     x.lineWidth = 1;
     x.beginPath();
@@ -280,8 +292,21 @@ export function drawBack(
         ? s.trk
         : -1;
     const prog = progressOf(s);
-    const seg = rings.seg(s.alb, s.sel, s.hover, activeTrk, prog, inkA(1), field, fieldVersion);
-    drawRing(x, seg, bx, by, R, s.ringRot, s.fadeSel * (1 - s.mix * 0.6), morph.flatten);
+    const land = deps.landscape ?? null;
+    const seg =
+      land && land.sections
+        ? rings.seg(s.alb, -1, land.hover, land.active, land.progress, inkA(1), field, fieldVersion, land.shape)
+        : rings.seg(s.alb, s.sel, s.hover, activeTrk, prog, inkA(1), field, fieldVersion, land ? land.shape : null);
+    drawRing(
+      x,
+      seg,
+      bx,
+      by,
+      R,
+      s.ringRot,
+      s.fadeSel * (1 - s.mix * 0.6) * (land ? land.alpha : 1),
+      morph.flatten,
+    );
 
     if (s.mix > 0) {
       const other = ALBUMS[s.fuseAlb] ? s.fuseAlb : s.alb;
@@ -297,7 +322,8 @@ export function drawBack(
       );
     }
 
-    trackLabels(x, bx, by, R, W, H, s, L, fonts, morph);
+    const labels = land ? land.labels : 1;
+    if (labels > 0.01) trackLabels(x, bx, by, R, W, H, s, L, fonts, morph, labels);
   }
 
   x.save();

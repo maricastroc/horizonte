@@ -5,6 +5,7 @@ uniform vec4 uM0, uM1;
 uniform vec3 uCur;
 uniform vec3 uWave;
 uniform float uSpin, uBlur, uTime, uFade, uGrain, uDisp, uJet;
+uniform vec2 uJetAxis;
 uniform float uReach;
 uniform float uRim;
 uniform vec2 uLight;
@@ -94,8 +95,8 @@ void main(){
 
   if (uJet > 0.001){
     vec2 jd = (p - uM0.xy) / uWorld;
-    float axis = abs(jd.x * 0.62 + jd.y * 0.78);
-    float along = clamp(1.0 - abs(jd.x * 0.78 - jd.y * 0.62) * 0.7, 0.0, 1.0);
+    float axis = abs(jd.x * uJetAxis.x + jd.y * uJetAxis.y);
+    float along = clamp(1.0 - abs(jd.x * uJetAxis.y - jd.y * uJetAxis.x) * 0.7, 0.0, 1.0);
     col += uInk * exp(-axis * axis * 900.0) * along * uJet * 2.4;
   }
 

@@ -21,12 +21,27 @@ import {
 import { bandsOf, sameBands, stageBox, FULL_BANDS } from "../composition/bands";
 import { RingBakery } from "../composition/ring";
 import {
+  coreFlattenOf,
   crownAt,
   mixMorphology,
   morphologyOf,
   NEUTRAL_MORPHOLOGY,
+  satRadiusOf,
   type AlbumMorphology,
 } from "../morphology";
+import {
+  approachState,
+  copyState,
+  jetAxisOf,
+  landscapeOf,
+  landscapeRotation,
+  momentAt,
+  morphologyOfState,
+  stateDistance,
+  type FormState,
+  type Landscape,
+  type Moment,
+} from "../landscape";
 import {
   ALBUMS,
   NEUTRAL_BIAS,
@@ -74,6 +89,7 @@ import {
   TIDE,
   LERP,
   INTAKE,
+  LANDSCAPE,
   MORPH,
   SECOND_MASS,
   SEQ,
@@ -155,8 +171,22 @@ export class FieldEngine implements InputActions {
   readonly experiments = {
     anticipation: false,
     anticipationGain: 1,
+    form: false,
   };
   readonly strain: Strain = emptyStrain();
+  readonly trackStrain: Strain = emptyStrain();
+  private landscape: Landscape | null = null;
+  private moment: Moment | null = null;
+  private formState: FormState | null = null;
+  private formDrawn: FormState | null = null;
+  private trackM: AlbumMorphology | null = null;
+  private formMix = 0;
+  private formSwap = 0;
+  private formVersion = 0;
+  private shapeVersion = 0;
+  private shapeKey = "";
+  private suspend = 0;
+  private sectionHover = -1;
   lead = 0;
   private railAlb = -1;
   private railTrk = -1;
@@ -202,6 +232,7 @@ export class FieldEngine implements InputActions {
 
     this.audioState = this.bus.update(0);
     this.experiments.anticipation = readExperiment("anticipate");
+    this.experiments.form = readExperiment("form");
     this.reduced = prefersReducedMotion();
     this.coarse = hasCoarsePointer();
     try {
@@ -424,6 +455,10 @@ export class FieldEngine implements InputActions {
     return this.MORPH[clamp(i, 0, this.MORPH.length - 1)] ?? NEUTRAL_MORPHOLOGY;
   }
 
+  private landscaped() {
+    return this.formMix >= 0.5 && this.trackM !== null;
+  }
+
   private hit() {
     return hitTest(
       this.mouse.tx,
@@ -434,7 +469,7 @@ export class FieldEngine implements InputActions {
       this.L,
       (a) => this.rings.bounds(a),
       ALBUMS.length,
-      (a) => this.morphAt(a),
+      (a) => (a === this.st.alb && this.landscaped() ? this.M : this.morphAt(a)),
     );
   }
 
@@ -451,6 +486,16 @@ export class FieldEngine implements InputActions {
       m = this.morphAt(s.alb);
     }
     if (s.mix > 0 && this.MORPH[s.fuseAlb]) m = mixMorphology(m, this.MORPH[s.fuseAlb], s.mix);
+    if (this.formMix > 0 && this.trackM) {
+      m = this.formMix >= 1 ? this.trackM : mixMorphology(m, this.trackM, this.formMix);
+    }
+    if (this.formMix > 0) {
+      const key = `${this.formVersion}:${Math.round(this.formMix * 40)}:${Math.round(s.mix * 40)}`;
+      if (key !== this.shapeKey) {
+        this.shapeKey = key;
+        this.shapeVersion++;
+      }
+    }
     return m;
   }
 
@@ -509,6 +554,10 @@ export class FieldEngine implements InputActions {
       return;
     }
     if (h.kind === "track") {
+      if (this.landscaped() && this.landscape && s.scale === "track") {
+        this.seekFraction(this.landscape.sections[h.i]?.at ?? 0);
+        return;
+      }
       this.playTrack(s.alb, h.i);
       return;
     }
@@ -630,7 +679,23 @@ export class FieldEngine implements InputActions {
       morph: this.M,
       morphOf: (a) => this.morphAt(a),
       field: this.deformation(),
-      fieldVersion: this.strain.version,
+      fieldVersion: this.landscaped() ? this.trackStrain.version : this.strain.version,
+      landscape:
+        this.formMix > 0 && this.trackM
+          ? {
+              shape: { m: this.M, version: this.shapeVersion },
+              sections: this.landscaped(),
+              active: this.moment?.section ?? -1,
+              hover: this.sectionHover,
+              progress: this.moment?.progress ?? 0,
+              labels: Math.max(0, 1 - this.formMix * 2),
+              alpha:
+                (1 - 0.7 * this.formSwap) *
+                (this.formMix > 0 && this.formMix < 1
+                  ? Math.min(1, Math.abs(this.formMix - 0.5) * 4)
+                  : 1),
+            }
+          : null,
     };
   }
 
@@ -646,6 +711,7 @@ export class FieldEngine implements InputActions {
     if (s.segueT < SEQ.segue.total) s.segueT += dt;
     this.trackBias(dt);
     this.C = this.fieldFor();
+    this.formStep(dt);
     this.M = this.morphFor();
 
     const K = this.reduced ? 0.25 : 1;
@@ -671,13 +737,20 @@ export class FieldEngine implements InputActions {
 
 
     this.strainStep(dt);
+    this.trackStrainStep(dt);
 
     const live = s.mode === "playing" || s.mode === "fusion";
     const target = live ? 0.42 + a.energy * 0.58 : s.mode === "paused" ? 0.22 : 0.3;
     s.energy += (target - s.energy) * Math.min(1, dt * LERP.energy);
 
     const h = this.hit();
-    s.hover = h.kind === "track" ? h.i : this.railTrk >= 0 ? this.railTrk : -1;
+    if (this.landscaped()) {
+      this.sectionHover = h.kind === "track" ? h.i : -1;
+      s.hover = this.railTrk >= 0 ? this.railTrk : -1;
+    } else {
+      this.sectionHover = -1;
+      s.hover = h.kind === "track" ? h.i : this.railTrk >= 0 ? this.railTrk : -1;
+    }
     s.hoverBody = h.kind === "body" ? h.i : this.railAlb >= 0 ? this.railAlb : -1;
     if (s.scale === "album" && s.hover >= 0) s.sel = s.hover;
     this.secondMass(dt);
@@ -782,14 +855,89 @@ export class FieldEngine implements InputActions {
   private ringRotation(dt: number) {
     const s = this.st;
     const onAir = s.playAlb >= 0 && s.playAlb === s.alb;
-    const target = ringRotationTarget(this.rings.bounds(s.alb), s.trk, progressOf(s), onAir);
+    const target = this.landscaped()
+      ? landscapeRotation(this.trackM!)
+      : ringRotationTarget(this.rings.bounds(s.alb), s.trk, progressOf(s), onAir);
     const raw = target - s.ringRot;
     const d = (((raw + Math.PI) % 6.2832) + 6.2832) % 6.2832 - Math.PI;
     s.ringRot += d * Math.min(1, dt * LERP.ringRot);
   }
 
   private deformation(): Float32Array | null {
+    if (this.landscaped()) {
+      return this.trackStrain.album === this.trackKey() ? this.trackStrain.field : null;
+    }
     return this.strain.album === this.st.alb ? this.strain.field : null;
+  }
+
+  private trackKey() {
+    return this.st.playAlb * 1000 + this.st.trk;
+  }
+
+  private trackStrainStep(dt: number) {
+    const s = this.st;
+    if (!this.trackM || !this.landscape || s.playAlb < 0) return;
+    const album = ALBUMS[s.playAlb];
+    const bounds = this.rings.bounds(s.playAlb);
+    const trk = clamp(s.trk, 0, bounds.length - 2);
+    const t = progressOf(s);
+    const live = s.mode === "playing" || s.mode === "collapse" || s.mode === "fusion";
+    const crown = crownAt(this.trackM, t);
+    const amp = amplitudeOf(crown.outer - crown.inner);
+    const load = live
+      ? loadOf(
+          chargeAt(album.signature, albumProgressOf(bounds, trk, t)),
+          complianceOf(album.signature.dynamics),
+          amp,
+        )
+      : 0;
+    strainStep(this.trackStrain, this.trackKey(), t, load, amp, dt, live);
+  }
+
+  private formStep(dt: number) {
+    const s = this.st;
+    const album = s.playAlb >= 0 ? ALBUMS[s.playAlb] : null;
+    if (!this.experiments.form || !album) {
+      this.formMix = Math.max(0, this.formMix - dt * LANDSCAPE.mix);
+      if (this.formMix === 0) {
+        this.trackM = null;
+        this.landscape = null;
+        this.formState = null;
+      }
+      return;
+    }
+    const L = landscapeOf(s.playAlb, clamp(s.trk, 0, album.tracks.length - 1));
+    const moment = momentAt(L, progressOf(s));
+    this.moment = moment;
+    const fresh = this.landscape !== L;
+    this.landscape = L;
+    const hidden =
+      s.mode === "collapse" && s.seqT >= SEQ.collapse.ramp && s.seqT < SEQ.collapse.valleyEnd;
+    if (!this.formState || hidden || (fresh && this.formMix < 0.02)) {
+      this.formState = copyState(moment.state);
+    } else {
+      const tau = fresh ? LANDSCAPE.tau[0] * 0.6 : moment.tau;
+      this.formState = approachState(this.formState, moment.state, 1 - Math.exp(-dt / tau));
+    }
+    if (fresh && this.formMix > 0.02 && !hidden) this.formSwap = 1;
+    this.formSwap = Math.max(0, this.formSwap - dt * 2.5);
+    this.suspend += (moment.suspension - this.suspend) * Math.min(1, dt * 2);
+
+    const want =
+      s.playAlb === s.alb &&
+      s.scale === "track" &&
+      !(s.mode === "collapse" && s.seqT < SEQ.collapse.ramp);
+    if (hidden && want) this.formMix = 1;
+    else this.formMix += ((want ? 1 : 0) - this.formMix) * Math.min(1, dt * LANDSCAPE.mix);
+    if (this.formMix > 0.99) this.formMix = 1;
+    if (this.formMix < 0.01) this.formMix = 0;
+
+    if (!this.formDrawn || fresh || stateDistance(this.formDrawn, this.formState) > LANDSCAPE.epsilon) {
+      this.trackM = morphologyOfState(L, this.formState);
+      this.formDrawn = copyState(this.formState);
+      this.formVersion++;
+    }
+    if (hidden && want) s.ringRot = landscapeRotation(this.trackM!);
   }
 
   private strainStep(dt: number) {
@@ -920,6 +1068,7 @@ export class FieldEngine implements InputActions {
     tgt.play = isPlaying ? 1 : 0.86;
     tgt.m0k =
       curvature(0.075 * C.massScale, isPlaying ? a.accent.bass : a.accent.bass * 0.25, cap) * K;
+    tgt.m0k *= 1 - LANDSCAPE.suspension.lens * this.suspend * this.formMix;
     tgt.m0h = 0.082 * this.hzK;
     tgt.spin = isPlaying
       ? curvature(0.42 * C.swirl, a.accent.mid * 0.7 + a.flux * 0.3, cap)
@@ -1006,7 +1155,7 @@ export class FieldEngine implements InputActions {
         m1x = (sx - 0.5) * aspect;
         m1y = 0.5 - sy;
         m1k = SECOND_MASS.k * this.C.massScale * sat.weight * s.form;
-        m1h = ((sat.size * geo.R) / this.H) * (0.4 + 0.6 * sat.weight);
+        m1h = (satRadiusOf(this.M, sat) * geo.R) / this.H;
       }
     }
 
@@ -1024,7 +1173,7 @@ export class FieldEngine implements InputActions {
       lobeAmp * s.form,
       -s.ringRot,
     );
-    u.uFlat.value = 1 + (this.M.flatten - 1) * s.form;
+    u.uFlat.value = 1 + (coreFlattenOf(this.M.flatten) - 1) * s.form;
     u.uWorld.value = this.worldUnit();
     this.guard(u.uGuard.value as THREE.Vector3);
     u.uM0.value.set(mx, my, s.m0k, s.m0h);
@@ -1039,6 +1188,8 @@ export class FieldEngine implements InputActions {
     u.uDisp.value =
       curvature(0.014, this.audioState.accent.treb, this.C.reactionCap * 0.6) + s.blur * 0.01;
     u.uJet.value = s.jet;
+    const jet = jetAxisOf(this.M.flatten, this.formMix);
+    (u.uJetAxis.value as THREE.Vector2).set(jet[0], jet[1]);
     u.uReach.value = this.reachAmp;
     const dBright = clamp(this.audioState.centroid - A.signature.brightness, -0.5, 0.5);
     u.uRim.value = this.C.rimHardness * (1 + dBright * this.C.reactionCap);

@@ -112,6 +112,16 @@ function lobeSum(cos: number[], sin: number[], turn: number): number {
   return v;
 }
 
+export function lobesOf(env: Float32Array): { cos: number[]; sin: number[] } {
+  const spec = spectrumOf(env);
+  return normalizeLobes(spec.cos, spec.sin);
+}
+
+export const coreFlattenOf = (flatten: number) =>
+  flatten >= MORPH.flatten[0]
+    ? flatten
+    : MORPH.flatten[0] - (MORPH.flatten[0] - flatten) * MORPH.coreTilt;
+
 const satGain = (weight: number) => 0.4 + 0.6 * weight;
 
 export const satRadiusOf = (m: AlbumMorphology, s: Satellite) =>

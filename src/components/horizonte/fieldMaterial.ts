@@ -18,6 +18,7 @@ export interface FieldUniforms {
   uGrain: { value: number };
   uDisp: { value: number };
   uJet: { value: number };
+  uJetAxis: { value: THREE.Vector2 };
   uReach: { value: number };
   uRim: { value: number };
   uLight: { value: THREE.Vector2 };
@@ -46,6 +47,7 @@ export function createFieldUniforms(): FieldUniforms {
     uGrain: { value: 0.035 },
     uDisp: { value: 0.014 },
     uJet: { value: 0 },
+    uJetAxis: { value: new THREE.Vector2(0.62, 0.78) },
     uReach: { value: 0 },
     uRim: { value: 3.5 },
     uLight: { value: new THREE.Vector2(-0.7, 0.71) },
