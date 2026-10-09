@@ -1,6 +1,14 @@
 import { ALBUMS, boundsOf } from "../content";
 import { clamp } from "../math";
-import { crownAt, morphologyOf, shellsAt, type AlbumMorphology } from "../morphology";
+import {
+  arcSpanOf,
+  crownAt,
+  isPathed,
+  morphologyOf,
+  pathTurn,
+  shellsAt,
+  type AlbumMorphology,
+} from "../morphology";
 import { STRAIN_BINS } from "./strain";
 import { RING, STRAIN } from "../tokens";
 import type { CoverAsset } from "./cover";
@@ -60,6 +68,18 @@ export interface SectorGeometry {
   t0: number;
   t1: number;
   inner: number;
+  lift: number;
+}
+
+function tracePath(x: CanvasRenderingContext2D, m: AlbumMorphology, t0: number, t1: number, lift: number) {
+  const steps = Math.max(2, Math.ceil(Math.abs(t1 - t0) * 240));
+  for (let i = 0; i <= steps; i++) {
+    const t = t0 + ((t1 - t0) * i) / steps;
+    const r = Math.max(6, (crownAt(m, t).inner - lift) * RING.unitR - 10);
+    const a = pathTurn(m, t) * 6.2832;
+    if (i === 0) x.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+    else x.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+  }
 }
 
 function bakeSectors(
@@ -104,16 +124,16 @@ function bakeSectors(
     const lift = isSel || isAct ? RING.lift : 0;
 
     const mid = crownAt(m, (t0 + t1) / 2);
-    sectors.push({ t0, t1, inner: (mid.inner - lift) * unitR });
+    sectors.push({ t0, t1, inner: (mid.inner - lift) * unitR, lift });
 
     const SL = slicesOf(span);
-    const arcPx = (2 * Math.PI * mid.inner * unitR) / Math.max(1, totalSlices);
+    const arcPx = (2 * Math.PI * mid.inner * unitR * Math.min(1, m.closure)) / Math.max(1, totalSlices);
     for (let i = 0; i < SL; i++) {
       const f = i / SL;
       const t = t0 + (t1 - t0) * f;
       const shells = shellsAt(m, t);
       x.save();
-      x.rotate(t * 6.2832);
+      x.rotate(pathTurn(m, t) * 6.2832);
       x.globalAlpha = base;
       for (let sh = 0; sh < shells.length; sh++) {
         const inner = (shells[sh].inner - lift) * unitR;
@@ -155,7 +175,7 @@ function drawDeformation(
     const shells = shellsAt(m, t);
     const base = shells[shells.length - 1].outer * unitR;
     x.save();
-    x.rotate(t * 6.2832);
+    x.rotate(pathTurn(m, t) * 6.2832);
     if (rise > 0) {
       x.globalAlpha = STRAIN.alpha;
       x.globalCompositeOperation = "source-over";
@@ -186,6 +206,12 @@ interface SegCacheKey {
   sel: number;
   hover: number;
   active: number;
+  shape: number;
+}
+
+export interface SegShape {
+  m: AlbumMorphology;
+  version: number;
 }
 
 export class RingBakery {
@@ -218,7 +244,7 @@ export class RingBakery {
   arc(i: number): HTMLCanvasElement {
     const cover = this.covers[i];
     if (!this.arcs[i] || this.arcVersion[i] !== cover.version) {
-      this.arcs[i] = bakeArc(cover.canvas, 0.52 + (i % 3) * 0.06);
+      this.arcs[i] = bakeArc(cover.canvas, arcSpanOf(this.morph(i)));
       this.arcVersion[i] = cover.version;
     }
     return this.arcs[i]!;
@@ -243,26 +269,29 @@ export class RingBakery {
     ink: string,
     field: Float32Array | null = null,
     fieldVersion = 0,
+    shape: SegShape | null = null,
   ): HTMLCanvasElement {
     const cover = this.covers[alb];
-    const key: SegCacheKey = { alb, version: cover.version, sel, hover, active };
+    const m = shape ? shape.m : this.morph(alb);
+    const key: SegCacheKey = {
+      alb,
+      version: cover.version,
+      sel,
+      hover,
+      active,
+      shape: shape ? shape.version : -1,
+    };
     const stale =
       !this.segKey ||
       this.segKey.alb !== key.alb ||
       this.segKey.version !== key.version ||
       this.segKey.sel !== key.sel ||
       this.segKey.hover !== key.hover ||
-      this.segKey.active !== key.active;
+      this.segKey.active !== key.active ||
+      this.segKey.shape !== key.shape;
 
     if (stale) {
-      const baked = bakeSectors(
-        cover.canvas,
-        this.bounds(alb),
-        this.morph(alb),
-        sel,
-        hover,
-        active,
-      );
+      const baked = bakeSectors(cover.canvas, m.bounds, m, sel, hover, active);
       this.segSlices = baked.canvas;
       this.segSectors = baked.sectors;
       this.segKey = key;
@@ -280,7 +309,7 @@ export class RingBakery {
     if (field) {
       x.save();
       x.translate(C, C);
-      drawDeformation(x, cover.canvas, this.morph(alb), field);
+      drawDeformation(x, cover.canvas, m, field);
       x.restore();
     }
 
@@ -293,13 +322,9 @@ export class RingBakery {
       x.strokeStyle = ink;
       x.lineWidth = isAct ? 4 : 2;
       x.beginPath();
-      x.arc(
-        0,
-        0,
-        Math.max(6, s.inner - 10),
-        s.t0 * 6.2832,
-        (isAct ? s.t0 + (s.t1 - s.t0) * progress : s.t1) * 6.2832,
-      );
+      const end = isAct ? s.t0 + (s.t1 - s.t0) * progress : s.t1;
+      if (isPathed(m)) tracePath(x, m, s.t0, end, s.lift);
+      else x.arc(0, 0, Math.max(6, s.inner - 10), s.t0 * 6.2832, end * 6.2832);
       x.stroke();
     });
     x.restore();

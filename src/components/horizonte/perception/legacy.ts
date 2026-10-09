@@ -27,6 +27,10 @@ export function legacyMorphologyOf(sig: AlbumSignature): AlbumMorphology {
     satellites: [],
     lobeCos: [],
     lobeSin: [],
+    phase: 0,
+    closure: 1,
+    spiral: 0,
+    drift: [],
     rMin: Math.max(coreRatio * 1.06, 1 - bandRatio),
     rMax: 1,
   };

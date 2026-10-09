@@ -1,7 +1,14 @@
 import { BAND, BREAKPOINT, GEO, GLYPH, LOCKUP, REACH, RING, RING_UNIT, SHARD } from "../tokens";
 import { albumProgressOf } from "../state";
 import { clamp, lerp } from "../math";
-import { neighborScale, type AlbumMorphology } from "../morphology";
+import {
+  crownAt,
+  isPathed,
+  neighborScale,
+  pathAt,
+  shellsAt,
+  type AlbumMorphology,
+} from "../morphology";
 import type { FieldState, Variant } from "../types";
 import {
   bandsOf,
@@ -302,9 +309,19 @@ export function hitTest(
 
   const bodyR = Math.min(m.coreRatio * REACH.core, m.rMin * REACH.inner * 0.98);
   if (rr < bodyR) return { kind: "body", i: s.alb };
+  let a = Math.atan2(dy, dx) - s.ringRot;
+  a = ((a % 6.2832) + 6.2832) % 6.2832;
+  if (isPathed(m)) {
+    const t = pathAt(m, a / 6.2832);
+    if (t < 0) return { kind: "empty", i: -1 };
+    const c = crownAt(m, t);
+    const top = shellsAt(m, t).at(-1)!.outer;
+    if (rr > c.inner * REACH.inner && rr < top * REACH.outer) {
+      return { kind: "track", i: sectorAt(m.bounds, t) };
+    }
+    return { kind: "empty", i: -1 };
+  }
   if (rr > m.rMin * REACH.inner && rr < m.rMax * REACH.outer) {
-    let a = Math.atan2(dy, dx) - s.ringRot;
-    a = ((a % 6.2832) + 6.2832) % 6.2832;
     return { kind: "track", i: sectorAt(bounds(s.alb), a / 6.2832) };
   }
   return { kind: "empty", i: -1 };

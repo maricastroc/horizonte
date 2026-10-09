@@ -50,7 +50,6 @@ export const RING = {
   alpha: { normal: 0.42, hover: 0.8, selected: 0.92, playing: 1 },
   lift: 0.035,
   anchor: -1.9,
-  neighborPhase: 0.7,
 } as const;
 
 export const RING_UNIT = RING.unitR / RING.buffer;
@@ -64,6 +63,8 @@ export const MORPH = {
   flatten: [0.46, 0.9],
   core: [0.2, 0.5],
   bandFill: 0.62,
+  bandFloor: 0.25,
+  arcSpan: [0.52, 0.64],
   plate: [0.52, 1.34],
   strataGap: 0.19,
   strataReach: 0.6,

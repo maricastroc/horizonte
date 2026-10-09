@@ -1,6 +1,6 @@
 import { ALBUMS, boundsOf } from "../content";
 import type { FieldConstants } from "../field";
-import { neighborScale, outerAt, satRadiusOf, type AlbumMorphology } from "../morphology";
+import { neighborScale, outerAt, pathTurn, satRadiusOf, type AlbumMorphology } from "../morphology";
 import { isEngaged, progressOf } from "../state";
 import { COLOR, GEO, MORPH, PARTICLES, RING, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
@@ -131,7 +131,7 @@ function trackLabels(
   x.font = `500 ${W * 0.0105}px ${fonts.mono}`;
   for (let k = 0; k < N; k++) {
     const t = (bounds[k] + bounds[k + 1]) / 2;
-    const a = t * 6.2832 + s.ringRot;
+    const a = pathTurn(m, t) * 6.2832 + s.ringRot;
     const reach = (m.rMax + 0.16) * R;
     const px = Math.max(W * 0.055, Math.min(W * 0.62, bx + Math.cos(a) * reach));
     const py = Math.max(H * 0.09, Math.min(H * 0.84, by + Math.sin(a) * reach * flatten));
@@ -222,7 +222,7 @@ export function drawBack(
     const nx = p.x * W;
     const ny = L.staged ? box.cy : p.y * H;
     const R = M * (0.16 + 0.24 * p.depth) * L.ringScale * ns;
-    drawRing(x, rings.arc(i), nx, ny, R, RING.anchor + i * RING.neighborPhase, a, mi.flatten);
+    drawRing(x, rings.arc(i), nx, ny, R, RING.anchor + mi.phase, a, mi.flatten);
 
     x.save();
     const br = M * GEO.neighborR * p.depth * ns;

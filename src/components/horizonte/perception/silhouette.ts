@@ -8,7 +8,7 @@ import {
 } from "../composition/layout";
 import { bandsOf, stageBox } from "../composition/bands";
 import { clamp } from "../math";
-import { morphologyOf, satRadiusOf, shellsAt, type AlbumMorphology } from "../morphology";
+import { morphologyOf, pathAt, satRadiusOf, shellsAt, type AlbumMorphology } from "../morphology";
 import { MORPH, RING } from "../tokens";
 import type { Variant } from "../types";
 
@@ -46,6 +46,7 @@ export interface SilhouetteOptions {
   gw?: number;
   gh?: number;
   morph?: AlbumMorphology;
+  rotation?: number;
 }
 
 export interface Silhouette {
@@ -66,7 +67,7 @@ export function silhouetteOf(
   const L = layoutFor(opts.variant ?? "desktop");
 
   const m = opts.morph ?? morphologyOf(sig, trackCount);
-  const bounds = boundsOf(sig, trackCount);
+  const bounds = opts.morph ? m.bounds : boundsOf(sig, trackCount);
   const base = baseRadius(W, H, 1, 0, L);
   const box = L.staged ? stageBox(W, H, bandsOf(W, H, 1)) : null;
   const g = box
@@ -116,10 +117,10 @@ export function silhouetteOf(
 
     let ink = 0;
 
-    if (rr > m.rMin * 0.9 && rr < m.rMax * 1.1) {
-      let a = Math.atan2(dy, dx) - RING.anchor;
-      a = ((a % TAU) + TAU) % TAU;
-      const t = a / TAU;
+    let a = Math.atan2(dy, dx) - (opts.rotation ?? RING.anchor);
+    a = ((a % TAU) + TAU) % TAU;
+    const t = rr > m.rMin * 0.9 && rr < m.rMax * 1.1 ? pathAt(m, a / TAU) : -1;
+    if (t >= 0) {
       const k = sectorAt(bounds, t);
       const b0 = bounds[k];
       const b1 = bounds[k + 1];

@@ -26,9 +26,15 @@ export interface AlbumMorphology {
   satellites: Satellite[];
   lobeCos: number[];
   lobeSin: number[];
+  phase: number;
+  closure: number;
+  spiral: number;
+  drift: number[];
   rMin: number;
   rMax: number;
 }
+
+export type MorphologyShape = Omit<AlbumMorphology, "rMin" | "rMax">;
 
 const HARMONICS = 7;
 
@@ -115,8 +121,33 @@ export function lobeAt(m: AlbumMorphology, turn: number): number {
   return lobeSum(m.lobeCos, m.lobeSin, turn);
 }
 
-export function outerAt(m: AlbumMorphology, turn: number): number {
-  return 1 + m.relief * lobeAt(m, turn);
+export const pathTurn = (m: Pick<AlbumMorphology, "closure">, t: number) =>
+  m.closure >= 1 ? t : t * m.closure;
+
+export function pathAt(m: Pick<AlbumMorphology, "closure">, turn: number): number {
+  const u = ((turn % 1) + 1) % 1;
+  if (m.closure >= 1) return u;
+  return u <= m.closure ? u / m.closure : -1;
+}
+
+export const isPathed = (m: Pick<AlbumMorphology, "closure" | "spiral" | "drift">) =>
+  m.closure < 1 || m.spiral !== 0 || m.drift.length > 0;
+
+export function segmentAt(bounds: number[], t: number): number {
+  const n = bounds.length - 1;
+  for (let k = 0; k < n; k++) if (t < bounds[k + 1]) return k;
+  return n - 1;
+}
+
+const shiftOf = (m: Pick<AlbumMorphology, "spiral" | "drift">, t: number, k: number) =>
+  m.spiral * (t - 0.5) + (m.drift[k] ?? 0);
+
+export function outerAt(m: AlbumMorphology, t: number): number {
+  return (
+    1 +
+    m.relief * lobeAt(m, pathTurn(m, t)) +
+    shiftOf(m, t, segmentAt(m.bounds, t))
+  );
 }
 
 export interface Crown {
@@ -124,25 +155,13 @@ export interface Crown {
   outer: number;
 }
 
-function plateIndex(bounds: number[], turn: number): number {
-  const n = bounds.length - 1;
-  for (let k = 0; k < n; k++) if (turn < bounds[k + 1]) return k;
-  return n - 1;
-}
-
-function crownFrom(
-  cos: number[],
-  sin: number[],
-  relief: number,
-  bandRatio: number,
-  coreRatio: number,
-  bounds: number[],
-  plate: number[],
-  turn: number,
-): Crown {
-  const outer = 1 + relief * lobeSum(cos, sin, turn);
-  const band = bandRatio * plate[plateIndex(bounds, turn)];
-  const inner = Math.max(coreRatio * 1.06, outer - band);
+function crownFrom(m: MorphologyShape, t: number): Crown {
+  const k = segmentAt(m.bounds, t);
+  const floor = m.coreRatio * 1.06;
+  const band = m.bandRatio * m.plate[k];
+  const raw = 1 + m.relief * lobeSum(m.lobeCos, m.lobeSin, pathTurn(m, t)) + shiftOf(m, t, k);
+  const outer = Math.max(raw, floor + band * MORPH.bandFloor);
+  const inner = Math.max(floor, outer - band);
   return { inner, outer };
 }
 
@@ -166,22 +185,29 @@ function shellsFrom(c: Crown, strata: number): Shell[] {
   return out;
 }
 
-export function shellsAt(m: AlbumMorphology, turn: number): Shell[] {
-  return shellsFrom(crownAt(m, turn), m.strata);
+export function shellsAt(m: AlbumMorphology, t: number): Shell[] {
+  return shellsFrom(crownFrom(m, t), m.strata);
 }
 
-export function crownAt(m: AlbumMorphology, turn: number): Crown {
-  return crownFrom(
-    m.lobeCos,
-    m.lobeSin,
-    m.relief,
-    m.bandRatio,
-    m.coreRatio,
-    m.bounds,
-    m.plate,
-    turn,
-  );
+export function crownAt(m: AlbumMorphology, t: number): Crown {
+  return crownFrom(m, t);
 }
+
+export function withExtent(shape: MorphologyShape): AlbumMorphology {
+  let rMin = Number.POSITIVE_INFINITY;
+  let rMax = 0;
+  for (let i = 0; i < 360; i++) {
+    const c = crownFrom(shape, i / 360);
+    const sh = shellsFrom(c, shape.strata);
+    const top = sh[sh.length - 1].outer;
+    if (top > rMax) rMax = top;
+    if (c.inner < rMin) rMin = c.inner;
+  }
+  return { ...shape, rMin, rMax };
+}
+
+export const arcSpanOf = (m: Pick<AlbumMorphology, "spread">) =>
+  lerp(MORPH.arcSpan[0], MORPH.arcSpan[1], m.spread);
 
 function trackLevels(sig: AlbumSignature, trackCount: number): number[] {
   const env = envelopeOf(sig);
@@ -276,26 +302,7 @@ export function morphologyOf(sig: AlbumSignature, trackCount: number): AlbumMorp
     for (const s of satellites) s.size *= k;
   }
 
-  let rMin = Number.POSITIVE_INFINITY;
-  let rMax = 0;
-  for (let i = 0; i < 360; i++) {
-    const c = crownFrom(
-      lobes.cos,
-      lobes.sin,
-      relief,
-      bandRatio,
-      coreRatio,
-      bounds,
-      plate,
-      i / 360,
-    );
-    const sh = shellsFrom(c, strata);
-    const top = sh[sh.length - 1].outer;
-    if (top > rMax) rMax = top;
-    if (c.inner < rMin) rMin = c.inner;
-  }
-
-  const m: AlbumMorphology = {
+  const m = withExtent({
     bounds,
     plate,
     circuit,
@@ -311,9 +318,11 @@ export function morphologyOf(sig: AlbumSignature, trackCount: number): AlbumMorp
     satellites,
     lobeCos: lobes.cos,
     lobeSin: lobes.sin,
-    rMin,
-    rMax,
-  };
+    phase: eccAngle,
+    closure: 1,
+    spiral: 0,
+    drift: [],
+  });
 
   byCount.set(trackCount, m);
   return m;
@@ -338,6 +347,10 @@ export const NEUTRAL_MORPHOLOGY: AlbumMorphology = {
   satellites: [],
   lobeCos: [],
   lobeSin: [],
+  phase: 0,
+  closure: 1,
+  spiral: 0,
+  drift: [],
   rMin: 1 - (1 - 0.34) * MORPH.bandFill,
   rMax: 1,
 };
@@ -372,6 +385,13 @@ export function mixMorphology(
       weight: lerp(sa.weight, sb.weight, k),
     });
   }
+  const drift: number[] = [];
+  const dn = Math.max(a.drift.length, b.drift.length);
+  if (a.bounds.length === b.bounds.length) {
+    for (let i = 0; i < dn; i++) drift.push(lerp(a.drift[i] ?? 0, b.drift[i] ?? 0, k));
+  } else {
+    drift.push(...(k < 0.5 ? a.drift : b.drift));
+  }
   return {
     bounds: k < 0.5 ? a.bounds : b.bounds,
     plate: k < 0.5 ? a.plate : b.plate,
@@ -388,6 +408,10 @@ export function mixMorphology(
     satellites: sats,
     lobeCos,
     lobeSin,
+    phase: lerp(a.phase, b.phase, k),
+    closure: lerp(a.closure, b.closure, k),
+    spiral: lerp(a.spiral, b.spiral, k),
+    drift,
     rMin: lerp(a.rMin, b.rMin, k),
     rMax: lerp(a.rMax, b.rMax, k),
   };
