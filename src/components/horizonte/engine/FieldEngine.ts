@@ -185,6 +185,8 @@ export class FieldEngine implements InputActions {
   private formVersion = 0;
   private shapeVersion = 0;
   private shapeKey = "";
+  private shapeAt = 0;
+  private shapeSide = false;
   private suspend = 0;
   private sectionHover = -1;
   lead = 0;
@@ -456,6 +458,13 @@ export class FieldEngine implements InputActions {
     return this.MORPH[clamp(i, 0, this.MORPH.length - 1)] ?? NEUTRAL_MORPHOLOGY;
   }
 
+  private sectionSpan() {
+    const L = this.landscape;
+    const k = this.moment?.section ?? -1;
+    if (!L || k < 0 || !this.landscaped()) return 1;
+    return Math.max(1e-3, L.sections[k].end - L.sections[k].at);
+  }
+
   private landscaped() {
     return this.formMix >= 0.5 && this.trackM !== null;
   }
@@ -492,9 +501,13 @@ export class FieldEngine implements InputActions {
     }
     if (this.formMix > 0) {
       const key = `${this.formVersion}:${Math.round(this.formMix * 40)}:${Math.round(s.mix * 40)}`;
-      if (key !== this.shapeKey) {
+      const side = this.formMix >= 0.5;
+      const discrete = side !== this.shapeSide || this.formSwap > 0.95;
+      if (key !== this.shapeKey && (discrete || s.t - this.shapeAt >= LANDSCAPE.bake)) {
         this.shapeKey = key;
         this.shapeVersion++;
+        this.shapeAt = s.t;
+        this.shapeSide = side;
       }
     }
     return m;
@@ -684,7 +697,12 @@ export class FieldEngine implements InputActions {
       landscape:
         this.formMix > 0 && this.trackM
           ? {
-              shape: { m: this.M, version: this.shapeVersion },
+              shape: {
+                m: this.M,
+                version: this.shapeVersion,
+                time: this.st.t,
+                span: this.sectionSpan(),
+              },
               sections: this.landscaped(),
               active: this.moment?.section ?? -1,
               hover: this.sectionHover,

@@ -47,6 +47,10 @@ export const RING = {
   gap: 0.02,
   slices: 44,
   arcSlices: 280,
+  sliceDensity: 620,
+  landscapeDensity: 380,
+  bakeBudget: 4,
+  dissolve: 0.45,
   alpha: { normal: 0.42, hover: 0.8, selected: 0.92, playing: 1 },
   lift: 0.035,
   anchor: -1.9,
@@ -123,6 +127,7 @@ export const LANDSCAPE = {
   face: 2.95,
   mix: 3,
   epsilon: 0.004,
+  bake: 0.5,
   jet: { flat: 0.9 },
 } as const;
 

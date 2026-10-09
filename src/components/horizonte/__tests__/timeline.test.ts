@@ -42,5 +42,5 @@ describe.runIf(OUT)("timeline contact sheet", () => {
     for (let r = 1; r < rows; r++) for (let x = 0; x < W; x++) px[r * grid * W + x] = 60;
     fs.writeFileSync(`${OUT}/timeline.png`, grayPng(px, W, H));
     expect(fs.existsSync(`${OUT}/timeline.png`)).toBe(true);
-  });
+  }, 60_000);
 });

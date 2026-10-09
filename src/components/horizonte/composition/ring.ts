@@ -82,6 +82,112 @@ function tracePath(x: CanvasRenderingContext2D, m: AlbumMorphology, t0: number, 
   }
 }
 
+interface SliceOp {
+  turn: number;
+  column: number;
+  alpha: number;
+  lift: number;
+  arcPx: number;
+  shells: { inner: number; outer: number }[];
+}
+
+class SectorBake {
+  readonly sectors: SectorGeometry[] = [];
+  private ops: SliceOp[] = [];
+  private cursor = 0;
+  private colW: number;
+
+  constructor(
+    private cover: HTMLCanvasElement,
+    bounds: number[],
+    m: AlbumMorphology,
+    sel: number,
+    hover: number,
+    active: number,
+    readonly canvas: HTMLCanvasElement,
+    density: number,
+  ) {
+    const { alpha, unitR } = RING;
+    const n = bounds.length - 1;
+    let totalSlices = 0;
+    const slicesOf = (span: number) => clamp(Math.round(span * density), 8, 96);
+    for (let k = 0; k < n; k++) totalSlices += slicesOf(bounds[k + 1] - bounds[k]);
+    this.colW = Math.ceil(COVER_SIZE / Math.max(1, totalSlices)) + 2;
+
+    for (let k = 0; k < n; k++) {
+      const b0 = bounds[k];
+      const b1 = bounds[k + 1];
+      const span = b1 - b0;
+      const g = Math.min(m.fragment, Math.max(0, span - MIN_TURN), span * 0.42) / 2;
+      const t0 = b0 + g;
+      const t1 = b1 - g;
+
+      const isSel = k === sel;
+      const isHov = k === hover;
+      const isAct = k === active;
+      const base = isAct
+        ? alpha.playing
+        : isSel
+          ? alpha.selected
+          : isHov
+            ? alpha.hover
+            : alpha.normal;
+      const lift = isSel || isAct ? RING.lift : 0;
+
+      const mid = crownAt(m, (t0 + t1) / 2);
+      this.sectors.push({ t0, t1, inner: (mid.inner - lift) * unitR, lift });
+
+      const SL = slicesOf(span);
+      const arcPx = (2 * Math.PI * mid.inner * unitR * Math.min(1, m.closure)) / Math.max(1, totalSlices);
+      for (let i = 0; i < SL; i++) {
+        const t = t0 + ((t1 - t0) * i) / SL;
+        this.ops.push({
+          turn: pathTurn(m, t),
+          column: Math.floor(t * COVER_SIZE),
+          alpha: base,
+          lift,
+          arcPx,
+          shells: shellsAt(m, t),
+        });
+      }
+    }
+    this.canvas.getContext("2d")!.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+  run(budgetMs: number): boolean {
+    const x = this.canvas.getContext("2d")!;
+    const { unitR } = RING;
+    const started = budgetMs === Number.POSITIVE_INFINITY ? 0 : performance.now();
+    x.save();
+    x.translate(C, C);
+    while (this.cursor < this.ops.length) {
+      const op = this.ops[this.cursor++];
+      x.save();
+      x.rotate(op.turn * 6.2832);
+      x.globalAlpha = op.alpha;
+      for (const sh of op.shells) {
+        const inner = (sh.inner - op.lift) * unitR;
+        const outer = (sh.outer + op.lift) * unitR;
+        x.drawImage(
+          this.cover,
+          op.column,
+          0,
+          this.colW,
+          COVER_SIZE,
+          inner,
+          -op.arcPx * 1.7,
+          Math.max(2, outer - inner),
+          op.arcPx * 3.4,
+        );
+      }
+      x.restore();
+      if ((this.cursor & 15) === 0 && started && performance.now() - started > budgetMs) break;
+    }
+    x.restore();
+    return this.cursor >= this.ops.length;
+  }
+}
+
 function bakeSectors(
   cover: HTMLCanvasElement,
   bounds: number[],
@@ -90,71 +196,9 @@ function bakeSectors(
   hover: number,
   active: number,
 ): { canvas: HTMLCanvasElement; sectors: SectorGeometry[] } {
-  const c = buffer();
-  const x = c.getContext("2d")!;
-  const { alpha, unitR } = RING;
-  const n = bounds.length - 1;
-  const sectors: SectorGeometry[] = [];
-
-  let totalSlices = 0;
-  const slicesOf = (span: number) => clamp(Math.round(span * 620), 8, 96);
-  for (let k = 0; k < n; k++) totalSlices += slicesOf(bounds[k + 1] - bounds[k]);
-  const colW = Math.ceil(COVER_SIZE / Math.max(1, totalSlices)) + 2;
-
-  x.save();
-  x.translate(C, C);
-  for (let k = 0; k < n; k++) {
-    const b0 = bounds[k];
-    const b1 = bounds[k + 1];
-    const span = b1 - b0;
-    const g = Math.min(m.fragment, Math.max(0, span - MIN_TURN), span * 0.42) / 2;
-    const t0 = b0 + g;
-    const t1 = b1 - g;
-
-    const isSel = k === sel;
-    const isHov = k === hover;
-    const isAct = k === active;
-    const base = isAct
-      ? alpha.playing
-      : isSel
-        ? alpha.selected
-        : isHov
-          ? alpha.hover
-          : alpha.normal;
-    const lift = isSel || isAct ? RING.lift : 0;
-
-    const mid = crownAt(m, (t0 + t1) / 2);
-    sectors.push({ t0, t1, inner: (mid.inner - lift) * unitR, lift });
-
-    const SL = slicesOf(span);
-    const arcPx = (2 * Math.PI * mid.inner * unitR * Math.min(1, m.closure)) / Math.max(1, totalSlices);
-    for (let i = 0; i < SL; i++) {
-      const f = i / SL;
-      const t = t0 + (t1 - t0) * f;
-      const shells = shellsAt(m, t);
-      x.save();
-      x.rotate(pathTurn(m, t) * 6.2832);
-      x.globalAlpha = base;
-      for (let sh = 0; sh < shells.length; sh++) {
-        const inner = (shells[sh].inner - lift) * unitR;
-        const outer = (shells[sh].outer + lift) * unitR;
-        x.drawImage(
-          cover,
-          Math.floor(t * COVER_SIZE),
-          0,
-          colW,
-          COVER_SIZE,
-          inner,
-          -arcPx * 1.7,
-          Math.max(2, outer - inner),
-          arcPx * 3.4,
-        );
-      }
-      x.restore();
-    }
-  }
-  x.restore();
-  return { canvas: c, sectors };
+  const job = new SectorBake(cover, bounds, m, sel, hover, active, buffer(), RING.sliceDensity);
+  job.run(Number.POSITIVE_INFINITY);
+  return { canvas: job.canvas, sectors: job.sectors };
 }
 
 function drawDeformation(
@@ -212,6 +256,8 @@ interface SegCacheKey {
 export interface SegShape {
   m: AlbumMorphology;
   version: number;
+  time: number;
+  span?: number;
 }
 
 export class RingBakery {
@@ -219,10 +265,15 @@ export class RingBakery {
   private arcVersion: number[];
   private segKey: SegCacheKey | null = null;
   private segSlices: HTMLCanvasElement | null = null;
+  private segSpare: HTMLCanvasElement | null = null;
+  private segPrev: HTMLCanvasElement | null = null;
   private segSectors: SectorGeometry[] = [];
   private segOut = buffer();
   private segProgress = -1;
   private segMarks = -1;
+  private segBlend = 1;
+  private job: SectorBake | null = null;
+  private doneAt = Number.NEGATIVE_INFINITY;
 
   constructor(private covers: CoverAsset[]) {
     this.arcs = covers.map(() => null);
@@ -291,20 +342,56 @@ export class RingBakery {
       this.segKey.shape !== key.shape;
 
     if (stale) {
-      const baked = bakeSectors(cover.canvas, m.bounds, m, sel, hover, active);
-      this.segSlices = baked.canvas;
-      this.segSectors = baked.sectors;
+      if (shape) {
+        const target = this.job ? this.job.canvas : (this.segSpare ?? buffer());
+        this.segSpare = null;
+        this.job = new SectorBake(cover.canvas, m.bounds, m, sel, hover, active, target, RING.landscapeDensity);
+      } else {
+        const baked = bakeSectors(cover.canvas, m.bounds, m, sel, hover, active);
+        this.segSlices = baked.canvas;
+        this.segSectors = baked.sectors;
+        this.segPrev = null;
+        this.segSpare = null;
+        this.job = null;
+      }
       this.segKey = key;
     }
 
-    const moved = Math.abs(progress - this.segProgress) >= 0.0008;
-    if (!stale && !moved && fieldVersion === this.segMarks) return this.segOut;
+    let swapped = false;
+    if (this.job) {
+      const first = !this.segSlices || !shape || this.segSectors.length !== m.bounds.length - 1;
+      if (this.job.run(first ? Number.POSITIVE_INFINITY : RING.bakeBudget)) {
+        const free = this.segPrev;
+        this.segPrev = first ? null : this.segSlices;
+        this.segSlices = this.job.canvas;
+        this.segSectors = this.job.sectors;
+        this.segSpare = free;
+        this.job = null;
+        this.doneAt = shape ? shape.time : 0;
+        swapped = true;
+      }
+    }
+    const blend =
+      shape && this.segPrev ? clamp((shape.time - this.doneAt) / RING.dissolve, 0, 1) : 1;
+
+    const moved = Math.abs(progress - this.segProgress) * (shape?.span ?? 1) >= 0.0008;
+    const fading = blend !== this.segBlend;
+    if (!stale && !swapped && !moved && !fading && fieldVersion === this.segMarks) return this.segOut;
     this.segProgress = progress;
     this.segMarks = fieldVersion;
+    this.segBlend = blend;
 
     const x = this.segOut.getContext("2d")!;
     x.clearRect(0, 0, RING.buffer, RING.buffer);
-    x.drawImage(this.segSlices!, 0, 0);
+    if (this.segPrev && blend < 1) {
+      x.globalAlpha = 1 - blend;
+      x.drawImage(this.segPrev, 0, 0);
+      x.globalAlpha = blend;
+      x.drawImage(this.segSlices!, 0, 0);
+      x.globalAlpha = 1;
+    } else {
+      x.drawImage(this.segSlices!, 0, 0);
+    }
 
     if (field) {
       x.save();
