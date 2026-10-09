@@ -72,6 +72,7 @@ export interface FieldGL {
   uniforms: FieldUniforms;
   render: () => void;
   resize: (w: number, h: number) => { dw: number; dh: number };
+  invalidate: () => void;
   dispose: () => void;
 }
 
@@ -139,6 +140,10 @@ export function createFieldGL(
       renderer.getDrawingBufferSize(size);
       uniforms.uRes.value.set(size.x, size.y);
       return { dw: size.x, dh: size.y };
+    },
+    invalidate: () => {
+      back.dispose();
+      front.dispose();
     },
     dispose: () => {
       mesh.geometry.dispose();

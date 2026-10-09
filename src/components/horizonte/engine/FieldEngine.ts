@@ -399,6 +399,7 @@ export class FieldEngine implements InputActions {
     const sh = dh > 0 ? dh : 2;
     const cw = Math.max(2, Math.min(sw, this.compMaxW));
     const ch = Math.max(2, Math.round((cw * sh) / sw));
+    if (cw !== this.cvB.width || ch !== this.cvB.height) this.gl.invalidate();
     this.cvB.width = cw;
     this.cvB.height = ch;
     this.cvF.width = cw;

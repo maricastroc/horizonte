@@ -12,6 +12,7 @@ vi.mock("../fieldMaterial", async (importReal) => {
         gl.renders++;
       },
       resize: (w: number, h: number) => ({ dw: Math.max(2, w), dh: Math.max(2, h) }),
+      invalidate: () => {},
       dispose: () => {},
     }),
   };
@@ -23,7 +24,7 @@ import { FieldEngine } from "../engine/FieldEngine";
 import * as T from "../engine/transport";
 import type { Catalog } from "../engine/transport";
 import { hitTest, layoutFor, sectorAt } from "../composition/layout";
-import { NEUTRAL_MORPHOLOGY } from "../morphology";
+import { NEUTRAL_MORPHOLOGY, morphologyOf } from "../morphology";
 import { MORPH } from "../tokens";
 import { initialState } from "../state";
 import { engineHarness, type EngineHarness, type FakeAudio } from "./fakes";
@@ -202,5 +203,44 @@ describe("sensory signature at the edges", () => {
     expect(M.flatten).toBeLessThanOrEqual(MORPH.flatten[1]);
     expect(M.coreRatio).toBeLessThanOrEqual(MORPH.core[1]);
     expect(C.rimHardness).toBeLessThanOrEqual(5);
+  });
+});
+
+describe("the second mass before the first fusion", () => {
+  const uniforms = () =>
+    (m() as unknown as { gl: { uniforms: Record<string, { value: never }> } }).gl.uniforms;
+  const secondMass = () =>
+    uniforms().uM1.value as unknown as { x: number; y: number; z: number; w: number };
+  const firstMass = () =>
+    uniforms().uM0.value as unknown as { x: number; y: number; z: number; w: number };
+  const settle = (frames = 240) => {
+    for (let i = 0; i < frames; i++) a().advance(16);
+  };
+  const bodies = (alb: number) =>
+    morphologyOf(ALBUMS[alb].signature, ALBUMS[alb].tracks.length).satellites.filter(
+      (s) => s.weight > 0.02,
+    ).length;
+
+  it("a record without satellites has no second body in the album", () => {
+    world();
+    const bare = ALBUMS.findIndex((_, i) => bodies(i) === 0);
+    expect(bare).toBeGreaterThanOrEqual(0);
+    m().teleportTo(0.99, 0.99);
+    m().enterAlbum(bare);
+    settle();
+    expect(secondMass().z).toBe(0);
+    expect(secondMass().w).toBe(0);
+  });
+
+  it("a record with satellites lends the lens to its leading satellite, not to a fixed offset", () => {
+    world();
+    const orbited = ALBUMS.findIndex((_, i) => bodies(i) > 0);
+    m().teleportTo(0.99, 0.99);
+    m().enterAlbum(orbited);
+    settle();
+    const dx = secondMass().x - firstMass().x;
+    const dy = secondMass().y - firstMass().y;
+    expect(secondMass().z).toBeGreaterThan(0);
+    expect(Math.hypot(dx - 0.6, dy - 0.1)).toBeGreaterThan(0.05);
   });
 });
