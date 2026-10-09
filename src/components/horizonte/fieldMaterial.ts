@@ -9,6 +9,7 @@ export interface FieldUniforms {
   uRes: { value: THREE.Vector2 };
   uM0: { value: THREE.Vector4 };
   uM1: { value: THREE.Vector4 };
+  uM2: { value: THREE.Vector4 };
   uCur: { value: THREE.Vector3 };
   uWave: { value: THREE.Vector3 };
   uSpin: { value: number };
@@ -38,6 +39,7 @@ export function createFieldUniforms(): FieldUniforms {
     uRes: { value: new THREE.Vector2(1, 1) },
     uM0: { value: new THREE.Vector4(0, 0, 0.088, 0.112) },
     uM1: { value: new THREE.Vector4(0, 0, 0.02, 0.05) },
+    uM2: { value: new THREE.Vector4(0, 0, 0, 0) },
     uCur: { value: new THREE.Vector3(0, 0, 0) },
     uWave: { value: new THREE.Vector3(0, 0, 0) },
     uSpin: { value: 0.06 },

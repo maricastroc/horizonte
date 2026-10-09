@@ -2,11 +2,13 @@ import { ALBUMS, boundsOf } from "../content";
 import type { FieldConstants } from "../field";
 import { neighborScale, outerAt, pathTurn, satRadiusOf, type AlbumMorphology } from "../morphology";
 import { isEngaged, progressOf } from "../state";
-import { COLOR, GEO, MORPH, PARTICLES, RING, TRACK_RING, rgba } from "../tokens";
+import { BINARY, COLOR, GEO, MORPH, PARTICLES, RING, TRACK_RING, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
 import type { RingBakery, SectionLayer, SegShape } from "./ring";
 import { drawTrackRingHalf, type TrackRingView } from "./trackRing";
+import { drawRibbon, satelliteDistance, toScreen, type RibbonView } from "./ribbon";
+import { curveAt } from "../binary";
 import { ls, type Ctx } from "./ctx";
 import { stageBox, type Bands } from "./bands";
 import {
@@ -31,6 +33,7 @@ export interface BackDeps {
   fieldVersion?: number;
   landscape?: LandscapeView | null;
   trackRing?: TrackRingView | null;
+  ribbon?: RibbonView | null;
   ringDim?: number;
   layer?: SectionLayer | null;
 }
@@ -89,13 +92,17 @@ function drawSatellites(
   m: AlbumMorphology,
   fade: number,
   ink: string,
+  ribbon: RibbonView | null = null,
 ) {
   if (fade <= 0.01) return;
   x.save();
   for (const sat of m.satellites) {
     if (sat.weight <= 0.02) continue;
-    const px = bx + Math.cos(sat.angle) * sat.dist * R;
-    const py = by + Math.sin(sat.angle) * sat.dist * R * m.flatten;
+    const dist = ribbon
+      ? satelliteDistance(ribbon.geometry, ribbon.tilt, ribbon.alpha, m, sat, ribbon.R / R)
+      : sat.dist;
+    const px = bx + Math.cos(sat.angle) * dist * R;
+    const py = by + Math.sin(sat.angle) * dist * R * m.flatten;
     const r = satRadiusOf(m, sat) * R;
     const a = fade * sat.weight;
 
@@ -176,6 +183,82 @@ function trackLabels(
     x.beginPath();
     x.moveTo(bx + Math.cos(a) * tick * 1.04, by + Math.sin(a) * tick * 1.04 * flatten);
     x.lineTo(bx + Math.cos(a) * far, by + Math.sin(a) * far * flatten);
+    x.stroke();
+  }
+  x.restore();
+}
+
+function ribbonLabels(
+  x: Ctx,
+  view: RibbonView,
+  W: number,
+  H: number,
+  s: FieldState,
+  L: WorldLayout,
+  fonts: FontFamilies,
+  m: AlbumMorphology,
+  fade: number,
+) {
+  const A = ALBUMS[s.alb];
+  const N = A.tracks.length;
+  const bounds = boundsOf(A.signature, N);
+  const g = view.geometry;
+  const silent = L.ringLabels === "none";
+  const reach = m.rMax - g.r0 + 0.16;
+  const c = Math.cos(view.tilt);
+  const sn = Math.sin(view.tilt);
+  const placed: number[][] = [];
+  const order = Array.from({ length: N }, (_, k) => k).sort((p, q) => {
+    const on = (k: number) => k === s.sel || (s.playAlb === s.alb && k === s.trk);
+    return Number(on(q)) - Number(on(p));
+  });
+  x.save();
+  x.textBaseline = "middle";
+  ls(x, "0.2em");
+  const size = W * 0.0105;
+  x.font = `500 ${size}px ${fonts.mono}`;
+  for (const k of order) {
+    const t = (bounds[k] + bounds[k + 1]) / 2;
+    const on = k === s.sel || (s.playAlb === s.alb && k === s.trk);
+    if (L.ringLabels !== "all" && !on) continue;
+    const p = curveAt(g, t + view.offset);
+    if (p.k < 0.6 && !on) continue;
+    const ax = p.x + p.nx * reach;
+    const ay = p.y + p.ny * reach;
+    const inside = [g.first, g.second].some(
+      (c, i) => Math.hypot(ax - c[0], ay - c[1]) < g.radii[i] + (m.rMax - g.r0),
+    );
+    if (inside && !on) continue;
+    const dx = c * p.nx - sn * p.ny;
+    const at = toScreen(view, m.flatten, p.x + p.nx * reach, p.y + p.ny * reach);
+    const px = Math.max(W * 0.055, Math.min(W * 0.62, at.x));
+    const py = Math.max(H * 0.09, Math.min(H * 0.84, at.y));
+    const text = `${String(k + 1).padStart(2, "0")}  ${A.tracks[k].title.toUpperCase()}`;
+    const tw = x.measureText(text).width;
+    const box = dx < 0 ? [px - tw, py - size, px, py + size] : [px, py - size, px + tw, py + size];
+    const pad = BINARY.labelGap;
+    const clash = placed.some(
+      (r) => box[0] < r[2] + pad && box[2] > r[0] - pad && box[1] < r[3] && box[3] > r[1],
+    );
+    if (clash && !on) continue;
+    if (!silent) {
+      const hidden = dx > 0.3 || (py > H * 0.6 && px < W * 0.46);
+      if (hidden && !on) continue;
+      placed.push(box);
+      x.globalAlpha = s.fadeSel * fade * (on ? 0.95 : 0.42);
+      x.fillStyle = on ? rgba(A.inkA, 1) : COLOR.dust;
+      x.textAlign = dx < 0 ? "right" : "left";
+      x.fillText(text, px, py);
+    }
+    const top = outerAt(m, t) - g.r0 + 0.02;
+    const a0 = toScreen(view, m.flatten, p.x + p.nx * top * p.k, p.y + p.ny * top * p.k);
+    const a1 = toScreen(view, m.flatten, p.x + p.nx * (reach - 0.05), p.y + p.ny * (reach - 0.05));
+    x.globalAlpha = s.fadeSel * fade * (on ? 0.6 : 0.18);
+    x.strokeStyle = on ? rgba(A.inkA, 1) : COLOR.dust;
+    x.lineWidth = 1;
+    x.beginPath();
+    x.moveTo(a0.x, a0.y);
+    x.lineTo(a1.x, a1.y);
     x.stroke();
   }
   x.restore();
@@ -276,7 +359,9 @@ export function drawBack(
   }
 
   const R = g.R;
-  drawSatellites(x, bx, by, R, morph, s.fadeSel * (1 - s.mix), inkA(0.9));
+  const ribbon = deps.ribbon ?? null;
+  const rib = ribbon ? ribbon.alpha : 0;
+  drawSatellites(x, bx, by, R, morph, s.fadeSel * (1 - s.mix), inkA(0.9), ribbon);
 
   if (s.fadeSel < 0.98) {
     drawRing(
@@ -319,9 +404,17 @@ export function drawBack(
       by,
       R,
       s.ringRot,
-      s.fadeSel * (1 - s.mix * 0.6) * (land ? land.alpha : 1) * (deps.ringDim ?? 1),
+      s.fadeSel * (1 - s.mix * 0.6) * (land ? land.alpha : 1) * (deps.ringDim ?? 1) * (1 - rib),
       morph.flatten,
     );
+    if (ribbon) {
+      drawRibbon(
+        x,
+        ribbon,
+        morph.flatten,
+        s.fadeSel * (1 - s.mix * 0.6) * (deps.ringDim ?? 1) * rib,
+      );
+    }
     if (deps.trackRing) {
       drawTrackRingHalf(
         x,
@@ -348,15 +441,33 @@ export function drawBack(
     }
 
     const labels = land ? land.labels : 1;
-    if (labels > 0.01) trackLabels(x, bx, by, R, W, H, s, L, fonts, morph, labels);
+    if (labels > 0.01) {
+      if (ribbon && rib > 0.5) ribbonLabels(x, ribbon, W, H, s, L, fonts, morph, labels);
+      else trackLabels(x, bx, by, R, W, H, s, L, fonts, morph, labels);
+    }
   }
 
+  const pull = ribbon ? ribbon.geometry.shape.split * rib * BINARY.dust.pull : 0;
+  const homes = ribbon
+    ? [
+        toScreen(ribbon, morph.flatten, ribbon.geometry.first[0], ribbon.geometry.first[1]),
+        toScreen(ribbon, morph.flatten, ribbon.geometry.second[0], ribbon.geometry.second[1]),
+      ]
+    : null;
+  const lead = ribbon ? ribbon.geometry.shape.lead : 0.5;
   x.save();
   x.globalCompositeOperation = "lighter";
-  for (const q of parts) {
+  for (let i = 0; i < parts.length; i++) {
+    const q = parts[i];
     const rr = q.r * M * 0.9;
-    const px = bx + Math.cos(q.a) * rr * 1.25;
-    const py = by + Math.sin(q.a) * rr * 0.72;
+    let px = bx + Math.cos(q.a) * rr * 1.25;
+    let py = by + Math.sin(q.a) * rr * 0.72;
+    if (homes && pull > 0) {
+      const h = homes[(i * 0.618034) % 1 < lead ? 0 : 1];
+      const rb = rr * BINARY.dust.spread;
+      px += (h.x + Math.cos(q.a) * rb * 1.25 - px) * pull;
+      py += (h.y + Math.sin(q.a) * rb * 0.72 - py) * pull;
+    }
     const tw = s.mode === "playing" ? 0.62 + 0.38 * Math.sin(q.tw + s.t * 5 + s.treb * 5) : 0.6;
     x.globalAlpha = (0.02 + q.z * 0.13) * tw * (0.5 + s.energy * 0.7);
     x.fillStyle = q.z > 0.6 ? inkA(1) : COLOR.dust;

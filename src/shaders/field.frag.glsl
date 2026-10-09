@@ -1,7 +1,7 @@
 precision highp float;
 uniform sampler2D uBack, uFront;
 uniform vec2 uRes;
-uniform vec4 uM0, uM1;
+uniform vec4 uM0, uM1, uM2;
 uniform vec3 uCur;
 uniform vec3 uWave;
 uniform float uSpin, uBlur, uTime, uFade, uGrain, uDisp, uJet;
@@ -76,7 +76,7 @@ void main(){
   float aspect = uRes.x / uRes.y;
   vec2 p = (uv - 0.5) * vec2(aspect, 1.0);
 
-  vec2 off = pullOf(p, uM0, uSpin) + pullOf(p, uM1, uSpin);
+  vec2 off = pullOf(p, uM0, uSpin) + pullOf(p, uM1, uSpin) + pullOf(p, uM2, uSpin);
   off += pullOf(p, vec4(uCur.xy, uCur.z, 0.0), uSpin * 0.4);
 
   vec2 dw = (p - uM0.xy) / uWorld;
@@ -89,9 +89,9 @@ void main(){
   vec2 offUv = off / vec2(aspect, 1.0);
   vec3 col = samp(uBack, uv, offUv, uBlur);
 
-  float core = max(coreOf(p, uM0, 1.0), coreOf(p, uM1, 0.0));
+  float core = max(max(coreOf(p, uM0, 1.0), coreOf(p, uM1, 0.0)), coreOf(p, uM2, 0.0));
   col = mix(col, vec3(0.0), core);
-  col += uInk * (rimOf(p, uM0, 1.0) + rimOf(p, uM1, 0.0)) * 1.15;
+  col += uInk * (rimOf(p, uM0, 1.0) + rimOf(p, uM1, 0.0) + rimOf(p, uM2, 0.0)) * 1.15;
 
   if (uJet > 0.001){
     vec2 jd = (p - uM0.xy) / uWorld;

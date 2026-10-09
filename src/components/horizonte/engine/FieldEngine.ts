@@ -22,6 +22,24 @@ import { bandsOf, sameBands, stageBox, FULL_BANDS } from "../composition/bands";
 import { RingBakery, type SectionLayer } from "../composition/ring";
 import { TrackRingBakery, type TrackRingView } from "../composition/trackRing";
 import {
+  RibbonBakery,
+  quantize,
+  ribbonCenter,
+  fitOf,
+  satelliteDistance,
+  toScreen,
+  type RibbonView,
+} from "../composition/ribbon";
+import {
+  binaryAt,
+  binaryGeometry,
+  binaryPlanOf,
+  SINGLE,
+  type BinaryGeometry,
+  type BinaryPlan,
+  type BinaryShape,
+} from "../binary";
+import {
   NEUTRAL_RELATIONS,
   albumRelationsOf,
   approachBodies,
@@ -91,6 +109,7 @@ import {
   type InputOptions,
 } from "./input";
 import {
+  BINARY,
   COMPOSITION_FALLBACK_W,
   COMPOSITION_MAX_W,
   GUARD,
@@ -107,6 +126,7 @@ import {
   SECOND_MASS,
   SEQ,
   TRACK_BIAS,
+  rgba,
 } from "../tokens";
 import type {
   FieldState,
@@ -198,7 +218,13 @@ export class FieldEngine implements InputActions {
     companions: false,
     rings: false,
     sector: false,
+    binary: false,
   };
+  private binaryPlan: BinaryPlan | null = null;
+  private binaryNext: BinaryPlan | null | undefined = undefined;
+  private binaryShape: BinaryShape = { ...SINGLE };
+  private binaryKey = "";
+  private readonly ribbons = new RibbonBakery();
   private score: Score | null = null;
   private bodies: Satellite[] | null = null;
   private sounding = -1;
@@ -277,6 +303,7 @@ export class FieldEngine implements InputActions {
     this.experiments.relations = readExperiment("relations") || this.experiments.companions;
     this.experiments.rings = readExperiment("rings");
     this.experiments.sector = readExperiment("sector");
+    this.experiments.binary = readExperiment("binary");
     this.reduced = prefersReducedMotion();
     this.coarse = hasCoarsePointer();
     try {
@@ -795,6 +822,7 @@ export class FieldEngine implements InputActions {
             }
           : null,
       trackRing: this.trackRingView(),
+      ribbon: this.ribbonView(),
       ringDim: 1 - (1 - TRACK_RING.albumDim) * this.ringsMix,
       layer: this.sectionLayer(),
     };
@@ -818,6 +846,7 @@ export class FieldEngine implements InputActions {
     this.C = this.fieldFor();
     this.formStep(dt);
     this.relationsStep(dt);
+    this.binaryStep(dt);
     this.M = this.withBodies(this.morphFor());
     this.lensStep(dt);
 
@@ -1102,6 +1131,123 @@ export class FieldEngine implements InputActions {
     return {
       ...m,
       satellites: [...pulledSatellites(m, this.pulls), ...(this.bodies ?? [])],
+    };
+  }
+
+  private binaryStep(dt: number) {
+    const s = this.st;
+    const key = `${s.playAlb}:${s.trk}`;
+    if (key !== this.binaryKey) {
+      this.binaryKey = key;
+      this.binaryNext = this.score
+        ? binaryPlanOf(this.score, this.morphAt(this.score.album).satellites)
+        : null;
+    }
+    const b = this.binaryShape;
+    if (this.binaryNext !== undefined && (b.split < 0.01 || !this.binaryPlan)) {
+      this.binaryPlan = this.binaryNext;
+      this.binaryNext = undefined;
+      b.split = 0;
+    }
+    const settled = this.binaryNext === undefined;
+    const want =
+      settled && this.experiments.binary && this.composing() && !!this.score && !!this.binaryPlan;
+    const target = want ? binaryAt(this.score!, this.binaryPlan!, progressOf(s)) : SINGLE;
+    b.split += (target.split - b.split) * (1 - Math.exp(-dt / BINARY.tau.split));
+    b.lead += (target.lead - b.lead) * (1 - Math.exp(-dt / BINARY.tau.lead));
+    if (target.split === 0 && b.split < 1e-4) {
+      b.split = 0;
+      if (!want) this.ribbons.reset();
+    }
+  }
+
+  private ribbonState: RibbonView | null = null;
+  private binaryScale = 1;
+  private ringFit: { alb: number; g: BinaryGeometry | null } = {
+    alb: -1,
+    g: null,
+  };
+
+  private ribbonView(): RibbonView | null {
+    this.ribbonState = this.ribbonFrame();
+    return this.ribbonState;
+  }
+
+  private ribbonFrame(): RibbonView | null {
+    const s = this.st;
+    const b = this.binaryShape;
+    const plan = this.binaryPlan;
+    const cover = this.covers[s.alb];
+    if (b.split <= 0 || !plan || !cover || s.alb !== s.playAlb) return null;
+    const geo = bodyGeom(this.W, this.H, s, this.L, this.M);
+    const offset = (s.ringRot - plan.tilt) / (2 * Math.PI);
+    const q = quantize(b, offset);
+    const active = isEngaged(s.mode) || s.mode === "fusion" ? s.trk : -1;
+    const canvas = this.ribbons.draw(
+      cover.canvas,
+      {
+        alb: s.alb,
+        version: cover.version,
+        sel: s.sel,
+        hover: s.hover,
+        active,
+        ...q,
+      },
+      this.morphAt(s.alb),
+      progressOf(s),
+      rgba(ALBUMS[s.alb].inkA, 1),
+      s.t,
+    );
+    const geometry = this.ribbons.geometry;
+    if (!geometry) return null;
+    const m = this.morphAt(s.alb);
+    const band = m.rMax - geometry.r0;
+    const ring =
+      this.ringFit.alb === s.alb && this.ringFit.g
+        ? this.ringFit.g
+        : binaryGeometry(SINGLE, geometry.r0);
+    this.ringFit = { alb: s.alb, g: ring };
+    const fit = (g: BinaryGeometry) =>
+      fitOf(g, plan.tilt, geo.flatten, geo.R, geo.cx, geo.cy, this.W, this.H, band);
+    this.binaryScale = clamp(fit(geometry) / Math.min(1, fit(ring)), BINARY.minScale, 1);
+    const x = Math.min(1, b.split / BINARY.handoff);
+    return {
+      canvas,
+      geometry,
+      cx: geo.cx,
+      cy: geo.cy,
+      R: geo.R * this.binaryScale,
+      tilt: plan.tilt,
+      offset: q.offset,
+      alpha: x * x * (3 - 2 * x),
+    };
+  }
+
+  private binaryMasses(geo: { cx: number; cy: number; R: number; flatten: number }) {
+    const b = this.binaryShape;
+    const plan = this.binaryPlan;
+    if (b.split <= 0 || !plan) return null;
+    const g = binaryGeometry(b, ribbonCenter(this.morphAt(this.st.alb)));
+    const sc = this.binaryScale;
+    const view = { cx: geo.cx, cy: geo.cy, R: geo.R * sc, tilt: plan.tilt };
+    const a = toScreen(view, geo.flatten, g.first[0], g.first[1]);
+    const c = toScreen(view, geo.flatten, g.second[0], g.second[1]);
+    const boost = 1 + (BINARY.lens - 1) * b.split;
+    const [qa, qb] = g.masses;
+    return {
+      first: {
+        x: a.x,
+        y: a.y,
+        k: qa * boost,
+        h: Math.sqrt(qa) * (1 + (sc - 1) * b.split),
+      },
+      second: {
+        x: c.x,
+        y: c.y,
+        k: qb * boost,
+        h: Math.sqrt(qb) * (1 + (sc - 1) * b.split),
+      },
+      split: b.split,
     };
   }
 
@@ -1398,8 +1544,12 @@ export class FieldEngine implements InputActions {
     } else if (s.scale !== "collection" && s.mode !== "fusion" && s.m1k <= 1e-4) {
       const sat = this.leadSatellite();
       if (sat) {
-        const sx = (geo.cx + Math.cos(sat.angle) * sat.dist * geo.R) / this.W;
-        const sy = (geo.cy + Math.sin(sat.angle) * sat.dist * geo.R * geo.flatten) / this.H;
+        const view = this.ribbonState;
+        const dist = view
+          ? satelliteDistance(view.geometry, view.tilt, view.alpha, this.M, sat, this.binaryScale)
+          : sat.dist;
+        const sx = (geo.cx + Math.cos(sat.angle) * dist * geo.R) / this.W;
+        const sy = (geo.cy + Math.sin(sat.angle) * dist * geo.R * geo.flatten) / this.H;
         m1x = (sx - 0.5) * aspect;
         m1y = 0.5 - sy;
         m1k = SECOND_MASS.k * this.C.massScale * sat.weight * s.form;
@@ -1407,8 +1557,27 @@ export class FieldEngine implements InputActions {
       }
     }
 
+    let m0x = mx;
+    let m0y = my;
+    let m0k = s.m0k;
+    let m0h = s.m0h;
+    const pair = this.binaryMasses(geo);
+    let m2 = [0, 0, 0, 0];
+    if (pair) {
+      m2 = [m1x, m1y, m1k * (1 - BINARY.satellite * pair.split), m1h];
+      m0x = (pair.first.x / this.W - 0.5) * aspect;
+      m0y = 0.5 - pair.first.y / this.H;
+      m0k = s.m0k * pair.first.k;
+      m0h = s.m0h * pair.first.h;
+      m1x = (pair.second.x / this.W - 0.5) * aspect;
+      m1y = 0.5 - pair.second.y / this.H;
+      m1k = s.m0k * pair.second.k;
+      m1h = s.m0h * pair.second.h;
+    }
+    const single = 1 - (pair ? pair.split : 0);
+
     const A = ALBUMS[s.alb];
-    const lobeAmp = this.M.relief * MORPH.coreLobe;
+    const lobeAmp = this.M.relief * MORPH.coreLobe * single;
     u.uLobeA.value.set(
       this.M.lobeCos[0] ?? 0,
       this.M.lobeSin[0] ?? 0,
@@ -1421,14 +1590,15 @@ export class FieldEngine implements InputActions {
       lobeAmp * s.form,
       -s.ringRot,
     );
-    u.uFlat.value = 1 + (coreFlattenOf(this.M.flatten) - 1) * s.form;
+    u.uFlat.value = 1 + (coreFlattenOf(this.M.flatten) - 1) * s.form * single;
     u.uWorld.value = this.worldUnit();
     this.guard(u.uGuard.value as THREE.Vector3);
-    u.uM0.value.set(mx, my, s.m0k, s.m0h);
+    u.uM0.value.set(m0x, m0y, m0k, m0h);
     u.uM1.value.set(m1x, m1y, m1k, m1h);
+    u.uM2.value.set(m2[0], m2[1], m2[2], m2[3]);
     u.uCur.value.set((this.mouse.x - 0.5) * aspect, 0.5 - this.mouse.y, s.curK);
     u.uWave.value.set(Math.max(0, s.waveR), s.waveA, 0);
-    u.uSpin.value = s.spin;
+    u.uSpin.value = s.spin * (1 - BINARY.spin * (pair ? pair.split : 0));
     u.uBlur.value = s.blur;
     u.uTime.value = s.t;
     u.uFade.value = Math.max(0, s.fade);

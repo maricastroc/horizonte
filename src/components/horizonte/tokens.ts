@@ -142,6 +142,36 @@ export const RELATIONS = {
   },
 } as const;
 
+export const BINARY = {
+  floor: 0.04,
+  arrival: 0.7,
+  alternation: 0.15,
+  climax: 0.12,
+  maxSplit: 1,
+  lead: 0.68,
+  emergence: 1.5,
+  gap: 0.45,
+  claim: 0.3,
+  slicePx: 5,
+  band: 0.5,
+  axis: [-2.8, -0.35],
+  clearance: 1.1,
+  leftward: 0.3,
+  jitter: 0.25,
+  tau: { split: 3.5, lead: 2.5 },
+  lens: 0.8,
+  spin: 0.75,
+  satellite: 0.5,
+  fragment: 0.5,
+  safe: [0.27, 0.79, 0.05, 0.9],
+  minScale: 0.7,
+  handoff: 0.04,
+  buffer: [1900, 1300],
+  bake: { split: 0.01, lead: 0.02, offset: 0.0005, budget: 5, dissolve: 0.4 },
+  dust: { spread: 0.55, pull: 0.8 },
+  labelGap: 46,
+} as const;
+
 export const TRACK_RING = {
   radius: 1.08,
   band: 0.1,
