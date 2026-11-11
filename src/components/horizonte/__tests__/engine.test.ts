@@ -4,6 +4,7 @@ const gl = vi.hoisted(() => ({
   renders: 0,
   sizes: [] as [number, number][],
   discards: 0,
+  invalidations: 0,
 }));
 
 vi.mock("../fieldMaterial", async (importReal) => {
@@ -18,6 +19,9 @@ vi.mock("../fieldMaterial", async (importReal) => {
       resize: (w: number, h: number) => {
         gl.sizes.push([w, h]);
         return { dw: w, dh: h };
+      },
+      invalidate: () => {
+        gl.invalidations++;
       },
       dispose: () => {
         gl.discards++;
@@ -521,6 +525,17 @@ describe("qualidade adaptativa", () => {
 });
 
 describe("window", () => {
+  it("a new composition size reallocates the world textures, and only then", () => {
+    const before = gl.invalidations;
+    engine.resize();
+    expect(gl.invalidations).toBe(before);
+    env.resize(900, 700);
+    engine.resize();
+    expect(gl.invalidations).toBe(before + 1);
+    engine.resize();
+    expect(gl.invalidations).toBe(before + 1);
+  });
+
   it("resizing reconfigures the composition and the layout", () => {
     env.resize(500, 900);
     engine.resize();
