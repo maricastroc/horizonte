@@ -322,6 +322,24 @@ export const LIGHT = {
 
 export const TRACK_BIAS = { blend: 0.55, cap: 0.25, lerp: 1.2 } as const;
 
+export const MOTION = {
+  attack: [0.24, 0.04],
+  release: [0.14, 1.2],
+  beatRelease: 0.45,
+  habitRatio: 5,
+  habit: [1.2, 6],
+  depth: [0.55, 1],
+  route: { floor: 0.35, slope: 1.3 },
+  track: { cap: 0.2, knee: 0.5 },
+  gate: {
+    sharpness: { floor: 0.074, knee: 0.12 },
+    sustain: { floor: 0.053, knee: 0.12 },
+    weight: { floor: 0.071, knee: 0.12 },
+    contrast: { floor: 0.109, knee: 0.12 },
+  },
+  lerp: 1.2,
+} as const;
+
 export const CHARGE = {
   fastSeconds: 20,
   ratio: 10,

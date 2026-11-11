@@ -996,6 +996,92 @@ de forma no navegador (ganham identidade parcial e uma seção só). Faixas de c
 escura ficam pouco visíveis quando a coroa se contrai. Os satélites do álbum
 continuam presentes na paisagem e às vezes competem com ela.
 
+## Experimento aberto — a assinatura de movimento
+
+**Entra desligado.** Ligue com `?x=motion` na URL ou
+`__horizonte.experiments.motion = true` no console. Desligado, a análise ao vivo
+recebe exatamente a resposta de antes (τ 0,12 s e 1,2 s, acento relativo ao
+hábito, roteamento 1:1) e o mundo é bit a bit o de antes.
+
+O diagnóstico: a identidade dos discos era de **forma**, não de **comportamento**.
+As silhuetas se distinguem de relance, mas todos os discos reagiam com as mesmas
+constantes de tempo, o mesmo roteamento de bandas e o mesmo operador de acento.
+Medido sobre o acervo, o operador de 0,12 s e 1,2 s comprimia a diversidade
+rítmica entre discos pela metade (a frequência característica do agudo variava
+16,6× na música e 7,5× no que chegava à tela). E, numa bancada com áudio real (ver
+abaixo), a lente variava só 0,2% a 3,4% durante a reprodução: o teto de P4 quase
+nunca era alcançado, porque o acento típico ficava muito abaixo dele.
+
+### De onde vêm os dados
+
+`scripts/analyze-motion.py` mede cada faixa no mesmo cache de WAV e gera
+`content/motion.generated.ts`. Âncoras fixas, como na assinatura.
+
+| Qualidade | Medida | Estabilidade entre metades | Redundância (\|r\| máx.) |
+| --- | --- | --: | --: |
+| Nitidez de ataque | p99 do envelope de ataques clareado sobre a mediana (log) | 0,76 | 0,52 (pulso) |
+| Sustentação | 1 − parte percussiva da energia (separação harmônico-percussiva) | 0,85 | 0,44 (pulso) |
+| Peso do grave | parte da potência abaixo de 120 Hz | 0,81 | 0,22 (nível) |
+| Microdinâmica | p90 − p10 do nível em 25 ms, dentro de blocos de 1 s | 0,91 | 0,41 (articulação) |
+| Grade | período do pulso, só com pulso da faixa ≥ 0,5 | 93% das metades em ±6% | — |
+
+Por faixa, a qualidade é a âncora do disco (média ponderada por duração) mais o
+desvio da faixa, com o mesmo portão de ruído e o mesmo joelho de P16/P17. O piso
+de cada portão é a instabilidade medida entre metades; o teto do desvio é 0,2. O
+disco continua dono da personalidade; a faixa a modula.
+
+### A gramática
+
+| Qualidade | Comportamento | Amplitude no acervo (por disco) | Fundamento |
+| --- | --- | --- | --- |
+| Nitidez de ataque | Tempo de subida da reação ao vivo (τ 240 → 40 ms) | 71 ms (*e-world*, *Чайка*) a 212 ms (*The Sheltering Sky*) | O tempo de subida do som vira o tempo de subida da resposta |
+| Sustentação | Tempo de relaxamento (τ 140 ms → 1,2 s) e hábito do acento (5× o relaxamento, entre 1,2 e 6 s) | 200 ms (*Чайка*) a 868 ms (*lebar*); hábito 1,2 a 4,3 s | O que o som sustenta, a resposta sustenta; o hábito mais longo deixa passar o inchaço lento que o de 1,2 s apagava |
+| Grade | Relaxamento limitado a 0,45 do período do pulso | 6 de 7 faixas de *0p*, 14 de 16 de *e-world* | Cada batida continua um evento separado, em vez de virar um borrão |
+| Microdinâmica | Profundidade: o acento passa a ser medido na variação típica da própria música (desvio absoluto médio na janela do hábito): um evento 2,5 vezes acima dessa variação, dividido pela profundidade (0,55 a 1), alcança o teto de P4 | 0,60 (*The Sheltering Sky*) a 0,86 (*Impromptu*) | O contraste entre evento e fundo que a música tem é o que a tela mostra; é o mesmo operador da carga, normalizado pela própria variação |
+| Peso do grave | Divisão da reação entre massa (lente, blur, parte grave do jato) e luz (fluxo do jato, dispersão, rim) | Massa 0,65 (*The Sheltering Sky*) a 1; luz 0,49 (*MKUltra*) a 1 | Correspondência intermodal grave ↔ pesado. Os ganhos nunca passam de 1: o teto de P4 continua sendo o teto |
+
+Só um disco de peso médio fica com massa e luz em 1, o roteamento de antes;
+quanto mais longe do meio, mais a reação vai para um dos lados. A profundidade não muda o teto de nenhum disco: muda
+quanto do teto o evento típico usa.
+
+O motor só lê a resposta (`attack`, `release`, `habit`, `depth`, `mass`,
+`light`), que desliza para a da faixa nova em cerca de um segundo. As qualidades
+em `motion.ts` são o vocabulário comum para as próximas etapas: a poeira, a
+persistência e a interpretação vão derivar delas os próprios parâmetros, sem
+mexer na análise.
+
+### Medido
+
+Bancada headless com o motor real e um emulador do `AnalyserNode` que lê o PCM da
+faixa na posição controlada. Comparado com o analisador real do navegador
+tocando a mesma faixa, o emulador erra 0,5% a 1,8% por banda. Catorze discos,
+três faixas cada, 30 s em trecho de nível típico, antes e depois:
+
+| | Antes | Depois |
+| --- | --: | --: |
+| Tempo de subida da reação, entre discos | 200–483 ms | **133–1650 ms** |
+| Subida × nitidez de ataque (Spearman) | −0,62 | **−0,73** |
+| Frequência característica do movimento | 0,53–1,33 Hz | **0,31–1,34 Hz** |
+| Desvio da lente durante a reprodução | 0,2–3,4% | **1,5–4,3%** |
+| Parte da variância que é do disco (frequência) | 0,62 | **0,65** |
+| Reconhece o disco só pelo movimento (acaso 0,07) | 0,07 | **0,19** |
+
+Nos pixels (capturas de 10 s, quadros desfocados para tirar o grão), *The
+Sheltering Sky* passa a se mover 3,5× menos e *Impromptu* 1,9× mais; a frequência
+do movimento de *Чайка* e *lebar* cai de 4,6 para 3,8 Hz e de 2,1 para 1,7 Hz.
+
+### O que não fica resolvido
+
+* A reação continua delicada: a lente varia 1,5% a 4,3%. Perto do núcleo a força
+  da lente satura (`k` 0,85) e nem muda; a personalidade aparece sobretudo no jato
+  e na tipografia a média distância do corpo.
+* A meia-vida visual acompanha a sustentação só moderadamente (Spearman 0,48):
+  em música densa, o próximo evento corta o decaimento antes de ele se mostrar.
+* Reverberação ainda não tem estimador; o relaxamento sai da sustentação.
+* Discos trazidos pelo usuário não têm essa análise no navegador e ficam com a
+  resposta neutra.
+* O jato continua fora de P4, como registrado na auditoria acima.
+
 ## O que não muda
 
 Colapso, cursor com massa, pausa e a camada de instrumentos ficam como estão. A
@@ -1027,4 +1113,5 @@ no pior disco. Registrado em `__tests__/ingest-envelope.test.ts`.
 ```bash
 python3 scripts/analyze-audio.py --report
 python3 scripts/analyze-form.py --report
+python3 scripts/analyze-motion.py --report
 ```
