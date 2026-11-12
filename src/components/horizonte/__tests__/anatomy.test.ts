@@ -20,13 +20,15 @@ import {
   compareSignature,
   inviteOf,
   medianOf,
-  nameFactOf,
+  nameWeightOf,
   questionsOf,
   readingOf,
   visibleSatellites,
   type CompareAxis,
+  type Question,
 } from "../anatomy";
 import { ALBUMS, CURATED_COUNT } from "../content";
+import { ANATOMY_EN } from "../i18n/anatomy.en";
 import { FieldEngine } from "../engine/FieldEngine";
 import type { FieldUniforms } from "../fieldMaterial";
 import { morphologyOf, pulseSpreadOf, type AlbumMorphology } from "../morphology";
@@ -67,6 +69,9 @@ const OWNS: Record<CompareAxis, readonly (typeof MORPH_FIELDS)[number][]> = {
   loudness: ["circuit", "coreRatio", "bandRatio"],
 };
 
+const say = (q: Question) => ANATOMY_EN.phrase(q);
+const part = (alb: number, p: Question["part"]) => questionsOf(alb).find((q) => q.part === p)!;
+
 const changed = (a: AlbumMorphology, b: AlbumMorphology) =>
   MORPH_FIELDS.filter((k) => Math.abs(a[k] - b[k]) > 1e-9);
 
@@ -78,24 +83,27 @@ describe("the questions a record asks", () => {
       expect(new Set(qs.map((q) => q.part)).size).toBe(6);
       for (let k = 1; k < qs.length; k++) expect(qs[k - 1].score).toBeGreaterThanOrEqual(qs[k].score);
       for (const q of qs) {
-        expect(q.ask.endsWith("?")).toBe(true);
-        expect(q.answer.length).toBeGreaterThan(20);
+        const p = say(q);
+        expect(p.ask.endsWith("?")).toBe(true);
+        expect(p.answer.length).toBeGreaterThan(20);
+        expect(p.what === null).toBe(!q.experiment);
         expect(q.reading.axis).toBe(AXIS_OF[q.part]);
+        expect(q.finding.part).toBe(q.part);
       }
     }
   });
 
   it("each record leads with what stands out in it", () => {
-    expect(questionsOf(EWORLD)[0].ask).toBe("Why are there four small bodies around it?");
-    expect(questionsOf(DARK)[0].ask).toBe("Why is the ring broken into pieces?");
-    expect(questionsOf(MKULTRA)[0].ask).toBe("Why does it lie so flat?");
-    expect(questionsOf(ASG)[0].ask).toBe("Why does it stand so open?");
-    expect(questionsOf(LEBAR)[0].ask).toBe("Why is its edge so jagged?");
+    expect(say(questionsOf(EWORLD)[0]).ask).toBe("Why are there four small bodies around it?");
+    expect(say(questionsOf(DARK)[0]).ask).toBe("Why is the ring broken into pieces?");
+    expect(say(questionsOf(MKULTRA)[0]).ask).toBe("Why does it lie so flat?");
+    expect(say(questionsOf(ASG)[0]).ask).toBe("Why does it stand so open?");
+    expect(say(questionsOf(LEBAR)[0]).ask).toBe("Why is its edge so jagged?");
   });
 
   it("the experiment says which way the record would change", () => {
-    const sat = (i: number) => questionsOf(i).find((q) => q.part === "satellites")!;
-    const pos = (i: number) => questionsOf(i).find((q) => q.part === "posture")!;
+    const sat = (i: number) => say(part(i, "satellites"));
+    const pos = (i: number) => say(part(i, "posture"));
     expect([sat(EWORLD).what, sat(EWORLD).label]).toEqual(["What if it were shorter?", "Shorter"]);
     expect([sat(ASG).what, sat(ASG).label]).toEqual(["What if it were longer?", "Longer"]);
     expect([pos(MKULTRA).what, pos(MKULTRA).label]).toEqual([
@@ -106,7 +114,7 @@ describe("the questions a record asks", () => {
   });
 
   it("the result names what the eye will see, counted by the real morphology", () => {
-    const sat = (i: number) => questionsOf(i).find((q) => q.part === "satellites")!;
+    const sat = (i: number) => say(part(i, "satellites"));
     expect(sat(EWORLD).result).toContain("two of its four small bodies dissolve");
     expect(sat(ASG).result).toContain("two small bodies appear");
     expect(visibleSatellites(compareMorphology(EWORLD, "duration"))).toBe(2);
@@ -115,7 +123,8 @@ describe("the questions a record asks", () => {
   it("speaks without technical numbers, except minutes", () => {
     for (let i = 0; i < CURATED_COUNT; i++) {
       for (const q of questionsOf(i)) {
-        for (const text of [q.ask, q.answer, q.what ?? "", q.result]) {
+        const en = say(q);
+        for (const text of [en.ask, en.answer, en.what ?? "", en.result]) {
           expect(text.replace(/\d+ minutes/g, "")).not.toMatch(/\d|dB|Hz|median/);
         }
       }
@@ -123,37 +132,40 @@ describe("the questions a record asks", () => {
   });
 
   it("a record close to the usual gets a neutral question and no experiment", () => {
-    const core = questionsOf(MKULTRA).find((q) => q.part === "core")!;
-    expect(core.what).toBeNull();
-    expect(core.ask).toBe("What sets the size of its dark center?");
+    const core = part(MKULTRA, "core");
+    expect(core.experiment).toBe(false);
+    expect(say(core).what).toBeNull();
+    expect(say(core).ask).toBe("What sets the size of its dark center?");
     expect(core.score).toBeCloseTo(0, 4);
   });
 
   it("gaps are explained by the pulse between tracks, never by dynamics", () => {
-    const gaps = questionsOf(DARK).find((q) => q.part === "gaps")!;
+    const gaps = part(DARK, "gaps");
     expect(gaps.reading.axis).toBe("spread");
-    expect(gaps.answer).toMatch(/pulse/);
-    expect(gaps.answer).not.toMatch(/dynamic|volume|loud/i);
+    expect(say(gaps).answer).toMatch(/pulse/);
+    expect(say(gaps).answer).not.toMatch(/dynamic|volume|loud/i);
   });
 
   it("the invitation is the record's leading question", () => {
     for (let i = 0; i < CURATED_COUNT; i++) {
-      expect(inviteOf(i)).toEqual({ part: questionsOf(i)[0].part, line: questionsOf(i)[0].ask });
+      expect(inviteOf(i)).toEqual({ part: questionsOf(i)[0].part });
     }
   });
 
   it("the deeper layer keeps the measurements and their standing", () => {
-    expect(readingOf(EWORLD, "duration").standing).toBe("longest of 14");
-    expect(readingOf(EWORLD, "pulse").standing).toBe("steadiest of 14");
-    expect(readingOf(ASG, "duration").standing).toBe("shortest of 14");
-    expect(readingOf(ASG, "brightness").standing).toBe("brightest of 14");
-    expect(readingOf(ASG, "dynamics").standing).toBe("most compressed of 14");
-    expect(readingOf(LEBAR, "dynamics").standing).toBe("most dynamic of 14");
-    expect(readingOf(DARK, "spread").standing).toBe("most uneven of 14");
-    expect(readingOf(MKULTRA, "brightness").standing).toBe("darkest of 14");
-    expect(readingOf(DUST, "pulse").standing).toBe("loosest of 14");
-    expect(readingOf(LEBAR, "brightness").standing).toBe("12th brightest of 14");
-    expect(nameFactOf(EWORLD)).toBe(
+    const standing = (alb: number, axis: CompareAxis) => ANATOMY_EN.standing(readingOf(alb, axis));
+    expect(standing(EWORLD, "duration")).toBe("longest of 14");
+    expect(standing(EWORLD, "pulse")).toBe("steadiest of 14");
+    expect(standing(ASG, "duration")).toBe("shortest of 14");
+    expect(standing(ASG, "brightness")).toBe("brightest of 14");
+    expect(standing(ASG, "dynamics")).toBe("most compressed of 14");
+    expect(standing(LEBAR, "dynamics")).toBe("most dynamic of 14");
+    expect(standing(DARK, "spread")).toBe("most uneven of 14");
+    expect(standing(MKULTRA, "brightness")).toBe("darkest of 14");
+    expect(standing(DUST, "pulse")).toBe("loosest of 14");
+    expect(standing(LEBAR, "brightness")).toBe("12th brightest of 14");
+    expect(nameWeightOf(EWORLD)).toBe(704);
+    expect(ANATOMY_EN.nameFact(nameWeightOf(EWORLD))).toBe(
       "The name is set at weight 704: the louder the record, the heavier the type.",
     );
   });
@@ -165,7 +177,7 @@ describe("the questions a record asks", () => {
         .sort((a, b) => a - b);
       expect(medianOf(axis)).toBeCloseTo((xs[6] + xs[7]) / 2, 9);
     }
-    expect(readingOf(EWORLD, "duration").medianShown).toBe("34 min");
+    expect(ANATOMY_EN.shown("duration", readingOf(EWORLD, "duration").median)).toBe("34 min");
   });
 });
 

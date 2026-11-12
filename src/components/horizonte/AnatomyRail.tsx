@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { COLOUR_NOTE, nameFactOf, questionsOf, type Invite, type Question } from "./anatomy";
+import { nameWeightOf, questionsOf, type Invite, type Question } from "./anatomy";
+import { CURATED_COUNT } from "./content";
 import type { FieldEngine } from "./engine/FieldEngine";
+import { ANATOMY_EN as W } from "./i18n/anatomy.en";
+import type { Phrasing } from "./i18n/types";
 import type { Snapshot } from "./types";
 
 export type AlbumView = "tracks" | "shape";
@@ -81,12 +84,14 @@ export function AnatomyTabs({
 }
 
 export function AnatomyInvite({
+  alb,
   invite,
   onOpen,
   compact,
   ink,
   enabled,
 }: {
+  alb: number;
   invite: Invite | null;
   onOpen: () => void;
   compact: boolean;
@@ -96,6 +101,8 @@ export function AnatomyInvite({
   const [shown, setShown] = useState<Invite | null>(invite);
   if (invite && invite !== shown) setShown(invite);
   if (!shown) return null;
+  const lead = questionsOf(alb).find((q) => q.part === shown.part);
+  const line = lead ? W.phrase(lead).ask : "Why this shape?";
   return (
     <button
       type="button"
@@ -116,7 +123,7 @@ export function AnatomyInvite({
       <span aria-hidden className="mt-[5px] block h-[14px] w-[3px]" style={{ background: ink }} />
       <span className="flex flex-col gap-2">
         <span className={`${QUESTION} ${compact ? "text-[18px]" : "text-[16px]"} leading-[1.28]`}>
-          {shown.line}
+          {line}
         </span>
         <span className="text-ink-text group-hover:underline group-focus-visible:underline">
           Find out ›
@@ -129,11 +136,11 @@ export function AnatomyInvite({
 function Numbers({ q, extra }: { q: Question; extra: string[] }) {
   const r = q.reading;
   const rows: [string, string][] = [
-    ["Measure", r.label],
-    ["This record", r.shown],
-    ["Usual here", `${r.medianShown} (median of the 14)`],
-    ["Standing", r.standing],
-    ["Drawn as", q.drawn],
+    ["Measure", W.measure[r.axis]],
+    ["This record", W.shown(r.axis, r.value)],
+    ["Usual here", `${W.shown(r.axis, r.median)} (median of the ${CURATED_COUNT})`],
+    ["Standing", W.standing(r)],
+    ["Drawn as", W.drawn[q.part]],
   ];
   return (
     <div className="flex flex-col gap-2 pt-1.5">
@@ -168,6 +175,11 @@ export function ShapePanel({
   enabled: boolean;
 }) {
   const questions = useMemo(() => questionsOf(snap.alb), [snap.alb]);
+  const phrased = useMemo(
+    () => new Map<Question, Phrasing>(questions.map((q) => [q, W.phrase(q)])),
+    [questions],
+  );
+  const say = (q: Question) => phrased.get(q)!;
   const lead = questions[0];
   const open = questions.find((q) => q.part === snap.focus) ?? lead;
   const key = `${snap.alb}:${open?.part}`;
@@ -220,8 +232,9 @@ export function ShapePanel({
   const others = questions.filter((q) => q !== open);
   const also = others.filter((q) => questions.indexOf(q) < SHOWN).slice(0, SHOWN - 1);
   const rest = others.filter((q) => !also.includes(q));
-  const extra = [nameFactOf(snap.alb), COLOUR_NOTE];
-  const said = trying ? (alt ? `${open.label}. ${open.result}` : "As it is.") : "";
+  const extra = [W.nameFact(nameWeightOf(snap.alb)), W.colourNote];
+  const o = say(open);
+  const said = trying ? (alt ? `${o.label}. ${o.result}` : "As it is.") : "";
 
   const askButton = (q: Question) => (
     <li key={q.part}>
@@ -241,7 +254,7 @@ export function ShapePanel({
           compact ? "min-h-[48px] py-2.5" : "py-2",
         ].join(" ")}
       >
-        <span className={`${PROSE} text-[12.5px] leading-[1.35]`}>{q.ask}</span>
+        <span className={`${PROSE} text-[12.5px] leading-[1.35]`}>{say(q).ask}</span>
         <span aria-hidden className="text-ink-faint">›</span>
       </button>
     </li>
@@ -262,11 +275,11 @@ export function ShapePanel({
       }}
     >
       <section
-        aria-label={open.ask}
+        aria-label={o.ask}
         className={["flex flex-col border-b border-rule-2", compact ? "py-4" : "py-4.5"].join(" ")}
       >
         <h3 className={`${QUESTION} ${compact ? "text-[18px]" : "text-[17px]"} leading-[1.26]`}>
-          {trying && open.what ? open.what : open.ask}
+          {trying && o.what ? o.what : o.ask}
         </h3>
         <p
           className={[
@@ -276,11 +289,11 @@ export function ShapePanel({
             trying && alt ? "text-ink-text" : "text-ink-text-2",
           ].join(" ")}
         >
-          {trying && alt ? open.result : open.answer}
+          {trying && alt ? o.result : o.answer}
         </p>
 
         {!trying &&
-          (open.what ? (
+          (o.what ? (
             <button
               type="button"
               tabIndex={enabled ? 0 : -1}
@@ -294,7 +307,7 @@ export function ShapePanel({
               ].join(" ")}
               style={{ boxShadow: `inset 0 -1px 0 ${ink}` }}
             >
-              {open.what} ▸
+              {o.what} ▸
             </button>
           ) : (
             <p className={`${PROSE} mt-4 text-[12px] leading-[1.45] text-ink-dim`}>
@@ -317,7 +330,7 @@ export function ShapePanel({
             >
               {[
                 { on: !alt, label: "As it is", value: false },
-                { on: alt, label: open.label, value: true },
+                { on: alt, label: o.label, value: true },
               ].map((b, i) => (
                 <button
                   key={b.label}

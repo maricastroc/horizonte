@@ -809,7 +809,7 @@ describe("why this shape", () => {
     const fake = mount({
       scale: "album",
       alb: EWORLD,
-      invite: { part: "satellites", line: "Why are there four small bodies around it?" },
+      invite: { part: "satellites" },
     });
     expect(screen.getByText("Why are there four small bodies around it?")).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: /Find out/ }));

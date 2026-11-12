@@ -482,6 +482,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       {view === "tracks" ? (
         <div id="album-panel-tracks" role="tabpanel" aria-labelledby="album-tab-tracks">
           <AnatomyInvite
+            alb={snap.alb}
             invite={snap.invite}
             onOpen={openInvite}
             compact={dense}
