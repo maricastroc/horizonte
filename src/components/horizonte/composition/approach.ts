@@ -1,4 +1,3 @@
-import type { Satellite } from "../morphology";
 import { APPROACH } from "../tokens";
 import type { FieldState } from "../types";
 
@@ -23,13 +22,6 @@ export function stagesOf(s: Pick<FieldState, "fadeSel" | "scale">): Stages {
     satellites: band(f, APPROACH.satellites),
     labels: band(f, APPROACH.labels),
     push: s.scale === "collection" ? 0 : Math.sin(Math.PI * Math.min(1, Math.max(0, f))),
-  };
-}
-
-export function emergeOf(sat: Satellite, e: number): { angle: number; dist: number } {
-  return {
-    angle: sat.angle + (1 - e) * APPROACH.satSwing,
-    dist: sat.dist * (APPROACH.satFrom + (1 - APPROACH.satFrom) * e),
   };
 }
 

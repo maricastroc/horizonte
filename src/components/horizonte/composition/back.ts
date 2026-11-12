@@ -21,7 +21,7 @@ import { drawFacing, drawGhost, type BodyFrame, type FocusSatellite } from "./fo
 import type { RingBakery, SegShape } from "./ring";
 import { ls, type Ctx } from "./ctx";
 import { stageBox, type Bands } from "./bands";
-import { emergeOf, namePlates, stagesOf } from "./approach";
+import { namePlates, stagesOf } from "./approach";
 import {
   albPos,
   atmosphereOf,
@@ -89,6 +89,8 @@ function drawRing(
   x.restore();
 }
 
+const widths = new Map<string, number>();
+
 const smooth01 = (v: number) => {
   const t = Math.min(1, Math.max(0, v));
   return t * t * (3 - 2 * t);
@@ -125,15 +127,13 @@ function drawSatellites(
   fade: number,
   ink: string,
   out: FocusSatellite[] | null = null,
-  emerge = 1,
 ) {
   if (fade <= 0.01) return;
   x.save();
   for (const sat of m.satellites) {
     if (sat.weight <= 0.02) continue;
-    const at = emergeOf(sat, emerge);
-    const px = bx + Math.cos(at.angle) * at.dist * R;
-    const py = by + Math.sin(at.angle) * at.dist * R * m.flatten;
+    const px = bx + Math.cos(sat.angle) * sat.dist * R;
+    const py = by + Math.sin(sat.angle) * sat.dist * R * m.flatten;
     const r = satRadiusOf(m, sat) * R;
     const a = fade * sat.weight;
     const rr = r * (1 + MORPH.satRim * 0.5);
@@ -280,6 +280,7 @@ export function drawBack(
   x.fillStyle = g0;
   x.fillRect(0, 0, W, H);
 
+  const tags: { i: number; nx: number; ty: number; tsz: number; line: number; alpha: number }[] = [];
   const order = ALBUMS.map((_, i) => i).sort(
     (p, q) => Math.abs(q - s.nav) - Math.abs(p - s.nav),
   );
@@ -293,6 +294,7 @@ export function drawBack(
       drawSilhouette(x, sil.sharp, fg.cx, fg.cy, fg.R, alpha, fg.flatten);
       const rim = alpha * SILHOUETTE.focusRim * glow;
       drawSilhouette(x, sil.rim, fg.cx, fg.cy, fg.R, rim, fg.flatten, "lighter");
+      drawSatellites(x, fg.cx, fg.cy, fg.R, morphOf(i), alpha, rgba(ALBUMS[i].inkA, 0.9));
       continue;
     }
     const p = albPos(i, s, L);
@@ -335,6 +337,8 @@ export function drawBack(
       );
     }
 
+    drawSatellites(x, nx, ny, nb.R, mi, a * (1 - blur * 0.6), rgba(ALBUMS[i].inkA, 0.9));
+
     const away = recede ? smooth01((Math.abs(p.d) - 0.5) / 0.4) : 1;
     const legible = recede ? smooth01((p.depth - 0.12) / 0.2) : 1;
     x.save();
@@ -351,28 +355,58 @@ export function drawBack(
     x.ellipse(nx, ny, br, br * (recede ? mi.flatten : 1), 0, 2.0, 4.1);
     x.stroke();
 
-    x.textAlign = "center";
-    ls(x, "-0.035em");
-    x.globalAlpha = a * (i === s.hoverBody ? 1 : 0.66) * away * legible;
-    x.fillStyle = COLOR.inkText;
+    x.restore();
 
-    const nw = weights[i];
     const tsz = M * GEO.neighborR * p.depth;
-    const ty = ny + br * (recede ? mi.flatten : 1) + M * 0.075 * p.depth;
-    x.font = `${nw} ${tsz}px ${fonts.archivo}`;
-    x.fillText(ALBUMS[i].artist, nx, ty);
+    const line = M * 0.03 * p.depth;
+    let ty = ny + br * (recede ? mi.flatten : 1) + M * 0.075 * p.depth;
+    if (recede) {
+      const half = nb.R * mi.rMax * mi.flatten;
+      const gap = line * NAMES.clear;
+      ty = p.d < 0 ? ny - half - gap - line : ny + half + gap + tsz * 0.8;
+    }
+    tags.push({ i, nx, ty, tsz, line, alpha: a * away * legible });
+  }
+
+  x.save();
+  x.textAlign = "center";
+  for (const t of tags) {
+    const hot = t.i === s.hoverBody;
+    ls(x, "-0.035em");
+    x.globalAlpha = t.alpha * (hot ? 1 : 0.66);
+    x.fillStyle = COLOR.inkText;
+    x.font = `${weights[t.i]} ${NAMES.probe}px ${fonts.archivo}`;
+    const key = `${x.font}|${ALBUMS[t.i].artist}`;
+    let unit = widths.get(key);
+    if (unit === undefined) {
+      unit = x.measureText(ALBUMS[t.i].artist).width / NAMES.probe;
+      widths.set(key, unit);
+    }
+    x.font = `${weights[t.i]} ${t.tsz}px ${fonts.archivo}`;
+    const half = (unit * t.tsz) / 2;
+    const edge = W * NAMES.edge;
+    const nx = Math.min(Math.max(t.nx, edge + half), W - edge - half);
+    const cy = t.ty + t.line * 0.5 - t.tsz * 0.3;
+    const reach = half + t.tsz * NAMES.pool;
+    x.save();
+    x.translate(nx, cy);
+    x.scale(1, (t.tsz * 1.6 + t.line) / reach);
+    const pool = x.createRadialGradient(0, 0, 0, 0, 0, reach);
+    pool.addColorStop(0, NAMES.halo);
+    pool.addColorStop(1, "rgba(7,7,10,0)");
+    x.globalAlpha = t.alpha;
+    x.fillStyle = pool;
+    x.fillRect(-reach, -reach, reach * 2, reach * 2);
+    x.restore();
+    x.fillText(ALBUMS[t.i].artist, nx, t.ty);
 
     ls(x, "0.2em");
-    x.globalAlpha = a * (i === s.hoverBody ? 0.95 : 0.5) * away * legible;
+    x.globalAlpha = t.alpha * (hot ? 0.95 : 0.5);
     x.font = `500 ${W * 0.0092}px ${fonts.mono}`;
-    x.fillText(
-      `${ALBUMS[i].cat} · ${labels.tracks(ALBUMS[i].tracks.length)}`,
-      nx,
-      ty + M * 0.03 * p.depth,
-    );
-    x.textAlign = "left";
-    x.restore();
+    const meta = `${ALBUMS[t.i].cat} · ${labels.tracks(ALBUMS[t.i].tracks.length)}`;
+    x.fillText(meta, nx, t.ty + t.line);
   }
+  x.restore();
 
   const R = g.R;
   drawSatellites(
@@ -381,10 +415,9 @@ export function drawBack(
     by,
     R,
     morph,
-    stage.satellites * (1 - s.mix),
+    stage.open * (1 - s.mix),
     inkA(0.9),
     frame ? frame.satellites : null,
-    stage.satellites,
   );
 
   if (stage.light > 0.02) {

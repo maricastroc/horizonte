@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { emergeOf, namePlates, stagesOf } from "../composition/approach";
+import { namePlates, stagesOf } from "../composition/approach";
 import { profileOf } from "../composition/relief";
 import { ALBUMS } from "../content";
 import { morphologyOf } from "../morphology";
-import { APPROACH, RELIEF } from "../tokens";
+import { RELIEF } from "../tokens";
 
 const at = (fadeSel: number, scale: "album" | "collection" = "album") => stagesOf({ fadeSel, scale });
 
@@ -30,13 +30,6 @@ describe("the approach unfolds in order", () => {
     expect(at(0.5, "collection").push).toBe(0);
   });
 
-  it("satellites rise from inside their orbit and swing into place", () => {
-    const sat = { angle: 1, dist: 1.4, size: 0.2, weight: 1 };
-    expect(emergeOf(sat, 1)).toEqual({ angle: 1, dist: 1.4 });
-    const early = emergeOf(sat, 0);
-    expect(early.dist).toBeCloseTo(1.4 * APPROACH.satFrom, 10);
-    expect(early.angle).toBeCloseTo(1 + APPROACH.satSwing, 10);
-  });
 });
 
 describe("the crown opens into plates", () => {
