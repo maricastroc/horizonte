@@ -39,6 +39,7 @@ import {
   mixMorphology,
   morphologyOf,
   NEUTRAL_MORPHOLOGY,
+  wholeReachOf,
   type AlbumMorphology,
 } from "../morphology";
 import {
@@ -101,6 +102,7 @@ import {
   MORPH,
   APPROACH,
   BREATH,
+  LENS,
   RELIEF,
   RING,
   SECOND_MASS,
@@ -726,6 +728,29 @@ export class FieldEngine implements InputActions {
     return Math.max(0.05, (2 * stageBox(this.W, this.H, b).halfH) / Math.max(1, this.H));
   }
 
+  private lensOf(): (x: number, y: number) => [number, number, number] {
+    const s = this.st;
+    const W = this.W;
+    const H = this.H;
+    const geo = bodyGeom(W, H, s, this.L, this.M);
+    const aspect = W / H;
+    const mx = (geo.cx / W - 0.5) * aspect;
+    const my = 0.5 - geo.cy / H;
+    const world = this.worldUnit();
+    const spin = s.spin;
+    const mass = s.m0k;
+    return (x, y) => {
+      const dx = ((x / W - 0.5) * aspect - mx) / world;
+      const dy = (0.5 - y / H - my) / world;
+      const r = Math.max(Math.hypot(dx, dy), 1e-4);
+      const pull = Math.min(mass / (r * r + LENS.soft), LENS.cap);
+      const k = pull * LENS.gain * world * H;
+      const ux = dx / r;
+      const uy = dy / r;
+      return [(-ux - uy * spin) * k, (uy - ux * spin) * k, pull / LENS.cap];
+    };
+  }
+
   private guard(out: THREE.Vector3) {
     if (!this.L.staged) {
       out.set(0, 1, 1);
@@ -886,6 +911,7 @@ export class FieldEngine implements InputActions {
       fieldVersion: this.strain.version,
       compare,
       breath: (i) => this.breathOf(i),
+      lens: this.lensOf(),
       frame: this.focusFrame(),
       facing: this.focusPart() === "posture" ? ease(this.focusAmt) : 0,
       ghost:
@@ -1178,7 +1204,7 @@ export class FieldEngine implements InputActions {
       const front = collectionBody(this.W, this.H, s, this.L, focused, fm);
       const reach =
         Math.hypot(body.cx - front.cx, (body.cy - front.cy) / front.flatten) / Math.max(1, front.R);
-      exposed = clamp((reach - fm.rMax) / SECOND_MASS.behind, 0, 1);
+      exposed = clamp((reach - wholeReachOf(fm)) / SECOND_MASS.behind, 0, 1);
     }
     m.k += (k - m.k) * e;
     const veil = this.intake ? 1 : settled * exposed;

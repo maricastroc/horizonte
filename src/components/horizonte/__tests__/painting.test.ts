@@ -8,10 +8,10 @@ import { collectionBody, layoutFor } from "../composition/layout";
 import { RingBakery } from "../composition/ring";
 import { ALBUMS, boundsOf } from "../content";
 import { fieldConstantsOf } from "../field";
-import { morphologyOf } from "../morphology";
+import { morphologyOf, wholeReachOf } from "../morphology";
 import { createFieldUniforms } from "../fieldMaterial";
 import { initialState } from "../state";
-import { PARTICLES } from "../tokens";
+import { NAMES, PARTICLES } from "../tokens";
 import type { FieldState, Mode, Scale, Variant } from "../types";
 import { engineHarness, paintContext, type EngineHarness } from "./fakes";
 
@@ -279,7 +279,7 @@ describe("neighbour names in the collection", () => {
   const L = layoutFor("desktop");
   const s = state({ nav: 5, navT: 5, alb: 5 });
 
-  const texts = () => {
+  const texts = (lens?: (x: number, y: number) => [number, number, number]) => {
     const reg = paintContext(10);
     const seen: { text: string; x: number; y: number }[] = [];
     const ctx = new Proxy(reg.ctx, {
@@ -290,23 +290,40 @@ describe("neighbour names in the collection", () => {
         return Reflect.get(base, key);
       },
     });
-    drawBack(ctx, W, H, s, L, backDeps());
+    drawBack(ctx, W, H, s, L, { ...backDeps(), lens });
     return seen;
   };
 
   const bodyOf = (i: number) => {
     const m = morphOf(i);
     const b = collectionBody(W, H, s, L, i, m);
-    return { ...b, half: b.R * m.rMax * m.flatten };
+    return { ...b, half: b.R * wholeReachOf(m) * m.flatten };
   };
 
-  it("a neighbour rising to the left is named above its body, clear of the core's pull", () => {
+  it("names land inside the frame and below the navigation where the lens actually shows them", () => {
+    const push: [number, number, number] = [200, 120, 0];
+    const neighbours = ALBUMS.filter((_, i) => i !== s.alb).map((a) => a.artist);
+    let checked = 0;
+    for (const t of texts(() => push)) {
+      if (!neighbours.includes(t.text)) continue;
+      checked++;
+      const screenX = t.x - push[0];
+      const screenY = t.y - push[1];
+      expect(screenX).toBeGreaterThanOrEqual(W * NAMES.edge);
+      expect(screenX).toBeLessThanOrEqual(W * (1 - NAMES.edge));
+      expect(screenY).toBeGreaterThanOrEqual(H * NAMES.ceiling);
+      expect(screenY).toBeLessThanOrEqual(H * NAMES.floor);
+    }
+    expect(checked).toBeGreaterThan(2);
+  });
+
+  it("a neighbour whose caption would cover the lockup is named above its body instead", () => {
     const name = texts().find((t) => t.text === ALBUMS[4].artist)!;
     const body = bodyOf(4);
     expect(name.y).toBeLessThan(body.cy - body.half);
   });
 
-  it("a neighbour sinking to the right is named below its body", () => {
+  it("otherwise a neighbour is captioned below its body", () => {
     const name = texts().find((t) => t.text === ALBUMS[6].artist)!;
     const body = bodyOf(6);
     expect(name.y).toBeGreaterThan(body.cy + body.half);

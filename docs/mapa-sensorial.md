@@ -162,6 +162,21 @@ sem fendas de setor nem estratos, suavizados por uma média móvel circular dupl
 de 3,5% de volta (`wholeCrownAt`, 2048 amostras). Sem a suavização, a espessura
 da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
 
+* **A leitura de identidade.** Medido com a silhueta monocromática no relance
+  do guardrail, a distinção da coroa vinha quase toda do tamanho (sem ele, a
+  correlação média sobe de 0,58 para 0,82) e do achatamento; os lobos, que são o
+  contorno, não contribuíam (0,584 → 0,580 sem eles), porque `relief` fica entre
+  0,06 e 0,19 no acervo e a borda interna acompanhava a externa com espessura
+  constante. A coroa da coleção (`identityOf`, `IDENTITY`) lê a mesma morfologia
+  de mais longe: lobos com ganho 2,2 e teto suave 0,45 (`tanh`), contraste de
+  espessura entre faixas ×1,6, e a borda interna segue só 30% dos lobos, de modo
+  que a massa se acumula onde o envelope tem energia; a banda nunca afina abaixo
+  de 45% da espessura. Resultado (média / pior par): 0,584 / 0,958 → 0,544 /
+  0,881; *Le Manoir* × *The Sheltering Sky* deixam de ser gêmeos. Caricatura em
+  torno da média e excentricidade (M7) como deslocamento do furo foram medidas e
+  descartadas (não mexem no pior par). A visão do álbum continua com a geometria
+  medida; a aproximação interpola de uma para a outra.
+  `__tests__/identity.test.ts` falha se a coleção voltar a convergir.
 * **Luz.** A borda voltada para `LIGHT.base` acende: na borda externa do lado
   da luz e na borda do furo do lado oposto. A face não é preta: é a capa
   desfocada em 7 px sob `COLOR.body`, e o que sobra dela são veios, as costuras
@@ -177,9 +192,12 @@ da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
   quanto da face escurece (84% a 60%) e quanto o lado da luz devolve (0,04 a
   0,20). Discos de timbre escuro ficam foscos e fundos; os brilhantes, acetinados.
   Sem isso, uma luz e um material iguais para todos aproximavam as silhuetas.
-* **Satélites.** A coleção mostra os satélites (M9) como corpos escuros com
-  borda, no lugar definitivo, no foco e em cada vizinho: a duração do disco
-  aparece sem abrir. Ao abrir, só a luz e a massa deles mudam.
+* **Satélites.** A coleção mostra os satélites (M9) no lugar definitivo, no
+  foco e em cada vizinho, com o material da coroa: face com a tinta do disco,
+  gradiente para a luz e borda fina do lado iluminado. Antes o corpo era
+  `COLOR.body`, da cor do vazio, e só sobrava um arco grosso que parecia um
+  glifo solto. Na coleção a órbita escala com a coroa de identidade
+  (`wholeReachOf / rMax`), para manter a mesma relação física com o corpo.
 * **Orientação.** Na coleção o anel repousa em `RING.anchor`, mesmo com o disco
   tocando: é a orientação em que as bordas foram assadas.
 * **Profundidade.** Desktop e tablet usam uma fileira que recua: cada passo
@@ -195,13 +213,17 @@ da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
   profundidade de campo sem filtro por quadro. O núcleo e o rótulo de cada
   vizinho só aparecem depois de |d| = 0,5, onde o núcleo do shader deixa de ser
   dele.
-* **Nomes dos vizinhos.** Ficam fora do furo, onde a segunda massa enrolava o
-  texto num anel ilegível: acima do corpo para os vizinhos que sobem à esquerda,
-  abaixo para os que descem à direita, ainda dentro da lente. São desenhados
-  numa segunda passada, depois de todos os corpos, sobre uma poça de sombra
-  (gradiente radial achatado; `shadowBlur` e `strokeText` custavam 0,6–0,8 ms
-  por quadro) e presos a 6% das bordas, margem que absorve o empurrão da lente.
-  A largura de cada nome é medida uma vez e escalada pelo tamanho.
+* **Nomes dos vizinhos.** Uma lógica só: legenda abaixo do corpo, a uma
+  distância proporcional ao tamanho do nome (logo, à profundidade), medida a
+  partir da coroa de identidade; acima só quando abaixo cobriria o lockup
+  principal. Os vizinhos ao lado do foco (|d| ≤ 1,5), que carregam a segunda
+  massa, ficam fora do raio em que a lente dela satura (0,154 H). A posição na
+  tela é verificada pela própria lente do foco (`lens`, o mesmo `pullOf` do
+  shader): se o nome cairia fora da moldura, sob a navegação (12% da altura) ou
+  na faixa de controles, ele é corrigido onde realmente aparece; se a correção
+  o levasse para a zona em que a lente do foco satura, onde ele viraria um anel
+  em volta do núcleo, ele esmaece em vez de mudar de lugar. Segunda passada,
+  sobre uma poça de sombra; largura medida uma vez.
 * **Distinção, medida.** Correlação par a par das silhuetas da coleção: no
   relance do guardrail (24 px) a forma só vai de 0,614 / 0,961 (média / pior par)
   a 0,608 / 0,955 com os satélites, porque os pares quase gêmeos (*Le Manoir* ×
