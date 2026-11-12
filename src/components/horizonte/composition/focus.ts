@@ -311,6 +311,51 @@ export function drawGhost(
   x.restore();
 }
 
+export function traceOutline(
+  x: CanvasRenderingContext2D,
+  m: AlbumMorphology,
+  cx: number,
+  cy: number,
+  R: number,
+  flatten: number,
+  rot: number,
+) {
+  const steps = 360;
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const a = t * TAU + rot;
+    const r = topOf(m, t) * R;
+    const px = cx + Math.cos(a) * r;
+    const py = cy + Math.sin(a) * r * flatten;
+    if (i === 0) x.moveTo(px, py);
+    else x.lineTo(px, py);
+  }
+  x.closePath();
+}
+
+export function drawFacing(
+  x: CanvasRenderingContext2D,
+  m: AlbumMorphology,
+  cx: number,
+  cy: number,
+  R: number,
+  rot: number,
+  color: string,
+  width: number,
+) {
+  x.save();
+  x.globalAlpha = 1;
+  x.globalCompositeOperation = "source-over";
+  x.strokeStyle = color;
+  x.lineWidth = width;
+  x.lineJoin = "round";
+  x.setLineDash(ANATOMY.facing.dash.map((d) => d * width));
+  x.beginPath();
+  traceOutline(x, m, cx, cy, R, 1, rot);
+  x.stroke();
+  x.restore();
+}
+
 export function drawFocus(
   mask: CanvasRenderingContext2D,
   W: number,
@@ -353,6 +398,14 @@ export function drawFocus(
   } else if (part === "posture") {
     const ring = crown(mask, f);
     ellipse(mask, core.x, core.y, core.rx * m, core.ry * m);
+    if (ring) {
+      mask.strokeStyle = KEEP;
+      mask.lineWidth = ANATOMY.focus.part.line * 2 * px;
+      mask.lineJoin = "round";
+      mask.beginPath();
+      traceOutline(mask, f.m!, f.bx, f.by, f.R, 1, f.rot);
+      mask.stroke();
+    }
     any = ring || core.rx > 0;
   } else if (part === "name" && f.name) {
     mask.font = f.name.font;

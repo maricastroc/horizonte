@@ -280,5 +280,6 @@ export const ANATOMY = {
   },
   compare: { duration: 1.1, steps: 3, peek: 0.35 },
   ghost: { alpha: 0.42, width: 1.1, color: [0.937, 0.922, 0.89] as Rgb },
+  facing: { alpha: 0.5, dash: [4, 5] as const },
   invite: { dwell: 9, shown: 16 },
 } as const;

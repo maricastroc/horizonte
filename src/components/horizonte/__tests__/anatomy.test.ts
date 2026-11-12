@@ -34,7 +34,7 @@ import { ANATOMY_PT } from "../i18n/anatomy.pt-BR";
 import { FieldEngine } from "../engine/FieldEngine";
 import type { FieldUniforms } from "../fieldMaterial";
 import { morphologyOf, pulseSpreadOf, shellsAt, type AlbumMorphology } from "../morphology";
-import { drawFocus, drawGhost, emptyFrame } from "../composition/focus";
+import { drawFacing, drawFocus, drawGhost, emptyFrame } from "../composition/focus";
 import { ANATOMY, IDLE_MS } from "../tokens";
 import { engineHarness, paintContext, type EngineHarness } from "./fakes";
 
@@ -426,6 +426,23 @@ describe("the isolation mask", () => {
     expect(lit(r.ops, "fill", LIGHT)).toBe(0);
   });
 
+  it("posture keeps the face-on outline lit, so the reference is never dimmed", () => {
+    const r = record();
+    expect(drawFocus(r.ctx, 1280, frameOf(MKULTRA), "posture", core)).toBe(true);
+    expect(lit(r.ops, "stroke", KEEP)).toBe(1);
+  });
+
+  it("the face-on reference is one closed dashed outline, round whatever the tilt", () => {
+    const paint = paintContext();
+    const m = morphologyOf(ALBUMS[MKULTRA].signature, ALBUMS[MKULTRA].tracks.length);
+    drawFacing(paint.ctx, m, 640, 400, 260, 0.3, "rgba(239,235,227,0.5)", 1.1);
+    expect(paint.calls.filter((c) => c === "setLineDash")).toHaveLength(1);
+    expect(paint.calls.filter((c) => c === "closePath")).toHaveLength(1);
+    expect(paint.calls.filter((c) => c === "stroke")).toHaveLength(1);
+    expect(paint.calls).not.toContain("fill");
+    expect(paint.calls).not.toContain("ellipse");
+  });
+
   it("gaps, layers and edge no longer light the same thing", () => {
     const sign = (part: "gaps" | "strata" | "contour") => {
       const r = record();
@@ -673,6 +690,26 @@ describe("anatomy in the engine", () => {
     run(0.1);
     expect(engine.getSnapshot().compare).toBe(false);
     expect(engine.getSnapshot().scale).toBe("album");
+  });
+
+  it("the face-on reference appears only while posture is asked about", () => {
+    start();
+    enter(MKULTRA);
+    const facing = () => (inner().backDeps() as unknown as { facing: number }).facing;
+    expect(facing()).toBe(0);
+    engine.setAnatomyFocus("contour");
+    run(1);
+    expect(facing()).toBe(0);
+    engine.setAnatomyFocus("posture");
+    run(1);
+    expect(facing()).toBeCloseTo(1, 5);
+    engine.setCompare(true);
+    run(2);
+    expect(facing()).toBeCloseTo(1, 5);
+    engine.setCompare(false);
+    engine.setAnatomyFocus(null);
+    run(1);
+    expect(facing()).toBe(0);
   });
 
   it("the ghost of the original is drawn only while the form is changed", () => {

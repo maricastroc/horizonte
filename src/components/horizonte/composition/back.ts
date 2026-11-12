@@ -6,7 +6,7 @@ import { isEngaged, progressOf } from "../state";
 import { ANATOMY, COLOR, GEO, MORPH, PARTICLES, RING, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
-import { drawGhost, type BodyFrame, type FocusSatellite } from "./focus";
+import { drawFacing, drawGhost, type BodyFrame, type FocusSatellite } from "./focus";
 import type { RingBakery, SegShape } from "./ring";
 import { ls, type Ctx } from "./ctx";
 import { stageBox, type Bands } from "./bands";
@@ -33,6 +33,7 @@ export interface BackDeps {
   compare?: SegShape | null;
   frame?: BodyFrame | null;
   ghost?: { m: AlbumMorphology; alpha: number } | null;
+  facing?: number;
   labels?: CanvasLabels;
 }
 
@@ -320,6 +321,18 @@ export function drawBack(
       deps.compare ?? null,
     );
     drawRing(x, seg, bx, by, R, s.ringRot, s.fadeSel * (1 - s.mix * 0.6), morph.flatten);
+    if (deps.facing && deps.facing > 0.005) {
+      drawFacing(
+        x,
+        morph,
+        bx,
+        by,
+        R,
+        s.ringRot,
+        rgba(ANATOMY.ghost.color, ANATOMY.facing.alpha * deps.facing),
+        ANATOMY.ghost.width * Math.max(1, W / 1440),
+      );
+    }
     if (deps.ghost && deps.ghost.alpha > 0.005) {
       const gg = bodyGeom(W, H, s, L, deps.ghost.m);
       drawGhost(

@@ -867,6 +867,7 @@ export class FieldEngine implements InputActions {
       fieldVersion: this.strain.version,
       compare: this.compareBake(),
       frame: this.focusFrame(),
+      facing: this.focusPart() === "posture" ? ease(this.focusAmt) : 0,
       ghost:
         this.compareAxis && this.compareK > 0.001 && this.compareAlb === this.st.alb
           ? { m: this.morphAt(this.st.alb), alpha: ANATOMY.ghost.alpha * ease(this.compareK) }
