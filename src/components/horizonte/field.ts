@@ -20,14 +20,15 @@ export const RANGE = {
   swirl: [0.62, 1.55],
 } as const;
 
-export const heftOf = (s: AlbumSignature) => s.loudness * 0.68 + s.duration * 0.32;
+export const heftOf = (s: Pick<AlbumSignature, "loudness" | "duration">) =>
+  s.loudness * 0.68 + s.duration * 0.32;
 
 export function fieldConstantsOf(sig: AlbumSignature, bias?: TrackBias): FieldConstants {
   const loudness = bias ? clamp(sig.loudness + bias.loudness, 0, 1) : sig.loudness;
   const dynamics = bias ? clamp(sig.dynamics + bias.dynamics, 0, 1) : sig.dynamics;
   const lit = bias ? clamp(sig.brightness + bias.brightness, 0, 1) : sig.brightness;
   const grid = bias ? clamp(sig.pulse + bias.pulse, 0, 1) : sig.pulse;
-  const heft = loudness * 0.68 + sig.duration * 0.32;
+  const heft = heftOf({ loudness, duration: sig.duration });
   return {
     artistWeight: Math.round(lerp(RANGE.artistWeight[0], RANGE.artistWeight[1], sig.loudness)),
     massScale: lerp(RANGE.massScale[0], RANGE.massScale[1], heft),
