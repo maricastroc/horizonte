@@ -37,6 +37,8 @@ export const RING = {
   Rin: 350,
   Rout: 475,
   arcSlices: 280,
+  bakeBudget: 4,
+  dissolve: 0.45,
   alpha: { normal: 0.42, hover: 0.8, selected: 0.92, playing: 1 },
   lift: 0.035,
   anchor: -1.9,
