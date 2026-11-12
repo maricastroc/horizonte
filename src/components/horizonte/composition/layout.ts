@@ -201,7 +201,21 @@ export function lockup(W: number, H: number, s: FieldState, L: WorldLayout): Loc
   const p = s.play;
   const z = s.zoom;
   const nominal = W * (t.size - p * t.play - z * t.zoom);
-  const meta = (v: number) => Math.max(v * t.meta, W * t.metaFloor);
+  const metaOf = (v: number) =>
+    Math.min(
+      L.staged ? Math.max(v * t.meta, W * t.metaFloor) : W * t.meta,
+      v * t.title * t.metaCeil,
+    );
+  const titleDrop = (v: number) =>
+    Math.max(
+      v * t.titleGap,
+      v * GLYPH.artist.descent + v * t.title * (GLYPH.title.ascent + t.titleAir),
+    );
+  const metaDrop = (v: number) =>
+    Math.max(
+      v * t.metaGap,
+      v * t.title * GLYPH.title.descent + metaOf(v) * (GLYPH.meta.ascent + t.metaAir),
+    );
 
   let size = t.sizeCap < 1 ? Math.min(nominal, H * t.sizeCap) : nominal;
   let ay = H * (t.baseline + p * t.baselinePlay);
@@ -209,36 +223,19 @@ export function lockup(W: number, H: number, s: FieldState, L: WorldLayout): Loc
   if (L.staged) {
     const b = bandsFor(W, H, s, L);
     const room = Math.max(1, (b.identity - b.stage) * H);
-    const stack = RISE + t.titleGap + t.metaGap;
-    if (size * stack + meta(size) * 0.35 > room) {
-      size = Math.min(
-        (room - W * t.metaFloor * 0.35) / stack,
-        room / (stack + t.meta * 0.35),
-      );
-    }
+    const depth = (v: number) => v * RISE + titleDrop(v) + metaDrop(v) + metaOf(v) * 0.35;
+    for (let i = 0; i < 8 && depth(size) > room; i++) size *= room / depth(size);
     ay = b.stage * H + size * RISE;
   }
 
-  const tsize = size * t.title;
-  const msize = L.staged ? meta(size) : W * t.meta;
-  const ty =
-    ay +
-    Math.max(
-      size * t.titleGap,
-      size * GLYPH.artist.descent + tsize * (GLYPH.title.ascent + t.titleAir),
-    );
+  const ty = ay + titleDrop(size);
   return {
     size,
     ay,
     ty,
-    tsize,
-    msize,
-    my:
-      ty +
-      Math.max(
-        size * t.metaGap,
-        tsize * GLYPH.title.descent + msize * (GLYPH.meta.ascent + t.metaAir),
-      ),
+    tsize: size * t.title,
+    msize: metaOf(size),
+    my: ty + metaDrop(size),
     margin: W * t.margin,
     marginTitle: W * t.marginTitle,
     marginMeta: W * t.marginMeta,

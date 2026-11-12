@@ -8,7 +8,7 @@ import { RingBakery } from "../composition/ring";
 import { ALBUMS } from "../content";
 import { fieldConstantsOf } from "../field";
 import { morphologyOf } from "../morphology";
-import { BAND, DPR_MAX } from "../tokens";
+import { BAND, DPR_MAX, GLYPH } from "../tokens";
 import type { FieldState } from "../types";
 import { baseState } from "./fixtures";
 import { engineHarness, paintContext } from "./fakes";
@@ -28,10 +28,15 @@ const LANDSCAPE = [
   { label: "932×430", w: 932, h: 430 },
 ];
 
-const CANVASES = VIEWPORTS.flatMap((v) => [
-  { ...v, label: `${v.label} @1x` },
-  { ...v, label: `${v.label} @${DPR_MAX}x`, w: v.w * DPR_MAX, h: v.h * DPR_MAX },
-]);
+const canvasesOf = (views: typeof VIEWPORTS) =>
+  views.flatMap((v) => [
+    { ...v, label: `${v.label} @1x`, dpr: 1 },
+    { ...v, label: `${v.label} @${DPR_MAX}x`, w: v.w * DPR_MAX, h: v.h * DPR_MAX, dpr: DPR_MAX },
+  ]);
+
+const CANVASES = canvasesOf(VIEWPORTS);
+const LANDSCAPE_CANVASES = canvasesOf(LANDSCAPE);
+const EVERY_CANVAS = [...CANVASES, ...LANDSCAPE_CANVASES];
 
 const morphOf = (alb: number) => morphologyOf(ALBUMS[alb].signature, ALBUMS[alb].tracks.length);
 
@@ -60,7 +65,7 @@ describe("regions of the mobile composition", () => {
 
   it("opening, stage and transport are never too small to touch", () => {
     for (const v of CANVASES) {
-      const px = v.h / (v.label.includes("@1x") ? 1 : DPR_MAX);
+      const px = v.h / v.dpr;
       const b = bandsOf(v.w, v.h, 1);
       expect(b.top * px, `abertura ${v.label}`).toBeGreaterThanOrEqual(72);
       expect((b.stage - b.top) * px, `palco ${v.label}`).toBeGreaterThanOrEqual(110);
@@ -70,7 +75,7 @@ describe("regions of the mobile composition", () => {
 
   it("in the album a usable list remains, even on the shortest screen", () => {
     for (const v of CANVASES) {
-      const px = v.h / (v.label.includes("@1x") ? 1 : DPR_MAX);
+      const px = v.h / v.dpr;
       const b = bandsOf(v.w, v.h, 1);
       expect((b.list - b.identity) * px, `list ${v.label}`).toBeGreaterThanOrEqual(2 * 48);
     }
@@ -96,6 +101,19 @@ describe("regions of the mobile composition", () => {
     }
   });
 
+  it("in phone landscape the collection does not crush the identity band", () => {
+    for (const v of LANDSCAPE) {
+      const field = bandsOf(v.w, v.h, 0);
+      const record = bandsOf(v.w, v.h, 1);
+      expect(field.stage, v.label).toBeGreaterThan(record.stage);
+      expect((field.identity - field.stage) * v.h, v.label).toBeCloseTo(
+        (record.identity - record.stage) * v.h,
+        6,
+      );
+      expect(field.identity, v.label).toBeLessThanOrEqual(field.list);
+    }
+  });
+
   it("desktop and tablet get no bands: the composition is mobile-only", () => {
     expect(MOBILE.staged).toBe(true);
     expect(DESKTOP.staged).toBe(false);
@@ -105,7 +123,7 @@ describe("regions of the mobile composition", () => {
 
 describe("the world fits the stage — no morphology invades the interface", () => {
   it("body, corona and satellites of every album stay inside the stage", () => {
-    for (const v of CANVASES) {
+    for (const v of EVERY_CANVAS) {
       for (const scene of SCENES) {
         const box = stageBox(v.w, v.h, bandsOf(v.w, v.h, scene.zoom));
         for (let alb = 0; alb < ALBUMS.length; alb++) {
@@ -125,7 +143,7 @@ describe("the world fits the stage — no morphology invades the interface", () 
   });
 
   it("the stage ends before the identity, so nothing of the world lands on the list", () => {
-    for (const v of CANVASES) {
+    for (const v of EVERY_CANVAS) {
       const b = bandsOf(v.w, v.h, 1);
       const box = stageBox(v.w, v.h, b);
       expect(box.cy + box.halfH, v.label).toBeLessThanOrEqual(b.stage * v.h + 0.5);
@@ -188,7 +206,7 @@ describe("the morphology stays different across records", () => {
 
 describe("album identity on mobile", () => {
   it("the identity block fits its own band, on every target screen", () => {
-    for (const v of CANVASES) {
+    for (const v of EVERY_CANVAS) {
       for (const scene of SCENES) {
         const s = album(0, { zoom: scene.zoom });
         const lk = lockup(v.w, v.h, s, MOBILE);
@@ -203,7 +221,7 @@ describe("album identity on mobile", () => {
   });
 
   it("the canvas text margin is the same gutter as the interface", () => {
-    for (const v of CANVASES) {
+    for (const v of EVERY_CANVAS) {
       const lk = lockup(v.w, v.h, album(0), MOBILE);
       expect(lk.margin / v.w, v.label).toBeCloseTo(BAND.gutter, 10);
       expect(lk.marginTitle / v.w, v.label).toBeCloseTo(BAND.gutter, 10);
@@ -212,11 +230,49 @@ describe("album identity on mobile", () => {
   });
 
   it("the metadata line never drops below legible", () => {
-    for (const v of CANVASES) {
-      const dpr = v.label.includes("@1x") ? 1 : DPR_MAX;
-      const lk = lockup(v.w, v.h, album(0), MOBILE);
-      expect(lk.msize / dpr, v.label).toBeGreaterThanOrEqual(9.5);
-      expect(lk.metaAlpha).toBeGreaterThan(0.85);
+    for (const v of EVERY_CANVAS) {
+      for (const scene of SCENES) {
+        const lk = lockup(v.w, v.h, album(0, { zoom: scene.zoom }), MOBILE);
+        expect(lk.msize / v.dpr, `${v.label} · ${scene.label}`).toBeGreaterThanOrEqual(9.5);
+        expect(lk.metaAlpha).toBeGreaterThan(0.85);
+      }
+    }
+  });
+
+  it("the metadata line never outgrows the title, not even in landscape", () => {
+    for (const v of EVERY_CANVAS) {
+      for (const scene of SCENES) {
+        const lk = lockup(v.w, v.h, album(0, { zoom: scene.zoom }), MOBILE);
+        const where = `${v.label} · ${scene.label}`;
+        expect(lk.msize, where).toBeLessThan(lk.tsize);
+        expect(lk.tsize, where).toBeLessThan(lk.size);
+      }
+    }
+  });
+
+  it("name, title and metadata never touch", () => {
+    for (const v of EVERY_CANVAS) {
+      for (const scene of SCENES) {
+        const lk = lockup(v.w, v.h, album(0, { zoom: scene.zoom }), MOBILE);
+        const where = `${v.label} · ${scene.label}`;
+        const nameToTitle =
+          lk.ty - lk.ay - lk.size * GLYPH.artist.descent - lk.tsize * GLYPH.title.ascent;
+        const titleToMeta =
+          lk.my - lk.ty - lk.tsize * GLYPH.title.descent - lk.msize * GLYPH.meta.ascent;
+        expect(nameToTitle, where).toBeGreaterThan(0);
+        expect(titleToMeta, where).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("in phone landscape the name and title keep usable sizes, in the collection as in the album", () => {
+    for (const v of LANDSCAPE_CANVASES) {
+      for (const scene of SCENES) {
+        const lk = lockup(v.w, v.h, album(0, { zoom: scene.zoom }), MOBILE);
+        const where = `${v.label} · ${scene.label}`;
+        expect(lk.size / v.dpr, where).toBeGreaterThanOrEqual(18);
+        expect(lk.tsize / v.dpr, where).toBeGreaterThanOrEqual(10.5);
+      }
     }
   });
 
