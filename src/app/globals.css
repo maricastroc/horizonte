@@ -17,16 +17,12 @@
 
 @theme {
   --color-void: #07070a;
-  --color-void-2: #0a0910;
   --color-paper: #efebe3;
-  --color-paper-hi: #f4f1ea;
   --color-ink-text: #e8e4dc;
   --color-ink-text-2: #cfc9c0;
-  --color-ink-hover: #c9c4bb;
   --color-ink-mute: #8c867e;
   --color-ink-dim: #6e6862;
   --color-ink-faint: #5a554f;
-  --color-ink-ghost: #3a3631;
   --color-rule: rgba(232, 228, 220, 0.14);
   --color-rule-2: rgba(232, 228, 220, 0.08);
   --color-chevron: #332f2b;
@@ -34,8 +30,6 @@
   --font-archivo: var(--font-archivo-src), var(--font-inter-src);
   --font-bodoni: var(--font-bodoni-src), var(--font-playfair-src);
   --font-mono: var(--font-mono-src);
-
-  --radius-none: 0px;
 }
 
 @layer base {

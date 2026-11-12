@@ -6,17 +6,6 @@ import { filesFromDataTransfer } from "./drop";
 import { IngestSession } from "./session";
 import type { IngestStatus } from "./types";
 
-export const IDLE_STATUS: IngestStatus = {
-  phase: "done",
-  progress: 0,
-  groupIndex: 0,
-  groupCount: 0,
-  artist: "",
-  title: "",
-  probe: null,
-  error: null,
-};
-
 const CLOSE_MS = 900;
 const ERROR_MS = 5200;
 const CANCEL_MS = 1400;

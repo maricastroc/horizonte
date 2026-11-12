@@ -349,7 +349,7 @@ export class FieldEngine implements InputActions {
     try {
       window.localStorage.setItem(EXPLORED_KEY, "1");
     } catch {
-      //
+      return;
     }
   }
 
@@ -548,10 +548,6 @@ export class FieldEngine implements InputActions {
 
   playTrack(alb: number, trk: number) {
     this.run(T.playTrack(this.st, CATALOG, alb, trk));
-  }
-
-  fuseTo(alb: number, trk: number) {
-    this.run(T.fuseTo(this.st, alb, trk));
   }
 
   private commitFusion() {

@@ -6,7 +6,6 @@ export type ProviderId = "curated" | "local";
 
 export interface CoverProvenance {
   license: string;
-  url?: string;
   source?: string;
   credit?: string;
 }

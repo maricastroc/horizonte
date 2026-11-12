@@ -1,6 +1,3 @@
-import type { AlbumSignature } from "../content/signature";
-import type { Album, Ink } from "../content/types";
-
 export interface LocalTrackDraft {
   file: File;
   title: string;
@@ -54,11 +51,4 @@ export interface IngestStatus {
   title: string;
   probe: IngestProbe | null;
   error: string | null;
-}
-
-export interface LocalAlbum extends Album {
-  signature: AlbumSignature;
-  inkA: Ink;
-  inkB: Ink;
-  objectUrls: string[];
 }

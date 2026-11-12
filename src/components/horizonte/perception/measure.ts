@@ -15,12 +15,6 @@ export const GUARDRAIL = {
   tracking: 0.25,
 } as const;
 
-export const glanceSigma = (
-  gw: number = STAGE.gw,
-  W: number = STAGE.W,
-  worldScale = 1,
-) => (GLANCE_PX * gw * worldScale) / W;
-
 export const glanceOf = (ppx: number, worldScale = 1) => GLANCE_PX * ppx * worldScale;
 
 export interface Subject {
@@ -147,12 +141,6 @@ export function worstDistant(r: PerceptionReport): PairScore | null {
     if (!worst || p.score > worst.score) worst = p;
   }
   return worst;
-}
-
-export function inkFraction(data: Float32Array): number {
-  let on = 0;
-  for (const v of data) if (v > 0.2) on++;
-  return on / data.length;
 }
 
 export function invariantFraction(shots: Float32Array[]): number {

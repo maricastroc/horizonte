@@ -6,11 +6,8 @@ export const COLOR = {
   inkText: "#E8E4DC",
   inkText2: "#CFC9C0",
   inkHover: "#C9C4BB",
-  inkMute: "#8C867E",
   inkFaint: "#5A554F",
   inkGhost: "#3A3631",
-  rule: "rgba(232,228,220,.14)",
-  rule2: "rgba(232,228,220,.08)",
   dust: "#CFCAC2",
   body: "#0B0A0E",
 } as const;
@@ -21,13 +18,8 @@ export const rgba = (v: Rgb, a: number) =>
   `rgba(${Math.round(v[0] * 255)},${Math.round(v[1] * 255)},${Math.round(v[2] * 255)},${a})`;
 
 export const GEO = {
-  marginText: 0.028,
-  lockup: 0.115,
-  lockupZoom: 0.018,
-  marginTitle: 0.032,
   anchorCollection: { x: 0.46, y: 0.425 },
   anchorAlbum: { x: 0.6, y: 0.44 },
-  flatten: 0.62,
   spreadX: 0.285,
   spreadY: 0.1,
   neighborR: 0.062,
@@ -44,8 +36,6 @@ export const RING = {
   arcOut: 1,
   Rin: 350,
   Rout: 475,
-  gap: 0.02,
-  slices: 44,
   arcSlices: 280,
   alpha: { normal: 0.42, hover: 0.8, selected: 0.92, playing: 1 },
   lift: 0.035,
@@ -184,7 +174,7 @@ export const LIGHT = {
   arc: 1,
 } as const;
 
-export const TRACK_BIAS = { blend: 0.55, cap: 0.25, lerp: 1.2 } as const;
+export const TRACK_BIAS = { lerp: 1.2 } as const;
 
 export const CHARGE = {
   fastSeconds: 20,
@@ -217,7 +207,6 @@ export const SECOND_MASS = { k: 0.03, h: 0.052, pointGain: 1.9, lerp: 3.5 } as c
 export const INTAKE = { mass: 0.45, horizon: 1.3 } as const;
 
 export const LERP = {
-  nav: 5.5,
   zoom: 4.2,
   play: 3.4,
   field: 9,
