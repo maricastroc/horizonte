@@ -3,6 +3,7 @@ import type { AlbumSignature } from "./content/signature";
 import { fieldConstantsOf } from "./field";
 import { ANCHOR } from "./ingest/dsp";
 import { morphologyOf, pulseSpreadOf, type AlbumMorphology } from "./morphology";
+import { MORPH } from "./tokens";
 
 export type AnatomyPart = "satellites" | "gaps" | "strata" | "contour" | "posture" | "core" | "name";
 
@@ -102,8 +103,23 @@ export function readingOf(alb: number, axis: CompareAxis): AxisReading {
   };
 }
 
+const VISIBLE = 0.02;
+
 export const visibleSatellites = (m: AlbumMorphology) =>
-  m.satellites.filter((s) => s.weight > 0.02).length;
+  m.satellites.filter((s) => s.weight > VISIBLE).length;
+
+let onsetCache: number[] | null = null;
+
+export function satelliteOnsets(): number[] {
+  if (!onsetCache) {
+    const [lo, hi] = MORPH.spreadAnchor;
+    onsetCache = Array.from({ length: MORPH.satellites }, (_, i) => {
+      const spread = MORPH.satOnset + i * MORPH.satStep + VISIBLE * MORPH.satKnee;
+      return rawOfNorm("duration", lo + spread * (hi - lo)) / 60;
+    });
+  }
+  return onsetCache;
+}
 
 export const AXIS_OF: Record<AnatomyPart, CompareAxis | null> = {
   satellites: "duration",
@@ -128,12 +144,20 @@ export interface Standing {
 export type Beat = "steady" | "partial" | "none";
 
 export type Finding =
-  | ({ part: "satellites"; bodies: number; after: number; minutes: number; usual: number } & Standing)
+  | ({
+      part: "satellites";
+      bodies: number;
+      after: number;
+      minutes: number;
+      usual: number;
+      extra: number;
+      onsets: number[];
+    } & Standing)
   | ({ part: "gaps"; open: boolean } & Standing)
   | ({ part: "strata"; beat: Beat } & Standing)
   | ({ part: "contour" } & Standing)
   | ({ part: "posture" } & Standing)
-  | ({ part: "core" } & Standing);
+  | ({ part: "core"; nameWeight: number } & Standing);
 
 export interface Question {
   part: QuestionPart;
@@ -171,13 +195,17 @@ function findingOf(alb: number, part: QuestionPart, r: AxisReading): Finding {
   const album = ALBUMS[alb];
   const st = standingOf(r);
   if (part === "satellites") {
+    const minutes = Math.round(album.signature.measured.durationS / 60);
+    const usual = Math.round(r.median / 60);
     return {
       part,
       ...st,
       bodies: visibleSatellites(morphologyOf(album.signature, album.tracks.length)),
       after: visibleSatellites(compareMorphology(alb, "duration")),
-      minutes: Math.round(album.signature.measured.durationS / 60),
-      usual: Math.round(r.median / 60),
+      minutes,
+      usual,
+      extra: minutes - usual,
+      onsets: satelliteOnsets(),
     };
   }
   if (part === "gaps") return { part, ...st, open: r.value > OPEN_GAPS };
@@ -185,6 +213,7 @@ function findingOf(alb: number, part: QuestionPart, r: AxisReading): Finding {
     const p = album.signature.pulse;
     return { part, ...st, beat: p > 0.5 ? "steady" : p < 0.1 ? "none" : "partial" };
   }
+  if (part === "core") return { part, ...st, nameWeight: nameWeightOf(alb) };
   return { part, ...st };
 }
 

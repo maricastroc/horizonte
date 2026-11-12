@@ -118,11 +118,11 @@ export const PT_BR: Copy = {
     compare: "Comparar",
     hold: "Segure a imagem para comparar",
     keys: "Esc volta",
-    settled: "Este disco já está onde a maioria da coleção está, então não há o que mudar.",
+    settled: "Este disco já está no valor típico da coleção, então não há o que comparar.",
     rows: {
       measure: "Medida",
       record: "Este disco",
-      usual: "Comum aqui",
+      usual: "Típico na coleção",
       standing: "Posição",
       drawn: "Desenhado como",
     },

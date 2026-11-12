@@ -6,13 +6,13 @@ mudar a redação nos redatores e gerar de novo.
 
 Cada álbum lista as seis perguntas na ordem em que a interface as mostra (a primeira é o
 convite). Para cada uma: a pergunta, a resposta, o experimento da Contraprova (botão e
-rótulo do alternador) e o que a pessoa vê quando segura a imagem. Perguntas neutras, de
-discos perto da mediana, não têm experimento.
+rótulo do alternador) e o que a pessoa vê quando segura a imagem. Em itálico, o que fica
+em "Em números". Perguntas neutras, de discos perto da mediana, não têm experimento.
 
 ## H—003 · Le Morte d'Abby — 0p
 
-> O nome é composto no peso 725: quanto mais alto o volume do disco, mais pesada a letra.  
-> The name is set at weight 725: the louder the record, the heavier the type.
+> O nome também vem do volume médio: quanto mais alto o disco, mais grosso o traço das letras. O deste disco está entre os mais pesados.  
+> The name follows average loudness too: the louder the record, the thicker its letters. This one is among the heaviest.
 
 ### 1. Camadas · strata
 
@@ -20,17 +20,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel é feito de camadas?
-- Porque o disco se apoia numa batida firme. A repetição no tempo vira camadas no espaço.
-- E se a batida fosse mais solta? · *Mais solta*
-- Com uma batida tão solta quanto a de um disco comum da coleção, as camadas se fundem e rareiam.
+- Por que o anel tem camadas?
+- As notas deste disco caem numa grade constante, como um pulso que se repete do começo ao fim. O Horizonte desenha essa regularidade como anéis paralelos: quanto mais regular o ritmo, mais afastados eles ficam.
+- E se o ritmo fosse menos regular? · *Menos regular*
+- Com um ritmo tão regular quanto o de um disco típico, as camadas se aproximam umas das outras.
 
 **EN**
 
-- Why is the ring made of layers?
-- Because it sits on a steady beat. Repetition in time becomes layers in space.
-- What if its beat were looser? · *Looser*
-- With a beat as loose as a usual record here, the layers melt into fewer bands.
+- Why does the ring have layers?
+- The notes on this record land on a steady grid, like a pulse that repeats from start to end. Horizonte draws that regularity as parallel rings: the more regular the rhythm, the further apart they sit.
+- What if the rhythm were less regular? · *Less regular*
+- With a rhythm as regular as a typical record's, the layers draw closer together.
 
 ### 2. Borda · contour
 
@@ -39,16 +39,16 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que a borda é tão lisa?
-- Porque o volume do disco quase não muda. Uma música sem grandes saltos deixa um contorno mais liso, que respira menos enquanto toca.
-- E se oscilasse mais entre o suave e o forte? · *Mais contraste*
-- Com uma variação de volume comum, a borda se recorta.
+- A intensidade deste disco quase não muda: o trecho mais calmo e o mais intenso ficam próximos. Como a borda acompanha essa intensidade ao longo do disco, ela quase não se move.
+- E se o volume variasse mais? · *Mais contraste*
+- Com trechos calmos e intensos tão distantes quanto num disco típico, os recortes se aprofundam, nos mesmos lugares.
 
 **EN**
 
 - Why is its edge so smooth?
-- Because it barely changes in volume. Even music leaves a smoother outline, and it breathes less when it plays.
-- What if it swung more between quiet and loud? · *More contrast*
-- With a usual range of volume, the edge gets carved.
+- This record's intensity barely changes: its calmest and most intense passages sit close together. The edge follows that intensity across the record, so it hardly moves.
+- What if its volume varied more? · *More contrast*
+- With calm and intense passages as far apart as in a typical record, the cuts deepen in the same places.
 
 ### 3. Pequenos corpos · satellites
 
@@ -56,17 +56,21 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que há três pequenos corpos em volta?
-- Porque o disco é longo: 45 minutos. Um disco longo vira território: em vez de crescer, ele se espalha em pequenos corpos.
-- E se fosse mais curto? · *Mais curto*
-- Com 34 minutos, uma duração comum na coleção, um dos seus três pequenos corpos se dissolve.
+- De onde vêm os três pequenos corpos?
+- Eles vêm da duração. Este disco tem 45 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela.
+- E se o disco fosse mais curto? · *Mais curto*
+- Com 34 minutos, a duração típica da coleção, restam dois pequenos corpos. O que some representava os 11 minutos a mais deste disco.
+- *Corpos surgem em: 23 · 33 · 44 · 54 min*
+- *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
-- Why are there three small bodies around it?
-- Because it is long: 45 minutes. A long record becomes territory: it spreads into small bodies instead of growing.
-- What if it were shorter? · *Shorter*
-- At 34 minutes, a usual length here, one of its three small bodies dissolves.
+- Where do the three small bodies come from?
+- They come from its length. At 45 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it.
+- What if the record were shorter? · *Shorter*
+- At 34 minutes, the collection's typical length, two small bodies remain. The one that goes stood for this record's extra 11 minutes.
+- *Bodies appear at: 23 · 33 · 44 · 54 min*
+- *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
 ### 4. Postura · posture
 
@@ -74,17 +78,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que a forma se ergue aberta?
-- Porque o disco soa mais brilhante que a maioria da coleção. Discos brilhantes se erguem abertos; os escuros se deitam.
-- E se soasse mais escuro? · *Mais escuro*
-- Com um brilho comum na coleção, a forma assenta e se inclina para baixo.
+- Por que a forma parece aberta?
+- Esta música tem mais agudos que a maioria da coleção, então soa um pouco mais brilhante. O Horizonte vira a forma para quem olha conforme esse brilho, e ela mostra uma face mais redonda. A linha tracejada mostra como ela seria vista de frente.
+- E se o som tivesse menos agudos? · *Menos agudos*
+- Com os agudos de um disco típico, a forma se inclina para trás e se achata, afastando-se da linha tracejada.
 
 **EN**
 
-- Why does it stand open?
-- Because it sounds brighter than most here. Bright records stand open; dark ones lie down.
-- What if it sounded darker? · *Darker*
-- As bright as a usual record here, it settles and tilts down.
+- Why does the shape look open?
+- This music carries more treble than most here, so it sounds a little brighter. Horizonte turns the shape toward you by that brightness, and it shows a rounder face. The dashed line shows it face-on.
+- What if it had less treble? · *Less treble*
+- With a typical record's treble, the shape tips back and flattens, away from the dashed line.
 
 ### 5. Centro escuro · core
 
@@ -93,16 +97,18 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que o centro escuro é tão grande?
-- Porque o volume do disco é alto. Discos de volume alto ganham um centro pesado que engole o anel, e o nome ganha um traço mais pesado também.
-- E se o volume fosse mais baixo? · *Mais baixo*
-- Com um volume comum na coleção, o centro encolhe.
+- Este disco soa alto do começo ao fim. No Horizonte, volume é massa: quanto mais alto o disco, maior o corpo e maior o centro escuro, que vai tomando o lugar do anel em volta.
+- E se o volume médio fosse mais baixo? · *Mais baixo*
+- No volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve espaço ao anel.
+- *Peso do nome: 725*
 
 **EN**
 
 - Why is its dark center so large?
-- Because it is loud. Loud records grow a heavy center that swallows the ring, and the name is set heavier too.
-- What if it were quieter? · *Quieter*
-- As loud as a usual record here, the center shrinks.
+- This record plays loud from start to end. In Horizonte, loudness is mass: the louder the record, the bigger the body and its dark center, which takes over the ring around it.
+- What if it were quieter overall? · *Quieter*
+- At a typical record's loudness, the whole body shrinks and the dark center gives room back to the ring.
+- *Name weight: 725*
 
 ### 6. Fendas · gaps
 
@@ -110,22 +116,22 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel está quase inteiro?
-- Porque suas faixas mantêm o mesmo tipo de pulso. Quando as faixas diferem no pulso, o anel se parte entre elas.
-- E se cada faixa seguisse seu próprio pulso? · *À deriva*
-- Com pulsos tão variados quanto os de um disco comum da coleção, abrem-se fendas entre as faixas.
+- Por que o anel é quase contínuo?
+- As faixas deste disco têm ritmos parecidos. Cada setor do anel é uma faixa, e as fendas só se abrem quando as faixas diferem no ritmo; aqui, quase não há o que separar.
+- E se as faixas variassem mais no ritmo? · *Ritmos variados*
+- Com faixas tão diferentes no ritmo quanto as de um disco típico, as fendas se alargam em todo o anel.
 
 **EN**
 
-- Why is the ring almost whole?
-- Because its tracks keep the same kind of pulse. When tracks differ in beat, the ring breaks between them.
-- What if its tracks drifted apart? · *Drifting*
-- With pulses as varied as a usual record here, breaks open between its tracks.
+- Why is the ring almost unbroken?
+- The tracks on this record share a similar rhythm. Each sector of the ring is a track, and breaks only open when tracks differ in rhythm, so here there is little to separate.
+- What if its tracks varied more in rhythm? · *More varied*
+- With tracks as varied in rhythm as a typical record's, the breaks widen all around the ring.
 
 ## H—001 · Tristan Lohengrin — Le Manoir
 
-> O nome é composto no peso 551: quanto mais alto o volume do disco, mais pesada a letra.  
-> The name is set at weight 551: the louder the record, the heavier the type.
+> O nome também vem do volume médio: quanto mais alto o disco, mais grosso o traço das letras. O deste disco é o mais leve da coleção.  
+> The name follows average loudness too: the louder the record, the thicker its letters. This one is the lightest here.
 
 ### 1. Pequenos corpos · satellites
 
@@ -133,17 +139,21 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que a forma é um corpo só?
-- Porque o disco é curto: 22 minutos. Só os discos mais longos se espalham em pequenos corpos.
-- E se fosse mais longo? · *Mais longo*
-- Com 34 minutos, uma duração comum na coleção, surgem dois pequenos corpos em volta.
+- Por que esta forma está sozinha?
+- Porque o disco é curto: 22 minutos. O Horizonte mostra o tempo com pequenos corpos que vão surgindo em volta da forma à medida que o disco se alonga, e este termina antes do primeiro.
+- E se o disco fosse mais longo? · *Mais longo*
+- Com 34 minutos, a duração típica da coleção, surgem dois pequenos corpos em volta. Eles representam os 12 minutos que faltam a este disco.
+- *Corpos surgem em: 23 · 33 · 44 · 54 min*
+- *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
-- Why is it a single body?
-- Because it is short: 22 minutes. Only longer records spread out into small bodies.
-- What if it were longer? · *Longer*
-- At 34 minutes, a usual length here, two small bodies appear around it.
+- Why is this shape alone?
+- Because the record is short: 22 minutes. Horizonte shows time as small bodies that gather around the shape as a record grows longer, and this one ends before the first appears.
+- What if the record were longer? · *Longer*
+- At 34 minutes, the collection's typical length, two small bodies appear around it. They stand for the 12 minutes this record doesn't have.
+- *Bodies appear at: 23 · 33 · 44 · 54 min*
+- *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
 ### 2. Centro escuro · core
 
@@ -152,16 +162,18 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que o centro escuro é tão pequeno?
-- Porque o volume do disco é baixo, o mais baixo da coleção. Discos de volume baixo guardam um centro pequeno e muito espaço aberto, e o nome ganha um traço mais leve também.
-- E se o volume fosse mais alto? · *Mais alto*
-- Com um volume comum na coleção, o centro se expande.
+- Este disco soa baixo do começo ao fim. No Horizonte, volume é massa: com pouca, o corpo encolhe e o centro escuro deixa um anel largo à sua volta. Nenhum disco da coleção soa tão baixo.
+- E se o volume médio fosse mais alto? · *Mais alto*
+- No volume de um disco típico, o corpo inteiro cresce e o centro escuro avança sobre o anel.
+- *Peso do nome: 551*
 
 **EN**
 
 - Why is its dark center so small?
-- Because it is quiet, the quietest record here. Quiet records keep a small center and open space, and the name is set lighter too.
-- What if it were louder? · *Louder*
-- As loud as a usual record here, the center swells.
+- This record plays quietly from start to end. In Horizonte, loudness is mass: with little of it, the body shrinks and the dark center leaves a wide ring around it. No record here is quieter.
+- What if it were louder overall? · *Louder*
+- At a typical record's loudness, the whole body grows and the dark center presses into the ring.
+- *Name weight: 551*
 
 ### 3. Fendas · gaps
 
@@ -169,17 +181,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel está partido em pedaços?
-- Porque suas faixas não seguem o mesmo pulso: algumas se apoiam num pulso firme, outras bem menos. Cada mudança de pulso abre uma fenda entre as faixas.
-- E se as faixas seguissem o mesmo pulso? · *Mesmo pulso*
-- Com pulsos tão próximos quanto os de um disco comum da coleção, as fendas entre as faixas se estreitam.
+- Por que o anel está partido?
+- Algumas faixas deste disco seguem uma batida regular; outras fluem sem uma. Cada setor do anel é uma faixa, e quanto mais as faixas diferem nesse ponto, mais as fendas se abrem, todas por igual, em volta do anel inteiro.
+- E se as faixas tivessem ritmos parecidos? · *Ritmos parecidos*
+- Com faixas tão parecidas no ritmo quanto as de um disco típico, as fendas se estreitam em todo o anel.
 
 **EN**
 
-- Why is the ring broken into pieces?
-- Because its tracks don't share one beat: some sit on a steady pulse, others much less. Each change of pulse opens a break between tracks.
-- What if its tracks shared one beat? · *One beat*
-- With pulses as close as a usual record here, the breaks between tracks narrow.
+- Why is the ring broken apart?
+- Some tracks on this record keep a steady beat; others move without one. Each sector of the ring is a track, and the more the tracks differ in this way, the wider the breaks open, all of them equally, around the whole ring.
+- What if its tracks were alike in rhythm? · *Alike in rhythm*
+- With tracks as alike in rhythm as a typical record's, the breaks narrow all around the ring.
 
 ### 4. Borda · contour
 
@@ -188,16 +200,16 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que a borda é tão lisa?
-- Porque o volume do disco quase não muda. Uma música sem grandes saltos deixa um contorno mais liso, que respira menos enquanto toca.
-- E se oscilasse mais entre o suave e o forte? · *Mais contraste*
-- Com uma variação de volume comum, a borda se recorta.
+- A intensidade deste disco quase não muda: o trecho mais calmo e o mais intenso ficam próximos. Como a borda acompanha essa intensidade ao longo do disco, ela quase não se move.
+- E se o volume variasse mais? · *Mais contraste*
+- Com trechos calmos e intensos tão distantes quanto num disco típico, os recortes se aprofundam, nos mesmos lugares.
 
 **EN**
 
 - Why is its edge so smooth?
-- Because it barely changes in volume. Even music leaves a smoother outline, and it breathes less when it plays.
-- What if it swung more between quiet and loud? · *More contrast*
-- With a usual range of volume, the edge gets carved.
+- This record's intensity barely changes: its calmest and most intense passages sit close together. The edge follows that intensity across the record, so it hardly moves.
+- What if its volume varied more? · *More contrast*
+- With calm and intense passages as far apart as in a typical record, the cuts deepen in the same places.
 
 ### 5. Camadas · strata
 
@@ -205,17 +217,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel mostra camadas tênues?
-- Porque a batida do disco é regular só em parte. Quanto mais firme a grade, mais o anel se divide em camadas.
-- E se a batida fosse mais firme? · *Mais firme*
-- Com uma batida tão firme quanto a de um disco comum da coleção, o anel se divide em camadas.
+- Por que as camadas do anel mal aparecem?
+- O ritmo deste disco tem alguma regularidade, mas pouca. As camadas estão lá, coladas umas às outras; só se separam quando o ritmo fica mais constante.
+- E se o ritmo fosse mais regular? · *Mais regular*
+- Com um ritmo tão regular quanto o de um disco típico, as camadas se afastam e ficam mais nítidas.
 
 **EN**
 
-- Why does the ring show faint layers?
-- Because its beat is only partly regular. The steadier the grid, the more the ring splits into layers.
-- What if it had a steadier beat? · *Steadier*
-- With a beat as steady as a usual record here, the band splits into layers.
+- Why are the ring's layers so faint?
+- This record's rhythm has some regularity, but not much. The layers are there, pressed together; they only pull apart as a rhythm grows steadier.
+- What if the rhythm were more regular? · *More regular*
+- With a rhythm as regular as a typical record's, the layers pull apart and sharpen.
 
 ### 6. Postura · posture
 
@@ -223,18 +235,18 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- O que define o quanto a forma se ergue?
-- O brilho. Este disco soa mais ou menos tão brilhante quanto a maioria da coleção, então a forma se ergue num ângulo comum.
+- O que define a inclinação da forma?
+- O brilho do som, isto é, o peso dos agudos. Quanto mais agudos, mais a forma se mostra de frente, redonda, como a linha tracejada; quanto menos, mais ela se deita. O brilho deste disco é o típico da coleção, e a inclinação também.
 
 **EN**
 
-- What sets how upright it stands?
-- Brightness. This record sounds about as bright as most here, so it stands at a usual angle.
+- What sets the shape's tilt?
+- Brightness: how much of the sound's energy sits in the treble. More treble turns the shape toward you, round like the dashed line; less lays it down. This record's brightness is typical of the collection, and so is its tilt.
 
 ## H—002 · Jono Terbakar — lebar
 
-> O nome é composto no peso 617: quanto mais alto o volume do disco, mais pesada a letra.  
-> The name is set at weight 617: the louder the record, the heavier the type.
+> O nome também vem do volume médio: quanto mais alto o disco, mais grosso o traço das letras. O deste disco está entre os mais leves.  
+> The name follows average loudness too: the louder the record, the thicker its letters. This one is among the lightest.
 
 ### 1. Borda · contour
 
@@ -243,16 +255,16 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que a borda é tão recortada?
-- Porque o disco vai do muito suave ao muito forte, mais que qualquer outro da coleção. Quanto maior essa oscilação, mais fundo o contorno, e mais ele respira enquanto toca.
-- E se fosse mais uniforme? · *Mais uniforme*
-- Com uma variação de volume comum, a borda se alisa.
+- Este disco vai de trechos muito calmos a trechos muito intensos. O anel percorre o disco do começo ao fim, e a borda acompanha esse vaivém: avança onde a música cresce e recua onde ela se acalma. Quanto maior a distância entre calma e intensidade, mais fundo o recorte, e nenhum disco da coleção vai tão longe.
+- E se o volume variasse menos? · *Menos contraste*
+- Com trechos calmos e intensos tão próximos quanto num disco típico, os recortes ficam mais rasos, mas não saem do lugar.
 
 **EN**
 
 - Why is its edge so jagged?
-- Because it swings between very quiet and very loud, more than any record here. The wider that swing, the deeper the outline, and the more it breathes when it plays.
-- What if it were more even? · *More even*
-- With a usual range of volume, the edge smooths out.
+- This record swings from very calm passages to very intense ones. The ring runs through the record from start to end, and the edge follows that swing: it pushes out where the music swells and pulls in where it settles. The bigger the gap between calm and intense, the deeper the cut, and no record here has a bigger one.
+- What if its volume varied less? · *Less contrast*
+- With calm and intense passages as close as in a typical record, the cuts grow shallower but stay where they are.
 
 ### 2. Postura · posture
 
@@ -260,17 +272,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que a forma se deita tão rente ao chão?
-- Porque o disco soa escuro: quase toda a sua energia fica nos graves. Discos escuros se deitam; os brilhantes se erguem abertos.
-- E se soasse mais brilhante? · *Mais brilhante*
-- Com um brilho comum na coleção, a forma se ergue e se abre.
+- Por que a forma está tão achatada?
+- Quase toda a energia desta música está nos graves, com poucos agudos por cima: ela soa escura. Para mostrar isso, o Horizonte deita a forma, achatada, como se a víssemos de lado. A linha tracejada mostra como ela seria vista de frente.
+- E se o som tivesse mais agudos? · *Mais agudos*
+- Com os agudos de um disco típico, a forma se levanta e se arredonda, aproximando-se da linha tracejada.
 
 **EN**
 
-- Why does it lie so flat?
-- Because it sounds dark: most of its energy sits low. Dark records lie down; bright ones stand open.
-- What if it sounded brighter? · *Brighter*
-- As bright as a usual record here, it rises and opens.
+- Why is the shape so flat?
+- Nearly all of this music's energy sits in the low end, with little treble on top: it sounds dark. To show that, Horizonte lays the shape down, flattened, as if seen from the side. The dashed line shows it face-on.
+- What if it had more treble? · *More treble*
+- With a typical record's treble, the shape lifts and rounds out, toward the dashed line.
 
 ### 3. Pequenos corpos · satellites
 
@@ -278,17 +290,21 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que há um pequeno corpo ao lado?
-- Por causa da duração: 27 minutos, mais curto que a maioria da coleção. Os discos se espalham em pequenos corpos conforme ficam mais longos; com essa duração, aparece um.
-- E se fosse mais longo? · *Mais longo*
-- Com 34 minutos, uma duração comum na coleção, surge mais um pequeno corpo em volta.
+- De onde vem o pequeno corpo ao lado?
+- Ele vem da duração. Com 27 minutos, mais curto que a maioria da coleção, este disco ganha só um: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração.
+- E se o disco fosse mais longo? · *Mais longo*
+- Com 34 minutos, a duração típica da coleção, surge mais um pequeno corpo. Ele representa os 7 minutos que faltam a este disco.
+- *Corpos surgem em: 23 · 33 · 44 · 54 min*
+- *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
-- Why is there a small body beside it?
-- Because of its length: 27 minutes, shorter than most here. Records spread into small bodies as they get longer; at this length, one.
-- What if it were longer? · *Longer*
-- At 34 minutes, a usual length here, one more small body appears around it.
+- Where does the small body beside it come from?
+- It comes from its length. At 27 minutes, shorter than most here, this record earns just one: Horizonte shows time as small bodies around the shape, one more for each added stretch.
+- What if the record were longer? · *Longer*
+- At 34 minutes, the collection's typical length, one more small body appears. It stands for the 7 minutes this record doesn't have.
+- *Bodies appear at: 23 · 33 · 44 · 54 min*
+- *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
 ### 4. Centro escuro · core
 
@@ -297,16 +313,18 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que o centro escuro é tão pequeno?
-- Porque o volume do disco é baixo. Discos de volume baixo guardam um centro pequeno e muito espaço aberto, e o nome ganha um traço mais leve também.
-- E se o volume fosse mais alto? · *Mais alto*
-- Com um volume comum na coleção, o centro se expande.
+- Este disco soa baixo do começo ao fim. No Horizonte, volume é massa: com pouca, o corpo encolhe e o centro escuro deixa um anel largo à sua volta.
+- E se o volume médio fosse mais alto? · *Mais alto*
+- No volume de um disco típico, o corpo inteiro cresce e o centro escuro avança sobre o anel.
+- *Peso do nome: 617*
 
 **EN**
 
 - Why is its dark center so small?
-- Because it is quiet. Quiet records keep a small center and open space, and the name is set lighter too.
-- What if it were louder? · *Louder*
-- As loud as a usual record here, the center swells.
+- This record plays quietly from start to end. In Horizonte, loudness is mass: with little of it, the body shrinks and the dark center leaves a wide ring around it.
+- What if it were louder overall? · *Louder*
+- At a typical record's loudness, the whole body grows and the dark center presses into the ring.
+- *Name weight: 617*
 
 ### 5. Fendas · gaps
 
@@ -314,17 +332,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel está quase inteiro?
-- Porque suas faixas mantêm o mesmo tipo de pulso. Quando as faixas diferem no pulso, o anel se parte entre elas.
-- E se cada faixa seguisse seu próprio pulso? · *À deriva*
-- Com pulsos tão variados quanto os de um disco comum da coleção, abrem-se fendas entre as faixas.
+- Por que o anel é quase contínuo?
+- As faixas deste disco têm ritmos parecidos. Cada setor do anel é uma faixa, e as fendas só se abrem quando as faixas diferem no ritmo; aqui, quase não há o que separar.
+- E se as faixas variassem mais no ritmo? · *Ritmos variados*
+- Com faixas tão diferentes no ritmo quanto as de um disco típico, as fendas se alargam em todo o anel.
 
 **EN**
 
-- Why is the ring almost whole?
-- Because its tracks keep the same kind of pulse. When tracks differ in beat, the ring breaks between them.
-- What if its tracks drifted apart? · *Drifting*
-- With pulses as varied as a usual record here, breaks open between its tracks.
+- Why is the ring almost unbroken?
+- The tracks on this record share a similar rhythm. Each sector of the ring is a track, and breaks only open when tracks differ in rhythm, so here there is little to separate.
+- What if its tracks varied more in rhythm? · *More varied*
+- With tracks as varied in rhythm as a typical record's, the breaks widen all around the ring.
 
 ### 6. Camadas · strata
 
@@ -332,22 +350,22 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel é uma camada só?
-- Porque o disco flutua livre de qualquer batida. Só a música presa a uma grade regular divide o anel em camadas.
-- E se a batida fosse mais firme? · *Mais firme*
-- Com uma batida tão firme quanto a de um disco comum da coleção, o anel se divide em camadas.
+- Por que o anel não tem camadas?
+- Os sons deste disco chegam sem uma batida que se repita, livres de qualquer grade. O anel só se divide em camadas quando o ritmo é regular.
+- E se o ritmo fosse mais regular? · *Mais regular*
+- Com um ritmo tão regular quanto o de um disco típico, o anel se divide em camadas, ainda bem juntas.
 
 **EN**
 
-- Why is the ring a single band?
-- Because it floats free of any beat. Only music on a steady grid splits the ring into layers.
-- What if it had a steadier beat? · *Steadier*
-- With a beat as steady as a usual record here, the band splits into layers.
+- Why does the ring have no layers?
+- The sounds on this record arrive without a repeating beat, free of any grid. The ring only splits into layers when a rhythm is regular.
+- What if the rhythm were more regular? · *More regular*
+- With a rhythm as regular as a typical record's, the ring splits into layers, still close together.
 
 ## H—004 · Mark Wilson X — Dark Thoughts
 
-> O nome é composto no peso 679: quanto mais alto o volume do disco, mais pesada a letra.  
-> The name is set at weight 679: the louder the record, the heavier the type.
+> O nome também vem do volume médio: quanto mais alto o disco, mais grosso o traço das letras. O deste disco tem o peso típico.  
+> The name follows average loudness too: the louder the record, the thicker its letters. This one has the typical weight.
 
 ### 1. Fendas · gaps
 
@@ -355,17 +373,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel está partido em pedaços?
-- Porque suas faixas não seguem o mesmo pulso: algumas se apoiam num pulso firme, outras bem menos. Cada mudança de pulso abre uma fenda entre as faixas.
-- E se as faixas seguissem o mesmo pulso? · *Mesmo pulso*
-- Com pulsos tão próximos quanto os de um disco comum da coleção, as fendas entre as faixas se estreitam.
+- Por que o anel está partido?
+- Algumas faixas deste disco seguem uma batida regular; outras fluem sem uma. Cada setor do anel é uma faixa, e quanto mais as faixas diferem nesse ponto, mais as fendas se abrem, todas por igual, em volta do anel inteiro. Nenhum disco da coleção tem faixas tão diferentes.
+- E se as faixas tivessem ritmos parecidos? · *Ritmos parecidos*
+- Com faixas tão parecidas no ritmo quanto as de um disco típico, as fendas se estreitam em todo o anel.
 
 **EN**
 
-- Why is the ring broken into pieces?
-- Because its tracks don't share one beat: some sit on a steady pulse, others much less. Each change of pulse opens a break between tracks.
-- What if its tracks shared one beat? · *One beat*
-- With pulses as close as a usual record here, the breaks between tracks narrow.
+- Why is the ring broken apart?
+- Some tracks on this record keep a steady beat; others move without one. Each sector of the ring is a track, and the more the tracks differ in this way, the wider the breaks open, all of them equally, around the whole ring. No record here has tracks this different.
+- What if its tracks were alike in rhythm? · *Alike in rhythm*
+- With tracks as alike in rhythm as a typical record's, the breaks narrow all around the ring.
 
 ### 2. Borda · contour
 
@@ -374,16 +392,16 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que a borda é tão recortada?
-- Porque o disco vai do muito suave ao muito forte. Quanto maior essa oscilação, mais fundo o contorno, e mais ele respira enquanto toca.
-- E se fosse mais uniforme? · *Mais uniforme*
-- Com uma variação de volume comum, a borda se alisa.
+- Este disco vai de trechos muito calmos a trechos muito intensos. O anel percorre o disco do começo ao fim, e a borda acompanha esse vaivém: avança onde a música cresce e recua onde ela se acalma. Quanto maior a distância entre calma e intensidade, mais fundo o recorte.
+- E se o volume variasse menos? · *Menos contraste*
+- Com trechos calmos e intensos tão próximos quanto num disco típico, os recortes ficam mais rasos, mas não saem do lugar.
 
 **EN**
 
 - Why is its edge so jagged?
-- Because it swings between very quiet and very loud. The wider that swing, the deeper the outline, and the more it breathes when it plays.
-- What if it were more even? · *More even*
-- With a usual range of volume, the edge smooths out.
+- This record swings from very calm passages to very intense ones. The ring runs through the record from start to end, and the edge follows that swing: it pushes out where the music swells and pulls in where it settles. The bigger the gap between calm and intense, the deeper the cut.
+- What if its volume varied less? · *Less contrast*
+- With calm and intense passages as close as in a typical record, the cuts grow shallower but stay where they are.
 
 ### 3. Pequenos corpos · satellites
 
@@ -391,17 +409,21 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que há um pequeno corpo ao lado?
-- Por causa da duração: 30 minutos, mais curto que a maioria da coleção. Os discos se espalham em pequenos corpos conforme ficam mais longos; com essa duração, aparece um.
-- E se fosse mais longo? · *Mais longo*
-- Com 34 minutos, uma duração comum na coleção, surge mais um pequeno corpo em volta.
+- De onde vem o pequeno corpo ao lado?
+- Ele vem da duração. Com 30 minutos, mais curto que a maioria da coleção, este disco ganha só um: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração.
+- E se o disco fosse mais longo? · *Mais longo*
+- Com 34 minutos, a duração típica da coleção, surge mais um pequeno corpo. Ele representa os 4 minutos que faltam a este disco.
+- *Corpos surgem em: 23 · 33 · 44 · 54 min*
+- *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
-- Why is there a small body beside it?
-- Because of its length: 30 minutes, shorter than most here. Records spread into small bodies as they get longer; at this length, one.
-- What if it were longer? · *Longer*
-- At 34 minutes, a usual length here, one more small body appears around it.
+- Where does the small body beside it come from?
+- It comes from its length. At 30 minutes, shorter than most here, this record earns just one: Horizonte shows time as small bodies around the shape, one more for each added stretch.
+- What if the record were longer? · *Longer*
+- At 34 minutes, the collection's typical length, one more small body appears. It stands for the 4 minutes this record doesn't have.
+- *Bodies appear at: 23 · 33 · 44 · 54 min*
+- *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
 ### 4. Postura · posture
 
@@ -409,17 +431,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que a forma se inclina para baixo?
-- Porque o disco soa um pouco mais escuro que a maioria da coleção. Discos escuros se deitam; os brilhantes se erguem abertos.
-- E se soasse mais brilhante? · *Mais brilhante*
-- Com um brilho comum na coleção, a forma se ergue e se abre.
+- Por que a forma está achatada?
+- Esta música tem menos agudos que a maioria da coleção, então soa um pouco escura. Para mostrar isso, o Horizonte inclina a forma para trás, e ela se achata. A linha tracejada mostra como ela seria vista de frente.
+- E se o som tivesse mais agudos? · *Mais agudos*
+- Com os agudos de um disco típico, a forma se levanta e se arredonda, aproximando-se da linha tracejada.
 
 **EN**
 
-- Why does it tilt down?
-- Because it sounds a little darker than most here. Dark records lie down; bright ones stand open.
-- What if it sounded brighter? · *Brighter*
-- As bright as a usual record here, it rises and opens.
+- Why is the shape flattened?
+- This music carries less treble than most here, so it sounds a little dark. To show that, Horizonte tilts the shape back, and it flattens. The dashed line shows it face-on.
+- What if it had more treble? · *More treble*
+- With a typical record's treble, the shape lifts and rounds out, toward the dashed line.
 
 ### 5. Camadas · strata
 
@@ -427,17 +449,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel mostra camadas tênues?
-- Porque a batida do disco é regular só em parte. Quanto mais firme a grade, mais o anel se divide em camadas.
-- E se a batida fosse mais solta? · *Mais solta*
-- Com uma batida tão solta quanto a de um disco comum da coleção, as camadas se fundem e rareiam.
+- Por que o anel se divide em camadas?
+- As notas deste disco caem numa grade bastante regular, mais que na maioria da coleção. O Horizonte desenha essa regularidade como anéis paralelos: quanto mais regular o ritmo, mais afastados eles ficam.
+- E se o ritmo fosse menos regular? · *Menos regular*
+- Com um ritmo tão regular quanto o de um disco típico, as camadas se aproximam umas das outras.
 
 **EN**
 
-- Why does the ring show faint layers?
-- Because its beat is only partly regular. The steadier the grid, the more the ring splits into layers.
-- What if its beat were looser? · *Looser*
-- With a beat as loose as a usual record here, the layers melt into fewer bands.
+- Why does the ring split into layers?
+- The notes on this record fall on a fairly steady grid, more than on most records here. Horizonte draws that regularity as parallel rings: the more regular the rhythm, the further apart they sit.
+- What if the rhythm were less regular? · *Less regular*
+- With a rhythm as regular as a typical record's, the layers draw closer together.
 
 ### 6. Centro escuro · core
 
@@ -446,17 +468,19 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - O que define o tamanho do centro escuro?
-- O volume. Este disco tem um volume parecido com o da maioria da coleção, então o centro tem um tamanho comum, assim como o peso do nome.
+- O quanto o disco soa alto. No Horizonte, volume é massa: discos mais altos ganham um corpo maior e um centro que estreita o anel; os mais baixos, o contrário. Este fica no meio da coleção.
+- *Peso do nome: 679*
 
 **EN**
 
 - What sets the size of its dark center?
-- Loudness. This record is about as loud as most here, so its center is of a usual size, and so is the weight of its name.
+- How loud the record plays. In Horizonte, loudness is mass: louder records get a bigger body and a center that narrows the ring; quieter ones, the reverse. This one sits in the middle of the collection.
+- *Name weight: 679*
 
 ## H—011 · Darin Wilson — Impromptu
 
-> O nome é composto no peso 678: quanto mais alto o volume do disco, mais pesada a letra.  
-> The name is set at weight 678: the louder the record, the heavier the type.
+> O nome também vem do volume médio: quanto mais alto o disco, mais grosso o traço das letras. O deste disco tem o peso típico.  
+> The name follows average loudness too: the louder the record, the thicker its letters. This one has the typical weight.
 
 ### 1. Pequenos corpos · satellites
 
@@ -464,17 +488,21 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que há um pequeno corpo ao lado?
-- Por causa da duração: 27 minutos, mais curto que a maioria da coleção. Os discos se espalham em pequenos corpos conforme ficam mais longos; com essa duração, aparece um.
-- E se fosse mais longo? · *Mais longo*
-- Com 34 minutos, uma duração comum na coleção, surge mais um pequeno corpo em volta.
+- De onde vem o pequeno corpo ao lado?
+- Ele vem da duração. Com 27 minutos, mais curto que a maioria da coleção, este disco ganha só um: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração.
+- E se o disco fosse mais longo? · *Mais longo*
+- Com 34 minutos, a duração típica da coleção, surge mais um pequeno corpo. Ele representa os 7 minutos que faltam a este disco.
+- *Corpos surgem em: 23 · 33 · 44 · 54 min*
+- *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
-- Why is there a small body beside it?
-- Because of its length: 27 minutes, shorter than most here. Records spread into small bodies as they get longer; at this length, one.
-- What if it were longer? · *Longer*
-- At 34 minutes, a usual length here, one more small body appears around it.
+- Where does the small body beside it come from?
+- It comes from its length. At 27 minutes, shorter than most here, this record earns just one: Horizonte shows time as small bodies around the shape, one more for each added stretch.
+- What if the record were longer? · *Longer*
+- At 34 minutes, the collection's typical length, one more small body appears. It stands for the 7 minutes this record doesn't have.
+- *Bodies appear at: 23 · 33 · 44 · 54 min*
+- *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
 ### 2. Borda · contour
 
@@ -483,16 +511,16 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que a borda é recortada?
-- Porque o disco transita entre o suave e o forte mais que a maioria da coleção. Quanto maior essa oscilação, mais fundo o contorno, e mais ele respira enquanto toca.
-- E se fosse mais uniforme? · *Mais uniforme*
-- Com uma variação de volume comum, a borda se alisa.
+- Este disco alterna trechos calmos e intensos mais que a maioria da coleção. O anel percorre o disco do começo ao fim, e a borda acompanha esse vaivém: avança onde a música cresce e recua onde ela se acalma.
+- E se o volume variasse menos? · *Menos contraste*
+- Com trechos calmos e intensos tão próximos quanto num disco típico, os recortes ficam mais rasos, mas não saem do lugar.
 
 **EN**
 
 - Why is its edge carved?
-- Because it moves between quiet and loud more than most here. The wider that swing, the deeper the outline, and the more it breathes when it plays.
-- What if it were more even? · *More even*
-- With a usual range of volume, the edge smooths out.
+- This record moves between calm and intense passages more than most here. The ring runs through the record from start to end, and the edge follows that swing: it pushes out where the music swells and pulls in where it settles.
+- What if its volume varied less? · *Less contrast*
+- With calm and intense passages as close as in a typical record, the cuts grow shallower but stay where they are.
 
 ### 3. Fendas · gaps
 
@@ -500,17 +528,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel está quase inteiro?
-- Porque suas faixas mantêm o mesmo tipo de pulso. Quando as faixas diferem no pulso, o anel se parte entre elas.
-- E se cada faixa seguisse seu próprio pulso? · *À deriva*
-- Com pulsos tão variados quanto os de um disco comum da coleção, abrem-se fendas entre as faixas.
+- Por que o anel é quase contínuo?
+- As faixas deste disco têm ritmos parecidos. Cada setor do anel é uma faixa, e as fendas só se abrem quando as faixas diferem no ritmo; aqui, quase não há o que separar.
+- E se as faixas variassem mais no ritmo? · *Ritmos variados*
+- Com faixas tão diferentes no ritmo quanto as de um disco típico, as fendas se alargam em todo o anel.
 
 **EN**
 
-- Why is the ring almost whole?
-- Because its tracks keep the same kind of pulse. When tracks differ in beat, the ring breaks between them.
-- What if its tracks drifted apart? · *Drifting*
-- With pulses as varied as a usual record here, breaks open between its tracks.
+- Why is the ring almost unbroken?
+- The tracks on this record share a similar rhythm. Each sector of the ring is a track, and breaks only open when tracks differ in rhythm, so here there is little to separate.
+- What if its tracks varied more in rhythm? · *More varied*
+- With tracks as varied in rhythm as a typical record's, the breaks widen all around the ring.
 
 ### 4. Camadas · strata
 
@@ -519,12 +547,12 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - O que dividiria o anel em camadas?
-- Uma batida firme. A batida deste disco é mais ou menos tão regular quanto a da maioria da coleção.
+- Um ritmo regular. Quando as notas caem numa grade que se repete, o anel se divide em camadas, mais afastadas quanto mais constante é a grade; o ritmo deste disco é tão regular quanto o de um disco típico.
 
 **EN**
 
 - What would split the ring into layers?
-- A steady beat. This record's beat is about as regular as most here.
+- A regular rhythm. When the notes land on a repeating grid, the ring splits into layers, further apart the steadier the grid; this record's rhythm is as regular as a typical one.
 
 ### 5. Postura · posture
 
@@ -532,13 +560,13 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- O que define o quanto a forma se ergue?
-- O brilho. Este disco soa mais ou menos tão brilhante quanto a maioria da coleção, então a forma se ergue num ângulo comum.
+- O que define a inclinação da forma?
+- O brilho do som, isto é, o peso dos agudos. Quanto mais agudos, mais a forma se mostra de frente, redonda, como a linha tracejada; quanto menos, mais ela se deita. O brilho deste disco é o típico da coleção, e a inclinação também.
 
 **EN**
 
-- What sets how upright it stands?
-- Brightness. This record sounds about as bright as most here, so it stands at a usual angle.
+- What sets the shape's tilt?
+- Brightness: how much of the sound's energy sits in the treble. More treble turns the shape toward you, round like the dashed line; less lays it down. This record's brightness is typical of the collection, and so is its tilt.
 
 ### 6. Centro escuro · core
 
@@ -547,17 +575,19 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - O que define o tamanho do centro escuro?
-- O volume. Este disco tem um volume parecido com o da maioria da coleção, então o centro tem um tamanho comum, assim como o peso do nome.
+- O quanto o disco soa alto. No Horizonte, volume é massa: discos mais altos ganham um corpo maior e um centro que estreita o anel; os mais baixos, o contrário. Este fica no meio da coleção.
+- *Peso do nome: 678*
 
 **EN**
 
 - What sets the size of its dark center?
-- Loudness. This record is about as loud as most here, so its center is of a usual size, and so is the weight of its name.
+- How loud the record plays. In Horizonte, loudness is mass: louder records get a bigger body and a center that narrows the ring; quieter ones, the reverse. This one sits in the middle of the collection.
+- *Name weight: 678*
 
 ## H—009 · zero-project — e-world
 
-> O nome é composto no peso 704: quanto mais alto o volume do disco, mais pesada a letra.  
-> The name is set at weight 704: the louder the record, the heavier the type.
+> O nome também vem do volume médio: quanto mais alto o disco, mais grosso o traço das letras. O deste disco é um pouco mais pesado que o típico.  
+> The name follows average loudness too: the louder the record, the thicker its letters. This one is set a little heavier than most.
 
 ### 1. Pequenos corpos · satellites
 
@@ -565,17 +595,21 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que há quatro pequenos corpos em volta?
-- Porque o disco é longo: 75 minutos, o mais longo da coleção. Um disco longo vira território: em vez de crescer, ele se espalha em pequenos corpos.
-- E se fosse mais curto? · *Mais curto*
-- Com 34 minutos, uma duração comum na coleção, dois dos seus quatro pequenos corpos se dissolvem.
+- De onde vêm os quatro pequenos corpos?
+- Eles vêm da duração. Este disco tem 75 minutos, mais que qualquer outro da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela.
+- E se o disco fosse mais curto? · *Mais curto*
+- Com 34 minutos, a duração típica da coleção, restam dois pequenos corpos. Os que somem representavam os 41 minutos a mais deste disco.
+- *Corpos surgem em: 23 · 33 · 44 · 54 min*
+- *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
-- Why are there four small bodies around it?
-- Because it is long: 75 minutes, the longest record here. A long record becomes territory: it spreads into small bodies instead of growing.
-- What if it were shorter? · *Shorter*
-- At 34 minutes, a usual length here, two of its four small bodies dissolve.
+- Where do the four small bodies come from?
+- They come from its length. At 75 minutes, the longest record here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it.
+- What if the record were shorter? · *Shorter*
+- At 34 minutes, the collection's typical length, two small bodies remain. The ones that go stood for this record's extra 41 minutes.
+- *Bodies appear at: 23 · 33 · 44 · 54 min*
+- *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
 ### 2. Camadas · strata
 
@@ -583,17 +617,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel é feito de camadas?
-- Porque o disco se apoia numa batida firme, a mais firme da coleção. A repetição no tempo vira camadas no espaço.
-- E se a batida fosse mais solta? · *Mais solta*
-- Com uma batida tão solta quanto a de um disco comum da coleção, as camadas se fundem e rareiam.
+- Por que o anel tem camadas?
+- As notas deste disco caem numa grade constante, como um pulso que se repete do começo ao fim. O Horizonte desenha essa regularidade como anéis paralelos: quanto mais regular o ritmo, mais afastados eles ficam. Nenhum disco da coleção é tão regular.
+- E se o ritmo fosse menos regular? · *Menos regular*
+- Com um ritmo tão regular quanto o de um disco típico, as camadas se aproximam umas das outras.
 
 **EN**
 
-- Why is the ring made of layers?
-- Because it sits on a steady beat, the steadiest here. Repetition in time becomes layers in space.
-- What if its beat were looser? · *Looser*
-- With a beat as loose as a usual record here, the layers melt into fewer bands.
+- Why does the ring have layers?
+- The notes on this record land on a steady grid, like a pulse that repeats from start to end. Horizonte draws that regularity as parallel rings: the more regular the rhythm, the further apart they sit. No record here is as regular.
+- What if the rhythm were less regular? · *Less regular*
+- With a rhythm as regular as a typical record's, the layers draw closer together.
 
 ### 3. Postura · posture
 
@@ -601,17 +635,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que a forma se ergue tão aberta?
-- Porque o disco soa brilhante. Discos brilhantes se erguem abertos; os escuros se deitam.
-- E se soasse mais escuro? · *Mais escuro*
-- Com um brilho comum na coleção, a forma assenta e se inclina para baixo.
+- Por que a forma parece tão aberta?
+- Boa parte da energia desta música está nos sons agudos, e é isso que a faz soar brilhante. O Horizonte vira a forma para quem olha conforme esse brilho: quanto mais agudos, mais ela aparece de frente, quase redonda. A linha tracejada mostra como ela seria vista de frente.
+- E se o som tivesse menos agudos? · *Menos agudos*
+- Com os agudos de um disco típico, a forma se inclina para trás e se achata, afastando-se da linha tracejada.
 
 **EN**
 
-- Why does it stand so open?
-- Because it sounds bright. Bright records stand open; dark ones lie down.
-- What if it sounded darker? · *Darker*
-- As bright as a usual record here, it settles and tilts down.
+- Why does the shape look so open?
+- Much of this music's energy sits in the treble, which is what makes it sound bright. Horizonte turns the shape toward you by that brightness: the more treble, the more it faces you, almost round. The dashed line shows it face-on.
+- What if it had less treble? · *Less treble*
+- With a typical record's treble, the shape tips back and flattens, away from the dashed line.
 
 ### 4. Fendas · gaps
 
@@ -619,17 +653,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel está quase inteiro?
-- Porque suas faixas mantêm o mesmo tipo de pulso. Quando as faixas diferem no pulso, o anel se parte entre elas.
-- E se cada faixa seguisse seu próprio pulso? · *À deriva*
-- Com pulsos tão variados quanto os de um disco comum da coleção, abrem-se fendas entre as faixas.
+- Por que o anel é quase contínuo?
+- As faixas deste disco têm ritmos parecidos. Cada setor do anel é uma faixa, e as fendas só se abrem quando as faixas diferem no ritmo; aqui, quase não há o que separar.
+- E se as faixas variassem mais no ritmo? · *Ritmos variados*
+- Com faixas tão diferentes no ritmo quanto as de um disco típico, as fendas se alargam em todo o anel.
 
 **EN**
 
-- Why is the ring almost whole?
-- Because its tracks keep the same kind of pulse. When tracks differ in beat, the ring breaks between them.
-- What if its tracks drifted apart? · *Drifting*
-- With pulses as varied as a usual record here, breaks open between its tracks.
+- Why is the ring almost unbroken?
+- The tracks on this record share a similar rhythm. Each sector of the ring is a track, and breaks only open when tracks differ in rhythm, so here there is little to separate.
+- What if its tracks varied more in rhythm? · *More varied*
+- With tracks as varied in rhythm as a typical record's, the breaks widen all around the ring.
 
 ### 5. Borda · contour
 
@@ -638,16 +672,16 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que a borda é recortada?
-- Porque o disco transita entre o suave e o forte mais que a maioria da coleção. Quanto maior essa oscilação, mais fundo o contorno, e mais ele respira enquanto toca.
-- E se fosse mais uniforme? · *Mais uniforme*
-- Com uma variação de volume comum, a borda se alisa.
+- Este disco alterna trechos calmos e intensos mais que a maioria da coleção. O anel percorre o disco do começo ao fim, e a borda acompanha esse vaivém: avança onde a música cresce e recua onde ela se acalma.
+- E se o volume variasse menos? · *Menos contraste*
+- Com trechos calmos e intensos tão próximos quanto num disco típico, os recortes ficam mais rasos, mas não saem do lugar.
 
 **EN**
 
 - Why is its edge carved?
-- Because it moves between quiet and loud more than most here. The wider that swing, the deeper the outline, and the more it breathes when it plays.
-- What if it were more even? · *More even*
-- With a usual range of volume, the edge smooths out.
+- This record moves between calm and intense passages more than most here. The ring runs through the record from start to end, and the edge follows that swing: it pushes out where the music swells and pulls in where it settles.
+- What if its volume varied less? · *Less contrast*
+- With calm and intense passages as close as in a typical record, the cuts grow shallower but stay where they are.
 
 ### 6. Centro escuro · core
 
@@ -656,21 +690,23 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que o centro escuro é grande?
-- Porque o volume do disco é mais alto que o da maioria da coleção. Discos de volume alto ganham um centro pesado que engole o anel, e o nome ganha um traço mais pesado também.
-- E se o volume fosse mais baixo? · *Mais baixo*
-- Com um volume comum na coleção, o centro encolhe.
+- Este disco soa mais alto que a maioria da coleção. No Horizonte, volume é massa, então o corpo cresce e o centro escuro avança sobre o anel.
+- E se o volume médio fosse mais baixo? · *Mais baixo*
+- No volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve espaço ao anel.
+- *Peso do nome: 704*
 
 **EN**
 
-- Why is its dark center fairly large?
-- Because it is louder than most here. Loud records grow a heavy center that swallows the ring, and the name is set heavier too.
-- What if it were quieter? · *Quieter*
-- As loud as a usual record here, the center shrinks.
+- Why is its dark center large?
+- This record plays louder than most here. In Horizonte, loudness is mass, so the body grows and the dark center presses into the ring.
+- What if it were quieter overall? · *Quieter*
+- At a typical record's loudness, the whole body shrinks and the dark center gives room back to the ring.
+- *Name weight: 704*
 
 ## H—R01 · Tale Twist — Wry Way
 
-> O nome é composto no peso 712: quanto mais alto o volume do disco, mais pesada a letra.  
-> The name is set at weight 712: the louder the record, the heavier the type.
+> O nome também vem do volume médio: quanto mais alto o disco, mais grosso o traço das letras. O deste disco é um pouco mais pesado que o típico.  
+> The name follows average loudness too: the louder the record, the thicker its letters. This one is set a little heavier than most.
 
 ### 1. Fendas · gaps
 
@@ -678,17 +714,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel está partido em pedaços?
-- Porque suas faixas não seguem o mesmo pulso: algumas se apoiam num pulso firme, outras bem menos. Cada mudança de pulso abre uma fenda entre as faixas.
-- E se as faixas seguissem o mesmo pulso? · *Mesmo pulso*
-- Com pulsos tão próximos quanto os de um disco comum da coleção, as fendas entre as faixas se estreitam.
+- Por que o anel está partido?
+- Algumas faixas deste disco seguem uma batida regular; outras fluem sem uma. Cada setor do anel é uma faixa, e quanto mais as faixas diferem nesse ponto, mais as fendas se abrem, todas por igual, em volta do anel inteiro.
+- E se as faixas tivessem ritmos parecidos? · *Ritmos parecidos*
+- Com faixas tão parecidas no ritmo quanto as de um disco típico, as fendas se estreitam em todo o anel.
 
 **EN**
 
-- Why is the ring broken into pieces?
-- Because its tracks don't share one beat: some sit on a steady pulse, others much less. Each change of pulse opens a break between tracks.
-- What if its tracks shared one beat? · *One beat*
-- With pulses as close as a usual record here, the breaks between tracks narrow.
+- Why is the ring broken apart?
+- Some tracks on this record keep a steady beat; others move without one. Each sector of the ring is a track, and the more the tracks differ in this way, the wider the breaks open, all of them equally, around the whole ring.
+- What if its tracks were alike in rhythm? · *Alike in rhythm*
+- With tracks as alike in rhythm as a typical record's, the breaks narrow all around the ring.
 
 ### 2. Postura · posture
 
@@ -696,17 +732,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que a forma se ergue tão aberta?
-- Porque o disco soa brilhante. Discos brilhantes se erguem abertos; os escuros se deitam.
-- E se soasse mais escuro? · *Mais escuro*
-- Com um brilho comum na coleção, a forma assenta e se inclina para baixo.
+- Por que a forma parece tão aberta?
+- Boa parte da energia desta música está nos sons agudos, e é isso que a faz soar brilhante. O Horizonte vira a forma para quem olha conforme esse brilho: quanto mais agudos, mais ela aparece de frente, quase redonda. A linha tracejada mostra como ela seria vista de frente.
+- E se o som tivesse menos agudos? · *Menos agudos*
+- Com os agudos de um disco típico, a forma se inclina para trás e se achata, afastando-se da linha tracejada.
 
 **EN**
 
-- Why does it stand so open?
-- Because it sounds bright. Bright records stand open; dark ones lie down.
-- What if it sounded darker? · *Darker*
-- As bright as a usual record here, it settles and tilts down.
+- Why does the shape look so open?
+- Much of this music's energy sits in the treble, which is what makes it sound bright. Horizonte turns the shape toward you by that brightness: the more treble, the more it faces you, almost round. The dashed line shows it face-on.
+- What if it had less treble? · *Less treble*
+- With a typical record's treble, the shape tips back and flattens, away from the dashed line.
 
 ### 3. Borda · contour
 
@@ -715,16 +751,16 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que a borda é tão lisa?
-- Porque o volume do disco quase não muda. Uma música sem grandes saltos deixa um contorno mais liso, que respira menos enquanto toca.
-- E se oscilasse mais entre o suave e o forte? · *Mais contraste*
-- Com uma variação de volume comum, a borda se recorta.
+- A intensidade deste disco quase não muda: o trecho mais calmo e o mais intenso ficam próximos. Como a borda acompanha essa intensidade ao longo do disco, ela quase não se move.
+- E se o volume variasse mais? · *Mais contraste*
+- Com trechos calmos e intensos tão distantes quanto num disco típico, os recortes se aprofundam, nos mesmos lugares.
 
 **EN**
 
 - Why is its edge so smooth?
-- Because it barely changes in volume. Even music leaves a smoother outline, and it breathes less when it plays.
-- What if it swung more between quiet and loud? · *More contrast*
-- With a usual range of volume, the edge gets carved.
+- This record's intensity barely changes: its calmest and most intense passages sit close together. The edge follows that intensity across the record, so it hardly moves.
+- What if its volume varied more? · *More contrast*
+- With calm and intense passages as far apart as in a typical record, the cuts deepen in the same places.
 
 ### 4. Camadas · strata
 
@@ -732,17 +768,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel mostra camadas tênues?
-- Porque a batida do disco é regular só em parte. Quanto mais firme a grade, mais o anel se divide em camadas.
-- E se a batida fosse mais solta? · *Mais solta*
-- Com uma batida tão solta quanto a de um disco comum da coleção, as camadas se fundem e rareiam.
+- Por que o anel se divide em camadas?
+- As notas deste disco caem numa grade bastante regular, mais que na maioria da coleção. O Horizonte desenha essa regularidade como anéis paralelos: quanto mais regular o ritmo, mais afastados eles ficam.
+- E se o ritmo fosse menos regular? · *Menos regular*
+- Com um ritmo tão regular quanto o de um disco típico, as camadas se aproximam umas das outras.
 
 **EN**
 
-- Why does the ring show faint layers?
-- Because its beat is only partly regular. The steadier the grid, the more the ring splits into layers.
-- What if its beat were looser? · *Looser*
-- With a beat as loose as a usual record here, the layers melt into fewer bands.
+- Why does the ring split into layers?
+- The notes on this record fall on a fairly steady grid, more than on most records here. Horizonte draws that regularity as parallel rings: the more regular the rhythm, the further apart they sit.
+- What if the rhythm were less regular? · *Less regular*
+- With a rhythm as regular as a typical record's, the layers draw closer together.
 
 ### 5. Pequenos corpos · satellites
 
@@ -750,17 +786,21 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que há um pequeno corpo ao lado?
-- Por causa da duração: 31 minutos, mais curto que a maioria da coleção. Os discos se espalham em pequenos corpos conforme ficam mais longos; com essa duração, aparece um.
-- E se fosse mais longo? · *Mais longo*
-- Com 34 minutos, uma duração comum na coleção, surge mais um pequeno corpo em volta.
+- De onde vem o pequeno corpo ao lado?
+- Ele vem da duração. Com 31 minutos, mais curto que a maioria da coleção, este disco ganha só um: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração.
+- E se o disco fosse mais longo? · *Mais longo*
+- Com 34 minutos, a duração típica da coleção, surge mais um pequeno corpo. Ele representa os 3 minutos que faltam a este disco.
+- *Corpos surgem em: 23 · 33 · 44 · 54 min*
+- *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
-- Why is there a small body beside it?
-- Because of its length: 31 minutes, shorter than most here. Records spread into small bodies as they get longer; at this length, one.
-- What if it were longer? · *Longer*
-- At 34 minutes, a usual length here, one more small body appears around it.
+- Where does the small body beside it come from?
+- It comes from its length. At 31 minutes, shorter than most here, this record earns just one: Horizonte shows time as small bodies around the shape, one more for each added stretch.
+- What if the record were longer? · *Longer*
+- At 34 minutes, the collection's typical length, one more small body appears. It stands for the 3 minutes this record doesn't have.
+- *Bodies appear at: 23 · 33 · 44 · 54 min*
+- *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
 ### 6. Centro escuro · core
 
@@ -769,21 +809,23 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que o centro escuro é grande?
-- Porque o volume do disco é mais alto que o da maioria da coleção. Discos de volume alto ganham um centro pesado que engole o anel, e o nome ganha um traço mais pesado também.
-- E se o volume fosse mais baixo? · *Mais baixo*
-- Com um volume comum na coleção, o centro encolhe.
+- Este disco soa mais alto que a maioria da coleção. No Horizonte, volume é massa, então o corpo cresce e o centro escuro avança sobre o anel.
+- E se o volume médio fosse mais baixo? · *Mais baixo*
+- No volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve espaço ao anel.
+- *Peso do nome: 712*
 
 **EN**
 
-- Why is its dark center fairly large?
-- Because it is louder than most here. Loud records grow a heavy center that swallows the ring, and the name is set heavier too.
-- What if it were quieter? · *Quieter*
-- As loud as a usual record here, the center shrinks.
+- Why is its dark center large?
+- This record plays louder than most here. In Horizonte, loudness is mass, so the body grows and the dark center presses into the ring.
+- What if it were quieter overall? · *Quieter*
+- At a typical record's loudness, the whole body shrinks and the dark center gives room back to the ring.
+- *Name weight: 712*
 
 ## H—016 · Madison Kenny — All Systems Go
 
-> O nome é composto no peso 748: quanto mais alto o volume do disco, mais pesada a letra.  
-> The name is set at weight 748: the louder the record, the heavier the type.
+> O nome também vem do volume médio: quanto mais alto o disco, mais grosso o traço das letras. O deste disco está entre os mais pesados.  
+> The name follows average loudness too: the louder the record, the thicker its letters. This one is among the heaviest.
 
 ### 1. Postura · posture
 
@@ -791,17 +833,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que a forma se ergue tão aberta?
-- Porque o disco soa brilhante, o mais brilhante da coleção. Discos brilhantes se erguem abertos; os escuros se deitam.
-- E se soasse mais escuro? · *Mais escuro*
-- Com um brilho comum na coleção, a forma assenta e se inclina para baixo.
+- Por que a forma parece tão aberta?
+- Boa parte da energia desta música está nos sons agudos, e é isso que a faz soar brilhante. O Horizonte vira a forma para quem olha conforme esse brilho: quanto mais agudos, mais ela aparece de frente, quase redonda. Nenhum disco da coleção é tão brilhante. A linha tracejada mostra como ela seria vista de frente.
+- E se o som tivesse menos agudos? · *Menos agudos*
+- Com os agudos de um disco típico, a forma se inclina para trás e se achata, afastando-se da linha tracejada.
 
 **EN**
 
-- Why does it stand so open?
-- Because it sounds bright, the brightest record here. Bright records stand open; dark ones lie down.
-- What if it sounded darker? · *Darker*
-- As bright as a usual record here, it settles and tilts down.
+- Why does the shape look so open?
+- Much of this music's energy sits in the treble, which is what makes it sound bright. Horizonte turns the shape toward you by that brightness: the more treble, the more it faces you, almost round. No record here is brighter. The dashed line shows it face-on.
+- What if it had less treble? · *Less treble*
+- With a typical record's treble, the shape tips back and flattens, away from the dashed line.
 
 ### 2. Pequenos corpos · satellites
 
@@ -809,17 +851,21 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que a forma é um corpo só?
-- Porque o disco é curto: 16 minutos, o mais curto da coleção. Só os discos mais longos se espalham em pequenos corpos.
-- E se fosse mais longo? · *Mais longo*
-- Com 34 minutos, uma duração comum na coleção, surgem dois pequenos corpos em volta.
+- Por que esta forma está sozinha?
+- Porque o disco é curto: 16 minutos, o mais curto da coleção. O Horizonte mostra o tempo com pequenos corpos que vão surgindo em volta da forma à medida que o disco se alonga, e este termina antes do primeiro.
+- E se o disco fosse mais longo? · *Mais longo*
+- Com 34 minutos, a duração típica da coleção, surgem dois pequenos corpos em volta. Eles representam os 18 minutos que faltam a este disco.
+- *Corpos surgem em: 23 · 33 · 44 · 54 min*
+- *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
-- Why is it a single body?
-- Because it is short: 16 minutes, the shortest record here. Only longer records spread out into small bodies.
-- What if it were longer? · *Longer*
-- At 34 minutes, a usual length here, two small bodies appear around it.
+- Why is this shape alone?
+- Because the record is short: 16 minutes, the shortest here. Horizonte shows time as small bodies that gather around the shape as a record grows longer, and this one ends before the first appears.
+- What if the record were longer? · *Longer*
+- At 34 minutes, the collection's typical length, two small bodies appear around it. They stand for the 18 minutes this record doesn't have.
+- *Bodies appear at: 23 · 33 · 44 · 54 min*
+- *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
 ### 3. Borda · contour
 
@@ -828,16 +874,16 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que a borda é tão lisa?
-- Porque o volume do disco quase não muda, menos que o de qualquer outro da coleção. Uma música sem grandes saltos deixa um contorno mais liso, que respira menos enquanto toca.
-- E se oscilasse mais entre o suave e o forte? · *Mais contraste*
-- Com uma variação de volume comum, a borda se recorta.
+- A intensidade deste disco quase não muda: o trecho mais calmo e o mais intenso ficam próximos. Como a borda acompanha essa intensidade ao longo do disco, ela quase não se move; nenhum disco da coleção varia tão pouco.
+- E se o volume variasse mais? · *Mais contraste*
+- Com trechos calmos e intensos tão distantes quanto num disco típico, os recortes se aprofundam, nos mesmos lugares.
 
 **EN**
 
 - Why is its edge so smooth?
-- Because it barely changes in volume, less than any record here. Even music leaves a smoother outline, and it breathes less when it plays.
-- What if it swung more between quiet and loud? · *More contrast*
-- With a usual range of volume, the edge gets carved.
+- This record's intensity barely changes: its calmest and most intense passages sit close together. The edge follows that intensity across the record, so it hardly moves; no record here varies less.
+- What if its volume varied more? · *More contrast*
+- With calm and intense passages as far apart as in a typical record, the cuts deepen in the same places.
 
 ### 4. Centro escuro · core
 
@@ -846,16 +892,18 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que o centro escuro é tão grande?
-- Porque o volume do disco é alto. Discos de volume alto ganham um centro pesado que engole o anel, e o nome ganha um traço mais pesado também.
-- E se o volume fosse mais baixo? · *Mais baixo*
-- Com um volume comum na coleção, o centro encolhe.
+- Este disco soa alto do começo ao fim. No Horizonte, volume é massa: quanto mais alto o disco, maior o corpo e maior o centro escuro, que vai tomando o lugar do anel em volta.
+- E se o volume médio fosse mais baixo? · *Mais baixo*
+- No volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve espaço ao anel.
+- *Peso do nome: 748*
 
 **EN**
 
 - Why is its dark center so large?
-- Because it is loud. Loud records grow a heavy center that swallows the ring, and the name is set heavier too.
-- What if it were quieter? · *Quieter*
-- As loud as a usual record here, the center shrinks.
+- This record plays loud from start to end. In Horizonte, loudness is mass: the louder the record, the bigger the body and its dark center, which takes over the ring around it.
+- What if it were quieter overall? · *Quieter*
+- At a typical record's loudness, the whole body shrinks and the dark center gives room back to the ring.
+- *Name weight: 748*
 
 ### 5. Fendas · gaps
 
@@ -863,17 +911,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel está quase inteiro?
-- Porque suas faixas mantêm o mesmo tipo de pulso. Quando as faixas diferem no pulso, o anel se parte entre elas.
-- E se as faixas seguissem o mesmo pulso? · *Mesmo pulso*
-- Com pulsos tão próximos quanto os de um disco comum da coleção, as fendas entre as faixas se estreitam.
+- Por que o anel tem fendas?
+- Algumas faixas deste disco têm um ritmo mais regular que outras. Cada setor do anel é uma faixa, e essa diferença abre fendas entre todos eles; aqui, um pouco mais largas que o típico, mas ainda estreitas.
+- E se as faixas tivessem ritmos parecidos? · *Ritmos parecidos*
+- Com faixas tão parecidas no ritmo quanto as de um disco típico, as fendas se estreitam em todo o anel.
 
 **EN**
 
-- Why is the ring almost whole?
-- Because its tracks keep the same kind of pulse. When tracks differ in beat, the ring breaks between them.
-- What if its tracks shared one beat? · *One beat*
-- With pulses as close as a usual record here, the breaks between tracks narrow.
+- Why does the ring have breaks?
+- Some tracks on this record keep a steadier rhythm than others. Each sector of the ring is a track, and that difference opens breaks between all of them; here they are a little wider than typical, though still narrow.
+- What if its tracks were alike in rhythm? · *Alike in rhythm*
+- With tracks as alike in rhythm as a typical record's, the breaks narrow all around the ring.
 
 ### 6. Camadas · strata
 
@@ -882,17 +930,17 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - O que dividiria o anel em camadas?
-- Uma batida firme. A batida deste disco é mais ou menos tão regular quanto a da maioria da coleção.
+- Um ritmo regular. Quando as notas caem numa grade que se repete, o anel se divide em camadas, mais afastadas quanto mais constante é a grade; o ritmo deste disco é tão regular quanto o de um disco típico.
 
 **EN**
 
 - What would split the ring into layers?
-- A steady beat. This record's beat is about as regular as most here.
+- A regular rhythm. When the notes land on a repeating grid, the ring splits into layers, further apart the steadier the grid; this record's rhythm is as regular as a typical one.
 
 ## H—R02 · Meho — MKUltra
 
-> O nome é composto no peso 678: quanto mais alto o volume do disco, mais pesada a letra.  
-> The name is set at weight 678: the louder the record, the heavier the type.
+> O nome também vem do volume médio: quanto mais alto o disco, mais grosso o traço das letras. O deste disco tem o peso típico.  
+> The name follows average loudness too: the louder the record, the thicker its letters. This one has the typical weight.
 
 ### 1. Postura · posture
 
@@ -900,17 +948,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que a forma se deita tão rente ao chão?
-- Porque o disco soa escuro, o mais escuro da coleção: quase toda a sua energia fica nos graves. Discos escuros se deitam; os brilhantes se erguem abertos.
-- E se soasse mais brilhante? · *Mais brilhante*
-- Com um brilho comum na coleção, a forma se ergue e se abre.
+- Por que a forma está tão achatada?
+- Quase toda a energia desta música está nos graves, com poucos agudos por cima: ela soa escura. Para mostrar isso, o Horizonte deita a forma, achatada, como se a víssemos de lado. Nenhum disco da coleção é tão escuro. A linha tracejada mostra como ela seria vista de frente.
+- E se o som tivesse mais agudos? · *Mais agudos*
+- Com os agudos de um disco típico, a forma se levanta e se arredonda, aproximando-se da linha tracejada.
 
 **EN**
 
-- Why does it lie so flat?
-- Because it sounds dark, the darkest record here: most of its energy sits low. Dark records lie down; bright ones stand open.
-- What if it sounded brighter? · *Brighter*
-- As bright as a usual record here, it rises and opens.
+- Why is the shape so flat?
+- Nearly all of this music's energy sits in the low end, with little treble on top: it sounds dark. To show that, Horizonte lays the shape down, flattened, as if seen from the side. No record here is darker. The dashed line shows it face-on.
+- What if it had more treble? · *More treble*
+- With a typical record's treble, the shape lifts and rounds out, toward the dashed line.
 
 ### 2. Pequenos corpos · satellites
 
@@ -918,17 +966,21 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que há quatro pequenos corpos em volta?
-- Porque o disco é longo: 66 minutos. Um disco longo vira território: em vez de crescer, ele se espalha em pequenos corpos.
-- E se fosse mais curto? · *Mais curto*
-- Com 34 minutos, uma duração comum na coleção, dois dos seus quatro pequenos corpos se dissolvem.
+- De onde vêm os quatro pequenos corpos?
+- Eles vêm da duração. Este disco tem 66 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela.
+- E se o disco fosse mais curto? · *Mais curto*
+- Com 34 minutos, a duração típica da coleção, restam dois pequenos corpos. Os que somem representavam os 32 minutos a mais deste disco.
+- *Corpos surgem em: 23 · 33 · 44 · 54 min*
+- *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
-- Why are there four small bodies around it?
-- Because it is long: 66 minutes. A long record becomes territory: it spreads into small bodies instead of growing.
-- What if it were shorter? · *Shorter*
-- At 34 minutes, a usual length here, two of its four small bodies dissolve.
+- Where do the four small bodies come from?
+- They come from its length. At 66 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it.
+- What if the record were shorter? · *Shorter*
+- At 34 minutes, the collection's typical length, two small bodies remain. The ones that go stood for this record's extra 32 minutes.
+- *Bodies appear at: 23 · 33 · 44 · 54 min*
+- *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
 ### 3. Camadas · strata
 
@@ -936,17 +988,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel mostra camadas tênues?
-- Porque a batida do disco é regular só em parte. Quanto mais firme a grade, mais o anel se divide em camadas.
-- E se a batida fosse mais firme? · *Mais firme*
-- Com uma batida tão firme quanto a de um disco comum da coleção, o anel se divide em camadas.
+- Por que as camadas do anel mal aparecem?
+- O ritmo deste disco tem alguma regularidade, mas pouca. As camadas estão lá, coladas umas às outras; só se separam quando o ritmo fica mais constante.
+- E se o ritmo fosse mais regular? · *Mais regular*
+- Com um ritmo tão regular quanto o de um disco típico, as camadas se afastam e ficam mais nítidas.
 
 **EN**
 
-- Why does the ring show faint layers?
-- Because its beat is only partly regular. The steadier the grid, the more the ring splits into layers.
-- What if it had a steadier beat? · *Steadier*
-- With a beat as steady as a usual record here, the band splits into layers.
+- Why are the ring's layers so faint?
+- This record's rhythm has some regularity, but not much. The layers are there, pressed together; they only pull apart as a rhythm grows steadier.
+- What if the rhythm were more regular? · *More regular*
+- With a rhythm as regular as a typical record's, the layers pull apart and sharpen.
 
 ### 4. Borda · contour
 
@@ -955,16 +1007,16 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que a borda é quase lisa?
-- Porque o volume do disco varia menos que o da maioria da coleção. Uma música sem grandes saltos deixa um contorno mais liso, que respira menos enquanto toca.
-- E se oscilasse mais entre o suave e o forte? · *Mais contraste*
-- Com uma variação de volume comum, a borda se recorta.
+- A intensidade deste disco varia menos que a da maioria da coleção. Como a borda acompanha essa intensidade ao longo do disco, os recortes ficam rasos.
+- E se o volume variasse mais? · *Mais contraste*
+- Com trechos calmos e intensos tão distantes quanto num disco típico, os recortes se aprofundam, nos mesmos lugares.
 
 **EN**
 
-- Why is its edge fairly smooth?
-- Because it stays within a narrower range of volume than most here. Even music leaves a smoother outline, and it breathes less when it plays.
-- What if it swung more between quiet and loud? · *More contrast*
-- With a usual range of volume, the edge gets carved.
+- Why is its edge nearly smooth?
+- This record's intensity varies less than most here. The edge follows that intensity across the record, so its cuts stay shallow.
+- What if its volume varied more? · *More contrast*
+- With calm and intense passages as far apart as in a typical record, the cuts deepen in the same places.
 
 ### 5. Fendas · gaps
 
@@ -972,17 +1024,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel está quase inteiro?
-- Porque suas faixas mantêm o mesmo tipo de pulso. Quando as faixas diferem no pulso, o anel se parte entre elas.
-- E se cada faixa seguisse seu próprio pulso? · *À deriva*
-- Com pulsos tão variados quanto os de um disco comum da coleção, abrem-se fendas entre as faixas.
+- Por que o anel é quase contínuo?
+- As faixas deste disco têm ritmos parecidos. Cada setor do anel é uma faixa, e as fendas só se abrem quando as faixas diferem no ritmo; aqui, quase não há o que separar.
+- E se as faixas variassem mais no ritmo? · *Ritmos variados*
+- Com faixas tão diferentes no ritmo quanto as de um disco típico, as fendas se alargam em todo o anel.
 
 **EN**
 
-- Why is the ring almost whole?
-- Because its tracks keep the same kind of pulse. When tracks differ in beat, the ring breaks between them.
-- What if its tracks drifted apart? · *Drifting*
-- With pulses as varied as a usual record here, breaks open between its tracks.
+- Why is the ring almost unbroken?
+- The tracks on this record share a similar rhythm. Each sector of the ring is a track, and breaks only open when tracks differ in rhythm, so here there is little to separate.
+- What if its tracks varied more in rhythm? · *More varied*
+- With tracks as varied in rhythm as a typical record's, the breaks widen all around the ring.
 
 ### 6. Centro escuro · core
 
@@ -991,17 +1043,19 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - O que define o tamanho do centro escuro?
-- O volume. Este disco tem um volume parecido com o da maioria da coleção, então o centro tem um tamanho comum, assim como o peso do nome.
+- O quanto o disco soa alto. No Horizonte, volume é massa: discos mais altos ganham um corpo maior e um centro que estreita o anel; os mais baixos, o contrário. Este fica no meio da coleção.
+- *Peso do nome: 678*
 
 **EN**
 
 - What sets the size of its dark center?
-- Loudness. This record is about as loud as most here, so its center is of a usual size, and so is the weight of its name.
+- How loud the record plays. In Horizonte, loudness is mass: louder records get a bigger body and a center that narrows the ring; quieter ones, the reverse. This one sits in the middle of the collection.
+- *Name weight: 678*
 
 ## H—R03 · Mescaline Sessions — Jajce Sessions
 
-> O nome é composto no peso 663: quanto mais alto o volume do disco, mais pesada a letra.  
-> The name is set at weight 663: the louder the record, the heavier the type.
+> O nome também vem do volume médio: quanto mais alto o disco, mais grosso o traço das letras. O deste disco é um pouco mais leve que o típico.  
+> The name follows average loudness too: the louder the record, the thicker its letters. This one is set a little lighter than most.
 
 ### 1. Postura · posture
 
@@ -1009,17 +1063,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que a forma se deita tão rente ao chão?
-- Porque o disco soa escuro: quase toda a sua energia fica nos graves. Discos escuros se deitam; os brilhantes se erguem abertos.
-- E se soasse mais brilhante? · *Mais brilhante*
-- Com um brilho comum na coleção, a forma se ergue e se abre.
+- Por que a forma está tão achatada?
+- Quase toda a energia desta música está nos graves, com poucos agudos por cima: ela soa escura. Para mostrar isso, o Horizonte deita a forma, achatada, como se a víssemos de lado. A linha tracejada mostra como ela seria vista de frente.
+- E se o som tivesse mais agudos? · *Mais agudos*
+- Com os agudos de um disco típico, a forma se levanta e se arredonda, aproximando-se da linha tracejada.
 
 **EN**
 
-- Why does it lie so flat?
-- Because it sounds dark: most of its energy sits low. Dark records lie down; bright ones stand open.
-- What if it sounded brighter? · *Brighter*
-- As bright as a usual record here, it rises and opens.
+- Why is the shape so flat?
+- Nearly all of this music's energy sits in the low end, with little treble on top: it sounds dark. To show that, Horizonte lays the shape down, flattened, as if seen from the side. The dashed line shows it face-on.
+- What if it had more treble? · *More treble*
+- With a typical record's treble, the shape lifts and rounds out, toward the dashed line.
 
 ### 2. Fendas · gaps
 
@@ -1027,17 +1081,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel está partido em pedaços?
-- Porque suas faixas não seguem o mesmo pulso: algumas se apoiam num pulso firme, outras bem menos. Cada mudança de pulso abre uma fenda entre as faixas.
-- E se as faixas seguissem o mesmo pulso? · *Mesmo pulso*
-- Com pulsos tão próximos quanto os de um disco comum da coleção, as fendas entre as faixas se estreitam.
+- Por que o anel está partido?
+- Algumas faixas deste disco seguem uma batida regular; outras fluem sem uma. Cada setor do anel é uma faixa, e quanto mais as faixas diferem nesse ponto, mais as fendas se abrem, todas por igual, em volta do anel inteiro.
+- E se as faixas tivessem ritmos parecidos? · *Ritmos parecidos*
+- Com faixas tão parecidas no ritmo quanto as de um disco típico, as fendas se estreitam em todo o anel.
 
 **EN**
 
-- Why is the ring broken into pieces?
-- Because its tracks don't share one beat: some sit on a steady pulse, others much less. Each change of pulse opens a break between tracks.
-- What if its tracks shared one beat? · *One beat*
-- With pulses as close as a usual record here, the breaks between tracks narrow.
+- Why is the ring broken apart?
+- Some tracks on this record keep a steady beat; others move without one. Each sector of the ring is a track, and the more the tracks differ in this way, the wider the breaks open, all of them equally, around the whole ring.
+- What if its tracks were alike in rhythm? · *Alike in rhythm*
+- With tracks as alike in rhythm as a typical record's, the breaks narrow all around the ring.
 
 ### 3. Centro escuro · core
 
@@ -1046,16 +1100,18 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que o centro escuro é pequeno?
-- Porque o volume do disco é um pouco mais baixo que o da maioria da coleção. Discos de volume baixo guardam um centro pequeno e muito espaço aberto, e o nome ganha um traço mais leve também.
-- E se o volume fosse mais alto? · *Mais alto*
-- Com um volume comum na coleção, o centro se expande.
+- Este disco soa um pouco mais baixo que a maioria da coleção. No Horizonte, volume é massa, então o corpo fica menor e o anel ganha espaço.
+- E se o volume médio fosse mais alto? · *Mais alto*
+- No volume de um disco típico, o corpo inteiro cresce e o centro escuro avança sobre o anel.
+- *Peso do nome: 663*
 
 **EN**
 
-- Why is its dark center fairly small?
-- Because it is a little quieter than most here. Quiet records keep a small center and open space, and the name is set lighter too.
-- What if it were louder? · *Louder*
-- As loud as a usual record here, the center swells.
+- Why is its dark center small?
+- This record plays a little quieter than most here. In Horizonte, loudness is mass, so the body stays smaller and the ring keeps more room.
+- What if it were louder overall? · *Louder*
+- At a typical record's loudness, the whole body grows and the dark center presses into the ring.
+- *Name weight: 663*
 
 ### 4. Camadas · strata
 
@@ -1063,17 +1119,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel mostra camadas tênues?
-- Porque a batida do disco é regular só em parte. Quanto mais firme a grade, mais o anel se divide em camadas.
-- E se a batida fosse mais firme? · *Mais firme*
-- Com uma batida tão firme quanto a de um disco comum da coleção, o anel se divide em camadas.
+- Por que as camadas do anel mal aparecem?
+- O ritmo deste disco tem alguma regularidade, mas pouca. As camadas estão lá, coladas umas às outras; só se separam quando o ritmo fica mais constante.
+- E se o ritmo fosse mais regular? · *Mais regular*
+- Com um ritmo tão regular quanto o de um disco típico, as camadas se afastam e ficam mais nítidas.
 
 **EN**
 
-- Why does the ring show faint layers?
-- Because its beat is only partly regular. The steadier the grid, the more the ring splits into layers.
-- What if it had a steadier beat? · *Steadier*
-- With a beat as steady as a usual record here, the band splits into layers.
+- Why are the ring's layers so faint?
+- This record's rhythm has some regularity, but not much. The layers are there, pressed together; they only pull apart as a rhythm grows steadier.
+- What if the rhythm were more regular? · *More regular*
+- With a rhythm as regular as a typical record's, the layers pull apart and sharpen.
 
 ### 5. Borda · contour
 
@@ -1082,16 +1138,16 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que a borda é quase lisa?
-- Porque o volume do disco varia menos que o da maioria da coleção. Uma música sem grandes saltos deixa um contorno mais liso, que respira menos enquanto toca.
-- E se oscilasse mais entre o suave e o forte? · *Mais contraste*
-- Com uma variação de volume comum, a borda se recorta.
+- A intensidade deste disco varia menos que a da maioria da coleção. Como a borda acompanha essa intensidade ao longo do disco, os recortes ficam rasos.
+- E se o volume variasse mais? · *Mais contraste*
+- Com trechos calmos e intensos tão distantes quanto num disco típico, os recortes se aprofundam, nos mesmos lugares.
 
 **EN**
 
-- Why is its edge fairly smooth?
-- Because it stays within a narrower range of volume than most here. Even music leaves a smoother outline, and it breathes less when it plays.
-- What if it swung more between quiet and loud? · *More contrast*
-- With a usual range of volume, the edge gets carved.
+- Why is its edge nearly smooth?
+- This record's intensity varies less than most here. The edge follows that intensity across the record, so its cuts stay shallow.
+- What if its volume varied more? · *More contrast*
+- With calm and intense passages as far apart as in a typical record, the cuts deepen in the same places.
 
 ### 6. Pequenos corpos · satellites
 
@@ -1099,18 +1155,22 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que há dois pequenos corpos em volta?
-- Por causa da duração: 33 minutos, perto do comum na coleção. Os discos se espalham em pequenos corpos conforme ficam mais longos; com essa duração, aparecem dois.
+- De onde vêm os dois pequenos corpos?
+- Eles vêm da duração. Com 33 minutos, perto da duração típica da coleção, este disco tem dois: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração.
+- *Corpos surgem em: 23 · 33 · 44 · 54 min*
+- *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
-- Why are there two small bodies around it?
-- Because of its length: 33 minutes, close to the usual here. Records spread into small bodies as they get longer; at this length, two.
+- Where do the two small bodies come from?
+- They come from its length. At 33 minutes, close to the collection's typical length, this record has two: Horizonte shows time as small bodies around the shape, one more for each added stretch.
+- *Bodies appear at: 23 · 33 · 44 · 54 min*
+- *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
 ## H—017 · The Ghost of an Alien — Dust. Time.. Gravity
 
-> O nome é composto no peso 624: quanto mais alto o volume do disco, mais pesada a letra.  
-> The name is set at weight 624: the louder the record, the heavier the type.
+> O nome também vem do volume médio: quanto mais alto o disco, mais grosso o traço das letras. O deste disco está entre os mais leves.  
+> The name follows average loudness too: the louder the record, the thicker its letters. This one is among the lightest.
 
 ### 1. Pequenos corpos · satellites
 
@@ -1118,17 +1178,21 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que há quatro pequenos corpos em volta?
-- Porque o disco é longo: 61 minutos. Um disco longo vira território: em vez de crescer, ele se espalha em pequenos corpos.
-- E se fosse mais curto? · *Mais curto*
-- Com 34 minutos, uma duração comum na coleção, dois dos seus quatro pequenos corpos se dissolvem.
+- De onde vêm os quatro pequenos corpos?
+- Eles vêm da duração. Este disco tem 61 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela.
+- E se o disco fosse mais curto? · *Mais curto*
+- Com 34 minutos, a duração típica da coleção, restam dois pequenos corpos. Os que somem representavam os 27 minutos a mais deste disco.
+- *Corpos surgem em: 23 · 33 · 44 · 54 min*
+- *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
-- Why are there four small bodies around it?
-- Because it is long: 61 minutes. A long record becomes territory: it spreads into small bodies instead of growing.
-- What if it were shorter? · *Shorter*
-- At 34 minutes, a usual length here, two of its four small bodies dissolve.
+- Where do the four small bodies come from?
+- They come from its length. At 61 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it.
+- What if the record were shorter? · *Shorter*
+- At 34 minutes, the collection's typical length, two small bodies remain. The ones that go stood for this record's extra 27 minutes.
+- *Bodies appear at: 23 · 33 · 44 · 54 min*
+- *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
 ### 2. Borda · contour
 
@@ -1137,16 +1201,16 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que a borda é tão recortada?
-- Porque o disco vai do muito suave ao muito forte. Quanto maior essa oscilação, mais fundo o contorno, e mais ele respira enquanto toca.
-- E se fosse mais uniforme? · *Mais uniforme*
-- Com uma variação de volume comum, a borda se alisa.
+- Este disco vai de trechos muito calmos a trechos muito intensos. O anel percorre o disco do começo ao fim, e a borda acompanha esse vaivém: avança onde a música cresce e recua onde ela se acalma. Quanto maior a distância entre calma e intensidade, mais fundo o recorte.
+- E se o volume variasse menos? · *Menos contraste*
+- Com trechos calmos e intensos tão próximos quanto num disco típico, os recortes ficam mais rasos, mas não saem do lugar.
 
 **EN**
 
 - Why is its edge so jagged?
-- Because it swings between very quiet and very loud. The wider that swing, the deeper the outline, and the more it breathes when it plays.
-- What if it were more even? · *More even*
-- With a usual range of volume, the edge smooths out.
+- This record swings from very calm passages to very intense ones. The ring runs through the record from start to end, and the edge follows that swing: it pushes out where the music swells and pulls in where it settles. The bigger the gap between calm and intense, the deeper the cut.
+- What if its volume varied less? · *Less contrast*
+- With calm and intense passages as close as in a typical record, the cuts grow shallower but stay where they are.
 
 ### 3. Postura · posture
 
@@ -1154,17 +1218,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que a forma se deita tão rente ao chão?
-- Porque o disco soa escuro: quase toda a sua energia fica nos graves. Discos escuros se deitam; os brilhantes se erguem abertos.
-- E se soasse mais brilhante? · *Mais brilhante*
-- Com um brilho comum na coleção, a forma se ergue e se abre.
+- Por que a forma está tão achatada?
+- Quase toda a energia desta música está nos graves, com poucos agudos por cima: ela soa escura. Para mostrar isso, o Horizonte deita a forma, achatada, como se a víssemos de lado. A linha tracejada mostra como ela seria vista de frente.
+- E se o som tivesse mais agudos? · *Mais agudos*
+- Com os agudos de um disco típico, a forma se levanta e se arredonda, aproximando-se da linha tracejada.
 
 **EN**
 
-- Why does it lie so flat?
-- Because it sounds dark: most of its energy sits low. Dark records lie down; bright ones stand open.
-- What if it sounded brighter? · *Brighter*
-- As bright as a usual record here, it rises and opens.
+- Why is the shape so flat?
+- Nearly all of this music's energy sits in the low end, with little treble on top: it sounds dark. To show that, Horizonte lays the shape down, flattened, as if seen from the side. The dashed line shows it face-on.
+- What if it had more treble? · *More treble*
+- With a typical record's treble, the shape lifts and rounds out, toward the dashed line.
 
 ### 4. Fendas · gaps
 
@@ -1172,17 +1236,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel está quase inteiro?
-- Porque suas faixas mantêm o mesmo tipo de pulso. Quando as faixas diferem no pulso, o anel se parte entre elas.
-- E se cada faixa seguisse seu próprio pulso? · *À deriva*
-- Com pulsos tão variados quanto os de um disco comum da coleção, abrem-se fendas entre as faixas.
+- Por que o anel é quase contínuo?
+- As faixas deste disco têm ritmos parecidos. Cada setor do anel é uma faixa, e as fendas só se abrem quando as faixas diferem no ritmo; aqui, quase não há o que separar. Nenhum disco da coleção tem faixas tão parecidas.
+- E se as faixas variassem mais no ritmo? · *Ritmos variados*
+- Com faixas tão diferentes no ritmo quanto as de um disco típico, as fendas se alargam em todo o anel.
 
 **EN**
 
-- Why is the ring almost whole?
-- Because its tracks keep the same kind of pulse. When tracks differ in beat, the ring breaks between them.
-- What if its tracks drifted apart? · *Drifting*
-- With pulses as varied as a usual record here, breaks open between its tracks.
+- Why is the ring almost unbroken?
+- The tracks on this record share a similar rhythm. Each sector of the ring is a track, and breaks only open when tracks differ in rhythm, so here there is little to separate. No record here has tracks this alike.
+- What if its tracks varied more in rhythm? · *More varied*
+- With tracks as varied in rhythm as a typical record's, the breaks widen all around the ring.
 
 ### 5. Camadas · strata
 
@@ -1190,17 +1254,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel é uma camada só?
-- Porque o disco flutua livre de qualquer batida; é o mais solto da coleção. Só a música presa a uma grade regular divide o anel em camadas.
-- E se a batida fosse mais firme? · *Mais firme*
-- Com uma batida tão firme quanto a de um disco comum da coleção, o anel se divide em camadas.
+- Por que o anel não tem camadas?
+- Os sons deste disco chegam sem uma batida que se repita, livres de qualquer grade. O anel só se divide em camadas quando o ritmo é regular. Nenhum disco da coleção tem um ritmo tão livre.
+- E se o ritmo fosse mais regular? · *Mais regular*
+- Com um ritmo tão regular quanto o de um disco típico, o anel se divide em camadas, ainda bem juntas.
 
 **EN**
 
-- Why is the ring a single band?
-- Because it floats free of any beat, the loosest here. Only music on a steady grid splits the ring into layers.
-- What if it had a steadier beat? · *Steadier*
-- With a beat as steady as a usual record here, the band splits into layers.
+- Why does the ring have no layers?
+- The sounds on this record arrive without a repeating beat, free of any grid. The ring only splits into layers when a rhythm is regular. No record here moves as freely.
+- What if the rhythm were more regular? · *More regular*
+- With a rhythm as regular as a typical record's, the ring splits into layers, still close together.
 
 ### 6. Centro escuro · core
 
@@ -1209,21 +1273,23 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que o centro escuro é tão pequeno?
-- Porque o volume do disco é baixo. Discos de volume baixo guardam um centro pequeno e muito espaço aberto, e o nome ganha um traço mais leve também.
-- E se o volume fosse mais alto? · *Mais alto*
-- Com um volume comum na coleção, o centro se expande.
+- Este disco soa baixo do começo ao fim. No Horizonte, volume é massa: com pouca, o corpo encolhe e o centro escuro deixa um anel largo à sua volta.
+- E se o volume médio fosse mais alto? · *Mais alto*
+- No volume de um disco típico, o corpo inteiro cresce e o centro escuro avança sobre o anel.
+- *Peso do nome: 624*
 
 **EN**
 
 - Why is its dark center so small?
-- Because it is quiet. Quiet records keep a small center and open space, and the name is set lighter too.
-- What if it were louder? · *Louder*
-- As loud as a usual record here, the center swells.
+- This record plays quietly from start to end. In Horizonte, loudness is mass: with little of it, the body shrinks and the dark center leaves a wide ring around it.
+- What if it were louder overall? · *Louder*
+- At a typical record's loudness, the whole body grows and the dark center presses into the ring.
+- *Name weight: 624*
 
 ## H—018 · смерть в летнюю полночь — где же твои крылья, Чайка
 
-> O nome é composto no peso 744: quanto mais alto o volume do disco, mais pesada a letra.  
-> The name is set at weight 744: the louder the record, the heavier the type.
+> O nome também vem do volume médio: quanto mais alto o disco, mais grosso o traço das letras. O deste disco está entre os mais pesados.  
+> The name follows average loudness too: the louder the record, the thicker its letters. This one is among the heaviest.
 
 ### 1. Camadas · strata
 
@@ -1231,17 +1297,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel é feito de camadas?
-- Porque o disco se apoia numa batida firme. A repetição no tempo vira camadas no espaço.
-- E se a batida fosse mais solta? · *Mais solta*
-- Com uma batida tão solta quanto a de um disco comum da coleção, as camadas se fundem e rareiam.
+- Por que o anel tem camadas?
+- As notas deste disco caem numa grade constante, como um pulso que se repete do começo ao fim. O Horizonte desenha essa regularidade como anéis paralelos: quanto mais regular o ritmo, mais afastados eles ficam.
+- E se o ritmo fosse menos regular? · *Menos regular*
+- Com um ritmo tão regular quanto o de um disco típico, as camadas se aproximam umas das outras.
 
 **EN**
 
-- Why is the ring made of layers?
-- Because it sits on a steady beat. Repetition in time becomes layers in space.
-- What if its beat were looser? · *Looser*
-- With a beat as loose as a usual record here, the layers melt into fewer bands.
+- Why does the ring have layers?
+- The notes on this record land on a steady grid, like a pulse that repeats from start to end. Horizonte draws that regularity as parallel rings: the more regular the rhythm, the further apart they sit.
+- What if the rhythm were less regular? · *Less regular*
+- With a rhythm as regular as a typical record's, the layers draw closer together.
 
 ### 2. Postura · posture
 
@@ -1249,17 +1315,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que a forma se ergue tão aberta?
-- Porque o disco soa brilhante. Discos brilhantes se erguem abertos; os escuros se deitam.
-- E se soasse mais escuro? · *Mais escuro*
-- Com um brilho comum na coleção, a forma assenta e se inclina para baixo.
+- Por que a forma parece tão aberta?
+- Boa parte da energia desta música está nos sons agudos, e é isso que a faz soar brilhante. O Horizonte vira a forma para quem olha conforme esse brilho: quanto mais agudos, mais ela aparece de frente, quase redonda. A linha tracejada mostra como ela seria vista de frente.
+- E se o som tivesse menos agudos? · *Menos agudos*
+- Com os agudos de um disco típico, a forma se inclina para trás e se achata, afastando-se da linha tracejada.
 
 **EN**
 
-- Why does it stand so open?
-- Because it sounds bright. Bright records stand open; dark ones lie down.
-- What if it sounded darker? · *Darker*
-- As bright as a usual record here, it settles and tilts down.
+- Why does the shape look so open?
+- Much of this music's energy sits in the treble, which is what makes it sound bright. Horizonte turns the shape toward you by that brightness: the more treble, the more it faces you, almost round. The dashed line shows it face-on.
+- What if it had less treble? · *Less treble*
+- With a typical record's treble, the shape tips back and flattens, away from the dashed line.
 
 ### 3. Centro escuro · core
 
@@ -1268,16 +1334,18 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que o centro escuro é tão grande?
-- Porque o volume do disco é alto. Discos de volume alto ganham um centro pesado que engole o anel, e o nome ganha um traço mais pesado também.
-- E se o volume fosse mais baixo? · *Mais baixo*
-- Com um volume comum na coleção, o centro encolhe.
+- Este disco soa alto do começo ao fim. No Horizonte, volume é massa: quanto mais alto o disco, maior o corpo e maior o centro escuro, que vai tomando o lugar do anel em volta.
+- E se o volume médio fosse mais baixo? · *Mais baixo*
+- No volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve espaço ao anel.
+- *Peso do nome: 744*
 
 **EN**
 
 - Why is its dark center so large?
-- Because it is loud. Loud records grow a heavy center that swallows the ring, and the name is set heavier too.
-- What if it were quieter? · *Quieter*
-- As loud as a usual record here, the center shrinks.
+- This record plays loud from start to end. In Horizonte, loudness is mass: the louder the record, the bigger the body and its dark center, which takes over the ring around it.
+- What if it were quieter overall? · *Quieter*
+- At a typical record's loudness, the whole body shrinks and the dark center gives room back to the ring.
+- *Name weight: 744*
 
 ### 4. Fendas · gaps
 
@@ -1285,17 +1353,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel está partido em pedaços?
-- Porque suas faixas não seguem o mesmo pulso: algumas se apoiam num pulso firme, outras bem menos. Cada mudança de pulso abre uma fenda entre as faixas.
-- E se as faixas seguissem o mesmo pulso? · *Mesmo pulso*
-- Com pulsos tão próximos quanto os de um disco comum da coleção, as fendas entre as faixas se estreitam.
+- Por que o anel está partido?
+- Algumas faixas deste disco seguem uma batida regular; outras fluem sem uma. Cada setor do anel é uma faixa, e quanto mais as faixas diferem nesse ponto, mais as fendas se abrem, todas por igual, em volta do anel inteiro.
+- E se as faixas tivessem ritmos parecidos? · *Ritmos parecidos*
+- Com faixas tão parecidas no ritmo quanto as de um disco típico, as fendas se estreitam em todo o anel.
 
 **EN**
 
-- Why is the ring broken into pieces?
-- Because its tracks don't share one beat: some sit on a steady pulse, others much less. Each change of pulse opens a break between tracks.
-- What if its tracks shared one beat? · *One beat*
-- With pulses as close as a usual record here, the breaks between tracks narrow.
+- Why is the ring broken apart?
+- Some tracks on this record keep a steady beat; others move without one. Each sector of the ring is a track, and the more the tracks differ in this way, the wider the breaks open, all of them equally, around the whole ring.
+- What if its tracks were alike in rhythm? · *Alike in rhythm*
+- With tracks as alike in rhythm as a typical record's, the breaks narrow all around the ring.
 
 ### 5. Borda · contour
 
@@ -1304,16 +1372,16 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que a borda é quase lisa?
-- Porque o volume do disco varia menos que o da maioria da coleção. Uma música sem grandes saltos deixa um contorno mais liso, que respira menos enquanto toca.
-- E se oscilasse mais entre o suave e o forte? · *Mais contraste*
-- Com uma variação de volume comum, a borda se recorta.
+- A intensidade deste disco varia menos que a da maioria da coleção. Como a borda acompanha essa intensidade ao longo do disco, os recortes ficam rasos.
+- E se o volume variasse mais? · *Mais contraste*
+- Com trechos calmos e intensos tão distantes quanto num disco típico, os recortes se aprofundam, nos mesmos lugares.
 
 **EN**
 
-- Why is its edge fairly smooth?
-- Because it stays within a narrower range of volume than most here. Even music leaves a smoother outline, and it breathes less when it plays.
-- What if it swung more between quiet and loud? · *More contrast*
-- With a usual range of volume, the edge gets carved.
+- Why is its edge nearly smooth?
+- This record's intensity varies less than most here. The edge follows that intensity across the record, so its cuts stay shallow.
+- What if its volume varied more? · *More contrast*
+- With calm and intense passages as far apart as in a typical record, the cuts deepen in the same places.
 
 ### 6. Pequenos corpos · satellites
 
@@ -1321,18 +1389,22 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que há dois pequenos corpos em volta?
-- Por causa da duração: 35 minutos, perto do comum na coleção. Os discos se espalham em pequenos corpos conforme ficam mais longos; com essa duração, aparecem dois.
+- De onde vêm os dois pequenos corpos?
+- Eles vêm da duração. Com 35 minutos, perto da duração típica da coleção, este disco tem dois: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração.
+- *Corpos surgem em: 23 · 33 · 44 · 54 min*
+- *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
-- Why are there two small bodies around it?
-- Because of its length: 35 minutes, close to the usual here. Records spread into small bodies as they get longer; at this length, two.
+- Where do the two small bodies come from?
+- They come from its length. At 35 minutes, close to the collection's typical length, this record has two: Horizonte shows time as small bodies around the shape, one more for each added stretch.
+- *Bodies appear at: 23 · 33 · 44 · 54 min*
+- *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
 ## H—019 · Grove of Whispers — The Sheltering Sky
 
-> O nome é composto no peso 570: quanto mais alto o volume do disco, mais pesada a letra.  
-> The name is set at weight 570: the louder the record, the heavier the type.
+> O nome também vem do volume médio: quanto mais alto o disco, mais grosso o traço das letras. O deste disco está entre os mais leves.  
+> The name follows average loudness too: the louder the record, the thicker its letters. This one is among the lightest.
 
 ### 1. Pequenos corpos · satellites
 
@@ -1340,17 +1412,21 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que há três pequenos corpos em volta?
-- Porque o disco é longo: 52 minutos. Um disco longo vira território: em vez de crescer, ele se espalha em pequenos corpos.
-- E se fosse mais curto? · *Mais curto*
-- Com 34 minutos, uma duração comum na coleção, um dos seus três pequenos corpos se dissolve.
+- De onde vêm os três pequenos corpos?
+- Eles vêm da duração. Este disco tem 52 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela.
+- E se o disco fosse mais curto? · *Mais curto*
+- Com 34 minutos, a duração típica da coleção, restam dois pequenos corpos. O que some representava os 18 minutos a mais deste disco.
+- *Corpos surgem em: 23 · 33 · 44 · 54 min*
+- *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
-- Why are there three small bodies around it?
-- Because it is long: 52 minutes. A long record becomes territory: it spreads into small bodies instead of growing.
-- What if it were shorter? · *Shorter*
-- At 34 minutes, a usual length here, one of its three small bodies dissolves.
+- Where do the three small bodies come from?
+- They come from its length. At 52 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it.
+- What if the record were shorter? · *Shorter*
+- At 34 minutes, the collection's typical length, two small bodies remain. The one that goes stood for this record's extra 18 minutes.
+- *Bodies appear at: 23 · 33 · 44 · 54 min*
+- *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
 ### 2. Centro escuro · core
 
@@ -1359,16 +1435,18 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que o centro escuro é tão pequeno?
-- Porque o volume do disco é baixo. Discos de volume baixo guardam um centro pequeno e muito espaço aberto, e o nome ganha um traço mais leve também.
-- E se o volume fosse mais alto? · *Mais alto*
-- Com um volume comum na coleção, o centro se expande.
+- Este disco soa baixo do começo ao fim. No Horizonte, volume é massa: com pouca, o corpo encolhe e o centro escuro deixa um anel largo à sua volta.
+- E se o volume médio fosse mais alto? · *Mais alto*
+- No volume de um disco típico, o corpo inteiro cresce e o centro escuro avança sobre o anel.
+- *Peso do nome: 570*
 
 **EN**
 
 - Why is its dark center so small?
-- Because it is quiet. Quiet records keep a small center and open space, and the name is set lighter too.
-- What if it were louder? · *Louder*
-- As loud as a usual record here, the center swells.
+- This record plays quietly from start to end. In Horizonte, loudness is mass: with little of it, the body shrinks and the dark center leaves a wide ring around it.
+- What if it were louder overall? · *Louder*
+- At a typical record's loudness, the whole body grows and the dark center presses into the ring.
+- *Name weight: 570*
 
 ### 3. Fendas · gaps
 
@@ -1376,17 +1454,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel está quase inteiro?
-- Porque suas faixas mantêm o mesmo tipo de pulso. Quando as faixas diferem no pulso, o anel se parte entre elas.
-- E se cada faixa seguisse seu próprio pulso? · *À deriva*
-- Com pulsos tão variados quanto os de um disco comum da coleção, abrem-se fendas entre as faixas.
+- Por que o anel é quase contínuo?
+- As faixas deste disco têm ritmos parecidos. Cada setor do anel é uma faixa, e as fendas só se abrem quando as faixas diferem no ritmo; aqui, quase não há o que separar.
+- E se as faixas variassem mais no ritmo? · *Ritmos variados*
+- Com faixas tão diferentes no ritmo quanto as de um disco típico, as fendas se alargam em todo o anel.
 
 **EN**
 
-- Why is the ring almost whole?
-- Because its tracks keep the same kind of pulse. When tracks differ in beat, the ring breaks between them.
-- What if its tracks drifted apart? · *Drifting*
-- With pulses as varied as a usual record here, breaks open between its tracks.
+- Why is the ring almost unbroken?
+- The tracks on this record share a similar rhythm. Each sector of the ring is a track, and breaks only open when tracks differ in rhythm, so here there is little to separate.
+- What if its tracks varied more in rhythm? · *More varied*
+- With tracks as varied in rhythm as a typical record's, the breaks widen all around the ring.
 
 ### 4. Camadas · strata
 
@@ -1394,17 +1472,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel é uma camada só?
-- Porque o disco flutua livre de qualquer batida. Só a música presa a uma grade regular divide o anel em camadas.
-- E se a batida fosse mais firme? · *Mais firme*
-- Com uma batida tão firme quanto a de um disco comum da coleção, o anel se divide em camadas.
+- Por que o anel não tem camadas?
+- Os sons deste disco chegam sem uma batida que se repita, livres de qualquer grade. O anel só se divide em camadas quando o ritmo é regular.
+- E se o ritmo fosse mais regular? · *Mais regular*
+- Com um ritmo tão regular quanto o de um disco típico, o anel se divide em camadas, ainda bem juntas.
 
 **EN**
 
-- Why is the ring a single band?
-- Because it floats free of any beat. Only music on a steady grid splits the ring into layers.
-- What if it had a steadier beat? · *Steadier*
-- With a beat as steady as a usual record here, the band splits into layers.
+- Why does the ring have no layers?
+- The sounds on this record arrive without a repeating beat, free of any grid. The ring only splits into layers when a rhythm is regular.
+- What if the rhythm were more regular? · *More regular*
+- With a rhythm as regular as a typical record's, the ring splits into layers, still close together.
 
 ### 5. Borda · contour
 
@@ -1413,16 +1491,16 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que a borda é recortada?
-- Porque o disco transita entre o suave e o forte mais que a maioria da coleção. Quanto maior essa oscilação, mais fundo o contorno, e mais ele respira enquanto toca.
-- E se fosse mais uniforme? · *Mais uniforme*
-- Com uma variação de volume comum, a borda se alisa.
+- Este disco alterna trechos calmos e intensos mais que a maioria da coleção. O anel percorre o disco do começo ao fim, e a borda acompanha esse vaivém: avança onde a música cresce e recua onde ela se acalma.
+- E se o volume variasse menos? · *Menos contraste*
+- Com trechos calmos e intensos tão próximos quanto num disco típico, os recortes ficam mais rasos, mas não saem do lugar.
 
 **EN**
 
 - Why is its edge carved?
-- Because it moves between quiet and loud more than most here. The wider that swing, the deeper the outline, and the more it breathes when it plays.
-- What if it were more even? · *More even*
-- With a usual range of volume, the edge smooths out.
+- This record moves between calm and intense passages more than most here. The ring runs through the record from start to end, and the edge follows that swing: it pushes out where the music swells and pulls in where it settles.
+- What if its volume varied less? · *Less contrast*
+- With calm and intense passages as close as in a typical record, the cuts grow shallower but stay where they are.
 
 ### 6. Postura · posture
 
@@ -1430,18 +1508,18 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- O que define o quanto a forma se ergue?
-- O brilho. Este disco soa mais ou menos tão brilhante quanto a maioria da coleção, então a forma se ergue num ângulo comum.
+- O que define a inclinação da forma?
+- O brilho do som, isto é, o peso dos agudos. Quanto mais agudos, mais a forma se mostra de frente, redonda, como a linha tracejada; quanto menos, mais ela se deita. O brilho deste disco é o típico da coleção, e a inclinação também.
 
 **EN**
 
-- What sets how upright it stands?
-- Brightness. This record sounds about as bright as most here, so it stands at a usual angle.
+- What sets the shape's tilt?
+- Brightness: how much of the sound's energy sits in the treble. More treble turns the shape toward you, round like the dashed line; less lays it down. This record's brightness is typical of the collection, and so is its tilt.
 
 ## H—020 · Awake In The Dew — Sounds To Ascension
 
-> O nome é composto no peso 777: quanto mais alto o volume do disco, mais pesada a letra.  
-> The name is set at weight 777: the louder the record, the heavier the type.
+> O nome também vem do volume médio: quanto mais alto o disco, mais grosso o traço das letras. O deste disco é o mais pesado da coleção.  
+> The name follows average loudness too: the louder the record, the thicker its letters. This one is the heaviest here.
 
 ### 1. Centro escuro · core
 
@@ -1450,16 +1528,18 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que o centro escuro é tão grande?
-- Porque o volume do disco é alto, o mais alto da coleção. Discos de volume alto ganham um centro pesado que engole o anel, e o nome ganha um traço mais pesado também.
-- E se o volume fosse mais baixo? · *Mais baixo*
-- Com um volume comum na coleção, o centro encolhe.
+- Este disco soa alto do começo ao fim. No Horizonte, volume é massa: quanto mais alto o disco, maior o corpo e maior o centro escuro, que vai tomando o lugar do anel em volta. Nenhum disco da coleção soa tão alto.
+- E se o volume médio fosse mais baixo? · *Mais baixo*
+- No volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve espaço ao anel.
+- *Peso do nome: 777*
 
 **EN**
 
 - Why is its dark center so large?
-- Because it is loud, the loudest record here. Loud records grow a heavy center that swallows the ring, and the name is set heavier too.
-- What if it were quieter? · *Quieter*
-- As loud as a usual record here, the center shrinks.
+- This record plays loud from start to end. In Horizonte, loudness is mass: the louder the record, the bigger the body and its dark center, which takes over the ring around it. No record here is louder.
+- What if it were quieter overall? · *Quieter*
+- At a typical record's loudness, the whole body shrinks and the dark center gives room back to the ring.
+- *Name weight: 777*
 
 ### 2. Borda · contour
 
@@ -1468,16 +1548,16 @@ discos perto da mediana, não têm experimento.
 **PT**
 
 - Por que a borda é tão recortada?
-- Porque o disco vai do muito suave ao muito forte. Quanto maior essa oscilação, mais fundo o contorno, e mais ele respira enquanto toca.
-- E se fosse mais uniforme? · *Mais uniforme*
-- Com uma variação de volume comum, a borda se alisa.
+- Este disco vai de trechos muito calmos a trechos muito intensos. O anel percorre o disco do começo ao fim, e a borda acompanha esse vaivém: avança onde a música cresce e recua onde ela se acalma. Quanto maior a distância entre calma e intensidade, mais fundo o recorte.
+- E se o volume variasse menos? · *Menos contraste*
+- Com trechos calmos e intensos tão próximos quanto num disco típico, os recortes ficam mais rasos, mas não saem do lugar.
 
 **EN**
 
 - Why is its edge so jagged?
-- Because it swings between very quiet and very loud. The wider that swing, the deeper the outline, and the more it breathes when it plays.
-- What if it were more even? · *More even*
-- With a usual range of volume, the edge smooths out.
+- This record swings from very calm passages to very intense ones. The ring runs through the record from start to end, and the edge follows that swing: it pushes out where the music swells and pulls in where it settles. The bigger the gap between calm and intense, the deeper the cut.
+- What if its volume varied less? · *Less contrast*
+- With calm and intense passages as close as in a typical record, the cuts grow shallower but stay where they are.
 
 ### 3. Pequenos corpos · satellites
 
@@ -1485,17 +1565,21 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que há dois pequenos corpos em volta?
-- Porque o disco é longo: 37 minutos. Um disco longo vira território: em vez de crescer, ele se espalha em pequenos corpos.
-- E se fosse mais curto? · *Mais curto*
-- Com 34 minutos, uma duração comum na coleção, seus pequenos corpos encolhem.
+- De onde vêm os dois pequenos corpos?
+- Eles vêm da duração. Este disco tem 37 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela.
+- E se o disco fosse mais curto? · *Mais curto*
+- Com 34 minutos, a duração típica da coleção, os dois pequenos corpos continuam lá, um pouco menores.
+- *Corpos surgem em: 23 · 33 · 44 · 54 min*
+- *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
-- Why are there two small bodies around it?
-- Because it is long: 37 minutes. A long record becomes territory: it spreads into small bodies instead of growing.
-- What if it were shorter? · *Shorter*
-- At 34 minutes, a usual length here, its small bodies shrink.
+- Where do the two small bodies come from?
+- They come from its length. At 37 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it.
+- What if the record were shorter? · *Shorter*
+- At 34 minutes, the collection's typical length, its two small bodies stay, a little smaller.
+- *Bodies appear at: 23 · 33 · 44 · 54 min*
+- *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
 ### 4. Camadas · strata
 
@@ -1503,17 +1587,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel mostra camadas tênues?
-- Porque a batida do disco é regular só em parte. Quanto mais firme a grade, mais o anel se divide em camadas.
-- E se a batida fosse mais solta? · *Mais solta*
-- Com uma batida tão solta quanto a de um disco comum da coleção, as camadas se fundem e rareiam.
+- Por que o anel se divide em camadas?
+- As notas deste disco caem numa grade bastante regular, mais que na maioria da coleção. O Horizonte desenha essa regularidade como anéis paralelos: quanto mais regular o ritmo, mais afastados eles ficam.
+- E se o ritmo fosse menos regular? · *Menos regular*
+- Com um ritmo tão regular quanto o de um disco típico, as camadas se aproximam umas das outras.
 
 **EN**
 
-- Why does the ring show faint layers?
-- Because its beat is only partly regular. The steadier the grid, the more the ring splits into layers.
-- What if its beat were looser? · *Looser*
-- With a beat as loose as a usual record here, the layers melt into fewer bands.
+- Why does the ring split into layers?
+- The notes on this record fall on a fairly steady grid, more than on most records here. Horizonte draws that regularity as parallel rings: the more regular the rhythm, the further apart they sit.
+- What if the rhythm were less regular? · *Less regular*
+- With a rhythm as regular as a typical record's, the layers draw closer together.
 
 ### 5. Fendas · gaps
 
@@ -1521,17 +1605,17 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- Por que o anel está quase inteiro?
-- Porque suas faixas mantêm o mesmo tipo de pulso. Quando as faixas diferem no pulso, o anel se parte entre elas.
-- E se as faixas seguissem o mesmo pulso? · *Mesmo pulso*
-- Com pulsos tão próximos quanto os de um disco comum da coleção, as fendas entre as faixas se estreitam.
+- Por que o anel tem fendas?
+- Algumas faixas deste disco têm um ritmo mais regular que outras. Cada setor do anel é uma faixa, e essa diferença abre fendas entre todos eles; aqui, um pouco mais largas que o típico, mas ainda estreitas.
+- E se as faixas tivessem ritmos parecidos? · *Ritmos parecidos*
+- Com faixas tão parecidas no ritmo quanto as de um disco típico, as fendas se estreitam em todo o anel.
 
 **EN**
 
-- Why is the ring almost whole?
-- Because its tracks keep the same kind of pulse. When tracks differ in beat, the ring breaks between them.
-- What if its tracks shared one beat? · *One beat*
-- With pulses as close as a usual record here, the breaks between tracks narrow.
+- Why does the ring have breaks?
+- Some tracks on this record keep a steadier rhythm than others. Each sector of the ring is a track, and that difference opens breaks between all of them; here they are a little wider than typical, though still narrow.
+- What if its tracks were alike in rhythm? · *Alike in rhythm*
+- With tracks as alike in rhythm as a typical record's, the breaks narrow all around the ring.
 
 ### 6. Postura · posture
 
@@ -1539,10 +1623,10 @@ discos perto da mediana, não têm experimento.
 
 **PT**
 
-- O que define o quanto a forma se ergue?
-- O brilho. Este disco soa mais ou menos tão brilhante quanto a maioria da coleção, então a forma se ergue num ângulo comum.
+- O que define a inclinação da forma?
+- O brilho do som, isto é, o peso dos agudos. Quanto mais agudos, mais a forma se mostra de frente, redonda, como a linha tracejada; quanto menos, mais ela se deita. O brilho deste disco é o típico da coleção, e a inclinação também.
 
 **EN**
 
-- What sets how upright it stands?
-- Brightness. This record sounds about as bright as most here, so it stands at a usual angle.
+- What sets the shape's tilt?
+- Brightness: how much of the sound's energy sits in the treble. More treble turns the shape toward you, round like the dashed line; less lays it down. This record's brightness is typical of the collection, and so is its tilt.

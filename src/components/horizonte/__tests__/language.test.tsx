@@ -124,14 +124,14 @@ describe("switching by hand", () => {
     browser(["en-US"]);
     const fake = mount({ scale: "album", alb: EWORLD });
     fireEvent.click(screen.getByRole("tab", { name: "Why this shape?" }));
-    fireEvent.click(screen.getByRole("button", { name: "What if it were shorter? ▸" }));
+    fireEvent.click(screen.getByRole("button", { name: "What if the record were shorter? ▸" }));
     act(() => fake.update({ focus: "satellites", compare: true }));
     const before = fake.calls.length;
     switchTo("Português (Brasil)");
     expect(screen.getByRole("tab", { name: "Por que esta forma?" }).getAttribute("aria-selected")).toBe(
       "true",
     );
-    expect(screen.getByRole("heading", { level: 3 }).textContent).toBe("E se fosse mais curto?");
+    expect(screen.getByRole("heading", { level: 3 }).textContent).toBe("E se o disco fosse mais curto?");
     expect(screen.getByRole("button", { name: "Mais curto" }).getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByRole("group", { name: "Comparar" })).toBeDefined();
     expect(fake.calls.slice(before)).toEqual([]);
@@ -162,21 +162,23 @@ describe("the anatomy in Portuguese", () => {
     mount({ scale: "album", alb: EWORLD });
     fireEvent.click(screen.getByRole("tab", { name: "Por que esta forma?" }));
     expect(screen.getByRole("heading", { level: 3 }).textContent).toBe(
-      "Por que há quatro pequenos corpos em volta?",
+      "De onde vêm os quatro pequenos corpos?",
     );
-    expect(screen.getByText(/Porque o disco é longo: 75 minutos/)).toBeDefined();
-    expect(screen.getByRole("button", { name: "E se fosse mais curto? ▸" })).toBeDefined();
+    expect(screen.getByText(/Eles vêm da duração\. Este disco tem 75 minutos/)).toBeDefined();
+    expect(screen.getByRole("button", { name: "E se o disco fosse mais curto? ▸" })).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: /Em números/ }));
     expect(screen.getByText("34 min (mediana dos 14)")).toBeDefined();
     expect(screen.getByText("o mais longo de 14")).toBeDefined();
+    expect(screen.getByText("Corpos surgem em")).toBeDefined();
+    expect(screen.getByText(/O anel sempre dá uma volta completa/)).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: /Mais sobre esta forma/ }));
-    expect(screen.getByText("A cor vem da capa, não do som.")).toBeDefined();
+    expect(screen.getByText("As cores vêm da capa, não da música.")).toBeDefined();
   });
 
   it("the invitation is the record's leading question, in Portuguese", () => {
     browser(["pt-BR"]);
     mount({ scale: "album", alb: EWORLD, invite: { part: "satellites" } });
-    expect(screen.getByText("Por que há quatro pequenos corpos em volta?")).toBeDefined();
+    expect(screen.getByText("De onde vêm os quatro pequenos corpos?")).toBeDefined();
     expect(screen.getByRole("button", { name: /Descobrir/ })).toBeDefined();
   });
 });
@@ -233,18 +235,18 @@ describe("room for the longer language", () => {
     mount({ scale: "album", alb: LE_MORTE, focus: "gaps" });
     fireEvent.click(screen.getByRole("tab", { name: "Por que esta forma?" }));
     const button = screen.getByRole("button", {
-      name: "E se cada faixa seguisse seu próprio pulso? ▸",
+      name: "E se as faixas variassem mais no ritmo? ▸",
     });
     expect(button.className).not.toMatch(/whitespace-nowrap/);
     const tail = button.querySelector("span.whitespace-nowrap");
-    expect(tail?.textContent).toBe("pulso? ▸");
+    expect(tail?.textContent).toBe("ritmo? ▸");
   });
 
   it("the comparison hint breaks only at its separator", () => {
     browser(["pt-BR"]);
     mount({ scale: "album", alb: EWORLD });
     fireEvent.click(screen.getByRole("tab", { name: "Por que esta forma?" }));
-    fireEvent.click(screen.getByRole("button", { name: "E se fosse mais curto? ▸" }));
+    fireEvent.click(screen.getByRole("button", { name: "E se o disco fosse mais curto? ▸" }));
     const hold = screen.getByText("Segure a imagem para comparar");
     expect(hold.className).toMatch(/whitespace-nowrap/);
     expect(hold.parentElement?.textContent).toBe("Segure a imagem para comparar · Esc volta");

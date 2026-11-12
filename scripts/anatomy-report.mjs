@@ -34,7 +34,7 @@ const server = await createServer({
 
 try {
   const load = (p) => server.ssrLoadModule(`/src/components/horizonte/${p}`);
-  const { questionsOf, nameWeightOf } = await load("anatomy.ts");
+  const { questionsOf } = await load("anatomy.ts");
   const { ALBUMS, CURATED_COUNT } = await load("content/index.ts");
   const { ANATOMY_EN } = await load("i18n/anatomy.en.ts");
   const { ANATOMY_PT } = await load("i18n/anatomy.pt-BR.ts");
@@ -48,23 +48,27 @@ try {
     "",
     "Cada álbum lista as seis perguntas na ordem em que a interface as mostra (a primeira é o",
     "convite). Para cada uma: a pergunta, a resposta, o experimento da Contraprova (botão e",
-    "rótulo do alternador) e o que a pessoa vê quando segura a imagem. Perguntas neutras, de",
-    "discos perto da mediana, não têm experimento.",
+    "rótulo do alternador) e o que a pessoa vê quando segura a imagem. Em itálico, o que fica",
+    "em \"Em números\". Perguntas neutras, de discos perto da mediana, não têm experimento.",
     "",
   ];
 
-  const block = (tag, p) => {
+  let current = null;
+  const block = (tag, p, w) => {
     lines.push(`**${tag}**`, "", `- ${p.ask}`, `- ${p.answer}`);
     if (p.what) lines.push(`- ${p.what} · *${p.label}*`, `- ${p.result}`);
+    const extra = [...w.details(current).map(([k, v]) => `${k}: ${v}`), w.depth(current)];
+    for (const line of extra.filter(Boolean)) lines.push(`- *${line}*`);
     lines.push("");
   };
 
   for (let i = 0; i < CURATED_COUNT; i++) {
     const album = ALBUMS[i];
     lines.push(`## ${album.cat} · ${album.artist} — ${album.title}`, "");
-    const weight = nameWeightOf(i);
-    lines.push(`> ${ANATOMY_PT.nameFact(weight)}  `, `> ${ANATOMY_EN.nameFact(weight)}`, "");
-    questionsOf(i).forEach((q, k) => {
+    const questions = questionsOf(i);
+    const core = questions.find((q) => q.part === "core").finding;
+    lines.push(`> ${ANATOMY_PT.nameFact(core)}  `, `> ${ANATOMY_EN.nameFact(core)}`, "");
+    questions.forEach((q, k) => {
       const f = q.finding;
       const facts = [
         f.near ? "perto da mediana" : f.high ? "acima da mediana" : "abaixo da mediana",
@@ -75,8 +79,9 @@ try {
         f.part === "strata" ? `batida ${f.beat}` : null,
       ].filter(Boolean);
       lines.push(`### ${k + 1}. ${PARTS[q.part]}`, "", `*${facts.join(" · ")}*`, "");
-      block("PT", ANATOMY_PT.phrase(q));
-      block("EN", ANATOMY_EN.phrase(q));
+      current = q;
+      block("PT", ANATOMY_PT.phrase(q), ANATOMY_PT);
+      block("EN", ANATOMY_EN.phrase(q), ANATOMY_EN);
     });
   }
 

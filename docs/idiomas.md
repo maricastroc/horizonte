@@ -69,37 +69,67 @@ i18n/
 
 `anatomy.ts` decide **o que** a forma diz e não contém nenhuma frase. Para cada parte da forma
 ele produz um `Finding`: se o disco está perto da mediana, acima ou abaixo dela, se é um
-extremo, se é o primeiro ou o último da coleção e, conforme a parte, quantos pequenos corpos
-existem e quantos restam na Contraprova, se o anel está aberto ou que tipo de batida o disco
-tem. A ordem das perguntas, o peso de cada uma e a existência do experimento também são
-decididos ali, uma vez só.
+extremo, se é o primeiro ou o último da coleção e, conforme a parte:
+
+- **pequenos corpos:** quantos existem, quantos restam na Contraprova, a duração, a duração
+  típica e a diferença entre as duas, e os minutos em que cada corpo nasce
+  (`satelliteOnsets`, derivado das constantes de `MORPH`);
+- **fendas:** se o anel está aberto;
+- **camadas:** que tipo de ritmo o disco tem;
+- **centro escuro:** o peso do nome.
+
+A ordem das perguntas, o peso de cada uma e a existência do experimento também são decididos
+ali, uma vez só.
 
 Os redatores decidem **como** dizer. Cada um recebe a mesma `Question` e devolve pergunta,
-resposta, experimento, rótulo do alternador e resultado. Eles cuidam do que é próprio de cada
-língua: concordância ("um pequeno corpo se dissolve", "dois dos seus quatro pequenos corpos se
-dissolvem"), gênero ("a batida mais firme", "o disco mais solto"), ordinais ("12th", "12º"),
-separador decimal ("−12.3 dB", "−12,3 dB") e o caso em que não há nada a contar ("at this
-length, none", "nenhum aparece").
+resposta, experimento, rótulo do alternador e resultado, além do aprofundamento de "Em
+números" (`details`, `depth`) e da frase sobre o nome (`nameFact`). Eles cuidam do que é próprio
+de cada língua: concordância ("resta um pequeno corpo", "o 1 minuto a mais"), gênero
+("Nenhum disco da coleção é tão escuro"), ordinais ("12th", "12º"), separador decimal
+("−12.3 dB", "−12,3 dB") e o caso em que não há nada a contar ("this length makes none",
+"nenhum aparece").
 
 Para trocar uma frase, edite só o redator. Para mudar uma regra (quando um disco é extremo,
 quando o anel está aberto), edite só `anatomy.ts`.
 
-### Vocabulário em português
+### Como as respostas explicam
 
-| Parte | Termo |
-| --- | --- |
-| satellites | pequenos corpos |
-| gaps | fendas (o anel "partido em pedaços" ou "quase inteiro") |
-| strata | camadas |
-| contour | borda, contorno |
-| posture | a forma se ergue, se deita, se inclina |
-| core | centro escuro |
-| record | disco |
-| here (o catálogo) | a coleção |
-| usual | comum |
+Cada resposta liga o que existe na música, a maneira como o Horizonte o representa e o que
+se vê na forma, sem virar uma fórmula de três frases.
 
-"Faixa" fica reservada às faixas do disco; por isso uma camada única é "uma camada só", e não
-"uma faixa".
+- **Fato e escolha ficam separados.** O que é medido no áudio aparece como fato. O que é
+  decisão de desenho aparece como do Horizonte ("o Horizonte representa o tempo…", "na forma,
+  essa regularidade se traduz em…"), para nada soar como lei da música.
+- **Os detalhes técnicos ficam em "Em números".** Lá ficam os limiares dos pequenos corpos,
+  o peso do nome e o porquê de a duração aparecer fora do anel. A resposta principal se
+  entende sem abrir essa camada.
+- **A Contraprova diz o parâmetro exato e a direção** ("E se o volume médio fosse mais
+  baixo?"). O resultado começa pela referência ("Com o volume de um disco típico,") e descreve
+  só o que o motor muda. Quando ajuda, diz o que isso revela sobre o original: os recortes da
+  borda ficam no mesmo lugar, e os pequenos corpos que somem "representavam os 41 minutos a
+  mais deste disco".
+- **"Típico"** é a mediana dos 14 discos curados, a mesma referência que a Contraprova usa
+  (`medianOf`). O texto nunca a chama de média.
+
+### Vocabulário
+
+| Parte | Descritor | Português | Inglês |
+| --- | --- | --- | --- |
+| satellites | duração | pequenos corpos | small bodies |
+| gaps | diferença de ritmo entre faixas | fendas; o anel "partido" ou "quase contínuo" | breaks; the ring "broken apart" or "almost unbroken" |
+| strata | regularidade do ritmo | camadas, anéis paralelos | layers, parallel rings |
+| contour | contraste (dinâmica) | borda, recortes | edge, cuts |
+| posture | brilho (energia nos agudos) | inclinação: aberta, de frente, achatada | tilt: open, facing you, flat |
+| core | volume médio | corpo e centro escuro | body and dark center |
+| — | — | disco, coleção, setor = faixa, típico | record, collection, sector = track, typical |
+
+Volume médio e contraste nunca se confundem: o primeiro é o quanto o disco soa alto do início
+ao fim (centro escuro, nome); o segundo é a distância entre os trechos calmos e os intensos
+(borda). Regularidade do ritmo não é força nem velocidade da batida: é se as notas caem numa
+grade que se repete.
+
+"Faixa" fica reservada às faixas do disco; por isso o português fala em "camadas" e "anéis
+paralelos", nunca em "faixas" do anel.
 
 ### Relatório de revisão
 
@@ -122,6 +152,10 @@ completo ("English", "Português (Brasil)"), `aria-pressed` indica o ativo, e o 
 ## Ajustes de layout
 
 O português é mais longo; nenhum tamanho de fonte foi reduzido.
+
+- O alternador da Contraprova ocupa a largura do painel, com as duas metades iguais, e o
+  rótulo pode quebrar linha. Rótulos precisos como "Ritmos parecidos", "Alike in rhythm" e
+  "Menos contraste" não cabiam ao lado de "Como é" no desktop e no tablet.
 
 - O botão do experimento ("E se cada faixa seguisse seu próprio pulso? ▸") quebra linha em vez
   de estourar o painel, e a seta fica presa à última palavra. O inglês também estourava com
