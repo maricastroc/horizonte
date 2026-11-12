@@ -123,6 +123,37 @@ heterogeneidade de brilho entre faixas (−0,86 com o brilho do álbum), entropi
 distribuição de faixas (não discrimina) e concentração de faixas (redundante com
 a contagem).
 
+## O relevo — a forma recebe luz
+
+No álbum e na faixa, as placas deixam de ser só capa somada em `lighter`: viram
+volume iluminado pela mesma `uLight` de P12, que agora varre sobre faces e não
+só sobre a borda do núcleo. Na coleção o relevo fica desligado (`uRelief.w = 0`);
+ali o corpo continua sendo o arco de capa.
+
+* **De onde vem a forma.** `composition/relief.ts` amostra a morfologia em 1024
+  ângulos e grava numa textura `RGBA16F` de 1024×2 (`uShape`): interior e
+  exterior de até três cascas, e a distância angular à fenda de setor mais
+  próxima. É a mesma geometria que o anel pinta (`shellsAt`, `gapOf`, `RING.lift`
+  e a deformação da coroa), nunca um modelo paralelo. Cascas que se tocam ou
+  quase se tocam (folga < `RELIEF.merge` = 0,012 do raio) são fundidas antes de
+  gravar: o levantamento do setor selecionado sobrepõe as cascas, e sem a fusão o
+  shader cavaria um sulco dentro da placa. Pela mesma regra, estratos de 1–2 px
+  não viram canaletas profundas.
+* **Quando é regravada.** Só quando muda álbum, forma comparada, seleção, faixa
+  ativa ou versão do strain. Custa ~0,3 ms de CPU por regravação.
+* **Como é iluminada.** O shader avalia a placa no ponto já deslocado pela lente
+  (`p + off`), então a luz acompanha a curvatura. Chanfro parabólico de até 5% do
+  raio, normal por diferença finita, um domo largo que inclina a forma inteira
+  para fora (o lado voltado para a luz acende, o oposto cai na sombra), difusa
+  normalizada para que o topo plano fique com a cor de antes, e especular estreita
+  sem o véu sobre o topo. Fora das placas: oclusão de contato e sombra curta
+  projetada para longe da luz, que também cai sobre a tipografia do plano de trás.
+* **O que não muda.** O deslocamento da lente é o mesmo de antes, bit a bit. Onde
+  a dispersão e o borrão espalham a cor por mais que um chanfro, o relevo recua
+  (`smear`), para não desenhar luz nítida sobre imagem borrada.
+* **Custo.** ~0,06–0,10 ms por quadro a 1440×900 (de ~1,1 para ~1,2 ms medidos
+  com upload dos planos), com saída antecipada fora da faixa radial da coroa.
+
 ## Guardrail — medir em espaço de imagem
 
 `perception/` rasteriza a silhueta do mundo com as mesmas funções de geometria do

@@ -1067,3 +1067,24 @@ describe("volume", () => {
     clock.mockRestore();
   });
 });
+
+describe("relief", () => {
+  const relief = () =>
+    (engine as unknown as { gl: { uniforms: { uRelief: { value: { w: number; x: number } } } } }).gl
+      .uniforms.uRelief.value;
+
+  it("stays off in the collection, which shows only the cover arc", () => {
+    run(1);
+    expect(relief().w).toBe(0);
+  });
+
+  it("lights the plates once the album opens and lets go on the way back", () => {
+    engine.enterAlbum(2);
+    run(2);
+    expect(relief().w).toBeGreaterThan(0.95);
+    expect(relief().x).toBeGreaterThan(0);
+    engine.goScale("collection");
+    run(2);
+    expect(relief().w).toBe(0);
+  });
+});

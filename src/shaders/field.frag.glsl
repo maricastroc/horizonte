@@ -16,6 +16,9 @@ uniform float uWorld;
 uniform vec3 uGuard;
 uniform sampler2D uFocus;
 uniform vec3 uFocusMix;
+uniform sampler2D uShape;
+uniform vec4 uRelief;
+uniform vec2 uReliefBand;
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(41.71, 289.13))) * 43758.5453); }
 
@@ -60,6 +63,62 @@ float rimOf(vec2 p, vec4 m, float lobed){
   return band * pow(g, uRim) * 1.25;
 }
 
+vec2 plateAt(vec2 q, float soft){
+  vec2 d = q - uM0.xy;
+  vec2 e = vec2(d.x, -d.y / max(uRelief.y, 0.05));
+  float R = uRelief.x;
+  float r = length(e) / R;
+  if (r < uReliefBand.x || r > uReliefBand.y) return vec2(-1.0, 0.0);
+  float turn = fract((atan(e.y, e.x) - uRelief.z) / 6.2831853);
+  vec4 a = texture2D(uShape, vec2(turn, 0.25));
+  vec4 b = texture2D(uShape, vec2(turn, 0.75));
+  float ang = b.z * 6.2831853 * r;
+  vec3 lo = vec3(a.x, a.z, b.x);
+  vec3 hi = vec3(a.y, a.w, b.y);
+  vec3 sd = min(min(vec3(r) - lo, hi - vec3(r)), vec3(ang)) * R;
+  vec3 bev = min(vec3(0.05 * R), (hi - lo) * R * 0.44);
+  vec3 s = clamp(sd / max(bev, vec3(1e-5)), 0.0, 1.0);
+  vec3 h = (1.0 - (1.0 - s) * (1.0 - s)) * bev * 0.62;
+  float top = max(sd.x, max(sd.y, sd.z));
+  float height = max(h.x, max(h.y, h.z));
+  float cov = soft > 0.0 ? smoothstep(-soft, soft, top) : clamp(top * uRes.y + 0.5, 0.0, 1.0);
+  return vec2(top, height * cov + cov * 1e-6);
+}
+
+vec3 relief(vec3 col, vec2 q, float smear){
+  float R = uRelief.x;
+  float w = uRelief.w * (1.0 - smoothstep(0.03 * R, 0.16 * R, smear));
+  if (w < 0.002) return col;
+  float px = 1.0 / uRes.y;
+  vec2 c = plateAt(q, 0.0);
+  vec2 ld = normalize(uLight);
+  vec3 L = normalize(vec3(uLight, 1.1));
+  if (c.y > 0.0) {
+    float dl = 1.5 * px;
+    float hx = plateAt(q + vec2(dl, 0.0), 0.0).y;
+    float hy = plateAt(q + vec2(0.0, dl), 0.0).y;
+    vec2 d = q - uM0.xy;
+    vec2 rad = normalize(vec2(d.x, d.y / max(uRelief.y, 0.05)) + 1e-6);
+    float rr = clamp(length(vec2(d.x, d.y / max(uRelief.y, 0.05))) / (R * uReliefBand.y), 0.0, 1.0);
+    vec2 g = vec2(hx - c.y, hy - c.y) / dl;
+    vec3 n = normalize(vec3(-g + rad * 0.5 * rr, 1.0));
+    float cov = clamp(c.x * uRes.y + 0.5, 0.0, 1.0);
+    float lit = (0.26 + 0.74 * max(dot(n, L), 0.0)) / (0.26 + 0.74 * L.z);
+    vec3 hv = normalize(L + vec3(0.0, 0.0, 1.0));
+    float base = pow(hv.z, 22.0);
+    float sp = max(0.0, pow(max(dot(n, hv), 0.0), 22.0) - base) / (1.0 - base);
+    float body = smoothstep(0.03, 0.16, max(col.r, max(col.g, col.b)));
+    vec3 shaded = col * lit + mix(uInk, vec3(1.0), 0.4) * sp * body * 0.5;
+    return mix(col, shaded, w * cov);
+  }
+  if (c.x < -0.5) return col;
+  float occ = smoothstep(0.035 * R, 0.0, -c.x);
+  vec2 sh = plateAt(q + ld * 0.03 * R, 0.014 * R);
+  float shade = sh.x < -0.5 ? 0.0 : smoothstep(-0.014 * R, 0.014 * R, sh.x);
+  float dark = max(occ * 0.4, shade * 0.62);
+  return col * (1.0 - dark * w);
+}
+
 vec3 samp(sampler2D t, vec2 uv, vec2 off, float blur){
   vec3 c = vec3(0.0);
   for (int i = 0; i < 4; i++){
@@ -89,6 +148,7 @@ void main(){
 
   vec2 offUv = off / vec2(aspect, 1.0);
   vec3 col = samp(uBack, uv, offUv, uBlur);
+  if (uRelief.w > 0.001) col = relief(col, p + off, length(off) * (uBlur * 2.2 + uDisp * 1.6));
 
   float core = max(coreOf(p, uM0, 1.0), coreOf(p, uM1, 0.0));
   col = mix(col, vec3(0.0), core);

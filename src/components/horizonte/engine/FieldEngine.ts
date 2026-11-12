@@ -24,11 +24,13 @@ import {
   layoutFor,
   ringRotationTarget,
   variantFor,
+  type BodyGeom,
   type Hit,
   type WorldLayout,
 } from "../composition/layout";
 import { bandsOf, sameBands, stageBox, FULL_BANDS } from "../composition/bands";
 import { RingBakery, type SegShape } from "../composition/ring";
+import { profileOf, writeProfile, type ReliefBand } from "../composition/relief";
 import {
   crownAt,
   mixMorphology,
@@ -94,6 +96,7 @@ import {
   INTAKE,
   MOTION,
   MORPH,
+  RELIEF,
   SECOND_MASS,
   SEQ,
   TRACK_BIAS,
@@ -169,6 +172,10 @@ export class FieldEngine implements InputActions {
   private hzK = 1;
   private bias: TrackBias = { ...NEUTRAL_BIAS };
   private lightSweep = 0;
+  private readonly reliefProfile = new Float32Array(RELIEF.texels * 8);
+  private reliefKey = "";
+  private reliefBand: ReliefBand = { lo: 0, hi: 0 };
+  private reliefShape: SegShape | null = null;
   private m1 = { x: 0, y: 0, k: 0, h: 0, alb: -1, ready: false };
   private readonly motion: MotionResponse = { ...NEUTRAL_MOTION };
   private motionTarget: MotionResponse = NEUTRAL_MOTION;
@@ -854,6 +861,8 @@ export class FieldEngine implements InputActions {
   };
 
   private backDeps(): BackDeps {
+    const compare = this.compareBake();
+    this.reliefShape = compare;
     return {
       labels: this.labels,
       fonts: this.fonts,
@@ -866,7 +875,7 @@ export class FieldEngine implements InputActions {
       morphOf: (a) => this.morphAt(a),
       field: this.deformation(),
       fieldVersion: this.strain.version,
-      compare: this.compareBake(),
+      compare,
       frame: this.focusFrame(),
       facing: this.focusPart() === "posture" ? ease(this.focusAmt) : 0,
       ghost:
@@ -1290,8 +1299,32 @@ export class FieldEngine implements InputActions {
     const light = lightDirection(this.lightSweep);
     u.uLight.value.set(light[0], light[1]);
     (u.uInk.value as THREE.Vector3).set(A.inkA[0], A.inkA[1], A.inkA[2]);
+    this.reliefSync(geo);
     this.focusRender();
     this.gl.render();
+  }
+
+  private reliefSync(geo: BodyGeom) {
+    const s = this.st;
+    const u = this.gl.uniforms;
+    const amount = s.fadeSel * (1 - s.mix);
+    if (amount <= 0.001) {
+      u.uRelief.value.w = 0;
+      return;
+    }
+    const shape = this.reliefShape;
+    const m = shape ? shape.m : this.morphAt(s.alb);
+    const active =
+      s.playAlb === s.alb && (isEngaged(s.mode) || s.mode === "fusion") ? s.trk : -1;
+    const field = this.deformation();
+    const key = `${s.alb}:${shape ? shape.version : -1}:${s.sel}:${active}:${field ? this.strain.version : -1}`;
+    if (key !== this.reliefKey) {
+      this.reliefKey = key;
+      this.reliefBand = profileOf(m, s.sel, active, field, this.reliefProfile);
+      writeProfile(u.uShape.value, this.reliefProfile);
+    }
+    u.uRelief.value.set(geo.R / this.H, geo.flatten, s.ringRot, amount);
+    u.uReliefBand.value.set(this.reliefBand.lo - RELIEF.margin, this.reliefBand.hi + RELIEF.margin);
   }
 
   private buildSnapshot(force = false): Snapshot {

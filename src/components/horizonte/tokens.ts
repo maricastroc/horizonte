@@ -179,6 +179,12 @@ export const LIGHT = {
   arc: 1,
 } as const;
 
+export const RELIEF = {
+  texels: 1024,
+  margin: 0.08,
+  merge: 0.012,
+} as const;
+
 export const TRACK_BIAS = { lerp: 1.2 } as const;
 
 export const MOTION = {

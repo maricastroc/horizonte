@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import frag from "@/shaders/field.frag.glsl";
 import vert from "@/shaders/field.vert.glsl";
+import { createReliefTexture } from "./composition/relief";
 import { ANATOMY, DPR_MAX } from "./tokens";
 
 export interface FieldUniforms {
@@ -29,6 +30,9 @@ export interface FieldUniforms {
   uGuard: { value: THREE.Vector3 };
   uFocus: { value: THREE.Texture | null };
   uFocusMix: { value: THREE.Vector3 };
+  uShape: { value: THREE.DataTexture };
+  uRelief: { value: THREE.Vector4 };
+  uReliefBand: { value: THREE.Vector2 };
   [key: string]: THREE.IUniform;
 }
 
@@ -59,6 +63,9 @@ export function createFieldUniforms(): FieldUniforms {
     uGuard: { value: new THREE.Vector3(0, 1, 1) },
     uFocus: { value: null },
     uFocusMix: { value: new THREE.Vector3(0, ANATOMY.focus.dim.ask, ANATOMY.focus.light) },
+    uShape: { value: createReliefTexture() },
+    uRelief: { value: new THREE.Vector4(1, 1, 0, 0) },
+    uReliefBand: { value: new THREE.Vector2(0, 0) },
   };
 }
 
@@ -159,6 +166,7 @@ export function createFieldGL(
       back.dispose();
       front.dispose();
       focus?.dispose();
+      uniforms.uShape.value.dispose();
       renderer.dispose();
     },
   };
