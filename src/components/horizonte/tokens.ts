@@ -262,3 +262,19 @@ export const COMPOSITION_FALLBACK_W = 1440;
 export const PARTICLES = 240;
 
 export const BREAKPOINT = { mobile: 768, tablet: 1200, short: 520 } as const;
+
+export const ANATOMY = {
+  key: "horizonte:anatomy",
+  focus: {
+    fade: 0.32,
+    dim: { ask: 0.55, what: 0.35 },
+    light: 0.3,
+    scale: 0.25,
+    halo: { satellite: 2.4, core: 1.55 },
+    margin: 1.12,
+    refresh: 12,
+  },
+  compare: { duration: 1.1, steps: 3, peek: 0.35 },
+  ghost: { alpha: 0.42, width: 1.1, color: [0.937, 0.922, 0.89] as Rgb },
+  invite: { dwell: 9, shown: 16 },
+} as const;

@@ -2,7 +2,16 @@ import * as THREE from "three";
 import { NEUTRAL_RESPONSE, curvature } from "../audio/analysis";
 import { AudioBus, type VisualAudioState } from "../audio/bus";
 import type { PlaybackFault } from "../audio/playback";
+import {
+  AXIS_OF,
+  compareMorphology,
+  inviteOf,
+  type AnatomyPart,
+  type CompareAxis,
+  type Invite,
+} from "../anatomy";
 import { drawBack, makeParticles, type BackDeps } from "../composition/back";
+import { drawFocus, emptyFrame, resetFrame, type BodyFrame } from "../composition/focus";
 import { drawFront, type FrontDeps } from "../composition/front";
 import { loadCovers, makeCover, type CoverAsset } from "../composition/cover";
 import {
@@ -18,7 +27,7 @@ import {
   type WorldLayout,
 } from "../composition/layout";
 import { bandsOf, sameBands, stageBox, FULL_BANDS } from "../composition/bands";
-import { RingBakery } from "../composition/ring";
+import { RingBakery, type SegShape } from "../composition/ring";
 import {
   crownAt,
   mixMorphology,
@@ -71,6 +80,7 @@ import {
   type InputOptions,
 } from "./input";
 import {
+  ANATOMY,
   COMPOSITION_FALLBACK_W,
   COMPOSITION_MAX_W,
   GUARD,
@@ -103,6 +113,13 @@ const PAN = {
 } as const;
 
 const CURSOR_GAIN = 9;
+
+const BAKED = new Set<CompareAxis>(["spread", "pulse", "dynamics", "loudness"]);
+
+const ease = (t: number) => t * t * (3 - 2 * t);
+
+const approach = (v: number, target: number, step: number) =>
+  v < target ? Math.min(target, v + step) : Math.max(target, v - step);
 
 const HORIZON_REF = 0.096;
 
@@ -172,6 +189,30 @@ export class FieldEngine implements InputActions {
 
   private explored = false;
 
+  private readonly cvFocus: HTMLCanvasElement;
+  private readonly ctxFocus: CanvasRenderingContext2D;
+  private readonly bodyFrame: BodyFrame = emptyFrame();
+  private focusPin: AnatomyPart | null = null;
+  private focusHover: AnatomyPart | null = null;
+  private focusAmt = 0;
+  private focusLive = false;
+  private focusKey = "";
+  private focusAge = 0;
+  private compareOn = false;
+  private compareAxis: CompareAxis | null = null;
+  private compareAlb = -1;
+  private compareK = 0;
+  private compareStep = -1;
+  private compareShape: SegShape | null = null;
+  private compareVersion = 1e6;
+  private peeking = false;
+  private peekBack = false;
+  private anatomyMark: string | null = null;
+  private dwell = 0;
+  private invite: Invite | null = null;
+  private inviteAt = 0;
+  private inviteAlb = -1;
+
   private tideT = 0;
 
   private tideGain = 0;
@@ -200,9 +241,11 @@ export class FieldEngine implements InputActions {
     this.ctxB = this.cvB.getContext("2d", { alpha: false })!;
     this.cvF = document.createElement("canvas");
     this.ctxF = this.cvF.getContext("2d")!;
+    this.cvFocus = document.createElement("canvas");
+    this.ctxFocus = this.cvFocus.getContext("2d")!;
     this.covers = loadCovers();
     this.rings = new RingBakery(this.covers);
-    this.gl = createFieldGL(canvas, this.cvB, this.cvF);
+    this.gl = createFieldGL(canvas, this.cvB, this.cvF, this.cvFocus);
     this.syncCatalog(-1);
     this.C = this.FIELD[0];
     this.unsubscribeCatalog = onCatalogChange((i) => this.syncCatalog(i));
@@ -215,6 +258,11 @@ export class FieldEngine implements InputActions {
       this.explored = window.localStorage.getItem(EXPLORED_KEY) === "1";
     } catch {
       this.explored = false;
+    }
+    try {
+      this.anatomyMark = window.localStorage.getItem(ANATOMY.key);
+    } catch {
+      this.anatomyMark = null;
     }
     this.snap = this.buildSnapshot(true);
 
@@ -321,11 +369,12 @@ export class FieldEngine implements InputActions {
 
   beginPan() {
     this.dragNav = this.st.navT;
+    if (this.compareOn && this.st.scale !== "collection") this.peeking = true;
   }
 
   panBy(stepPx: number, totalPx: number, viewportW: number) {
     const s = this.st;
-    if (s.scale !== "collection") return;
+    if (s.scale !== "collection" || this.peeking) return;
     if (this.L.variant === "mobile") {
       const total = totalPx / (viewportW * PAN.mobileWidth);
       s.navT = clamp(this.dragNav - total, this.dragNav - 1, this.dragNav + 1);
@@ -337,6 +386,11 @@ export class FieldEngine implements InputActions {
 
   endPan(tap: boolean) {
     const s = this.st;
+    if (this.peeking) {
+      this.peeking = false;
+      this.peekBack = true;
+      return;
+    }
     if (tap) {
       this.click();
       return;
@@ -411,6 +465,10 @@ export class FieldEngine implements InputActions {
     this.cvB.height = ch;
     this.cvF.width = cw;
     this.cvF.height = ch;
+    const fw = Math.max(2, Math.round(cw * ANATOMY.focus.scale));
+    const fh = Math.max(2, Math.round(ch * ANATOMY.focus.scale));
+    this.cvFocus.width = fw;
+    this.cvFocus.height = fh;
     this.W = cw;
     this.H = ch;
     this.L = layoutFor(variantFor(w, h));
@@ -418,6 +476,171 @@ export class FieldEngine implements InputActions {
 
   setRailAlb(i: number) {
     this.railAlb = i;
+  }
+
+  setAnatomyFocus(part: AnatomyPart | null) {
+    if (this.compareOn && (!part || AXIS_OF[part] !== this.compareAxis)) this.compareOn = false;
+    this.focusPin = part;
+    this.markIntent();
+  }
+
+  previewAnatomy(part: AnatomyPart | null) {
+    this.focusHover = part;
+  }
+
+  setCompare(on: boolean) {
+    const axis = this.focusPin ? AXIS_OF[this.focusPin] : null;
+    if (on && (!axis || this.st.scale === "collection")) return;
+    if (on && axis && (axis !== this.compareAxis || this.compareAlb !== this.st.alb)) {
+      this.dropCompare();
+      this.compareAxis = axis;
+      this.compareAlb = this.st.alb;
+    }
+    this.compareOn = on;
+    this.markIntent();
+  }
+
+  openAnatomy() {
+    this.invite = null;
+    this.remember("opened");
+  }
+
+  closeAnatomy() {
+    this.focusPin = null;
+    this.focusHover = null;
+    this.compareOn = false;
+  }
+
+  private dropCompare() {
+    this.compareOn = false;
+    this.compareAxis = null;
+    this.compareAlb = -1;
+    this.compareK = 0;
+    this.compareStep = -1;
+    this.compareShape = null;
+  }
+
+  private remember(mark: "opened" | "invited") {
+    if (this.anatomyMark === "opened") return;
+    this.anatomyMark = mark;
+    try {
+      window.localStorage.setItem(ANATOMY.key, mark);
+    } catch {
+      return;
+    }
+  }
+
+  private focusPart(): AnatomyPart | null {
+    if (this.st.scale === "collection") return null;
+    if (this.compareOn || this.compareK > 0) return this.focusPin;
+    return this.focusHover ?? this.focusPin;
+  }
+
+  private anatomyStep(dt: number) {
+    const s = this.st;
+    if (s.scale === "collection") {
+      this.focusHover = null;
+      this.focusPin = null;
+      this.compareOn = false;
+    }
+    if (this.compareAxis && this.compareAlb !== s.alb) this.dropCompare();
+    if (!this.compareOn) {
+      this.peeking = false;
+      this.peekBack = false;
+    }
+    const k = this.compareOn && !this.peeking ? 1 : 0;
+    const span = this.peeking || this.peekBack ? ANATOMY.compare.peek : ANATOMY.compare.duration;
+    this.compareK = this.reduced ? k : approach(this.compareK, k, dt / span);
+    if (this.peekBack && this.compareK >= 1) this.peekBack = false;
+    if (!this.compareOn && this.compareK <= 0 && this.compareAxis) {
+      const pinned = this.focusPin ? AXIS_OF[this.focusPin] : null;
+      if (pinned !== this.compareAxis) this.dropCompare();
+    }
+    const f = this.focusPart() && this.focusLive ? 1 : 0;
+    this.focusAmt = this.reduced ? f : approach(this.focusAmt, f, dt / ANATOMY.focus.fade);
+    this.inviteStep(dt);
+  }
+
+  private inviteStep(dt: number) {
+    const s = this.st;
+    const ceremony = s.mode === "collapse" || s.mode === "fusion";
+    if (!this.anatomyMark && s.scale !== "collection" && !ceremony && !this.focusPin) {
+      this.dwell += dt;
+      if (this.dwell >= ANATOMY.invite.dwell) {
+        this.invite = inviteOf(s.alb);
+        this.inviteAt = s.t;
+        this.inviteAlb = s.alb;
+        this.remember("invited");
+      }
+    }
+    if (
+      this.invite &&
+      (s.t - this.inviteAt > ANATOMY.invite.shown ||
+        s.scale === "collection" ||
+        s.alb !== this.inviteAlb ||
+        this.focusPin)
+    ) {
+      this.invite = null;
+    }
+  }
+
+  private compareBake(): SegShape | null {
+    const s = this.st;
+    const axis = this.compareAxis;
+    if (!axis || this.compareAlb !== s.alb || s.scale === "collection" || !BAKED.has(axis)) {
+      return null;
+    }
+    const steps = ANATOMY.compare.steps;
+    const kq = Math.round(ease(this.compareK) * steps) / steps;
+    if (kq !== this.compareStep || !this.compareShape) {
+      this.compareStep = kq;
+      this.compareVersion++;
+      const base = this.morphAt(s.alb);
+      const target = compareMorphology(s.alb, axis);
+      this.compareShape = {
+        m: kq <= 0 ? base : kq >= 1 ? target : mixMorphology(base, target, kq),
+        version: this.compareVersion,
+        time: s.t,
+      };
+    } else {
+      this.compareShape.time = s.t;
+    }
+    return this.compareShape;
+  }
+
+  private focusFrame(): BodyFrame | null {
+    if (!this.focusPart()) return null;
+    resetFrame(this.bodyFrame);
+    return this.bodyFrame;
+  }
+
+  private focusRender() {
+    const u = this.gl.uniforms;
+    const part = this.focusPart();
+    if (part) {
+      const rx = this.st.m0h * this.H;
+      const body = this.bodyFrame;
+      const core = { x: body.bx, y: body.by, rx, ry: rx * u.uFlat.value };
+      const r = (v: number) => Math.round(v * 2);
+      const sats = body.satellites.map((q) => `${r(q.x)},${r(q.y)},${r(q.r)},${r(q.w * 50)}`);
+      const key = [part, r(body.bx), r(body.by), r(body.R), r(body.flatten * 400), r(body.rot * 400),
+        r(rx), r(core.ry), this.st.sel, this.st.hover, this.W, sats.join(";")].join("|");
+      this.focusAge++;
+      if (key !== this.focusKey || this.focusAge >= ANATOMY.focus.refresh) {
+        this.focusKey = key;
+        this.focusAge = 0;
+        this.focusLive = drawFocus(this.ctxFocus, this.W, body, part, core);
+        const tex = u.uFocus.value;
+        if (tex) tex.needsUpdate = true;
+      }
+    } else {
+      this.focusLive = false;
+      this.focusKey = "";
+    }
+    const mix = u.uFocusMix.value as THREE.Vector3;
+    const { ask, what } = ANATOMY.focus.dim;
+    mix.x = this.focusAmt;
+    mix.y = ask + (what - ask) * ease(this.compareK);
   }
 
   setRailTrk(i: number) {
@@ -457,6 +680,9 @@ export class FieldEngine implements InputActions {
       m = mixMorphology(this.MORPH[i], this.MORPH[j], s.nav - i);
     } else {
       m = this.morphAt(s.alb);
+      if (this.compareAxis && this.compareK > 0 && this.compareAlb === s.alb) {
+        m = mixMorphology(m, compareMorphology(s.alb, this.compareAxis), ease(this.compareK));
+      }
     }
     if (s.mix > 0 && this.MORPH[s.fuseAlb]) m = mixMorphology(m, this.MORPH[s.fuseAlb], s.mix);
     return m;
@@ -556,6 +782,10 @@ export class FieldEngine implements InputActions {
   }
 
   back() {
+    if (this.compareOn) {
+      this.setCompare(false);
+      return;
+    }
     this.run(T.back(this.st));
   }
 
@@ -635,6 +865,12 @@ export class FieldEngine implements InputActions {
       morphOf: (a) => this.morphAt(a),
       field: this.deformation(),
       fieldVersion: this.strain.version,
+      compare: this.compareBake(),
+      frame: this.focusFrame(),
+      ghost:
+        this.compareAxis && this.compareK > 0.001 && this.compareAlb === this.st.alb
+          ? { m: this.morphAt(this.st.alb), alpha: ANATOMY.ghost.alpha * ease(this.compareK) }
+          : null,
     };
   }
 
@@ -651,6 +887,7 @@ export class FieldEngine implements InputActions {
     this.trackBias(dt);
     this.motionStep(dt);
     this.C = this.fieldFor();
+    this.anatomyStep(dt);
     this.M = this.morphFor();
 
     const K = this.reduced ? 0.25 : 1;
@@ -1061,13 +1298,14 @@ export class FieldEngine implements InputActions {
     const light = lightDirection(this.lightSweep);
     u.uLight.value.set(light[0], light[1]);
     (u.uInk.value as THREE.Vector3).set(A.inkA[0], A.inkA[1], A.inkA[2]);
+    this.focusRender();
     this.gl.render();
   }
 
   private buildSnapshot(force = false): Snapshot {
     const s = this.st;
     const quiet = performance.now() - this.intent;
-    const idle = !this.coarse && quiet > IDLE_MS;
+    const idle = !this.coarse && quiet > IDLE_MS && !this.focusPin && !this.compareOn;
     const navAlb = Math.round(s.nav);
     const hint =
       !this.explored && s.scale === "collection" && quiet > HINT_MS
@@ -1091,6 +1329,10 @@ export class FieldEngine implements InputActions {
       hintDir: navAlb < ALBUMS.length - 1 ? 1 : -1,
       variant: this.L.variant,
       fault: this.faultKind,
+      focus: this.focusPin,
+      compare: this.compareOn,
+      peek: this.peeking,
+      invite: this.invite,
       announce:
         s.playAlb >= 0
           ? `${String(s.trk + 1).padStart(2, "0")} · ${
@@ -1115,6 +1357,10 @@ export class FieldEngine implements InputActions {
       prev.hintDir === next.hintDir &&
       prev.variant === next.variant &&
       prev.fault === next.fault &&
+      prev.focus === next.focus &&
+      prev.compare === next.compare &&
+      prev.peek === next.peek &&
+      prev.invite === next.invite &&
       sameBands(prev.bands, next.bands) &&
       prev.announce === next.announce;
     return same ? prev : next;

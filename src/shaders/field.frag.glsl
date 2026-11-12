@@ -14,6 +14,8 @@ uniform vec4 uLobeB;
 uniform float uFlat;
 uniform float uWorld;
 uniform vec3 uGuard;
+uniform sampler2D uFocus;
+uniform vec3 uFocusMix;
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(41.71, 289.13))) * 43758.5453); }
 
@@ -106,6 +108,13 @@ void main(){
   vec3 fCol = samp(uFront, uv, fOff, uBlur * 0.6);
   float fA = texture2D(uFront, uv + fOff).a;
   col = mix(col, fCol, clamp(fA * 1.6, 0.0, 1.0));
+
+  if (uFocusMix.x > 0.0005){
+    vec2 fm = texture2D(uFocus, uv + offUv).rg;
+    float keep = smoothstep(0.08, 0.62, fm.r);
+    col *= mix(1.0 - uFocusMix.x * uFocusMix.y, 1.0, keep);
+    col += uInk * fm.g * (1.0 - keep) * uFocusMix.x * uFocusMix.z;
+  }
 
   float cd = length(p - uCur.xy);
   col += uInk * exp(-cd * cd * 5200.0) * 0.55;

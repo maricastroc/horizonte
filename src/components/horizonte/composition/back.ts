@@ -2,10 +2,11 @@ import { ALBUMS, boundsOf } from "../content";
 import type { FieldConstants } from "../field";
 import { neighborScale, outerAt, satRadiusOf, type AlbumMorphology } from "../morphology";
 import { isEngaged, progressOf } from "../state";
-import { COLOR, GEO, MORPH, PARTICLES, RING, rgba } from "../tokens";
+import { ANATOMY, COLOR, GEO, MORPH, PARTICLES, RING, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
-import type { RingBakery } from "./ring";
+import { drawGhost, type BodyFrame, type FocusSatellite } from "./focus";
+import type { RingBakery, SegShape } from "./ring";
 import { ls, type Ctx } from "./ctx";
 import { stageBox, type Bands } from "./bands";
 import {
@@ -28,6 +29,9 @@ export interface BackDeps {
   morphOf: (alb: number) => AlbumMorphology;
   field?: Float32Array | null;
   fieldVersion?: number;
+  compare?: SegShape | null;
+  frame?: BodyFrame | null;
+  ghost?: { m: AlbumMorphology; alpha: number } | null;
 }
 
 export function makeParticles(): Particle[] {
@@ -74,6 +78,7 @@ function drawSatellites(
   m: AlbumMorphology,
   fade: number,
   ink: string,
+  out: FocusSatellite[] | null = null,
 ) {
   if (fade <= 0.01) return;
   x.save();
@@ -83,6 +88,8 @@ function drawSatellites(
     const py = by + Math.sin(sat.angle) * sat.dist * R * m.flatten;
     const r = satRadiusOf(m, sat) * R;
     const a = fade * sat.weight;
+    const rr = r * (1 + MORPH.satRim * 0.5);
+    out?.push({ x: px, y: py, r: rr, ry: rr * m.flatten, w: a });
 
     x.globalAlpha = a * 0.95;
     x.fillStyle = COLOR.body;
@@ -201,6 +208,15 @@ export function drawBack(
   const bx = g.cx;
   const by = g.cy;
   const M = L.staged ? Math.min(W, 2 * box.halfH) : Math.min(W, H);
+  const frame = deps.frame ?? null;
+  if (frame) {
+    frame.bx = bx;
+    frame.by = by;
+    frame.R = g.R;
+    frame.flatten = morph.flatten;
+    frame.rot = s.ringRot;
+    frame.m = morph;
+  }
 
   x.fillStyle = COLOR.void;
   x.fillRect(0, 0, W, H);
@@ -260,7 +276,16 @@ export function drawBack(
   }
 
   const R = g.R;
-  drawSatellites(x, bx, by, R, morph, s.fadeSel * (1 - s.mix), inkA(0.9));
+  drawSatellites(
+    x,
+    bx,
+    by,
+    R,
+    morph,
+    s.fadeSel * (1 - s.mix),
+    inkA(0.9),
+    frame ? frame.satellites : null,
+  );
 
   if (s.fadeSel < 0.98) {
     drawRing(
@@ -280,8 +305,31 @@ export function drawBack(
         ? s.trk
         : -1;
     const prog = progressOf(s);
-    const seg = rings.seg(s.alb, s.sel, s.hover, activeTrk, prog, inkA(1), field, fieldVersion);
+    const seg = rings.seg(
+      s.alb,
+      s.sel,
+      s.hover,
+      activeTrk,
+      prog,
+      inkA(1),
+      field,
+      fieldVersion,
+      deps.compare ?? null,
+    );
     drawRing(x, seg, bx, by, R, s.ringRot, s.fadeSel * (1 - s.mix * 0.6), morph.flatten);
+    if (deps.ghost && deps.ghost.alpha > 0.005) {
+      const gg = bodyGeom(W, H, s, L, deps.ghost.m);
+      drawGhost(
+        x,
+        deps.ghost.m,
+        gg.cx,
+        gg.cy,
+        gg.R,
+        s.ringRot,
+        rgba(ANATOMY.ghost.color, deps.ghost.alpha),
+        ANATOMY.ghost.width * Math.max(1, W / 1440),
+      );
+    }
 
     if (s.mix > 0) {
       const other = ALBUMS[s.fuseAlb] ? s.fuseAlb : s.alb;
@@ -354,6 +402,7 @@ export function drawBack(
   x.globalAlpha = (1 - s.mix) * (0.92 - s.play * 0.25);
   x.fillStyle = COLOR.paper;
   x.fillText(A.artist, lk.margin, lk.ay);
+  if (frame) frame.name = { text: A.artist, font: x.font, x: lk.margin, y: lk.ay };
   if (s.mix > 0 && ALBUMS[s.fuseAlb]) {
     x.globalAlpha = s.mix * (0.92 - s.play * 0.25);
     x.fillText(
