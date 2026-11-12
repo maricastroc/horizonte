@@ -1,4 +1,5 @@
 import { ALBUMS, boundsOf } from "../content";
+import { CANVAS_LABELS, type CanvasLabels } from "../i18n/canvas";
 import type { FieldConstants } from "../field";
 import { neighborScale, outerAt, satRadiusOf, type AlbumMorphology } from "../morphology";
 import { isEngaged, progressOf } from "../state";
@@ -32,6 +33,7 @@ export interface BackDeps {
   compare?: SegShape | null;
   frame?: BodyFrame | null;
   ghost?: { m: AlbumMorphology; alpha: number } | null;
+  labels?: CanvasLabels;
 }
 
 export function makeParticles(): Particle[] {
@@ -197,6 +199,7 @@ export function drawBack(
 ) {
   const x = ctx as Ctx;
   const { fonts, covers, rings, weights, parts, C, morph, morphOf } = deps;
+  const labels = deps.labels ?? CANVAS_LABELS;
   const field = deps.field ?? null;
   const fieldVersion = deps.fieldVersion ?? 0;
   const A = ALBUMS[s.alb];
@@ -267,7 +270,7 @@ export function drawBack(
     x.globalAlpha = a * (i === s.hoverBody ? 0.95 : 0.5);
     x.font = `500 ${W * 0.0092}px ${fonts.mono}`;
     x.fillText(
-      `${ALBUMS[i].cat} · ${ALBUMS[i].tracks.length} TRACKS`,
+      `${ALBUMS[i].cat} · ${labels.tracks(ALBUMS[i].tracks.length)}`,
       nx,
       ny + br + M * 0.105 * p.depth,
     );

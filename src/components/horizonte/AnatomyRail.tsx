@@ -4,8 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { nameWeightOf, questionsOf, type Invite, type Question } from "./anatomy";
 import { CURATED_COUNT } from "./content";
 import type { FieldEngine } from "./engine/FieldEngine";
-import { ANATOMY_EN as W } from "./i18n/anatomy.en";
-import type { Phrasing } from "./i18n/types";
+import { useCopy, type Phrasing } from "./i18n";
 import type { Snapshot } from "./types";
 
 export type AlbumView = "tracks" | "shape";
@@ -32,6 +31,7 @@ export function AnatomyTabs({
   ink: string;
   enabled: boolean;
 }) {
+  const t = useCopy().anatomy;
   const tab = (v: AlbumView, label: string) => {
     const on = view === v;
     return (
@@ -71,14 +71,14 @@ export function AnatomyTabs({
   return (
     <div
       role="tablist"
-      aria-label="Album views"
+      aria-label={t.views}
       className={[
         "flex items-center gap-6 border-b border-rule-2",
         compact ? "sticky top-0 z-10 bg-void/92 backdrop-blur-sm" : "pb-1",
       ].join(" ")}
     >
-      {tab("tracks", "Tracks")}
-      {tab("shape", "Why this shape?")}
+      {tab("tracks", t.tracks)}
+      {tab("shape", t.shape)}
     </div>
   );
 }
@@ -98,11 +98,12 @@ export function AnatomyInvite({
   ink: string;
   enabled: boolean;
 }) {
+  const t = useCopy().anatomy;
   const [shown, setShown] = useState<Invite | null>(invite);
   if (invite && invite !== shown) setShown(invite);
   if (!shown) return null;
   const lead = questionsOf(alb).find((q) => q.part === shown.part);
-  const line = lead ? W.phrase(lead).ask : "Why this shape?";
+  const line = lead ? t.write.phrase(lead).ask : t.shape;
   return (
     <button
       type="button"
@@ -126,7 +127,7 @@ export function AnatomyInvite({
           {line}
         </span>
         <span className="text-ink-text group-hover:underline group-focus-visible:underline">
-          Find out ›
+          {t.findOut}
         </span>
       </span>
     </button>
@@ -134,13 +135,15 @@ export function AnatomyInvite({
 }
 
 function Numbers({ q, extra }: { q: Question; extra: string[] }) {
+  const t = useCopy().anatomy;
+  const w = t.write;
   const r = q.reading;
   const rows: [string, string][] = [
-    ["Measure", W.measure[r.axis]],
-    ["This record", W.shown(r.axis, r.value)],
-    ["Usual here", `${W.shown(r.axis, r.median)} (median of the ${CURATED_COUNT})`],
-    ["Standing", W.standing(r)],
-    ["Drawn as", W.drawn[q.part]],
+    [t.rows.measure, w.measure[r.axis]],
+    [t.rows.record, w.shown(r.axis, r.value)],
+    [t.rows.usual, t.usual(w.shown(r.axis, r.median), CURATED_COUNT)],
+    [t.rows.standing, w.standing(r)],
+    [t.rows.drawn, w.drawn[q.part]],
   ];
   return (
     <div className="flex flex-col gap-2 pt-1.5">
@@ -174,10 +177,11 @@ export function ShapePanel({
   ink: string;
   enabled: boolean;
 }) {
+  const t = useCopy().anatomy;
   const questions = useMemo(() => questionsOf(snap.alb), [snap.alb]);
   const phrased = useMemo(
-    () => new Map<Question, Phrasing>(questions.map((q) => [q, W.phrase(q)])),
-    [questions],
+    () => new Map<Question, Phrasing>(questions.map((q) => [q, t.write.phrase(q)])),
+    [questions, t],
   );
   const say = (q: Question) => phrased.get(q)!;
   const lead = questions[0];
@@ -232,9 +236,9 @@ export function ShapePanel({
   const others = questions.filter((q) => q !== open);
   const also = others.filter((q) => questions.indexOf(q) < SHOWN).slice(0, SHOWN - 1);
   const rest = others.filter((q) => !also.includes(q));
-  const extra = [W.nameFact(nameWeightOf(snap.alb)), W.colourNote];
+  const extra = [t.write.nameFact(nameWeightOf(snap.alb)), t.write.colourNote];
   const o = say(open);
-  const said = trying ? (alt ? `${o.label}. ${o.result}` : "As it is.") : "";
+  const said = trying ? (alt ? `${o.label}. ${o.result}` : `${t.asItIs}.`) : "";
 
   const askButton = (q: Question) => (
     <li key={q.part}>
@@ -311,7 +315,7 @@ export function ShapePanel({
             </button>
           ) : (
             <p className={`${PROSE} mt-4 text-[12px] leading-[1.45] text-ink-dim`}>
-              It already sits where most records here do, so there is nothing to change.
+              {t.settled}
             </p>
           ))}
 
@@ -319,7 +323,7 @@ export function ShapePanel({
           <>
             <div
               role="group"
-              aria-label="Compare"
+              aria-label={t.compare}
               className={["mt-4.5 flex border border-rule", compact ? "w-full" : "w-fit"].join(" ")}
               onKeyDown={(e) => {
                 if (e.key === "ArrowLeft") engine?.setCompare(false);
@@ -329,7 +333,7 @@ export function ShapePanel({
               }}
             >
               {[
-                { on: !alt, label: "As it is", value: false },
+                { on: !alt, label: t.asItIs, value: false },
                 { on: alt, label: o.label, value: true },
               ].map((b, i) => (
                 <button
@@ -351,7 +355,7 @@ export function ShapePanel({
               ))}
             </div>
             <p className={`${HINT} mt-3 text-[9.5px]`}>
-              {compact ? "Hold the image to compare" : "Hold the image to compare · Esc returns"}
+              {compact ? t.hold : t.holdKeys}
             </p>
           </>
         )}
@@ -366,7 +370,7 @@ export function ShapePanel({
             compact ? "min-h-[40px]" : "",
           ].join(" ")}
         >
-          In numbers {nums ? "▾" : "›"}
+          {t.inNumbers} {nums ? "▾" : "›"}
         </button>
         {nums && <Numbers q={open} extra={compact ? extra : []} />}
         {compact && (
@@ -376,14 +380,14 @@ export function ShapePanel({
             onClick={() => pick(next)}
             className="mt-1 min-h-[44px] w-fit cursor-pointer text-ink-text-2 hover:text-ink-text"
           >
-            Next question ›
+            {t.nextQuestion}
           </button>
         )}
       </section>
 
       {!compact && (
         <>
-          <p className="pt-3.5 pb-1 text-ink-faint">Also</p>
+          <p className="pt-3.5 pb-1 text-ink-faint">{t.also}</p>
           <ul>{also.map(askButton)}</ul>
           <button
             type="button"
@@ -392,7 +396,7 @@ export function ShapePanel({
             onClick={() => setMore((v) => !v)}
             className="mt-3 cursor-pointer text-ink-dim hover:text-ink-text"
           >
-            More about this shape {more ? "▾" : "›"}
+            {t.more} {more ? "▾" : "›"}
           </button>
           {more && (
             <div className="flex flex-col gap-2.5 pt-2">

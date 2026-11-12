@@ -13,6 +13,7 @@ import {
 import { drawBack, makeParticles, type BackDeps } from "../composition/back";
 import { drawFocus, emptyFrame, resetFrame, type BodyFrame } from "../composition/focus";
 import { drawFront, type FrontDeps } from "../composition/front";
+import { CANVAS_LABELS, type CanvasLabels } from "../i18n/canvas";
 import { loadCovers, makeCover, type CoverAsset } from "../composition/cover";
 import {
   albPos,
@@ -218,6 +219,7 @@ export class FieldEngine implements InputActions {
   private dragNav = 0;
   private audioState: VisualAudioState;
 
+  private labels: CanvasLabels = CANVAS_LABELS;
   private snap: Snapshot;
   private listeners = new Set<() => void>();
 
@@ -462,6 +464,10 @@ export class FieldEngine implements InputActions {
     this.W = cw;
     this.H = ch;
     this.L = layoutFor(variantFor(w, h));
+  }
+
+  setLabels(labels: CanvasLabels) {
+    this.labels = labels;
   }
 
   setRailAlb(i: number) {
@@ -845,6 +851,7 @@ export class FieldEngine implements InputActions {
 
   private backDeps(): BackDeps {
     return {
+      labels: this.labels,
       fonts: this.fonts,
       covers: this.covers,
       rings: this.rings,
@@ -865,7 +872,7 @@ export class FieldEngine implements InputActions {
   }
 
   private frontDeps(): FrontDeps {
-    return { fonts: this.fonts, covers: this.covers };
+    return { fonts: this.fonts, covers: this.covers, labels: this.labels };
   }
 
 
@@ -1313,12 +1320,6 @@ export class FieldEngine implements InputActions {
       compare: this.compareOn,
       peek: this.peeking,
       invite: this.invite,
-      announce:
-        s.playAlb >= 0
-          ? `${String(s.trk + 1).padStart(2, "0")} · ${
-              ALBUMS[s.playAlb].tracks[s.trk]?.title ?? ""
-            } — ${ALBUMS[s.playAlb].artist}`
-          : `Collection · ${ALBUMS.length} bodies`,
     };
     if (force) return next;
     const prev = this.snap;
@@ -1341,8 +1342,7 @@ export class FieldEngine implements InputActions {
       prev.compare === next.compare &&
       prev.peek === next.peek &&
       prev.invite === next.invite &&
-      sameBands(prev.bands, next.bands) &&
-      prev.announce === next.announce;
+      sameBands(prev.bands, next.bands);
     return same ? prev : next;
   }
 

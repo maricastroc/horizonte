@@ -58,6 +58,7 @@ CURATION = [
         cover=dict(license="Not declared by the author", credit="Art by David Harrington",
                    source="https://tristanlohengrin.bandcamp.com/album/le-manoir-album-cc-by-40"),
         note="The author adds an extra term: registering in Content ID is forbidden.",
+        note_pt="O autor acrescenta um termo extra: é proibido registrar a obra no Content ID.",
         tracks=tl([("Le Manoir", 96), ("Dans le Jardin", 240), ("Le Hall", 53),
                    ("A travers les couloirs", 73), ("La Salle de Bal", 119), ("La Chambre", 138),
                    ("Le Couloir Secret", 123), ("La Salle de Torture", 194), ("Poursuivi", 90),
@@ -84,6 +85,8 @@ CURATION = [
         cover=dict(license="Unsplash License", credit="Photo by Riccardo Pelati (Unsplash)",
                    source="https://markwilsonx.bandcamp.com/album/dark-thoughts-cc-by"),
         note="Credit required by the author: “[TITLE] © 2023 by Mark Wilson X is licensed under CC BY 4.0”.",
+        note_pt=("Crédito exigido pelo autor: “[TITLE] © 2023 by Mark Wilson X is licensed under CC BY "
+                 "4.0”."),
         tracks=tl([("Ritual", 216), ("The Stranger", 208), ("The Killer Awoke", 183),
                    ("Terror Drome", 173), ("Something Not Right Part One", 131),
                    ("Something Not Right Part Two", 127), ("A Killer In Me", 249),
@@ -137,6 +140,11 @@ CURATION = [
               "licence is CC BY-SA 4.0 (Attribution-ShareAlike), not CC BY 4.0 — the extra "
               "obligation to share the adaptation (the re-encoded audio) under the same BY-SA "
               "applies to this album and differs from the rest of the collection."),
+        note_pt=("Não é o álbum previsto de início (Meanderings, H—007, ainda pendente): os arquivos "
+                 "recebidos correspondem a Impromptu, cinco standards de jazz ao piano solo. A licença "
+                 "é CC BY-SA 4.0 (Atribuição-CompartilhaIgual), não CC BY 4.0 — a obrigação extra de "
+                 "compartilhar a adaptação (o áudio recodificado) sob a mesma BY-SA vale para este "
+                 "álbum e o distingue do resto da coleção."),
         tracks=tl([("One For Bill", 282), ("Blue Monk", 364), ("Spring Is Here", 370),
                    ("Solar", 278), ("Blue In Green", 331)]),
     ),
@@ -312,6 +320,9 @@ CURATION = [
         note=("Six tracks, all from the verified CC BY 4.0 item. A seventh bonus track "
               "circulating elsewhere was deliberately left out: it is not part of that item "
               "and its licence could not be confirmed at the source."),
+        note_pt=("Seis faixas, todas do item verificado em CC BY 4.0. Uma sétima faixa bônus que "
+                 "circula por aí ficou de fora de propósito: ela não faz parte desse item, e sua "
+                 "licença não pôde ser confirmada na fonte."),
     ),
     dict(
         kind="archive", cat="H—019", slug="grove-of-whispers-the-sheltering-sky",
@@ -337,6 +348,9 @@ CURATION = [
         note=("The licence is CC BY-SA 4.0 (Attribution-ShareAlike), not CC BY 4.0 — the extra "
               "obligation to share the adaptation (the re-encoded audio) under the same BY-SA "
               "applies to this album, as it does to Darin Wilson's Impromptu."),
+        note_pt=("A licença é CC BY-SA 4.0 (Atribuição-CompartilhaIgual), não CC BY 4.0 — a obrigação "
+                 "extra de compartilhar a adaptação (o áudio recodificado) sob a mesma BY-SA vale para "
+                 "este álbum, assim como para Impromptu, de Darin Wilson."),
     ),
 ]
 
@@ -785,6 +799,8 @@ export interface CuratedAlbum extends Album {{
   label?: string;
   /** Observação de licenciamento relevante para esta obra. */
   note?: string;
+  /** A mesma observação em português, mostrada quando a interface está em pt-BR. */
+  notePt?: string;
 }}
 
 /** Itens da curadoria desejada que NÃO podem ser usados, e por quê. */
@@ -963,6 +979,8 @@ def main():
             album["label"] = entry["label"]
         if entry.get("note"):
             album["note"] = entry["note"]
+        if entry.get("note_pt"):
+            album["notePt"] = entry["note_pt"]
         albums.append(album)
 
     if not args.only:

@@ -1,4 +1,5 @@
 import { SR, downmix } from "./dsp";
+import { IngestFailure } from "./types";
 
 export const MAX_FILE_BYTES = 320 * 1024 * 1024;
 export const MAX_TRACK_SECONDS = 45 * 60;
@@ -60,14 +61,18 @@ export interface DecodeResult {
 
 export async function decodeToMono(file: File): Promise<DecodeResult> {
   if (file.size > MAX_FILE_BYTES) {
-    throw new Error(`file too large (${Math.round(file.size / 1048576)} MB)`);
+    throw new IngestFailure({
+      kind: "tooLarge",
+      file: file.name,
+      mb: Math.round(file.size / 1048576),
+    });
   }
   const Ctor = offlineCtor();
   const ctx = new Ctor(1, 1, SR);
   const buffer = await decodeAudioData(ctx, await file.arrayBuffer());
   const seconds = buffer.length / buffer.sampleRate;
   if (seconds > MAX_TRACK_SECONDS) {
-    throw new Error(`track too long (${Math.round(seconds / 60)} min)`);
+    throw new IngestFailure({ kind: "tooLong", file: file.name, minutes: Math.round(seconds / 60) });
   }
 
   if (buffer.sampleRate === SR) {

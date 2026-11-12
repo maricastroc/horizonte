@@ -42,6 +42,21 @@ export interface IngestProbe {
   duration: number;
 }
 
+export type IngestError =
+  | { kind: "unsupported"; formats: string[] }
+  | { kind: "empty" }
+  | { kind: "unreadable"; file: string }
+  | { kind: "tooLarge"; file: string; mb: number }
+  | { kind: "tooLong"; file: string; minutes: number }
+  | { kind: "recordTooLong" }
+  | { kind: "failed" };
+
+export class IngestFailure extends Error {
+  constructor(public reason: IngestError) {
+    super(reason.kind);
+  }
+}
+
 export interface IngestStatus {
   phase: IngestPhase;
   progress: number;
@@ -50,5 +65,5 @@ export interface IngestStatus {
   artist: string;
   title: string;
   probe: IngestProbe | null;
-  error: string | null;
+  error: IngestError | null;
 }

@@ -43,5 +43,7 @@ export interface Album {
   license: License;
   label?: string;
   note?: string;
+  notePt?: string;
+  unnamed?: ("artist" | "title")[];
   tracks: Track[];
 }

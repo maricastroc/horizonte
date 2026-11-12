@@ -1,4 +1,5 @@
 import { ALBUMS } from "../content";
+import { CANVAS_LABELS, type CanvasLabels } from "../i18n/canvas";
 import { COLOR } from "../tokens";
 import type { FieldState, FontFamilies } from "../types";
 import type { CoverAsset } from "./cover";
@@ -8,6 +9,7 @@ import { lockup, type ShardSpec, type WorldLayout } from "./layout";
 export interface FrontDeps {
   fonts: FontFamilies;
   covers: CoverAsset[];
+  labels?: CanvasLabels;
 }
 
 class FragmentCache {
@@ -121,7 +123,7 @@ export function drawFront(
   x.fillStyle = COLOR.inkText2;
   const sub = (
     s.scale === "collection"
-      ? [A.year, `${A.tracks.length} TRACKS`, A.cat]
+      ? [A.year, (deps.labels ?? CANVAS_LABELS).tracks(A.tracks.length), A.cat]
       : [A.artist, A.title, A.year]
   )
     .filter(Boolean)

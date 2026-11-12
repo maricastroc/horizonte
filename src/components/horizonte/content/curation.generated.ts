@@ -4,6 +4,7 @@ export interface CuratedAlbum extends Album {
   originalCat?: string;
   label?: string;
   note?: string;
+  notePt?: string;
 }
 
 export interface BlockedAlbum {
@@ -256,7 +257,8 @@ export const CURATION: CuratedAlbum[] = [
       ]
     },
     label: "Tristan Lohengrin (self-released)",
-    note: "The author adds an extra term: registering in Content ID is forbidden."
+    note: "The author adds an extra term: registering in Content ID is forbidden.",
+    notePt: "O autor acrescenta um termo extra: é proibido registrar a obra no Content ID."
   },
   {
     id: "jono-terbakar-lebar",
@@ -508,7 +510,8 @@ export const CURATION: CuratedAlbum[] = [
       ]
     },
     label: "Mark Wilson X (self-released)",
-    note: "Credit required by the author: “[TITLE] © 2023 by Mark Wilson X is licensed under CC BY 4.0”."
+    note: "Credit required by the author: “[TITLE] © 2023 by Mark Wilson X is licensed under CC BY 4.0”.",
+    notePt: "Crédito exigido pelo autor: “[TITLE] © 2023 by Mark Wilson X is licensed under CC BY 4.0”."
   },
   {
     id: "darin-wilson-impromptu",
@@ -589,7 +592,8 @@ export const CURATION: CuratedAlbum[] = [
       ]
     },
     label: "Darin Wilson (self-released)",
-    note: "Not the album originally expected (Meanderings, H—007, still pending): the files provided correspond to Impromptu, five jazz standards on solo piano. The licence is CC BY-SA 4.0 (Attribution-ShareAlike), not CC BY 4.0 — the extra obligation to share the adaptation (the re-encoded audio) under the same BY-SA applies to this album and differs from the rest of the collection."
+    note: "Not the album originally expected (Meanderings, H—007, still pending): the files provided correspond to Impromptu, five jazz standards on solo piano. The licence is CC BY-SA 4.0 (Attribution-ShareAlike), not CC BY 4.0 — the extra obligation to share the adaptation (the re-encoded audio) under the same BY-SA applies to this album and differs from the rest of the collection.",
+    notePt: "Não é o álbum previsto de início (Meanderings, H—007, ainda pendente): os arquivos recebidos correspondem a Impromptu, cinco standards de jazz ao piano solo. A licença é CC BY-SA 4.0 (Atribuição-CompartilhaIgual), não CC BY 4.0 — a obrigação extra de compartilhar a adaptação (o áudio recodificado) sob a mesma BY-SA vale para este álbum e o distingue do resto da coleção."
   },
   {
     id: "zero-project-e-world",
@@ -1315,7 +1319,8 @@ export const CURATION: CuratedAlbum[] = [
     },
     originalCat: "SCL174",
     label: "Southern City's Lab",
-    note: "Six tracks, all from the verified CC BY 4.0 item. A seventh bonus track circulating elsewhere was deliberately left out: it is not part of that item and its licence could not be confirmed at the source."
+    note: "Six tracks, all from the verified CC BY 4.0 item. A seventh bonus track circulating elsewhere was deliberately left out: it is not part of that item and its licence could not be confirmed at the source.",
+    notePt: "Seis faixas, todas do item verificado em CC BY 4.0. Uma sétima faixa bônus que circula por aí ficou de fora de propósito: ela não faz parte desse item, e sua licença não pôde ser confirmada na fonte."
   },
   {
     id: "grove-of-whispers-the-sheltering-sky",
@@ -1478,7 +1483,8 @@ export const CURATION: CuratedAlbum[] = [
     },
     originalCat: "TRANZ068",
     label: "Tranzmitter Netlabel",
-    note: "The licence is CC BY-SA 4.0 (Attribution-ShareAlike), not CC BY 4.0 — the extra obligation to share the adaptation (the re-encoded audio) under the same BY-SA applies to this album, as it does to Darin Wilson's Impromptu."
+    note: "The licence is CC BY-SA 4.0 (Attribution-ShareAlike), not CC BY 4.0 — the extra obligation to share the adaptation (the re-encoded audio) under the same BY-SA applies to this album, as it does to Darin Wilson's Impromptu.",
+    notePt: "A licença é CC BY-SA 4.0 (Atribuição-CompartilhaIgual), não CC BY 4.0 — a obrigação extra de compartilhar a adaptação (o áudio recodificado) sob a mesma BY-SA vale para este álbum, assim como para Impromptu, de Darin Wilson."
   },
 ];
 

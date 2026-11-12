@@ -5,7 +5,7 @@ import { canvasToUrl, drawSignatureCover, inksFromArtwork, inksFromMeasurement }
 import { norm } from "./dsp";
 import { isSupported, supportedLabels } from "./formats";
 import { Cancelled, Measurer, type MeasurerDeps } from "./measure";
-import type { IngestProbe, IngestStatus, LocalGroupDraft } from "./types";
+import { IngestFailure, type IngestProbe, type IngestStatus, type LocalGroupDraft } from "./types";
 
 const DECODE_SHARE = 0.35;
 const ANALYSIS_SHARE = 0.65;
@@ -91,8 +91,8 @@ export class IngestSession {
         phase: "failed",
         error:
           rejected.length > 0
-            ? `This browser cannot read those files. It reads: ${supportedLabels().join(", ")}.`
-            : "No recognized audio file.",
+            ? { kind: "unsupported", formats: supportedLabels() }
+            : { kind: "empty" },
       });
       return { indices: [], rejected };
     }
@@ -122,7 +122,10 @@ export class IngestSession {
     } catch (e) {
       this.releasePending();
       if (e instanceof Cancelled || this.aborted) this.emit({ phase: "cancelled", progress: 0 });
-      else this.emit({ phase: "failed", error: (e as Error).message });
+      else {
+        const error = e instanceof IngestFailure ? e.reason : ({ kind: "failed" } as const);
+        this.emit({ phase: "failed", error });
+      }
     } finally {
       this.measurer.dispose();
     }

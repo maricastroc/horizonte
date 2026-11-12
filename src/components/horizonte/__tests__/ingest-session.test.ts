@@ -6,7 +6,7 @@ import type { IngestRequest, IngestResponse } from "../ingest/protocol";
 import { createWorkerCore } from "../ingest/workerCore";
 import { resetFormatProbe } from "../ingest/formats";
 import { IngestSession } from "../ingest/session";
-import type { IngestStatus } from "../ingest/types";
+import { IngestFailure, type IngestStatus } from "../ingest/types";
 import { engineHarness, paintContext, type EngineHarness } from "./fakes";
 
 const noise = (seconds: number, seed = 1) => {
@@ -204,7 +204,10 @@ describe("ingesting a local record", () => {
     expect(rejected).toEqual(["a.wma", "b.ra"]);
     expect(ALBUMS).toHaveLength(CURATED_COUNT);
     expect(seen.at(-1)?.phase).toBe("failed");
-    expect(seen.at(-1)?.error).toMatch(/MP3/);
+    expect(seen.at(-1)?.error).toEqual({
+      kind: "unsupported",
+      formats: expect.arrayContaining(["MP3"]),
+    });
   });
 
   it("a decode error fails naming the file and registers nothing", async () => {
@@ -215,7 +218,17 @@ describe("ingesting a local record", () => {
     expect(indices).toEqual([]);
     expect(ALBUMS).toHaveLength(CURATED_COUNT);
     expect(seen.at(-1)?.phase).toBe("failed");
-    expect(seen.at(-1)?.error).toContain("b.mp3");
+    expect(seen.at(-1)?.error).toEqual({ kind: "unreadable", file: "b.mp3" });
+  });
+
+  it("a track that is too long fails with the reason, not just the file", async () => {
+    const { seen, sink } = track();
+    const tooLong = async (f: File): Promise<DecodeResult> => {
+      throw new IngestFailure({ kind: "tooLong", file: f.name, minutes: 52 });
+    };
+    const session = new IngestSession(sink, deps(tooLong));
+    await session.run([file("a.mp3")]);
+    expect(seen.at(-1)?.error).toEqual({ kind: "tooLong", file: "a.mp3", minutes: 52 });
   });
 
   it("a decode error gives back the URLs already created", async () => {

@@ -8,8 +8,9 @@ import { FULL_BANDS } from "./composition/bands";
 import { ACCEPT } from "./ingest/formats";
 import { useIngest } from "./ingest/useIngest";
 import { timecode } from "./format";
+import { useCopy } from "./i18n";
 import { COLOR, IDLE_OPACITY, rgba } from "./tokens";
-import type { Fault, Scale, Snapshot } from "./types";
+import type { Scale, Snapshot } from "./types";
 import type { FieldEngine } from "./engine/FieldEngine";
 
 const DEFAULT_SNAPSHOT: Snapshot = {
@@ -27,7 +28,6 @@ const DEFAULT_SNAPSHOT: Snapshot = {
   hint: null,
   hintDir: 1,
   variant: "desktop",
-  announce: `Collection · ${ALBUMS.length} bodies`,
   fault: null,
   focus: null,
   compare: false,
@@ -38,11 +38,7 @@ const DEFAULT_SNAPSHOT: Snapshot = {
 const noop = () => () => {};
 const getDefault = () => DEFAULT_SNAPSHOT;
 
-const LEVELS: { key: Scale; label: string }[] = [
-  { key: "collection", label: "Collection" },
-  { key: "album", label: "Album" },
-  { key: "track", label: "Track" },
-];
+const LEVELS: Scale[] = ["collection", "album", "track"];
 
 const ROW = "h-[26px] items-center gap-[10px] cursor-pointer " +
   "border-b border-rule-2 w-full text-left transition-colors duration-150";
@@ -60,11 +56,6 @@ const ARIA_MS = 1000;
 const SEEK_STEPS = 1000;
 const SEEK_KEY_S = 5;
 
-const FAULT: Record<Fault, string> = {
-  source: "Could not load this track.",
-  blocked: "The browser blocked the sound — ask again.",
-};
-
 const pct = (v: number) => `${(v * 100).toFixed(3)}%`;
 
 export const isInstrumentsTarget = (e: Event) => {
@@ -79,6 +70,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     getDefault,
   );
 
+  const t = useCopy();
   const { status, dragging, ingest, cancel } = useIngest(engine);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -126,10 +118,10 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       const now = performance.now();
       if (now - ariaAt > ARIA_MS) {
         ariaAt = now;
-        seek.setAttribute("aria-valuetext", `${timecode(position)} of ${timecode(duration)}`);
+        seek.setAttribute("aria-valuetext", t.seek.value(timecode(position), timecode(duration)));
       }
     });
-  }, [engine, snap.variant]);
+  }, [engine, snap.variant, t]);
 
   const intent = useCallback(() => engine?.markIntent(), [engine]);
 
@@ -211,15 +203,25 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
 
   const shownVolume = muted ? 0 : volume;
 
-  const credit = [album.license.attribution, album.note].filter(Boolean).join(" — ");
+  const credit = t.credit(album);
+  const licenseName = album.provider === "local" ? t.local.license : album.license.name;
 
   const context = compact
     ? snap.scale === "collection"
       ? `${snap.navAlb + 1}/${ALBUMS.length}`
-      : `${album.tracks.length} tracks`
+      : t.trackCount(album.tracks.length)
     : snap.scale === "collection"
-      ? `Collection · ${snap.navAlb + 1}/${ALBUMS.length}`
-      : `${album.cat} · ${album.tracks.length} tracks`;
+      ? t.collectionAt(snap.navAlb + 1, ALBUMS.length)
+      : `${album.cat} · ${t.trackCount(album.tracks.length)}`;
+
+  const playing = snap.playAlb >= 0 ? ALBUMS[snap.playAlb] : null;
+  const announce = playing
+    ? t.announce.track(
+        String(snap.trk + 1).padStart(2, "0"),
+        playing.tracks[snap.trk]?.title ?? "",
+        playing.artist,
+      )
+    : t.announce.collection(ALBUMS.length);
 
   const licenseLink = album.license.source ? (
     <a
@@ -229,35 +231,35 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       title={credit}
       className="cursor-pointer whitespace-nowrap text-ink-mute hover:text-ink-text"
     >
-      {album.license.name}
+      {licenseName}
     </a>
   ) : (
     <span title={credit} className="whitespace-nowrap text-ink-mute">
-      {album.license.name}
+      {licenseName}
     </span>
   );
 
   const breadcrumb = (
-    <nav aria-label="Scale">
+    <nav aria-label={t.scaleNav}>
       <ol className="flex items-center gap-2.5">
         {LEVELS.map((lvl, i) => {
-          const cur = LEVELS.findIndex((l) => l.key === snap.scale);
+          const cur = LEVELS.indexOf(snap.scale);
           const color = i === cur ? COLOR.inkText : i < cur ? COLOR.inkText2 : COLOR.inkFaint;
           return (
-            <li key={lvl.key} className="flex items-center gap-2.5">
+            <li key={lvl} className="flex items-center gap-2.5">
               {i > 0 && <span aria-hidden className="text-chevron">›</span>}
               <button
                 type="button"
                 style={{ color }}
                 aria-current={i === cur ? "step" : undefined}
-                onClick={() => engine?.goScale(lvl.key)}
+                onClick={() => engine?.goScale(lvl)}
                 className={
                   compact
                     ? `${TAP} px-0.5`
                     : "cursor-pointer py-0.75 hover:text-ink-text"
                 }
               >
-                {lvl.label}
+                {t.scale[lvl]}
               </button>
             </li>
           );
@@ -327,7 +329,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           dragging ? "text-ink-text" : "text-ink-text-2",
         ].join(" ")}
       >
-        <span className="truncate">{dragging ? "Drop to measure" : "Bring a record"}</span>
+        <span className="truncate">{dragging ? t.intake.dragging : t.intake.idle}</span>
         <span
           aria-hidden
           className={[
@@ -410,7 +412,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             : "flex-none cursor-pointer whitespace-nowrap hover:text-ink-text"
         }
       >
-        ◂◂ Previous
+        {t.transport.previous}
       </button>
       <button
         type="button"
@@ -424,10 +426,10 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         ].join(" ")}
       >
         {snap.mode === "playing"
-          ? "❙❙ Pause"
+          ? t.transport.pause
           : snap.playAlb >= 0 && snap.scale === "track"
-            ? "▸ Resume"
-            : "▸ Play"}
+            ? t.transport.resume
+            : t.transport.play}
       </button>
       <button
         type="button"
@@ -438,7 +440,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             : "flex-none cursor-pointer whitespace-nowrap hover:text-ink-text"
         }
       >
-        Next ▸▸
+        {t.transport.next}
       </button>
     </>
   );
@@ -451,8 +453,8 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       max={SEEK_STEPS}
       step={1}
       defaultValue={0}
-      aria-label="Position in track"
-      aria-valuetext="00:00 of 00:00"
+      aria-label={t.seek.label}
+      aria-valuetext={t.seek.value("00:00", "00:00")}
       onChange={onSeek}
       onKeyDown={onSeekKey}
       onPointerDown={() => {
@@ -518,11 +520,11 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     >
       {snap.hintDir > 0 ? (
         <>
-          {snap.hint === "swipe" ? "Swipe" : "Drag"} to explore <span className="ml-1">&#8594;</span>
+          {snap.hint === "swipe" ? t.hint.swipe : t.hint.drag} <span className="ml-1">&#8594;</span>
         </>
       ) : (
         <>
-          <span className="mr-1">&#8592;</span> {snap.hint === "swipe" ? "Swipe" : "Drag"} to explore
+          <span className="mr-1">&#8592;</span> {snap.hint === "swipe" ? t.hint.swipe : t.hint.drag}
         </>
       )}
     </p>
@@ -530,7 +532,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
 
   const fault = snap.fault && (
     <p role="status" className="normal-case tracking-[.08em] text-ink-text-2">
-      {FAULT[snap.fault]}
+      {t.fault[snap.fault]}
     </p>
   );
 
@@ -554,7 +556,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       {children}
       {status && <Ceremony status={status} onCancel={cancel} />}
       <p aria-live="polite" className="sr-only">
-        {snap.announce}
+        {announce}
       </p>
     </div>
     {hint}
@@ -570,7 +572,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           style={{ left: gut, right: gut, top: 0, height: pct(b.top) }}
         >
           <div className="flex items-baseline justify-between gap-3">
-            <h1 className="text-ink-text">Horizonte</h1>
+            <h1 className="text-ink-text">{t.title}</h1>
             <span className="whitespace-nowrap text-ink-mute">
               {context} · {licenseLink}
             </span>
@@ -585,7 +587,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
                 onClick={() => setRailOpen((v) => !v)}
                 className={`${TAP} text-ink-text`}
               >
-                {railOpen ? "Close" : "Albums"}
+                {railOpen ? t.albumsClose : t.albumsOpen}
               </button>
             )}
           </div>
@@ -593,7 +595,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
 
         <nav
           id="album-rail"
-          aria-label="Albums"
+          aria-label={t.albumsNav}
           aria-hidden={!albumRailOn}
           className={[
             "absolute flex flex-col border-t border-rule",
@@ -617,7 +619,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         </nav>
 
         <nav
-          aria-label={`Tracks of ${album.title}`}
+          aria-label={t.tracksOf(album.title)}
           aria-hidden={!trackRailOn}
           className={[
             "absolute border-t border-rule",
@@ -655,7 +657,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
                 muted ? "text-ink-text" : ""
               }`}
             >
-              {muted ? "Mute" : "Sound"}
+              {muted ? t.sound.muted : t.sound.on}
             </button>
           </div>
           <div className="flex min-h-[44px] items-center justify-between">{transport(true)}</div>
@@ -667,14 +669,14 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   return shell(
     <>
       <div className="pointer-events-auto absolute left-8.5 top-7.5 flex flex-col gap-3">
-        <h1 className="text-ink-text">Horizonte</h1>
+        <h1 className="text-ink-text">{t.title}</h1>
         {breadcrumb}
       </div>
 
       <div className="absolute right-8.5 top-14 bottom-37.5 flex flex-col items-end gap-6.5">
         <nav
           id="album-rail"
-          aria-label="Albums"
+          aria-label={t.albumsNav}
           aria-hidden={!albumRailOn}
           className={[
             "isolate relative flex min-h-0 flex-col w-53.5 border-t border-rule",
@@ -702,14 +704,14 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               ].join(" ")}
             >
               <span>
-                {ALBUMS.length} albums {albumsFolded ? "▾" : "▴"}
+                {t.albumCount(ALBUMS.length)} {albumsFolded ? "▾" : "▴"}
               </span>
               {albumsFolded && (
                 <span className="truncate text-right text-ink-text">{album.artist}</span>
               )}
             </button>
           ) : (
-            <p className="pb-1.5 text-ink-faint">{ALBUMS.length} albums</p>
+            <p className="pb-1.5 text-ink-faint">{t.albumCount(ALBUMS.length)}</p>
           )}
           {!albumsFolded && (
             <>
@@ -725,7 +727,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         </nav>
 
         <nav
-          aria-label={`Tracks of ${album.title}`}
+          aria-label={t.tracksOf(album.title)}
           aria-hidden={!trackRailOn}
           className={[
             "w-65.5 border-t border-rule",
@@ -754,7 +756,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               onClick={toggleMute}
               className="cursor-pointer whitespace-nowrap hover:text-ink-text"
             >
-              {muted ? "Mute" : "Sound"}
+              {muted ? t.sound.muted : t.sound.on}
             </button>
             <input
               type="range"
@@ -763,7 +765,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               step={1}
               value={Math.round(shownVolume * 100)}
               onChange={onVolume}
-              aria-label="Volume"
+              aria-label={t.sound.volume}
               aria-valuetext={`${Math.round(shownVolume * 100)}%`}
               style={{
                 ["--range-ink" as string]: COLOR.inkText,
@@ -789,7 +791,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             snap.scale === "collection" ? "pointer-events-none opacity-0" : "opacity-100",
           ].join(" ")}
         >
-          ◂ Back
+          {t.transport.back}
         </button>
         <span className="whitespace-nowrap text-ink-faint">{context}</span>
         {licenseLink}
