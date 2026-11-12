@@ -213,17 +213,22 @@ da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
   profundidade de campo sem filtro por quadro. O núcleo e o rótulo de cada
   vizinho só aparecem depois de |d| = 0,5, onde o núcleo do shader deixa de ser
   dele.
-* **Nomes dos vizinhos.** Uma lógica só: legenda abaixo do corpo, a uma
-  distância proporcional ao tamanho do nome (logo, à profundidade), medida a
-  partir da coroa de identidade; acima só quando abaixo cobriria o lockup
-  principal. Os vizinhos ao lado do foco (|d| ≤ 1,5), que carregam a segunda
-  massa, ficam fora do raio em que a lente dela satura (0,154 H). A posição na
-  tela é verificada pela própria lente do foco (`lens`, o mesmo `pullOf` do
-  shader): se o nome cairia fora da moldura, sob a navegação (12% da altura) ou
-  na faixa de controles, ele é corrigido onde realmente aparece; se a correção
-  o levasse para a zona em que a lente do foco satura, onde ele viraria um anel
-  em volta do núcleo, ele esmaece em vez de mudar de lugar. Segunda passada,
-  sobre uma poça de sombra; largura medida uma vez.
+* **Nomes dos vizinhos.** Menos nomes, bem compostos. Só o vizinho mais próximo
+  de cada lado tem nome (some entre |d| = 1 e 1,3); um mais distante só ganha
+  nome enquanto o cursor aponta para ele. O nome é legenda abaixo do corpo, a
+  uma distância proporcional ao tamanho do nome e medida a partir da coroa de
+  identidade; se a legenda cobriria o lockup principal, o vizinho fica sem nome,
+  em vez de subir para perto da navegação, onde a segunda massa dele ainda o
+  empurrava para cima. A linha mono (catálogo · faixas) é proporcional ao nome
+  (40%, piso de 9 px, teto de 0,92% da largura) e fica a 32% do nome mais 1,25
+  da própria altura abaixo dele; antes ela tinha tamanho fixo e, nos vizinhos
+  distantes, ficava maior que o nome e o atravessava. Os vizinhos ao lado do
+  foco (|d| ≤ 1,5) ficam fora do raio em que a lente da segunda massa satura
+  (0,154 H). A posição é verificada na tela pela lente do foco (`lens`, o mesmo
+  `pullOf` do shader): fora da moldura ou na faixa de controles, é corrigida
+  onde aparece; se a correção cairia na zona em que a lente do foco satura, o
+  nome esmaece. Segunda passada, sobre uma poça de sombra; larguras medidas uma
+  vez.
 * **Distinção, medida.** Correlação par a par das silhuetas da coleção: no
   relance do guardrail (24 px) a forma só vai de 0,614 / 0,961 (média / pior par)
   a 0,608 / 0,955 com os satélites, porque os pares quase gêmeos (*Le Manoir* ×

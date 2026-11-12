@@ -330,7 +330,6 @@ export function drawBack(
     hv: number;
     ty: number;
     tsz: number;
-    line: number;
     alpha: number;
   }[] = [];
   const lead = lockup(W, H, s, L);
@@ -420,42 +419,53 @@ export function drawBack(
     x.restore();
 
     const tsz = M * GEO.neighborR * p.depth;
-    const line = M * 0.03 * p.depth;
     const ty = ny + br * (recede ? mi.flatten : 1) + M * 0.075 * p.depth;
     const hv = recede ? nb.R * wholeReachOf(mi) * mi.flatten : -1;
-    tags.push({ i, d: p.d, nx, ny, hv, ty, tsz, line, alpha: a * away * legible });
+    tags.push({ i, d: p.d, nx, ny, hv, ty, tsz, alpha: a * away * legible });
   }
 
   x.save();
   x.textAlign = "center";
-  for (const t of tags) {
-    const hot = t.i === s.hoverBody;
-    ls(x, "-0.035em");
-    x.fillStyle = COLOR.inkText;
-    x.font = `${weights[t.i]} ${NAMES.probe}px ${fonts.archivo}`;
-    const key = `${x.font}|${ALBUMS[t.i].artist}`;
+  const unitOf = (font: string, text: string) => {
+    x.font = font;
+    const key = `${font}|${text}`;
     let unit = widths.get(key);
     if (unit === undefined) {
-      unit = x.measureText(ALBUMS[t.i].artist).width / NAMES.probe;
+      unit = x.measureText(text).width / NAMES.probe;
       widths.set(key, unit);
     }
-    x.font = `${weights[t.i]} ${t.tsz}px ${fonts.archivo}`;
-    const half = (unit * t.tsz) / 2;
+    return unit;
+  };
+  for (const t of tags) {
+    const hot = t.i === s.hoverBody;
+    const presence = Math.max(smooth01((NAMES.reach - Math.abs(t.d)) / NAMES.fade), hot ? 1 : 0);
+    if (presence <= 0.01) continue;
+    const artist = ALBUMS[t.i].artist;
+    const meta = `${ALBUMS[t.i].cat} · ${labels.tracks(ALBUMS[t.i].tracks.length)}`;
+    const msz = Math.min(W * NAMES.metaCeil, Math.max(NAMES.metaFloor, t.tsz * NAMES.metaRatio));
+    const step = t.tsz * NAMES.descent + msz * NAMES.lead;
+    ls(x, "0.16em");
+    const metaHalf = (unitOf(`500 ${NAMES.probe}px ${fonts.mono}`, meta) * msz) / 2;
+    ls(x, "-0.035em");
+    const nameHalf = (unitOf(`${weights[t.i]} ${NAMES.probe}px ${fonts.archivo}`, artist) * t.tsz) / 2;
+    const half = Math.max(nameHalf, metaHalf);
+    const top = t.tsz * 0.8;
+    const bottom = step + msz * 0.3;
     const edge = W * NAMES.edge;
     let nx = t.nx;
     let ty = t.ty;
     if (t.hv >= 0) {
       const gap = t.tsz * NAMES.gap;
       const reach = Math.abs(t.d) <= NAMES.near ? Math.max(t.hv + gap, horizon) : t.hv + gap;
-      const below = t.ny + reach + t.tsz * 0.8;
+      ty = t.ny + reach + top;
       const covers =
-        nx - half < shelter.x1 && below + t.line > shelter.y0 && below - t.tsz < shelter.y1;
-      ty = covers ? t.ny - reach - t.line : below;
+        nx - half < shelter.x1 && ty + bottom > shelter.y0 && ty - top < shelter.y1;
+      if (covers) continue;
     }
     const [sx, sy] = seen(nx, ty);
     const fx = Math.min(Math.max(sx, edge + half), W - edge - half);
-    const fy = Math.min(Math.max(sy, H * NAMES.ceiling + t.tsz * 0.8), H * NAMES.floor - t.line);
-    let shown = 1;
+    const fy = Math.min(Math.max(sy, H * NAMES.ceiling + top), H * NAMES.floor - bottom);
+    let shown = presence;
     if (fx !== sx || fy !== sy) {
       const [ox, oy, grip] = lens(fx, fy);
       if (grip < NAMES.strong) {
@@ -463,16 +473,16 @@ export function drawBack(
         ty = fy + oy;
       } else {
         const out = Math.max(Math.abs(fx - sx) / half, Math.abs(fy - sy) / t.tsz);
-        shown = Math.max(0, 1 - out);
+        shown *= Math.max(0, 1 - out);
       }
     }
     if (shown <= 0.01) continue;
-    x.globalAlpha = t.alpha * shown * (hot ? 1 : 0.66);
-    const cy = ty + t.line * 0.5 - t.tsz * 0.3;
+
+    const cy = ty + (bottom - top) / 2;
     const reach = half + t.tsz * NAMES.pool;
     x.save();
     x.translate(nx, cy);
-    x.scale(1, (t.tsz * 1.6 + t.line) / reach);
+    x.scale(1, (top + bottom + t.tsz * NAMES.pool) / reach);
     const pool = x.createRadialGradient(0, 0, 0, 0, 0, reach);
     pool.addColorStop(0, NAMES.halo);
     pool.addColorStop(1, "rgba(7,7,10,0)");
@@ -480,13 +490,17 @@ export function drawBack(
     x.fillStyle = pool;
     x.fillRect(-reach, -reach, reach * 2, reach * 2);
     x.restore();
-    x.fillText(ALBUMS[t.i].artist, nx, ty);
 
-    ls(x, "0.2em");
-    x.globalAlpha = t.alpha * shown * (hot ? 0.95 : 0.5);
-    x.font = `500 ${W * 0.0092}px ${fonts.mono}`;
-    const meta = `${ALBUMS[t.i].cat} · ${labels.tracks(ALBUMS[t.i].tracks.length)}`;
-    x.fillText(meta, nx, ty + t.line);
+    ls(x, "-0.035em");
+    x.fillStyle = COLOR.inkText;
+    x.globalAlpha = t.alpha * shown * (hot ? 1 : NAMES.nameAlpha);
+    x.font = `${weights[t.i]} ${t.tsz}px ${fonts.archivo}`;
+    x.fillText(artist, nx, ty);
+
+    ls(x, "0.16em");
+    x.globalAlpha = t.alpha * shown * (hot ? 0.9 : NAMES.metaAlpha);
+    x.font = `500 ${msz}px ${fonts.mono}`;
+    x.fillText(meta, nx, ty + step);
   }
   x.restore();
 
