@@ -106,11 +106,12 @@ export const EN: Copy = {
     compare: "Compare",
     hold: "Hold the image to compare",
     keys: "Esc returns",
-    settled: "It already sits where most records here do, so there is nothing to change.",
+    settled:
+      "This record already sits at the collection's typical value, so there is nothing to compare.",
     rows: {
       measure: "Measure",
       record: "This record",
-      usual: "Usual here",
+      usual: "Typical here",
       standing: "Standing",
       drawn: "Drawn as",
     },

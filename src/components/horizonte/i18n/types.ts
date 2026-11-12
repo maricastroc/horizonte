@@ -1,4 +1,4 @@
-import type { AxisReading, CompareAxis, Question, QuestionPart } from "../anatomy";
+import type { AxisReading, CompareAxis, Finding, Question, QuestionPart } from "../anatomy";
 import type { Album } from "../content";
 import type { IngestError, IngestPhase, IngestProbe } from "../ingest/types";
 import type { Fault, Scale } from "../types";
@@ -18,7 +18,9 @@ export interface AnatomyWriter {
   shown(axis: CompareAxis, value: number): string;
   standing(r: AxisReading): string;
   drawn: Record<QuestionPart, string>;
-  nameFact(weight: number): string;
+  details(q: Question): [string, string][];
+  depth(q: Question): string | null;
+  nameFact(core: Extract<Finding, { part: "core" }>): string;
   colourNote: string;
 }
 

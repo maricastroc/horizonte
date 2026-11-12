@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { nameWeightOf, questionsOf, type Invite, type Question } from "./anatomy";
+import { questionsOf, type Finding, type Invite, type Question } from "./anatomy";
 import { CURATED_COUNT } from "./content";
 import type { FieldEngine } from "./engine/FieldEngine";
 import { useCopy, type Phrasing } from "./i18n";
@@ -144,7 +144,9 @@ function Numbers({ q, extra }: { q: Question; extra: string[] }) {
     [t.rows.usual, t.usual(w.shown(r.axis, r.median), CURATED_COUNT)],
     [t.rows.standing, w.standing(r)],
     [t.rows.drawn, w.drawn[q.part]],
+    ...w.details(q),
   ];
+  const depth = w.depth(q);
   return (
     <div className="flex flex-col gap-2 pt-1.5">
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[9.5px]">
@@ -155,7 +157,7 @@ function Numbers({ q, extra }: { q: Question; extra: string[] }) {
           </div>
         ))}
       </dl>
-      {extra.map((line) => (
+      {[...(depth ? [depth] : []), ...extra].map((line) => (
         <p key={line} className={`${PROSE} text-[11.5px] leading-[1.45] text-ink-dim`}>
           {line}
         </p>
@@ -236,7 +238,8 @@ export function ShapePanel({
   const others = questions.filter((q) => q !== open);
   const also = others.filter((q) => questions.indexOf(q) < SHOWN).slice(0, SHOWN - 1);
   const rest = others.filter((q) => !also.includes(q));
-  const extra = [t.write.nameFact(nameWeightOf(snap.alb)), t.write.colourNote];
+  const core = questions.find((q) => q.part === "core")!.finding as Extract<Finding, { part: "core" }>;
+  const extra = [t.write.nameFact(core), t.write.colourNote];
   const o = say(open);
   const said = trying ? (alt ? `${o.label}. ${o.result}` : `${t.asItIs}.`) : "";
 

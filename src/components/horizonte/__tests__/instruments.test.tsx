@@ -644,22 +644,22 @@ describe("why this shape", () => {
     mount({ scale: "album", alb: EWORLD, focus: "satellites" });
     openShape();
     const q = screen.getByRole("heading", { level: 3 });
-    expect(q.textContent).toBe("Why are there four small bodies around it?");
-    expect(screen.getByText(/Because it is long: 75 minutes/)).toBeDefined();
-    expect(screen.getByRole("button", { name: "What if it were shorter? ▸" })).toBeDefined();
+    expect(q.textContent).toBe("Where do the four small bodies come from?");
+    expect(screen.getByText(/From its length: 75 minutes/)).toBeDefined();
+    expect(screen.getByRole("button", { name: "What if the record were shorter? ▸" })).toBeDefined();
     expect(screen.queryByText(/median|dB|Hz/)).toBeNull();
   });
 
   it("trying it turns into a switch between the record and its other version", () => {
     const fake = mount({ scale: "album", alb: EWORLD, focus: "satellites" });
     openShape();
-    fireEvent.click(screen.getByRole("button", { name: "What if it were shorter? ▸" }));
+    fireEvent.click(screen.getByRole("button", { name: "What if the record were shorter? ▸" }));
     expect(fake.last("setCompare")?.args).toEqual([true]);
     act(() => fake.update({ compare: true }));
-    expect(screen.getByRole("heading", { level: 3 }).textContent).toBe("What if it were shorter?");
+    expect(screen.getByRole("heading", { level: 3 }).textContent).toBe("What if the record were shorter?");
     const shorter = screen.getByRole("button", { name: "Shorter" });
     expect(shorter.getAttribute("aria-pressed")).toBe("true");
-    const said = screen.getAllByText(/two of its four small bodies dissolve/);
+    const said = screen.getAllByText(/two small bodies remain/);
     expect(said).toHaveLength(2);
     expect(said.some((el) => el.getAttribute("aria-live") === "polite")).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "As it is" }));
@@ -669,7 +669,7 @@ describe("why this shape", () => {
   it("while peeking, the switch shows the record as it is", () => {
     const fake = mount({ scale: "album", alb: EWORLD, focus: "satellites" });
     openShape();
-    fireEvent.click(screen.getByRole("button", { name: "What if it were shorter? ▸" }));
+    fireEvent.click(screen.getByRole("button", { name: "What if the record were shorter? ▸" }));
     act(() => fake.update({ compare: true, peek: true }));
     expect(screen.getByRole("button", { name: "As it is" }).getAttribute("aria-pressed")).toBe("true");
   });
@@ -677,17 +677,17 @@ describe("why this shape", () => {
   it("Escape inside the panel leaves the experiment", () => {
     const fake = mount({ scale: "album", alb: EWORLD, focus: "satellites" });
     openShape();
-    fireEvent.click(screen.getByRole("button", { name: "What if it were shorter? ▸" }));
+    fireEvent.click(screen.getByRole("button", { name: "What if the record were shorter? ▸" }));
     act(() => fake.update({ compare: true }));
     fireEvent.keyDown(screen.getByRole("tabpanel"), { key: "Escape" });
     expect(fake.last("setCompare")?.args).toEqual([false]);
-    expect(screen.getByRole("button", { name: "What if it were shorter? ▸" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "What if the record were shorter? ▸" })).toBeDefined();
   });
 
   it("two more of the record's questions are at hand, and pointing one previews it", () => {
     const fake = mount({ scale: "album", alb: EWORLD, focus: "satellites" });
     openShape();
-    const layers = screen.getByRole("button", { name: /Why is the ring made of layers\?/ });
+    const layers = screen.getByRole("button", { name: /Why does the ring have layers\?/ });
     fireEvent.focus(layers);
     expect(fake.last("previewAnatomy")?.args).toEqual(["strata"]);
     fireEvent.click(layers);
@@ -697,19 +697,22 @@ describe("why this shape", () => {
   it("the numbers stay one step away", () => {
     mount({ scale: "album", alb: EWORLD, focus: "satellites" });
     openShape();
-    expect(screen.queryByText("Usual here")).toBeNull();
+    expect(screen.queryByText("Typical here")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /In numbers/ }));
-    expect(screen.getByText("Usual here")).toBeDefined();
+    expect(screen.getByText("Typical here")).toBeDefined();
     expect(screen.getByText("34 min (median of the 14)")).toBeDefined();
     expect(screen.getByText("longest of 14")).toBeDefined();
+    expect(screen.getByText("Bodies appear at")).toBeDefined();
+    expect(screen.getByText("23 · 33 · 44 · 54 min")).toBeDefined();
+    expect(screen.getByText(/The ring always makes one full turn/)).toBeDefined();
   });
 
   it("more about the shape holds the other questions and the plain facts", () => {
     mount({ scale: "album", alb: EWORLD, focus: "satellites" });
     openShape();
     fireEvent.click(screen.getByRole("button", { name: /More about this shape/ }));
-    expect(screen.getByText(/Colour comes from the cover/)).toBeDefined();
-    expect(screen.getByText(/The name is set at weight 704/)).toBeDefined();
+    expect(screen.getByText(/The colours come from the cover/)).toBeDefined();
+    expect(screen.getByText(/The name follows average loudness/)).toBeDefined();
   });
 
   it("a record close to the usual explains itself without an experiment", () => {
@@ -718,7 +721,7 @@ describe("why this shape", () => {
     expect(screen.getByRole("heading", { level: 3 }).textContent).toBe(
       "What sets the size of its dark center?",
     );
-    expect(screen.getByText(/nothing to change/)).toBeDefined();
+    expect(screen.getByText(/nothing to compare/)).toBeDefined();
     expect(screen.queryByRole("button", { name: /What if/ })).toBeNull();
   });
 
@@ -728,7 +731,7 @@ describe("why this shape", () => {
       alb: EWORLD,
       invite: { part: "satellites" },
     });
-    expect(screen.getByText("Why are there four small bodies around it?")).toBeDefined();
+    expect(screen.getByText("Where do the four small bodies come from?")).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: /Find out/ }));
     expect(fake.last("openAnatomy")).toBeDefined();
     expect(fake.last("setAnatomyFocus")?.args).toEqual(["satellites"]);
@@ -763,7 +766,7 @@ describe("why this shape", () => {
     expect(next.className).toContain("min-h-[44px]");
     fireEvent.click(next);
     expect(fake.last("setAnatomyFocus")?.args).toEqual(["strata"]);
-    fireEvent.click(screen.getByRole("button", { name: "What if it were shorter? ▸" }));
+    fireEvent.click(screen.getByRole("button", { name: "What if the record were shorter? ▸" }));
     for (const b of within(screen.getByRole("group", { name: "Compare" })).getAllByRole("button")) {
       expect(b.className).toContain("min-h-[46px]");
     }
