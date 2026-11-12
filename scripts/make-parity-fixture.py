@@ -12,8 +12,11 @@ exige que os números batam.
 É o padrão dos vetores de conformidade do Gauntlet: uma entrada versionada, dois
 motores independentes, e a obrigação de concordarem.
 
-Uso:  python3 scripts/make-parity-fixture.py [--seconds 10] [--slug accasari]
+Uso:  python3 scripts/make-parity-fixture.py [--seconds 10] [--slug madison-kenny-all-systems-go]
 Requer: .cache/analysis populado (ou seja, rodar uma vez na máquina que tem o acervo).
+
+Só aceita álbuns aprovados do acervo, porque os recortes são versionados: a
+licença, a fonte e a atribuição exigida vão para `golden.json` junto deles.
 """
 
 import argparse
@@ -60,8 +63,16 @@ def write_wav(path, x):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--seconds", type=float, default=10.0)
-    ap.add_argument("--slug", default="accasari")
+    ap.add_argument("--slug", default="madison-kenny-all-systems-go")
     args = ap.parse_args()
+
+    aa = load_analyzer()
+    entry = next(
+        (e for e in aa.FC.CURATION if e.get("slug") == args.slug and e.get("kind") != "blocked"),
+        None,
+    )
+    if entry is None:
+        raise SystemExit(f"'{args.slug}' não é um álbum aprovado do acervo")
 
     sources = sorted(
         os.path.join(CACHE, f)
@@ -89,7 +100,6 @@ def main():
         cut_paths.append(dest)
         print(f"  recorte {i}: {len(seg)/SR:.1f}s → {os.path.relpath(dest, ROOT)}")
 
-    aa = load_analyzer()
     # decode() do pipeline resolve caminhos pela convenção MUSIC→CACHE; aqui os
     # arquivos já são WAV no formato de análise, então lemos direto.
     aa.decode = read_wav
@@ -104,6 +114,22 @@ def main():
             "do pipeline offline (scripts/analyze-audio.py). Não editar à mão — regenerar."
         ),
         "sourceSlug": args.slug,
+        "source": {
+            "artist": entry["artist"],
+            "title": entry["title"],
+            "url": entry["verify_url"],
+            "license": entry["license"]["name"],
+            "licenseUrl": entry["license"]["url"],
+            "attribution": (
+                f"{entry['artist']} — {entry['title']} "
+                f"({entry.get('label', entry['artist'])}, {entry['year']}). "
+                f"Licensed under {entry['license']['name']}."
+            ),
+            "changes": (
+                f"{args.seconds:g} s excerpts of each track, starting 30 s in, decoded to "
+                f"{SR} Hz mono 16-bit WAV."
+            ),
+        },
         "seconds": args.seconds,
         "sampleRate": SR,
         "tracks": [os.path.basename(p) for p in cut_paths],

@@ -1,12 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { ALBUMS } from "../content";
 import { analyzeTrackPcm, composeAlbum } from "../ingest/dsp";
 import { pearson, readWav } from "./wav";
 
 const DIR = path.resolve(__dirname, "fixtures/parity");
 
 type Golden = {
+  sourceSlug: string;
+  source: { license: string; url: string; attribution: string };
   sampleRate: number;
   tracks: string[];
   expected: {
@@ -37,6 +40,14 @@ describe("conformance vector: browser DSP ↔ offline pipeline", () => {
     for (const t of golden.tracks) {
       expect(fs.existsSync(path.join(DIR, t))).toBe(true);
     }
+  });
+
+  it("comes from a catalogue album and carries its licence", () => {
+    const album = ALBUMS.find((a) => a.id === golden.sourceSlug);
+    expect(album, golden.sourceSlug).toBeTruthy();
+    expect(golden.source.license).toBe(album!.license.name);
+    expect(golden.source.url).toBe(album!.license.source);
+    expect(golden.source.attribution).toBe(album!.license.attribution);
   });
 
   it("reproduces every descriptor the Python pipeline measured", () => {

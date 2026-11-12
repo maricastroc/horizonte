@@ -50,8 +50,8 @@ o porte e o Python produzem a mesma string base64 do envelope nos 14 discos do
 acervo e os mesmos escalares, inclusive pulso e brilho por faixa.
 `ingest-parity.corpus.test.ts` verifica isso com tolerância, e com
 `PARITY_STRICT=1` exige o envelope byte a byte. Sem o corpus local, a fixture
-versionada (`fixtures/parity/`, três trechos de 10 s) faz a mesma verificação em
-CI.
+versionada (`fixtures/parity/`: quatro trechos de 10 s de *All Systems Go*, CC BY
+4.0, com a atribuição em `golden.json`) faz a mesma verificação em CI.
 
 **O decode não é idêntico.** `afconvert -c 1` faz downmix equal-power
 (`(L+R)/√2`); o Web Audio faz `0,5·(L+R)`, 2,88 dB abaixo. O navegador foi
