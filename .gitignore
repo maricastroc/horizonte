@@ -23,6 +23,10 @@
 # misc
 .DS_Store
 *.pem
+*.bak
+*.orig
+*.rej
+*.log
 
 # debug
 npm-debug.log*
@@ -44,13 +48,11 @@ next-env.d.ts
 
 .claude
 
-# cache de download da curadoria (regenerável: scripts/fetch-curation.py)
+# dados locais de desenvolvimento: WAV de análise (testes de corpus), álbuns
+# da aquisição manual, cache de download da curadoria e bancadas
 /.cache
 
-# Assets de mídia: vivem no object storage/CDN, não no Git.
-# Só remova do índice DEPOIS de rodar `npm run media:upload` e de definir
-# NEXT_PUBLIC_MEDIA_BASE_URL na Vercel:
-#   git rm -r --cached public/music
+# mídia: arquivos novos ficam fora do Git; o que já está versionado continua
 /public/music
 
 # python
