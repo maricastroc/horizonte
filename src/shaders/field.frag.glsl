@@ -159,7 +159,7 @@ void main(){
 
   float core = max(coreOf(p, uM0, 1.0), coreOf(p, uM1, 0.0));
   col = mix(col, vec3(0.0), core);
-  col += uInk * (rimOf(p, uM0, 1.0) + rimOf(p, uM1, 0.0)) * 1.15;
+  col += uInk * (rimOf(p, uM0, 1.0) + rimOf(p, uM1, 0.0) * smoothstep(0.008, 0.02, uM1.w)) * 1.15;
 
   if (uJet > 0.001){
     vec2 jd = (p - uM0.xy) / uWorld;

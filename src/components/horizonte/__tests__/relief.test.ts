@@ -140,7 +140,7 @@ describe("the whole crown seen from the collection", () => {
   it("is one solid band, with no sector gaps and no strata", () => {
     const m = morphOf(ALBUMS.findIndex((_, i) => morphOf(i).strata > 0.05));
     const p = new Float32Array(ROW * 2);
-    profileOf(m, 2, 3, null, p, true);
+    profileOf(m, 2, 3, null, p, 0);
     for (let i = 0; i < N; i += 17) {
       expect(shellsIn(p, i)).toHaveLength(1);
       expect(edgeIn(p, i)).toBeGreaterThan(0);

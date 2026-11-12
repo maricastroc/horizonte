@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { shellsAt, wholeCrownAt, type AlbumMorphology } from "../morphology";
-import { RELIEF, RING, SILHOUETTE } from "../tokens";
+import { APPROACH, RELIEF, RING, SILHOUETTE } from "../tokens";
 import { gapOf } from "./ring";
 import { STRAIN_BINS } from "./strain";
 
@@ -65,15 +65,33 @@ function edgeAt(sectors: Sector[], t: number): { edge: number; k: number } {
   return { edge, k };
 }
 
+interface Band {
+  inner: number;
+  outer: number;
+}
+
+function closedOf(real: Band[], whole: Band): Band[] {
+  const total = real.reduce((sum, b) => sum + Math.max(0, b.outer - b.inner), 0) || 1;
+  const span = whole.outer - whole.inner;
+  let cum = 0;
+  return real.map((b) => {
+    const inner = whole.inner + (span * cum) / total;
+    cum += Math.max(0, b.outer - b.inner);
+    return { inner, outer: whole.inner + (span * cum) / total };
+  });
+}
+
 export function profileOf(
   m: AlbumMorphology,
   sel: number,
   active: number,
   field: Float32Array | null,
   out: Float32Array = new Float32Array(ROW * 2),
-  whole = false,
+  open = 1,
 ): ReliefBand {
   const sectors = sectorsOf(m);
+  const seam = sectors.reduce((g, s) => Math.max(g, s.t0 - s.b0), 0) + APPROACH.seam;
+  const shut = 1 - Math.min(1, Math.max(0, open));
   let lo = Number.POSITIVE_INFINITY;
   let hi = 0;
   out.fill(0);
@@ -81,23 +99,31 @@ export function profileOf(
     const t = (i + 0.5) / N;
     const { edge, k } = edgeAt(sectors, t);
     const lift = k === sel || k === active ? RING.lift : 0;
-    const shells = whole
-      ? [wholeCrownAt(m, t, SILHOUETTE.smooth)]
-      : shellsAt(m, t);
+    const shells = shellsAt(m, t);
     const last = shells.length - 1;
     const rise = field ? field[Math.min(STRAIN_BINS - 1, Math.floor(t * STRAIN_BINS))] : 0;
-    const merged: { inner: number; outer: number }[] = [];
-    shells.forEach((sh, j) => {
+    let bands: Band[] = shells.map((sh, j) => {
       const inner = sh.inner - lift;
       let outer = sh.outer + lift;
       if (j === last && rise !== 0) {
         const reach = sh.outer + rise;
         outer = Math.max(inner, rise > 0 ? Math.max(outer, reach) : Math.min(outer, reach));
       }
-      const prev = merged[merged.length - 1];
-      if (prev && inner - prev.outer < RELIEF.merge) prev.outer = Math.max(prev.outer, outer);
-      else merged.push({ inner, outer });
+      return { inner, outer };
     });
+    if (shut > 0) {
+      const closed = closedOf(bands, wholeCrownAt(m, t, SILHOUETTE.smooth));
+      bands = bands.map((b, j) => ({
+        inner: b.inner + (closed[j].inner - b.inner) * shut,
+        outer: b.outer + (closed[j].outer - b.outer) * shut,
+      }));
+    }
+    const merged: Band[] = [];
+    for (const b of bands) {
+      const prev = merged[merged.length - 1];
+      if (prev && b.inner - prev.outer < RELIEF.merge) prev.outer = Math.max(prev.outer, b.outer);
+      else merged.push({ ...b });
+    }
     for (let j = 0; j < Math.min(3, merged.length); j++) {
       const { inner, outer } = merged[j];
       const at = j < 2 ? i * 4 + j * 2 : ROW + i * 4;
@@ -106,7 +132,7 @@ export function profileOf(
       if (inner < lo) lo = inner;
       if (outer > hi) hi = outer;
     }
-    out[ROW + i * 4 + 2] = whole ? 1 : edge;
+    out[ROW + i * 4 + 2] = edge + seam * shut;
   }
   return { lo: Number.isFinite(lo) ? lo : 0, hi };
 }

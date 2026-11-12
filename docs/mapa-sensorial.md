@@ -187,6 +187,35 @@ da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
 * **Mobile.** O palco por bandas não muda: um corpo por tela, mesma fórmula de
   antes, só que com a silhueta no lugar do arco.
 
+## A aproximação — da coleção ao álbum
+
+Entrar num álbum é uma aproximação com duração, não um decaimento exponencial:
+`fadeSel` anda em linha reta em 0,95 s na ida e 0,6 s na volta (`APPROACH`), e
+cada etapa é uma janela suavizada desse progresso (`stagesOf`):
+
+| Etapa | Janela | O que acontece |
+| --- | --- | --- |
+| Luz | 0,05–0,60 | O relevo passa de contraluz a luz frontal e as placas ganham a capa. A direção da luz gira até 0,55 rad no meio do caminho e volta. |
+| Abertura | 0,30–0,85 | O perfil sai da coroa inteira: as cascas partem de posições contíguas dentro da coroa suavizada e deslizam até as reais, e as fendas de setor se abrem a partir do meio de cada fenda. A silhueta da coleção some junto. |
+| Satélites | 0,55–1 | Cada satélite nasce a 55% da própria órbita e gira 0,9 rad até o lugar. A segunda massa do shader acompanha, com massa e horizonte crescendo junto. |
+| Rótulos | 0,72–1 | Nomes e marcas das faixas. |
+
+No meio da ida o raio cresce até 10% (`push`), um avanço de câmera que se
+desfaz na chegada. Os vizinhos se abrem para fora e crescem com o `zoom`, como
+se a câmera passasse por eles. Na volta tudo se desfaz na ordem inversa, sem o
+avanço. Com movimento reduzido o álbum aparece de uma vez.
+
+**Na coleção, o nome acompanha a prateleira.** Entre dois discos, os dois
+lockups dividem o lugar: cada um entra pelo lado de onde o disco vem, e a
+opacidade é complementar. O título em Bodoni e a linha mono andam 70% e 49% do
+nome, uma paralaxe dentro do próprio lockup.
+
+**A segunda massa da coleção** tem o horizonte do núcleo que o vizinho
+desenha (`R × coreRatio × 0,9 × flatten`), some enquanto viaja de um vizinho
+para outro (zona morta de 2% da altura) e some quando o vizinho está atrás do
+foco, o que acontece em telas 4:3. A atração continua: um corpo escondido ainda
+curva o da frente (P14).
+
 ## Guardrail — medir em espaço de imagem
 
 `perception/` rasteriza a silhueta do mundo com as mesmas funções de geometria do

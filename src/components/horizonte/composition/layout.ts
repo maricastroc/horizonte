@@ -1,4 +1,17 @@
-import { BAND, BREAKPOINT, DEPTH, GEO, GLYPH, LOCKUP, REACH, RING, RING_UNIT, SHARD } from "../tokens";
+import { stagesOf } from "./approach";
+import {
+  APPROACH,
+  BAND,
+  BREAKPOINT,
+  DEPTH,
+  GEO,
+  GLYPH,
+  LOCKUP,
+  REACH,
+  RING,
+  RING_UNIT,
+  SHARD,
+} from "../tokens";
 import { albumProgressOf } from "../state";
 import { clamp, lerp } from "../math";
 import { neighborScale, type AlbumMorphology } from "../morphology";
@@ -103,7 +116,7 @@ export function albPos(i: number, s: FieldState, L: WorldLayout) {
   const a = Math.abs(d);
   const depth = Math.pow(q, a);
   const reach = Math.sign(d) * L.spreadX * ((1 - depth) / (1 - q));
-  const x = zx + reach * (1 - s.zoom * 0.6) - s.tide;
+  const x = zx + reach * (1 + s.zoom * APPROACH.pass) - s.tide;
   const y = zy + reach * L.tilt * (1 - s.zoom);
   return { x, y, depth, d };
 }
@@ -128,10 +141,11 @@ export function collectionBody(
   m: AlbumMorphology,
 ): BodyGeom {
   const p = albPos(i, s, L);
+  const a = Math.abs(p.d);
   return {
     cx: p.x * W,
     cy: p.y * H,
-    R: ringR(W, H, s, L) * m.circuit * p.depth,
+    R: ringR(W, H, s, L) * m.circuit * p.depth * (1 + s.zoom * APPROACH.grow * Math.min(1, a)),
     flatten: m.flatten,
   };
 }
@@ -140,7 +154,7 @@ export const baseRadius = (W: number, H: number, zoom: number, play: number, L: 
   Math.min(W, H) * (0.385 - zoom * 0.105 + play * 0.055) * L.ringScale;
 
 export const ringR = (W: number, H: number, s: FieldState, L: WorldLayout) =>
-  baseRadius(W, H, s.zoom, s.play, L);
+  baseRadius(W, H, s.zoom, s.play, L) * (1 + APPROACH.push * stagesOf(s).push);
 
 export interface BodyGeom {
   cx: number;

@@ -3,13 +3,14 @@ import { CANVAS_LABELS, type CanvasLabels } from "../i18n/canvas";
 import type { FieldConstants } from "../field";
 import { neighborScale, outerAt, satRadiusOf, type AlbumMorphology } from "../morphology";
 import { isEngaged, progressOf } from "../state";
-import { ANATOMY, COLOR, GEO, MORPH, PARTICLES, RING, SILHOUETTE, rgba } from "../tokens";
+import { ANATOMY, COLOR, GEO, MORPH, NAMES, PARTICLES, RING, SILHOUETTE, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
 import { drawFacing, drawGhost, type BodyFrame, type FocusSatellite } from "./focus";
 import type { RingBakery, SegShape } from "./ring";
 import { ls, type Ctx } from "./ctx";
 import { stageBox, type Bands } from "./bands";
+import { emergeOf, namePlates, stagesOf } from "./approach";
 import {
   albPos,
   atmosphereOf,
@@ -112,13 +113,15 @@ function drawSatellites(
   fade: number,
   ink: string,
   out: FocusSatellite[] | null = null,
+  emerge = 1,
 ) {
   if (fade <= 0.01) return;
   x.save();
   for (const sat of m.satellites) {
     if (sat.weight <= 0.02) continue;
-    const px = bx + Math.cos(sat.angle) * sat.dist * R;
-    const py = by + Math.sin(sat.angle) * sat.dist * R * m.flatten;
+    const at = emergeOf(sat, emerge);
+    const px = bx + Math.cos(at.angle) * at.dist * R;
+    const py = by + Math.sin(at.angle) * at.dist * R * m.flatten;
     const r = satRadiusOf(m, sat) * R;
     const a = fade * sat.weight;
     const rr = r * (1 + MORPH.satRim * 0.5);
@@ -165,6 +168,7 @@ function trackLabels(
   const bounds = boundsOf(A.signature, N);
   const flatten = m.flatten;
   const silent = L.ringLabels === "none";
+  const labels = stagesOf(s).labels;
   x.save();
   x.textBaseline = "middle";
   ls(x, "0.2em");
@@ -182,7 +186,7 @@ function trackLabels(
       const hidden = Math.cos(a) > 0.3 || (py > H * 0.6 && px < W * 0.46);
       if (hidden && !on) continue;
 
-      x.globalAlpha = s.fadeSel * (on ? 0.95 : 0.42);
+      x.globalAlpha = labels * (on ? 0.95 : 0.42);
       x.fillStyle = on ? rgba(A.inkA, 1) : COLOR.dust;
       x.textAlign = Math.cos(a) < 0 ? "right" : "left";
       x.fillText(
@@ -194,7 +198,7 @@ function trackLabels(
 
     const tick = outerAt(m, t) * R;
     const far = silent ? tick * 1.3 : reach - R * 0.05;
-    x.globalAlpha = s.fadeSel * (on ? 0.6 : 0.18);
+    x.globalAlpha = labels * (on ? 0.6 : 0.18);
     x.strokeStyle = on ? rgba(A.inkA, 1) : COLOR.dust;
     x.lineWidth = 1;
     x.beginPath();
@@ -252,6 +256,7 @@ export function drawBack(
     frame.m = morph;
   }
 
+  const stage = stagesOf(s);
   x.fillStyle = COLOR.void;
   x.fillRect(0, 0, W, H);
 
@@ -267,7 +272,7 @@ export function drawBack(
   );
   for (const i of order) {
     if (i === s.alb) {
-      const alpha = (1 - s.fadeSel) * (1 - s.mix * 0.7);
+      const alpha = (1 - stage.open) * (1 - s.mix * 0.7);
       if (alpha <= 0.01) continue;
       const fg = L.recede > 0 ? collectionBody(W, H, s, L, i, morphOf(i)) : g;
       const sil = rings.silhouette(i);
@@ -350,12 +355,13 @@ export function drawBack(
     by,
     R,
     morph,
-    s.fadeSel * (1 - s.mix),
+    stage.satellites * (1 - s.mix),
     inkA(0.9),
     frame ? frame.satellites : null,
+    stage.satellites,
   );
 
-  if (s.fadeSel > 0.02) {
+  if (stage.light > 0.02) {
     const activeTrk =
       s.playAlb === s.alb && (isEngaged(s.mode) || s.mode === "fusion")
         ? s.trk
@@ -372,7 +378,7 @@ export function drawBack(
       fieldVersion,
       deps.compare ?? null,
     );
-    drawRing(x, seg, bx, by, R, s.ringRot, s.fadeSel * (1 - s.mix * 0.6), morph.flatten);
+    drawRing(x, seg, bx, by, R, s.ringRot, stage.light * (1 - s.mix * 0.6), morph.flatten);
     if (deps.facing && deps.facing > 0.005) {
       drawFacing(
         x,
@@ -455,22 +461,28 @@ export function drawBack(
   x.save();
   x.textBaseline = "alphabetic";
   ls(x, "-0.035em");
-  let asz = lk.size;
-  const wgt = Math.round(C.artistWeight);
-  x.font = `${wgt} ${asz}px ${fonts.archivo}`;
   const fit = s.scale === "collection" ? L.fitCollection : L.fitAlbum;
-  if (fit > 0) {
-    const maxW = L.staged ? W - lk.margin * 2 : W * fit - lk.margin;
-    const mw = x.measureText(A.artist).width;
-    if (mw > maxW) {
-      asz = Math.max(asz * lk.floor, asz * (maxW / mw));
-      x.font = `${wgt} ${asz}px ${fonts.archivo}`;
+  const plates = namePlates(s, ALBUMS.length);
+  for (const plate of plates) {
+    const name = ALBUMS[plate.alb].artist;
+    const settled = plates.length === 1 && plate.alb === s.alb;
+    const wgt = settled ? Math.round(C.artistWeight) : weights[plate.alb];
+    let asz = lk.size;
+    x.font = `${wgt} ${asz}px ${fonts.archivo}`;
+    if (fit > 0) {
+      const maxW = L.staged ? W - lk.margin * 2 : W * fit - lk.margin;
+      const mw = x.measureText(name).width;
+      if (mw > maxW) {
+        asz = Math.max(asz * lk.floor, asz * (maxW / mw));
+        x.font = `${wgt} ${asz}px ${fonts.archivo}`;
+      }
     }
+    const nx = lk.margin + plate.shift * W * NAMES.slide;
+    x.globalAlpha = (1 - s.mix) * (0.92 - s.play * 0.25) * plate.alpha;
+    x.fillStyle = COLOR.paper;
+    x.fillText(name, nx, lk.ay);
+    if (frame && plate.alb === s.alb) frame.name = { text: name, font: x.font, x: nx, y: lk.ay };
   }
-  x.globalAlpha = (1 - s.mix) * (0.92 - s.play * 0.25);
-  x.fillStyle = COLOR.paper;
-  x.fillText(A.artist, lk.margin, lk.ay);
-  if (frame) frame.name = { text: A.artist, font: x.font, x: lk.margin, y: lk.ay };
   if (s.mix > 0 && ALBUMS[s.fuseAlb]) {
     x.globalAlpha = s.mix * (0.92 - s.play * 0.25);
     x.fillText(

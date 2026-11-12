@@ -87,10 +87,17 @@ describe("albPos", () => {
     expect(albPos(1, s, DESKTOP).depth).toBeCloseTo(albPos(3, s, DESKTOP).depth, 10);
   });
 
-  it("zoom gathers the neighbours towards the focus", () => {
+  it("zoom carries the camera past the neighbours, which open outwards", () => {
     const isOpen = albPos(1, baseState({ nav: 0, zoom: 0 }), DESKTOP);
     const closed = albPos(1, baseState({ nav: 0, zoom: 1 }), DESKTOP);
-    expect(closed.x - GEO.anchorAlbum.x).toBeLessThan(isOpen.x - GEO.anchorCollection.x);
+    expect(closed.x - GEO.anchorAlbum.x).toBeGreaterThan(isOpen.x - GEO.anchorCollection.x);
+  });
+
+  it("on the mobile stage zoom still gathers the neighbours", () => {
+    const M = layoutFor("mobile");
+    const isOpen = albPos(1, baseState({ nav: 0, zoom: 0 }), M);
+    const closed = albPos(1, baseState({ nav: 0, zoom: 1 }), M);
+    expect(closed.x - M.anchorAlbum.x).toBeLessThan(isOpen.x - M.anchorCollection.x);
   });
 });
 

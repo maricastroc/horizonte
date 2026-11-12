@@ -32,6 +32,7 @@ import {
 import { bandsOf, sameBands, stageBox, FULL_BANDS } from "../composition/bands";
 import { RingBakery, type SegShape } from "../composition/ring";
 import { profileOf, writeProfile, type ReliefBand } from "../composition/relief";
+import { emergeOf, stagesOf } from "../composition/approach";
 import {
   crownAt,
   mixMorphology,
@@ -97,6 +98,7 @@ import {
   INTAKE,
   MOTION,
   MORPH,
+  APPROACH,
   RELIEF,
   RING,
   SECOND_MASS,
@@ -977,7 +979,7 @@ export class FieldEngine implements InputActions {
 
     this.ringRotation(dt);
     this.lightAngle(dt);
-    s.fadeSel += ((s.scale === "collection" ? 0 : 1) - s.fadeSel) * Math.min(1, dt * 4);
+    this.approachStep(dt);
     s.form +=
       ((s.scale === "collection" ? MORPH.collectionForm : 1) - s.form) * Math.min(1, dt * 4);
     this.tideStep(dt);
@@ -1041,6 +1043,17 @@ export class FieldEngine implements InputActions {
     this.bus.setResponse(this.motion);
   }
 
+  private approachStep(dt: number) {
+    const s = this.st;
+    const inside = s.scale !== "collection";
+    if (this.reduced) {
+      s.fadeSel = inside ? 1 : 0;
+      return;
+    }
+    const rate = inside ? 1 / APPROACH.enter : -1 / APPROACH.leave;
+    s.fadeSel = clamp(s.fadeSel + rate * dt, 0, 1);
+  }
+
   private ringRotation(dt: number) {
     const s = this.st;
     const onAir = s.playAlb >= 0 && s.playAlb === s.alb && s.scale !== "collection";
@@ -1091,9 +1104,13 @@ export class FieldEngine implements InputActions {
     const k = this.intake
       ? SECOND_MASS.k * INTAKE.mass
       : SECOND_MASS.k * C.massScale * gain;
+    const body =
+      this.L.recede > 0 ? collectionBody(this.W, this.H, s, this.L, at, mm) : null;
     const h = this.intake
       ? SECOND_MASS.h * INTAKE.horizon
-      : SECOND_MASS.h * (mm.coreRatio / MORPH.coreRef) * mm.circuit;
+      : body
+        ? (body.R * mm.coreRatio * SECOND_MASS.core * mm.flatten) / Math.max(1, this.H)
+        : SECOND_MASS.h * (mm.coreRatio / MORPH.coreRef) * mm.circuit;
 
     const m = this.m1;
     if (!m.ready || m.alb !== at) m.alb = at;
@@ -1109,8 +1126,21 @@ export class FieldEngine implements InputActions {
     const e = Math.min(1, dt * SECOND_MASS.lerp);
     m.x += (p.x - m.x) * e;
     m.y += (p.y - m.y) * e;
+    const away = Math.hypot((p.x - m.x) * this.W, (p.y - m.y) * this.H) / Math.max(1, this.H);
+    const settled = body
+      ? clamp(1 - Math.max(0, away - SECOND_MASS.drift) / SECOND_MASS.settle, 0, 1)
+      : 1;
+    let exposed = 1;
+    if (body && at !== focused) {
+      const fm = this.morphAt(focused);
+      const front = collectionBody(this.W, this.H, s, this.L, focused, fm);
+      const reach =
+        Math.hypot(body.cx - front.cx, (body.cy - front.cy) / front.flatten) / Math.max(1, front.R);
+      exposed = clamp((reach - fm.rMax) / SECOND_MASS.behind, 0, 1);
+    }
     m.k += (k - m.k) * e;
-    m.h += (h - m.h) * e;
+    const veil = this.intake ? 1 : settled * exposed;
+    m.h += (h * veil - m.h) * Math.min(1, dt * SECOND_MASS.lerp * 2);
   }
 
   private lightAngle(dt: number) {
@@ -1256,12 +1286,14 @@ export class FieldEngine implements InputActions {
     } else if (s.scale !== "collection" && s.mode !== "fusion" && s.m1k <= 1e-4) {
       const sat = this.leadSatellite();
       if (sat) {
-        const sx = (geo.cx + Math.cos(sat.angle) * sat.dist * geo.R) / this.W;
-        const sy = (geo.cy + Math.sin(sat.angle) * sat.dist * geo.R * geo.flatten) / this.H;
+        const e = stagesOf(s).satellites;
+        const at = emergeOf(sat, e);
+        const sx = (geo.cx + Math.cos(at.angle) * at.dist * geo.R) / this.W;
+        const sy = (geo.cy + Math.sin(at.angle) * at.dist * geo.R * geo.flatten) / this.H;
         m1x = (sx - 0.5) * aspect;
         m1y = 0.5 - sy;
-        m1k = SECOND_MASS.k * this.C.massScale * sat.weight * s.form;
-        m1h = ((sat.size * geo.R) / this.H) * (0.4 + 0.6 * sat.weight);
+        m1k = SECOND_MASS.k * this.C.massScale * sat.weight * s.form * e;
+        m1h = ((sat.size * geo.R) / this.H) * (0.4 + 0.6 * sat.weight) * e;
       }
     }
 
@@ -1298,7 +1330,7 @@ export class FieldEngine implements InputActions {
     u.uReach.value = this.reachAmp;
     const dBright = clamp(this.audioState.centroid - A.signature.brightness, -0.5, 0.5);
     u.uRim.value = this.C.rimHardness * (1 + dBright * this.C.reactionCap * this.motion.light);
-    const light = lightDirection(this.lightSweep);
+    const light = lightDirection(this.lightSweep + APPROACH.turn * stagesOf(s).push);
     u.uLight.value.set(light[0], light[1]);
     (u.uInk.value as THREE.Vector3).set(A.inkA[0], A.inkA[1], A.inkA[2]);
     this.reliefSync(geo);
@@ -1310,6 +1342,7 @@ export class FieldEngine implements InputActions {
     const s = this.st;
     const u = this.gl.uniforms;
     const amount = 1 - s.mix;
+    const stage = stagesOf(s);
     if (amount <= 0.001) {
       u.uRelief.value.w = 0;
       return;
@@ -1321,14 +1354,14 @@ export class FieldEngine implements InputActions {
       inside && s.playAlb === s.alb && (isEngaged(s.mode) || s.mode === "fusion") ? s.trk : -1;
     const sel = inside ? s.sel : -1;
     const field = inside ? this.deformation() : null;
-    const whole = s.fadeSel < 0.5;
-    const key = `${s.alb}:${shape ? shape.version : -1}:${sel}:${active}:${field ? this.strain.version : -1}:${whole}`;
+    const open = Math.round(stage.open * RELIEF.steps) / RELIEF.steps;
+    const key = `${s.alb}:${shape ? shape.version : -1}:${sel}:${active}:${field ? this.strain.version : -1}:${open}`;
     if (key !== this.reliefKey) {
       this.reliefKey = key;
-      this.reliefBand = profileOf(m, sel, active, field, this.reliefProfile, whole);
+      this.reliefBand = profileOf(m, sel, active, field, this.reliefProfile, open);
       writeProfile(u.uShape.value, this.reliefProfile);
     }
-    const k = s.fadeSel;
+    const k = stage.open;
     const far =
       this.L.recede > 0 ? collectionBody(this.W, this.H, s, this.L, s.alb, this.morphAt(s.alb)) : geo;
     const R = far.R + (geo.R - far.R) * k;
@@ -1342,7 +1375,7 @@ export class FieldEngine implements InputActions {
     u.uReliefBand.value.set(
       this.reliefBand.lo - RELIEF.margin,
       this.reliefBand.hi + RELIEF.margin,
-      1 - k,
+      1 - stage.light,
       0,
     );
   }

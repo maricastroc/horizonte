@@ -41,6 +41,24 @@ export const DEPTH = {
   softBlur: 2.2,
 } as const;
 
+export const APPROACH = {
+  enter: 0.95,
+  leave: 0.6,
+  light: [0.05, 0.6],
+  open: [0.3, 0.85],
+  satellites: [0.55, 1],
+  labels: [0.72, 1],
+  push: 0.1,
+  turn: 0.55,
+  pass: 1.1,
+  grow: 0.8,
+  seam: 0.03,
+  satFrom: 0.55,
+  satSwing: 0.9,
+} as const;
+
+export const NAMES = { slide: 0.08, lag: 0.7 } as const;
+
 export const SILHOUETTE = {
   face: 0.8,
   veil: 10,
@@ -208,6 +226,7 @@ export const RELIEF = {
   texels: 1024,
   margin: 0.08,
   merge: 0.012,
+  steps: 48,
 } as const;
 
 export const TRACK_BIAS = { lerp: 1.2 } as const;
@@ -256,7 +275,16 @@ export const STRAIN = {
   scarFloor: 0.004,
 } as const;
 
-export const SECOND_MASS = { k: 0.03, h: 0.052, pointGain: 1.9, lerp: 3.5 } as const;
+export const SECOND_MASS = {
+  k: 0.03,
+  h: 0.052,
+  pointGain: 1.9,
+  lerp: 3.5,
+  core: 0.9,
+  drift: 0.02,
+  settle: 0.05,
+  behind: 0.06,
+} as const;
 
 export const INTAKE = { mass: 0.45, horizon: 1.3 } as const;
 

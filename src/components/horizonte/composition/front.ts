@@ -1,8 +1,9 @@
 import { ALBUMS } from "../content";
 import { CANVAS_LABELS, type CanvasLabels } from "../i18n/canvas";
-import { COLOR } from "../tokens";
+import { COLOR, NAMES } from "../tokens";
 import type { FieldState, FontFamilies } from "../types";
 import type { CoverAsset } from "./cover";
+import { namePlates } from "./approach";
 import { ls, type Ctx } from "./ctx";
 import { lockup, type ShardSpec, type WorldLayout } from "./layout";
 
@@ -89,7 +90,6 @@ export function drawFront(
   deps: FrontDeps,
 ) {
   const x = ctx as Ctx;
-  const A = ALBUMS[s.alb];
   x.clearRect(0, 0, W, H);
 
   const lk = lockup(W, H, s, L);
@@ -109,29 +109,35 @@ export function drawFront(
     x.restore();
   }
 
-  x.save();
-  x.textBaseline = "alphabetic";
-  ls(x, "-0.01em");
-  x.globalAlpha = 1;
-  x.fillStyle = COLOR.paperHi;
+  const labels = deps.labels ?? CANVAS_LABELS;
   const titleFont = (size: number) => `italic 400 ${size}px ${deps.fonts.bodoni}`;
-  fitFont(x, frontTitle(s), titleFont, lk.tsize, lk.widthTitle, lk.floor);
-  x.fillText(frontTitle(s), lk.marginTitle, lk.ty);
-
-  x.globalAlpha = lk.metaAlpha;
-  ls(x, "0.22em");
-  x.fillStyle = COLOR.inkText2;
-  const sub = (
-    s.scale === "collection"
-      ? [A.year, (deps.labels ?? CANVAS_LABELS).tracks(A.tracks.length), A.cat]
-      : [A.artist, A.title, A.year]
-  )
-    .filter(Boolean)
-    .join(" · ");
   const metaFont = (size: number) => `500 ${size}px ${deps.fonts.mono}`;
-  fitFont(x, sub, metaFont, lk.msize, lk.widthMeta, lk.floor);
-  x.fillText(sub, lk.marginMeta, lk.my);
-  x.restore();
+  for (const plate of namePlates(s, ALBUMS.length)) {
+    const P = ALBUMS[plate.alb];
+    const slide = plate.shift * W * NAMES.slide;
+    const title = s.scale === "collection" ? P.title : frontTitle(s);
+    x.save();
+    x.textBaseline = "alphabetic";
+    ls(x, "-0.01em");
+    x.globalAlpha = plate.alpha;
+    x.fillStyle = COLOR.paperHi;
+    fitFont(x, title, titleFont, lk.tsize, lk.widthTitle, lk.floor);
+    x.fillText(title, lk.marginTitle + slide * NAMES.lag, lk.ty);
+
+    x.globalAlpha = lk.metaAlpha * plate.alpha;
+    ls(x, "0.22em");
+    x.fillStyle = COLOR.inkText2;
+    const sub = (
+      s.scale === "collection"
+        ? [P.year, labels.tracks(P.tracks.length), P.cat]
+        : [P.artist, P.title, P.year]
+    )
+      .filter(Boolean)
+      .join(" · ");
+    fitFont(x, sub, metaFont, lk.msize, lk.widthMeta, lk.floor);
+    x.fillText(sub, lk.marginMeta + slide * NAMES.lag * NAMES.lag, lk.my);
+    x.restore();
+  }
 
   const spec = L.shard;
   const sm = fragment.get(deps.covers[s.alb], s.alb, W, H, spec);

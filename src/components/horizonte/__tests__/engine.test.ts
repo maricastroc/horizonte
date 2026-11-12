@@ -33,7 +33,7 @@ vi.mock("../fieldMaterial", async (importReal) => {
 import { ALBUMS, OPENING } from "../content";
 import { EXPLORED_KEY, HINT_MS, TIDE } from "../tokens";
 import { FieldEngine } from "../engine/FieldEngine";
-import { albPos, bodyGeom, layoutFor } from "../composition/layout";
+import { albPos, bodyGeom, collectionBody, layoutFor, variantFor } from "../composition/layout";
 import { fieldConstantsOf } from "../field";
 import { morphologyOf } from "../morphology";
 import { peakOf, scarCount, STRAIN_BINS } from "../composition/strain";
@@ -44,8 +44,8 @@ import {
   COMPOSITION_MAX_W,
   RING,
   INTAKE,
-  MORPH,
   SECOND_MASS,
+  APPROACH,
 } from "../tokens";
 import { boundsOf, trackBiasOf } from "../content/signature";
 import { engineHarness, type EngineHarness, type FakeAudio } from "./fakes";
@@ -54,6 +54,12 @@ const FONTS = { archivo: "A", bodoni: "B", mono: "M" };
 
 let env: EngineHarness;
 let engine: FieldEngine;
+
+function drawnCore(alb: number, mm: ReturnType<typeof morphologyOf>) {
+  const dims = engine as unknown as { W: number; H: number };
+  const body = collectionBody(dims.W, dims.H, engine.st, layoutFor("desktop"), alb, mm);
+  return (body.R * mm.coreRatio * SECOND_MASS.core * mm.flatten) / dims.H;
+}
 
 function on(options: Parameters<typeof engineHarness>[0] = {}) {
   env = engineHarness(options);
@@ -496,7 +502,7 @@ describe("uniform contract", () => {
 
     const m1 = u().uM1.value as unknown as { z: number; w: number };
     expect(m1.z).toBeCloseTo(SECOND_MASS.k * c.massScale, 4);
-    expect(m1.w).toBeCloseTo(SECOND_MASS.h * (mm.coreRatio / MORPH.coreRef) * mm.circuit, 4);
+    expect(m1.w).toBeCloseTo(drawnCore(neighbour, mm), 3);
   });
 
   it("the shader's time follows the world's clock", () => {
@@ -820,8 +826,10 @@ describe("pointing has weight (P14)", () => {
 
   it("the pointed body's horizon is its own, with no gain", () => {
     pointAtRail(7);
+    run(2);
+    env.advance();
     const mm = morphologyOf(ALBUMS[7].signature, ALBUMS[7].tracks.length);
-    expect(m1().w).toBeCloseTo(SECOND_MASS.h * (mm.coreRatio / MORPH.coreRef) * mm.circuit, 4);
+    expect(m1().w).toBeCloseTo(drawnCore(7, mm), 3);
   });
 
   it("the mass arrives with inertia, it does not teleport", () => {
@@ -1100,5 +1108,54 @@ describe("relief", () => {
     engine.goScale("collection");
     run(4);
     expect(engine.st.ringRot).toBeCloseTo(RING.anchor, 2);
+  });
+});
+
+describe("the approach has a duration, not a decay", () => {
+  it("entering takes the declared time and leaving is quicker", () => {
+    engine.enterAlbum(2);
+    run(APPROACH.enter * 0.5);
+    expect(engine.st.fadeSel).toBeGreaterThan(0.4);
+    expect(engine.st.fadeSel).toBeLessThan(0.6);
+    run(APPROACH.enter * 0.6);
+    expect(engine.st.fadeSel).toBe(1);
+    engine.goScale("collection");
+    run(APPROACH.leave + 0.05);
+    expect(engine.st.fadeSel).toBe(0);
+  });
+
+  it("with reduced motion the album is simply there", () => {
+    engine.setReducedMotion(true);
+    engine.enterAlbum(2);
+    run(0.05);
+    expect(engine.st.fadeSel).toBe(1);
+  });
+
+  it("a neighbour hidden behind the focus keeps its pull but shows no horizon", () => {
+    engine.stop();
+    env.restore();
+    on({ innerWidth: 1366, innerHeight: 1024 });
+    const m1 = () =>
+      (engine as unknown as { m1: { h: number; k: number; alb: number } }).m1;
+    let hidden = 0;
+    for (let alb = 1; alb < ALBUMS.length - 1; alb++) {
+      engine.st.navT = alb;
+      run(3);
+      const s = engine.st;
+      const at = m1().alb;
+      const dims = engine as unknown as { W: number; H: number };
+      const L = layoutFor(variantFor(1366, 1024));
+      const fm = morphologyOf(ALBUMS[alb].signature, ALBUMS[alb].tracks.length);
+      const am = morphologyOf(ALBUMS[at].signature, ALBUMS[at].tracks.length);
+      const front = collectionBody(dims.W, dims.H, s, L, alb, fm);
+      const back = collectionBody(dims.W, dims.H, s, L, at, am);
+      const reach = Math.hypot(back.cx - front.cx, (back.cy - front.cy) / front.flatten) / front.R;
+      if (reach < fm.rMax) {
+        hidden++;
+        expect(m1().h).toBeLessThan(1e-3);
+        expect(m1().k).toBeGreaterThan(0);
+      }
+    }
+    expect(hidden).toBeGreaterThan(0);
   });
 });
