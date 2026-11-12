@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { AnatomyInvite, AnatomyTabs, ShapePanel, type AlbumView } from "./AnatomyRail";
 import Ceremony from "./Ceremony";
-import { ALBUMS } from "./content";
+import { ALBUMS, OPENING } from "./content";
 import { FULL_BANDS } from "./composition/bands";
 import { ACCEPT } from "./ingest/formats";
 import { useIngest } from "./ingest/useIngest";
@@ -18,8 +18,8 @@ const DEFAULT_SNAPSHOT: Snapshot = {
   scale: "collection",
   bands: FULL_BANDS,
   mode: "stopped",
-  alb: 0,
-  navAlb: 0,
+  alb: OPENING,
+  navAlb: OPENING,
   sel: 0,
   trk: 0,
   playAlb: -1,
