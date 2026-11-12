@@ -1037,12 +1037,20 @@ disco continua dono da personalidade; a faixa a modula.
 | Nitidez de ataque | Tempo de subida da reação ao vivo (τ 240 → 40 ms) | 71 ms (*e-world*, *Чайка*) a 212 ms (*The Sheltering Sky*) | O tempo de subida do som vira o tempo de subida da resposta |
 | Sustentação | Tempo de relaxamento (τ 140 ms → 1,2 s) e hábito do acento (5× o relaxamento, entre 1,2 e 6 s) | 200 ms (*Чайка*) a 868 ms (*lebar*); hábito 1,2 a 4,3 s | O que o som sustenta, a resposta sustenta; o hábito mais longo deixa passar o inchaço lento que o de 1,2 s apagava |
 | Grade | Relaxamento limitado a 0,45 do período do pulso | 6 de 7 faixas de *0p*, 14 de 16 de *e-world* | Cada batida continua um evento separado, em vez de virar um borrão |
-| Microdinâmica | Profundidade: o acento passa a ser medido na variação típica da própria música (desvio absoluto médio na janela do hábito): um evento 2,5 vezes acima dessa variação, dividido pela profundidade (0,55 a 1), alcança o teto de P4 | 0,60 (*The Sheltering Sky*) a 0,86 (*Impromptu*) | O contraste entre evento e fundo que a música tem é o que a tela mostra; é o mesmo operador da carga, normalizado pela própria variação |
+| Microdinâmica | Profundidade: o acento passa a ser medido na variação típica da própria música (desvio absoluto médio na janela do hábito): um evento 2,5 vezes acima dessa variação, dividido pela profundidade (0,825 a 1,5), alcança o teto de P4 | 0,90 (*The Sheltering Sky*) a 1,29 (*Impromptu*) | O contraste entre evento e fundo que a música tem é o que a tela mostra; é o mesmo operador da carga, normalizado pela própria variação |
 | Peso do grave | Divisão da reação entre massa (lente, blur, parte grave do jato) e luz (fluxo do jato, dispersão, rim) | Massa 0,65 (*The Sheltering Sky*) a 1; luz 0,49 (*MKUltra*) a 1 | Correspondência intermodal grave ↔ pesado. Os ganhos nunca passam de 1: o teto de P4 continua sendo o teto |
 
 Só um disco de peso médio fica com massa e luz em 1, o roteamento de antes;
 quanto mais longe do meio, mais a reação vai para um dos lados. A profundidade não muda o teto de nenhum disco: muda
 quanto do teto o evento típico usa.
+
+A profundidade foi recalibrada depois da primeira escuta (11/11/2026), que achou a
+reação tímida. Na primeira calibração (0,55 a 1), o acento típico usava 19% a 34%
+do teto e só 0% a 4,7% dos quadros o alcançavam: havia folga. Multiplicar a faixa
+por 1,5 aumenta lente, dispersão e giro em 1,2 a 1,5 vez sem mexer no teto de
+nenhum disco; quem mais encosta nele são os discos de ataque mais seco (*e-world*,
+*Impromptu* e *Чайка*, em 12% a 13% dos quadros). O jato não depende da
+profundidade e fica como estava.
 
 O motor só lê a resposta (`attack`, `release`, `habit`, `depth`, `mass`,
 `light`), que desliza para a da faixa nova em cerca de um segundo. As qualidades
@@ -1055,24 +1063,28 @@ mexer na análise.
 Bancada headless com o motor real e um emulador do `AnalyserNode` que lê o PCM da
 faixa na posição controlada. Comparado com o analisador real do navegador
 tocando a mesma faixa, o emulador erra 0,5% a 1,8% por banda. Catorze discos,
-três faixas cada, 30 s em trecho de nível típico, antes e depois:
+três faixas cada, 30 s em trecho de nível típico, antes, na primeira calibração e
+na atual:
 
-| | Antes | Depois |
-| --- | --: | --: |
-| Tempo de subida da reação, entre discos | 200–483 ms | **133–1650 ms** |
-| Subida × nitidez de ataque (Spearman) | −0,62 | **−0,73** |
-| Frequência característica do movimento | 0,53–1,33 Hz | **0,31–1,34 Hz** |
-| Desvio da lente durante a reprodução | 0,2–3,4% | **1,5–4,3%** |
-| Parte da variância que é do disco (frequência) | 0,62 | **0,65** |
-| Reconhece o disco só pelo movimento (acaso 0,07) | 0,07 | **0,19** |
+| | Antes | Profundidade 0,55 a 1 | Profundidade 0,825 a 1,5 |
+| --- | --: | --: | --: |
+| Tempo de subida da reação, entre discos | 200–483 ms | 133–1650 ms | **117–1633 ms** |
+| Subida × nitidez de ataque (Spearman) | −0,62 | −0,73 | **−0,71** |
+| Frequência característica do movimento | 0,53–1,33 Hz | 0,31–1,34 Hz | **0,31–1,35 Hz** |
+| Desvio da lente durante a reprodução | 0,2–3,4% | 1,5–4,3% | **1,9–6,2%** |
+| Quadros em que o acento alcança o teto | — | 0–4,7% | **0,6–12,8%** |
+| Parte da variância que é do disco (frequência) | 0,62 | 0,65 | **0,65** |
+| Reconhece o disco só pelo movimento (acaso 0,07) | 0,07 | 0,19 | **0,26** |
 
-Nos pixels (capturas de 10 s, quadros desfocados para tirar o grão), *The
-Sheltering Sky* passa a se mover 3,5× menos e *Impromptu* 1,9× mais; a frequência
-do movimento de *Чайка* e *lebar* cai de 4,6 para 3,8 Hz e de 2,1 para 1,7 Hz.
+Os tempos não mudam com a profundidade; o que cresce é o tamanho do gesto, e
+com ele a chance de reconhecer o disco. Nos pixels, na primeira calibração
+(capturas de 10 s, quadros desfocados para tirar o grão), *The Sheltering Sky*
+passava a se mover 3,5× menos e *Impromptu* 1,9× mais; a frequência do movimento
+de *Чайка* e *lebar* caía de 4,6 para 3,8 Hz e de 2,1 para 1,7 Hz.
 
 ### O que não fica resolvido
 
-* A reação continua delicada: a lente varia 1,5% a 4,3%. Perto do núcleo a força
+* A reação continua contida: a lente varia 1,9% a 6,2%. Perto do núcleo a força
   da lente satura (`k` 0,85) e nem muda; a personalidade aparece sobretudo no jato
   e na tipografia a média distância do corpo.
 * A meia-vida visual acompanha a sustentação só moderadamente (Spearman 0,48):

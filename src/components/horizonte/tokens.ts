@@ -328,7 +328,7 @@ export const MOTION = {
   beatRelease: 0.45,
   habitRatio: 5,
   habit: [1.2, 6],
-  depth: [0.55, 1],
+  depth: [0.825, 1.5],
   route: { floor: 0.35, slope: 1.3 },
   track: { cap: 0.2, knee: 0.5 },
   gate: {

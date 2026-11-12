@@ -136,7 +136,7 @@ describe("from qualities to response", () => {
     const sharp = responseOf(quality({ contrast: 1 }));
     expect(sharp.depth).toBeGreaterThan(flat.depth);
     expect(flat.depth).toBeGreaterThan(0);
-    expect(sharp.depth).toBeLessThanOrEqual(1);
+    expect(sharp.depth).toBeLessThanOrEqual(MOTION.depth[1]);
   });
 
   it("a balanced spectrum keeps today's routing", () => {
