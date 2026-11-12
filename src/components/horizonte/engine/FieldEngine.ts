@@ -20,6 +20,7 @@ import {
   bandsFor,
   baseRadius,
   bodyGeom,
+  collectionBody,
   hitTest,
   layoutFor,
   ringRotationTarget,
@@ -97,6 +98,7 @@ import {
   MOTION,
   MORPH,
   RELIEF,
+  RING,
   SECOND_MASS,
   SEQ,
   TRACK_BIAS,
@@ -1041,7 +1043,7 @@ export class FieldEngine implements InputActions {
 
   private ringRotation(dt: number) {
     const s = this.st;
-    const onAir = s.playAlb >= 0 && s.playAlb === s.alb;
+    const onAir = s.playAlb >= 0 && s.playAlb === s.alb && s.scale !== "collection";
     const target = ringRotationTarget(this.rings.bounds(s.alb), s.trk, progressOf(s), onAir);
     const raw = target - s.ringRot;
     const d = (((raw + Math.PI) % 6.2832) + 6.2832) % 6.2832 - Math.PI;
@@ -1307,24 +1309,42 @@ export class FieldEngine implements InputActions {
   private reliefSync(geo: BodyGeom) {
     const s = this.st;
     const u = this.gl.uniforms;
-    const amount = s.fadeSel * (1 - s.mix);
+    const amount = 1 - s.mix;
     if (amount <= 0.001) {
       u.uRelief.value.w = 0;
       return;
     }
     const shape = this.reliefShape;
     const m = shape ? shape.m : this.morphAt(s.alb);
+    const inside = s.scale !== "collection";
     const active =
-      s.playAlb === s.alb && (isEngaged(s.mode) || s.mode === "fusion") ? s.trk : -1;
-    const field = this.deformation();
-    const key = `${s.alb}:${shape ? shape.version : -1}:${s.sel}:${active}:${field ? this.strain.version : -1}`;
+      inside && s.playAlb === s.alb && (isEngaged(s.mode) || s.mode === "fusion") ? s.trk : -1;
+    const sel = inside ? s.sel : -1;
+    const field = inside ? this.deformation() : null;
+    const whole = s.fadeSel < 0.5;
+    const key = `${s.alb}:${shape ? shape.version : -1}:${sel}:${active}:${field ? this.strain.version : -1}:${whole}`;
     if (key !== this.reliefKey) {
       this.reliefKey = key;
-      this.reliefBand = profileOf(m, s.sel, active, field, this.reliefProfile);
+      this.reliefBand = profileOf(m, sel, active, field, this.reliefProfile, whole);
       writeProfile(u.uShape.value, this.reliefProfile);
     }
-    u.uRelief.value.set(geo.R / this.H, geo.flatten, s.ringRot, amount);
-    u.uReliefBand.value.set(this.reliefBand.lo - RELIEF.margin, this.reliefBand.hi + RELIEF.margin);
+    const k = s.fadeSel;
+    const far =
+      this.L.recede > 0 ? collectionBody(this.W, this.H, s, this.L, s.alb, this.morphAt(s.alb)) : geo;
+    const R = far.R + (geo.R - far.R) * k;
+    const cx = far.cx + (geo.cx - far.cx) * k;
+    const cy = far.cy + (geo.cy - far.cy) * k;
+    const flatten = far.flatten + (geo.flatten - far.flatten) * k;
+    const rot = RING.anchor + (s.ringRot - RING.anchor) * k;
+    const aspect = this.W / this.H;
+    u.uRelief.value.set(R / this.H, flatten, rot, amount);
+    u.uReliefAt.value.set((cx / this.W - 0.5) * aspect, 0.5 - cy / this.H);
+    u.uReliefBand.value.set(
+      this.reliefBand.lo - RELIEF.margin,
+      this.reliefBand.hi + RELIEF.margin,
+      1 - k,
+      0,
+    );
   }
 
   private buildSnapshot(force = false): Snapshot {

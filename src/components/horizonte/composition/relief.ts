@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { shellsAt, type AlbumMorphology } from "../morphology";
-import { RELIEF, RING } from "../tokens";
+import { shellsAt, wholeCrownAt, type AlbumMorphology } from "../morphology";
+import { RELIEF, RING, SILHOUETTE } from "../tokens";
 import { gapOf } from "./ring";
 import { STRAIN_BINS } from "./strain";
 
@@ -71,6 +71,7 @@ export function profileOf(
   active: number,
   field: Float32Array | null,
   out: Float32Array = new Float32Array(ROW * 2),
+  whole = false,
 ): ReliefBand {
   const sectors = sectorsOf(m);
   let lo = Number.POSITIVE_INFINITY;
@@ -80,7 +81,9 @@ export function profileOf(
     const t = (i + 0.5) / N;
     const { edge, k } = edgeAt(sectors, t);
     const lift = k === sel || k === active ? RING.lift : 0;
-    const shells = shellsAt(m, t);
+    const shells = whole
+      ? [wholeCrownAt(m, t, SILHOUETTE.smooth)]
+      : shellsAt(m, t);
     const last = shells.length - 1;
     const rise = field ? field[Math.min(STRAIN_BINS - 1, Math.floor(t * STRAIN_BINS))] : 0;
     const merged: { inner: number; outer: number }[] = [];
@@ -103,7 +106,7 @@ export function profileOf(
       if (inner < lo) lo = inner;
       if (outer > hi) hi = outer;
     }
-    out[ROW + i * 4 + 2] = edge;
+    out[ROW + i * 4 + 2] = whole ? 1 : edge;
   }
   return { lo: Number.isFinite(lo) ? lo : 0, hi };
 }

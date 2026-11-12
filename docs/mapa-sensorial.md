@@ -127,8 +127,8 @@ a contagem).
 
 No álbum e na faixa, as placas deixam de ser só capa somada em `lighter`: viram
 volume iluminado pela mesma `uLight` de P12, que agora varre sobre faces e não
-só sobre a borda do núcleo. Na coleção o relevo fica desligado (`uRelief.w = 0`);
-ali o corpo continua sendo o arco de capa.
+só sobre a borda do núcleo. Na coleção a mesma luz vem por trás (ver "A coleção
+em contraluz", abaixo).
 
 * **De onde vem a forma.** `composition/relief.ts` amostra a morfologia em 1024
   ângulos e grava numa textura `RGBA16F` de 1024×2 (`uShape`): interior e
@@ -153,6 +153,39 @@ ali o corpo continua sendo o arco de capa.
   (`smear`), para não desenhar luz nítida sobre imagem borrada.
 * **Custo.** ~0,06–0,10 ms por quadro a 1440×900 (de ~1,1 para ~1,2 ms medidos
   com upload dos planos), com saída antecipada fora da faixa radial da coroa.
+
+## A coleção em contraluz
+
+A coleção mostra a forma de cada disco, mas não a estrutura dela. Cada corpo é a
+**coroa inteira**: o contorno externo da última casca e o interno da primeira,
+sem fendas de setor nem estratos, suavizados por uma média móvel circular dupla
+de 3,5% de volta (`wholeCrownAt`, 2048 amostras). Sem a suavização, a espessura
+da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
+
+* **Luz.** A face fica escura (80% de `COLOR.body` sobre a capa desfocada em
+  10 px, que sobra como veio) e só a borda voltada para `LIGHT.base` acende: na
+  borda externa do lado da luz e na borda do furo do lado oposto. A borda é
+  assada uma vez por disco (`RingBakery.silhouette`: face 1000², borda 500²,
+  versão desfocada 320²; 1–6 ms por disco). No foco, o relevo do shader entra
+  em modo contraluz (`uReliefBand.z = 1 − fadeSel`) e soma a borda analítica.
+  Ao abrir o álbum, o modo volta para luz frontal e a coroa dá lugar às placas.
+* **Orientação.** Na coleção o anel repousa em `RING.anchor`, mesmo com o disco
+  tocando: é a orientação em que as bordas foram assadas.
+* **Profundidade.** Desktop e tablet usam uma fileira que recua: cada passo
+  multiplica o tamanho por `DEPTH.recede` = 0,52 e o espaçamento soma uma série
+  geométrica, então cabem mais discos no quadro. A fileira sobe à esquerda e
+  desce à direita (`DEPTH.tilt` = 0,22), longe do lockup e do índice. Foco e
+  vizinhos usam a mesma fórmula de corpo (`collectionBody`): o raio é
+  `ringR × circuit × profundidade`, então nenhum corpo salta de tamanho quando
+  passa o foco adiante. Os corpos são desenhados do mais distante para o mais
+  próximo, e o mais próximo encobre o de trás.
+* **Atmosfera.** A opacidade cai até 0,30 entre |d| = 0,5 e 3 (`atmosphereOf`),
+  e entre |d| = 0,6 e 1,9 a versão nítida dá lugar à desfocada (`defocusOf`):
+  profundidade de campo sem filtro por quadro. O núcleo e o rótulo de cada
+  vizinho só aparecem depois de |d| = 0,5, onde o núcleo do shader deixa de ser
+  dele.
+* **Mobile.** O palco por bandas não muda: um corpo por tela, mesma fórmula de
+  antes, só que com a silhueta no lugar do arco.
 
 ## Guardrail — medir em espaço de imagem
 

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { ALBUMS } from "../content";
-import { morphologyOf, shellsAt } from "../morphology";
+import { morphologyOf, shellsAt, wholeCrownAt } from "../morphology";
 import { profileOf, createReliefTexture, writeProfile } from "../composition/relief";
 import { gapOf } from "../composition/ring";
 import { STRAIN_BINS } from "../composition/strain";
-import { RELIEF, RING } from "../tokens";
+import { RELIEF, RING, SILHOUETTE } from "../tokens";
 
 const N = RELIEF.texels;
 const ROW = N * 4;
@@ -97,5 +97,53 @@ describe("relief profile", () => {
     writeProfile(tex, p);
     expect(tex.version).toBeGreaterThan(before);
     expect((tex.image.data as Uint16Array).some((v) => v !== 0)).toBe(true);
+  });
+});
+
+describe("the whole crown seen from the collection", () => {
+  it("has no steps where the plates change thickness from track to track", () => {
+    const n = 4096;
+    const jump = (at: (t: number) => { inner: number; outer: number }) => {
+      let worst = 0;
+      let prev = at(0);
+      for (let i = 1; i <= n; i++) {
+        const c = at(i / n);
+        worst = Math.max(worst, Math.abs(c.inner - prev.inner), Math.abs(c.outer - prev.outer));
+        prev = c;
+      }
+      return worst;
+    };
+    let rawWorst = 0;
+    for (let alb = 0; alb < ALBUMS.length; alb++) {
+      const m = morphOf(alb);
+      const raw = jump((t) => {
+        const sh = shellsAt(m, t);
+        return { inner: sh[0].inner, outer: sh[sh.length - 1].outer };
+      });
+      rawWorst = Math.max(rawWorst, raw);
+      expect(jump((t) => wholeCrownAt(m, t, SILHOUETTE.smooth))).toBeLessThan(0.004);
+    }
+    expect(rawWorst).toBeGreaterThan(0.04);
+  });
+
+  it("stays within the reach of the album it hides", () => {
+    for (let alb = 0; alb < ALBUMS.length; alb++) {
+      const m = morphOf(alb);
+      for (let i = 0; i < 64; i++) {
+        const c = wholeCrownAt(m, i / 64, SILHOUETTE.smooth);
+        expect(c.inner).toBeGreaterThanOrEqual(m.rMin - 1e-6);
+        expect(c.outer).toBeLessThanOrEqual(m.rMax + 1e-6);
+      }
+    }
+  });
+
+  it("is one solid band, with no sector gaps and no strata", () => {
+    const m = morphOf(ALBUMS.findIndex((_, i) => morphOf(i).strata > 0.05));
+    const p = new Float32Array(ROW * 2);
+    profileOf(m, 2, 3, null, p, true);
+    for (let i = 0; i < N; i += 17) {
+      expect(shellsIn(p, i)).toHaveLength(1);
+      expect(edgeIn(p, i)).toBeGreaterThan(0);
+    }
   });
 });

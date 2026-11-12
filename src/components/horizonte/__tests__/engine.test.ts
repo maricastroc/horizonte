@@ -1069,22 +1069,36 @@ describe("volume", () => {
 });
 
 describe("relief", () => {
-  const relief = () =>
-    (engine as unknown as { gl: { uniforms: { uRelief: { value: { w: number; x: number } } } } }).gl
-      .uniforms.uRelief.value;
+  type Uniforms = {
+    uRelief: { value: { w: number; x: number } };
+    uReliefBand: { value: { z: number } };
+  };
+  const uniforms = () => (engine as unknown as { gl: { uniforms: Uniforms } }).gl.uniforms;
+  const relief = () => uniforms().uRelief.value;
+  const band = () => uniforms().uReliefBand.value;
 
-  it("stays off in the collection, which shows only the cover arc", () => {
+  it("in the collection the whole crown is backlit", () => {
     run(1);
-    expect(relief().w).toBe(0);
+    expect(relief().w).toBeGreaterThan(0.95);
+    expect(band().z).toBeCloseTo(1, 2);
   });
 
-  it("lights the plates once the album opens and lets go on the way back", () => {
+  it("lights the plates from the front once the album opens, and backlights them again on the way back", () => {
     engine.enterAlbum(2);
     run(2);
     expect(relief().w).toBeGreaterThan(0.95);
     expect(relief().x).toBeGreaterThan(0);
+    expect(band().z).toBeLessThan(0.02);
     engine.goScale("collection");
     run(2);
-    expect(relief().w).toBe(0);
+    expect(band().z).toBeGreaterThan(0.98);
+  });
+
+  it("the collection holds the ring in the orientation the silhouettes were baked in", () => {
+    engine.playTrack(0, 1);
+    run(6);
+    engine.goScale("collection");
+    run(4);
+    expect(engine.st.ringRot).toBeCloseTo(RING.anchor, 2);
   });
 });

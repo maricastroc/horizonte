@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { GEO, GLYPH, RING, RING_UNIT } from "../tokens";
 import {
   albPos,
+  collectionBody,
   hitTest,
   layoutFor,
   lockup,
@@ -300,5 +301,45 @@ describe("ringRotationTarget — the ring is the record's clock (P13)", () => {
       expect(rot).toBeLessThan(previous);
       previous = rot;
     }
+  });
+});
+
+describe("the collection recedes", () => {
+  const s = baseState({ nav: 4, zoom: 0 });
+
+  it("each step away shrinks by the same ratio", () => {
+    const d1 = albPos(5, s, DESKTOP).depth;
+    const d2 = albPos(6, s, DESKTOP).depth;
+    const d3 = albPos(7, s, DESKTOP).depth;
+    expect(d2 / d1).toBeCloseTo(d1, 10);
+    expect(d3 / d2).toBeCloseTo(d1, 10);
+  });
+
+  it("spacing tightens with distance, so more of the shelf stays in frame", () => {
+    const x = (i: number) => albPos(i, s, DESKTOP).x;
+    const gap1 = x(5) - x(4);
+    const gap2 = x(6) - x(5);
+    const gap3 = x(7) - x(6);
+    expect(gap2).toBeLessThan(gap1);
+    expect(gap3).toBeLessThan(gap2);
+  });
+
+  it("rises on the left and sinks on the right, away from the lockup and the rail", () => {
+    expect(albPos(3, s, DESKTOP).y).toBeLessThan(albPos(4, s, DESKTOP).y);
+    expect(albPos(5, s, DESKTOP).y).toBeGreaterThan(albPos(4, s, DESKTOP).y);
+  });
+
+  it("a body keeps its size when it hands the focus to its neighbour", () => {
+    const M = NEUTRAL_MORPHOLOGY;
+    const before = collectionBody(W, H, baseState({ nav: 4.4999, zoom: 0 }), DESKTOP, 4, M);
+    const after = collectionBody(W, H, baseState({ nav: 4.5001, zoom: 0 }), DESKTOP, 4, M);
+    expect(after.R).toBeCloseTo(before.R, 1);
+    expect(after.cx).toBeCloseTo(before.cx, 0);
+  });
+
+  it("the mobile stage keeps one body per screen, untouched", () => {
+    const m = layoutFor("mobile");
+    expect(m.recede).toBe(0);
+    expect(albPos(5, s, m).x - albPos(4, s, m).x).toBeCloseTo(m.spreadX, 10);
   });
 });

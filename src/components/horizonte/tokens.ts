@@ -29,6 +29,31 @@ export const GEO = {
   scrimTop: 0.1,
 } as const;
 
+export const DEPTH = {
+  recede: 0.52,
+  tilt: 0.22,
+  tabletSpread: 0.5,
+  clear: 0.5,
+  far: 3,
+  haze: 0.3,
+  focus: [0.6, 1.9],
+  soft: 320,
+  softBlur: 2.2,
+} as const;
+
+export const SILHOUETTE = {
+  face: 0.8,
+  veil: 10,
+  smooth: 0.035,
+  rim: [4, 13],
+  rimAlpha: [1, 0.42],
+  rimWhite: 0.45,
+  rimScale: 0.5,
+  rimBlur: 0.7,
+  focusRim: 0.55,
+  step: 720,
+} as const;
+
 export const RING = {
   buffer: 1000,
   unitR: 330,
