@@ -110,19 +110,19 @@ export function sampleEnvelope(env: Float32Array, t: number): number {
 }
 
 export function boundsOf(sig: AlbumSignature, trackCount: number): number[] {
-  let porContagem = boundsCache.get(sig);
-  if (!porContagem) {
-    porContagem = new Map();
-    boundsCache.set(sig, porContagem);
+  let byCount = boundsCache.get(sig);
+  if (!byCount) {
+    byCount = new Map();
+    boundsCache.set(sig, byCount);
   }
-  const hit = porContagem.get(trackCount);
+  const hit = byCount.get(trackCount);
   if (hit) return hit;
 
   const bounds = new Array<number>(trackCount + 1);
   const spans = sig.spans;
   if (spans.length !== trackCount) {
     for (let k = 0; k <= trackCount; k++) bounds[k] = k / trackCount;
-    porContagem.set(trackCount, bounds);
+    byCount.set(trackCount, bounds);
     return bounds;
   }
   let acc = 0;
@@ -133,7 +133,7 @@ export function boundsOf(sig: AlbumSignature, trackCount: number): number[] {
   }
   const total = bounds[trackCount] || 1;
   for (let k = 1; k <= trackCount; k++) bounds[k] /= total;
-  porContagem.set(trackCount, bounds);
+  byCount.set(trackCount, bounds);
   return bounds;
 }
 
