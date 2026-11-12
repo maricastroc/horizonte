@@ -123,6 +123,99 @@ heterogeneidade de brilho entre faixas (−0,86 com o brilho do álbum), entropi
 distribuição de faixas (não discrimina) e concentração de faixas (redundante com
 a contagem).
 
+## O relevo — a forma recebe luz
+
+No álbum e na faixa, as placas deixam de ser só capa somada em `lighter`: viram
+volume iluminado pela mesma `uLight` de P12, que agora varre sobre faces e não
+só sobre a borda do núcleo. Na coleção a mesma luz vem por trás (ver "A coleção
+em contraluz", abaixo).
+
+* **De onde vem a forma.** `composition/relief.ts` amostra a morfologia em 1024
+  ângulos e grava numa textura `RGBA16F` de 1024×2 (`uShape`): interior e
+  exterior de até três cascas, e a distância angular à fenda de setor mais
+  próxima. É a mesma geometria que o anel pinta (`shellsAt`, `gapOf`, `RING.lift`
+  e a deformação da coroa), nunca um modelo paralelo. Cascas que se tocam ou
+  quase se tocam (folga < `RELIEF.merge` = 0,012 do raio) são fundidas antes de
+  gravar: o levantamento do setor selecionado sobrepõe as cascas, e sem a fusão o
+  shader cavaria um sulco dentro da placa. Pela mesma regra, estratos de 1–2 px
+  não viram canaletas profundas.
+* **Quando é regravada.** Só quando muda álbum, forma comparada, seleção, faixa
+  ativa ou versão do strain. Custa ~0,3 ms de CPU por regravação.
+* **Como é iluminada.** O shader avalia a placa no ponto já deslocado pela lente
+  (`p + off`), então a luz acompanha a curvatura. Chanfro parabólico de até 5% do
+  raio, normal por diferença finita, um domo largo que inclina a forma inteira
+  para fora (o lado voltado para a luz acende, o oposto cai na sombra), difusa
+  normalizada para que o topo plano fique com a cor de antes, e especular estreita
+  sem o véu sobre o topo. Fora das placas: oclusão de contato e sombra curta
+  projetada para longe da luz, que também cai sobre a tipografia do plano de trás.
+* **O que não muda.** O deslocamento da lente é o mesmo de antes, bit a bit. Onde
+  a dispersão e o borrão espalham a cor por mais que um chanfro, o relevo recua
+  (`smear`), para não desenhar luz nítida sobre imagem borrada.
+* **Custo.** ~0,06–0,10 ms por quadro a 1440×900 (de ~1,1 para ~1,2 ms medidos
+  com upload dos planos), com saída antecipada fora da faixa radial da coroa.
+
+## A coleção em contraluz
+
+A coleção mostra a forma de cada disco, mas não a estrutura dela. Cada corpo é a
+**coroa inteira**: o contorno externo da última casca e o interno da primeira,
+sem fendas de setor nem estratos, suavizados por uma média móvel circular dupla
+de 3,5% de volta (`wholeCrownAt`, 2048 amostras). Sem a suavização, a espessura
+da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
+
+* **Luz.** A face fica escura (80% de `COLOR.body` sobre a capa desfocada em
+  10 px, que sobra como veio) e só a borda voltada para `LIGHT.base` acende: na
+  borda externa do lado da luz e na borda do furo do lado oposto. A borda é
+  assada uma vez por disco (`RingBakery.silhouette`: face 1000², borda 500²,
+  versão desfocada 320²; 1–6 ms por disco). No foco, o relevo do shader entra
+  em modo contraluz (`uReliefBand.z = 1 − fadeSel`) e soma a borda analítica.
+  Ao abrir o álbum, o modo volta para luz frontal e a coroa dá lugar às placas.
+* **Orientação.** Na coleção o anel repousa em `RING.anchor`, mesmo com o disco
+  tocando: é a orientação em que as bordas foram assadas.
+* **Profundidade.** Desktop e tablet usam uma fileira que recua: cada passo
+  multiplica o tamanho por `DEPTH.recede` = 0,52 e o espaçamento soma uma série
+  geométrica, então cabem mais discos no quadro. A fileira sobe à esquerda e
+  desce à direita (`DEPTH.tilt` = 0,22), longe do lockup e do índice. Foco e
+  vizinhos usam a mesma fórmula de corpo (`collectionBody`): o raio é
+  `ringR × circuit × profundidade`, então nenhum corpo salta de tamanho quando
+  passa o foco adiante. Os corpos são desenhados do mais distante para o mais
+  próximo, e o mais próximo encobre o de trás.
+* **Atmosfera.** A opacidade cai até 0,30 entre |d| = 0,5 e 3 (`atmosphereOf`),
+  e entre |d| = 0,6 e 1,9 a versão nítida dá lugar à desfocada (`defocusOf`):
+  profundidade de campo sem filtro por quadro. O núcleo e o rótulo de cada
+  vizinho só aparecem depois de |d| = 0,5, onde o núcleo do shader deixa de ser
+  dele.
+* **Mobile.** O palco por bandas não muda: um corpo por tela, mesma fórmula de
+  antes, só que com a silhueta no lugar do arco.
+
+## A aproximação — da coleção ao álbum
+
+Entrar num álbum é uma aproximação com duração, não um decaimento exponencial:
+`fadeSel` anda em linha reta em 0,95 s na ida e 0,6 s na volta (`APPROACH`), e
+cada etapa é uma janela suavizada desse progresso (`stagesOf`):
+
+| Etapa | Janela | O que acontece |
+| --- | --- | --- |
+| Luz | 0,05–0,60 | O relevo passa de contraluz a luz frontal e as placas ganham a capa. A direção da luz gira até 0,55 rad no meio do caminho e volta. |
+| Abertura | 0,30–0,85 | O perfil sai da coroa inteira: as cascas partem de posições contíguas dentro da coroa suavizada e deslizam até as reais, e as fendas de setor se abrem a partir do meio de cada fenda. A silhueta da coleção some junto. |
+| Satélites | 0,55–1 | Cada satélite nasce a 55% da própria órbita e gira 0,9 rad até o lugar. A segunda massa do shader acompanha, com massa e horizonte crescendo junto. |
+| Rótulos | 0,72–1 | Nomes e marcas das faixas. |
+
+No meio da ida o raio cresce até 10% (`push`), um avanço de câmera que se
+desfaz na chegada. Os vizinhos se abrem para fora e crescem com o `zoom`, como
+se a câmera passasse por eles. Na volta tudo se desfaz na ordem inversa, sem o
+avanço. Com movimento reduzido o álbum aparece de uma vez.
+
+**Na coleção, o nome acompanha a prateleira.** Entre dois discos, os dois
+lockups dividem o lugar: cada um entra pelo lado de onde o disco vem, e a
+opacidade é complementar. O título em Bodoni e a linha mono andam 70% e 49% do
+nome, uma paralaxe dentro do próprio lockup.
+
+**A segunda massa da coleção** tem o horizonte do núcleo que o vizinho
+desenha (`R × coreRatio × 0,9 × flatten`), some enquanto viaja de um vizinho
+para outro (zona morta de 2% da altura) e some quando o vizinho está atrás do
+foco, o que acontece em telas 4:3. A atração continua: um corpo escondido ainda
+curva o da frente (P14).
+
 ## Guardrail — medir em espaço de imagem
 
 `perception/` rasteriza a silhueta do mundo com as mesmas funções de geometria do
@@ -221,8 +314,8 @@ temperamento dele: quão rápido sobe, quanto sustenta, quanto do teto P4 o even
 típico alcança e se vai para a massa ou para a luz. Parado, e para discos sem essa
 análise (os trazidos pelo visitante, ou um disco novo antes de rodar o script), a
 análise recebe a resposta neutra (τ 0,12 s e 1,2 s, acento relativo ao hábito,
-roteamento 1:1), e o mundo em repouso não muda. `motionStep` desliza para a
-resposta da faixa nova em cerca de um segundo.
+roteamento 1:1). `motionStep` desliza para a resposta da faixa nova em cerca de
+um segundo. Em repouso, a mesma assinatura vira respiração (abaixo).
 
 `scripts/analyze-motion.py` mede cada faixa no cache de WAV e gera
 `content/motion.generated.ts`. A qualidade da faixa é a âncora do disco
@@ -244,6 +337,31 @@ neutra), lente variando 1,9% a 6,2% durante a reprodução (0,2–3,4% com a neu
 teto alcançado em
 0,6% a 12,8% dos quadros, e o disco reconhecível só pelo movimento em 26% dos
 casos (acaso 7%).
+
+### Parado: a respiração
+
+Sem música, cada disco respira com o temperamento que teria tocando. A âncora
+do disco (média das faixas ponderada pela duração, a mesma das qualidades por
+faixa) é posta contra a amplitude do acervo, para que os quatorze discos ocupem
+a faixa inteira (`breath.ts`):
+
+| Qualidade | Respiração | No acervo |
+| --- | --- | --- |
+| Nitidez | Subida: 3% a 42% do período | um tique em *Чайка* e *e-world*, um inchaço em *The Sheltering Sky* |
+| Sustentação | Período sem grade (3,6 a 6,8 s) e queda (7% a 55% do período) | 4,0 s (*All Systems Go*, *Sounds to Ascension*) a 6,8 s (*lebar*) |
+| Grade | Com pulso em ≥ 50% da duração, o período é um número inteiro de batidas (4, 8 ou 16; mediana ponderada das batidas), nunca abaixo de 3,2 s | *Le Morte d'Abby* e *e-world*: 8 × 0,67 s = 5,4 s; *Чайка*: 4 × 0,93 s = 3,7 s |
+| Microdinâmica | Profundidade 0,6 a 1 | |
+| Peso do grave | Divide entre massa (lente +14%, horizonte +6%) e luz (borda e especular até +80%) | |
+
+Cada pulso é uma subida exponencial seguida de queda exponencial, somado
+periodicamente com as caudas dos ciclos anteriores: o ciclo nunca salta.
+O foco respira em massa e luz; durante a navegação, a respiração é a mistura dos
+dois discos vizinhos pela fração de `nav`. Cada vizinho respira na própria fase
+(razão áurea × índice): escala até 1,4% e borda até +60%.
+
+Tocando, colapsando ou fundindo, o ganho cai a zero em cerca de um segundo e a
+música assume. Com movimento reduzido, ou num disco sem análise de movimento,
+não há respiração. Medido em 1440×900: o brilho da região do foco varia 3–4%.
 
 ## A leitura — "Why this shape?"
 

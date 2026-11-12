@@ -170,6 +170,55 @@ export function shellsAt(m: AlbumMorphology, turn: number): Shell[] {
   return shellsFrom(crownAt(m, turn), m.strata);
 }
 
+const WHOLE_N = 2048;
+const wholeCache = new WeakMap<AlbumMorphology, Map<number, Float32Array[]>>();
+
+function boxPass(src: Float32Array, half: number): Float32Array {
+  const n = src.length;
+  const out = new Float32Array(n);
+  const w = 2 * half + 1;
+  let sum = 0;
+  for (let k = -half; k <= half; k++) sum += src[(k + n) % n];
+  for (let i = 0; i < n; i++) {
+    out[i] = sum / w;
+    sum += src[(i + half + 1) % n] - src[(i - half + n) % n];
+  }
+  return out;
+}
+
+function wholeCrownOf(m: AlbumMorphology, reach: number): Float32Array[] {
+  let byReach = wholeCache.get(m);
+  if (!byReach) {
+    byReach = new Map();
+    wholeCache.set(m, byReach);
+  }
+  const hit = byReach.get(reach);
+  if (hit) return hit;
+  const inner = new Float32Array(WHOLE_N);
+  const outer = new Float32Array(WHOLE_N);
+  for (let i = 0; i < WHOLE_N; i++) {
+    const sh = shellsAt(m, i / WHOLE_N);
+    inner[i] = sh[0].inner;
+    outer[i] = sh[sh.length - 1].outer;
+  }
+  const half = Math.max(1, Math.round((reach * WHOLE_N) / 2));
+  const out = [boxPass(boxPass(inner, half), half), boxPass(boxPass(outer, half), half)];
+  byReach.set(reach, out);
+  return out;
+}
+
+export function wholeCrownAt(m: AlbumMorphology, turn: number, reach: number): Crown {
+  const [inner, outer] = wholeCrownOf(m, reach);
+  const f = (((turn % 1) + 1) % 1) * WHOLE_N;
+  const i = Math.floor(f) % WHOLE_N;
+  const j = (i + 1) % WHOLE_N;
+  const u = f - Math.floor(f);
+  return {
+    inner: inner[i] + (inner[j] - inner[i]) * u,
+    outer: outer[i] + (outer[j] - outer[i]) * u,
+  };
+}
+
 export function crownAt(m: AlbumMorphology, turn: number): Crown {
   return crownFrom(
     m.lobeCos,

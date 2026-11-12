@@ -29,6 +29,67 @@ export const GEO = {
   scrimTop: 0.1,
 } as const;
 
+export const DEPTH = {
+  recede: 0.52,
+  tilt: 0.22,
+  tabletSpread: 0.5,
+  clear: 0.5,
+  far: 3,
+  haze: 0.3,
+  focus: [0.6, 1.9],
+  soft: 320,
+  softBlur: 2.2,
+} as const;
+
+export const APPROACH = {
+  enter: 0.95,
+  leave: 0.6,
+  light: [0.05, 0.6],
+  open: [0.3, 0.85],
+  satellites: [0.55, 1],
+  labels: [0.72, 1],
+  push: 0.1,
+  turn: 0.55,
+  pass: 1.1,
+  grow: 0.8,
+  seam: 0.03,
+  satFrom: 0.55,
+  satSwing: 0.9,
+} as const;
+
+export const BREATH = {
+  period: [3.6, 6.8],
+  bars: [4, 8, 16],
+  minPeriod: 3.2,
+  grid: 0.5,
+  rise: [0.03, 0.42],
+  fall: [0.07, 0.55],
+  depth: [0.6, 1],
+  mass: 0.14,
+  horizon: 0.06,
+  light: 0.8,
+  scale: 0.014,
+  rim: 0.6,
+  samples: 96,
+  lerp: 1.2,
+  phase: 0.6180339887498949,
+} as const;
+
+export const NAMES = { slide: 0.08, lag: 0.7 } as const;
+
+export const SILHOUETTE = {
+  face: 0.8,
+  veil: 10,
+  smooth: 0.035,
+  rim: [4, 13],
+  rimAlpha: [1, 0.42],
+  rimWhite: 0.45,
+  rimScale: 0.5,
+  rimBlur: 0.7,
+  focusRim: 0.55,
+  step: 720,
+} as const;
+
 export const RING = {
   buffer: 1000,
   unitR: 330,
@@ -179,6 +240,13 @@ export const LIGHT = {
   arc: 1,
 } as const;
 
+export const RELIEF = {
+  texels: 1024,
+  margin: 0.08,
+  merge: 0.012,
+  steps: 48,
+} as const;
+
 export const TRACK_BIAS = { lerp: 1.2 } as const;
 
 export const MOTION = {
@@ -225,7 +293,16 @@ export const STRAIN = {
   scarFloor: 0.004,
 } as const;
 
-export const SECOND_MASS = { k: 0.03, h: 0.052, pointGain: 1.9, lerp: 3.5 } as const;
+export const SECOND_MASS = {
+  k: 0.03,
+  h: 0.052,
+  pointGain: 1.9,
+  lerp: 3.5,
+  core: 0.9,
+  drift: 0.02,
+  settle: 0.05,
+  behind: 0.06,
+} as const;
 
 export const INTAKE = { mass: 0.45, horizon: 1.3 } as const;
 

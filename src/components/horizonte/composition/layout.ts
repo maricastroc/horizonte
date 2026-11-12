@@ -1,4 +1,17 @@
-import { BAND, BREAKPOINT, GEO, GLYPH, LOCKUP, REACH, RING, RING_UNIT, SHARD } from "../tokens";
+import { stagesOf } from "./approach";
+import {
+  APPROACH,
+  BAND,
+  BREAKPOINT,
+  DEPTH,
+  GEO,
+  GLYPH,
+  LOCKUP,
+  REACH,
+  RING,
+  RING_UNIT,
+  SHARD,
+} from "../tokens";
 import { albumProgressOf } from "../state";
 import { clamp, lerp } from "../math";
 import { neighborScale, type AlbumMorphology } from "../morphology";
@@ -34,6 +47,8 @@ export interface WorldLayout {
   fitAlbum: number;
   ringLabels: "all" | "selected" | "none";
   staged: boolean;
+  recede: number;
+  tilt: number;
   type: LockupSpec;
   shard: ShardSpec;
 }
@@ -49,6 +64,8 @@ const DESKTOP: WorldLayout = {
   fitAlbum: 0.5,
   ringLabels: "all",
   staged: false,
+  recede: DEPTH.recede,
+  tilt: DEPTH.tilt,
   type: LOCKUP.desktop,
   shard: SHARD.desktop,
 };
@@ -57,6 +74,7 @@ const TABLET: WorldLayout = {
   ...DESKTOP,
   variant: "tablet",
   anchorCollection: { x: 0.44, y: 0.4 },
+  spreadX: DEPTH.tabletSpread,
   anchorAlbum: { x: 0.5, y: 0.4 },
   ringScale: 0.86,
   fitCollection: 0.92,
@@ -75,6 +93,8 @@ const MOBILE: WorldLayout = {
   fitAlbum: 0.9,
   ringLabels: "none",
   staged: true,
+  recede: 0,
+  tilt: 0,
   type: LOCKUP.mobile,
   shard: SHARD.mobile,
 };
@@ -84,19 +104,57 @@ export const layoutFor = (variant: Variant): WorldLayout =>
 
 export function albPos(i: number, s: FieldState, L: WorldLayout) {
   const d = i - s.nav;
-  const depth = 1 / (1 + Math.abs(d) * 0.8);
   const zx = L.anchorCollection.x + (L.anchorAlbum.x - L.anchorCollection.x) * s.zoom;
   const zy = L.anchorCollection.y + (L.anchorAlbum.y - L.anchorCollection.y) * s.zoom;
-  const x = zx + d * L.spreadX * (1 - s.zoom * 0.6) - s.tide;
-  const y = zy + Math.sin(d * 1.15) * L.spreadY * (1 - s.zoom);
+  if (L.recede <= 0) {
+    const depth = 1 / (1 + Math.abs(d) * 0.8);
+    const x = zx + d * L.spreadX * (1 - s.zoom * 0.6) - s.tide;
+    const y = zy + Math.sin(d * 1.15) * L.spreadY * (1 - s.zoom);
+    return { x, y, depth, d };
+  }
+  const q = L.recede;
+  const a = Math.abs(d);
+  const depth = Math.pow(q, a);
+  const reach = Math.sign(d) * L.spreadX * ((1 - depth) / (1 - q));
+  const x = zx + reach * (1 + s.zoom * APPROACH.pass) - s.tide;
+  const y = zy + reach * L.tilt * (1 - s.zoom);
   return { x, y, depth, d };
+}
+
+export const atmosphereOf = (d: number) => {
+  const a = Math.abs(d);
+  const t = clamp((a - DEPTH.clear) / (DEPTH.far - DEPTH.clear), 0, 1);
+  return 1 - (1 - DEPTH.haze) * t * t * (3 - 2 * t);
+};
+
+export const defocusOf = (d: number) => {
+  const t = clamp((Math.abs(d) - DEPTH.focus[0]) / (DEPTH.focus[1] - DEPTH.focus[0]), 0, 1);
+  return t * t * (3 - 2 * t);
+};
+
+export function collectionBody(
+  W: number,
+  H: number,
+  s: FieldState,
+  L: WorldLayout,
+  i: number,
+  m: AlbumMorphology,
+): BodyGeom {
+  const p = albPos(i, s, L);
+  const a = Math.abs(p.d);
+  return {
+    cx: p.x * W,
+    cy: p.y * H,
+    R: ringR(W, H, s, L) * m.circuit * p.depth * (1 + s.zoom * APPROACH.grow * Math.min(1, a)),
+    flatten: m.flatten,
+  };
 }
 
 export const baseRadius = (W: number, H: number, zoom: number, play: number, L: WorldLayout) =>
   Math.min(W, H) * (0.385 - zoom * 0.105 + play * 0.055) * L.ringScale;
 
 export const ringR = (W: number, H: number, s: FieldState, L: WorldLayout) =>
-  baseRadius(W, H, s.zoom, s.play, L);
+  baseRadius(W, H, s.zoom, s.play, L) * (1 + APPROACH.push * stagesOf(s).push);
 
 export interface BodyGeom {
   cx: number;

@@ -3,16 +3,31 @@ import { CANVAS_LABELS, type CanvasLabels } from "../i18n/canvas";
 import type { FieldConstants } from "../field";
 import { neighborScale, outerAt, satRadiusOf, type AlbumMorphology } from "../morphology";
 import { isEngaged, progressOf } from "../state";
-import { ANATOMY, COLOR, GEO, MORPH, PARTICLES, RING, rgba } from "../tokens";
+import {
+  ANATOMY,
+  BREATH,
+  COLOR,
+  GEO,
+  MORPH,
+  NAMES,
+  PARTICLES,
+  RING,
+  SILHOUETTE,
+  rgba,
+} from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
 import { drawFacing, drawGhost, type BodyFrame, type FocusSatellite } from "./focus";
 import type { RingBakery, SegShape } from "./ring";
 import { ls, type Ctx } from "./ctx";
 import { stageBox, type Bands } from "./bands";
+import { emergeOf, namePlates, stagesOf } from "./approach";
 import {
   albPos,
+  atmosphereOf,
   bandsFor,
+  collectionBody,
+  defocusOf,
   bodyGeom,
   lockup,
   ringBufferScale,
@@ -35,6 +50,7 @@ export interface BackDeps {
   ghost?: { m: AlbumMorphology; alpha: number } | null;
   facing?: number;
   labels?: CanvasLabels;
+  breath?: (alb: number) => { mass: number; light: number };
 }
 
 export function makeParticles(): Particle[] {
@@ -73,6 +89,33 @@ function drawRing(
   x.restore();
 }
 
+const smooth01 = (v: number) => {
+  const t = Math.min(1, Math.max(0, v));
+  return t * t * (3 - 2 * t);
+};
+
+function drawSilhouette(
+  x: Ctx,
+  buf: HTMLCanvasElement,
+  cx: number,
+  cy: number,
+  R: number,
+  alpha: number,
+  flatten: number,
+  mode: GlobalCompositeOperation = "source-over",
+) {
+  if (alpha <= 0.01) return;
+  const sc = ringBufferScale(R);
+  x.save();
+  x.globalCompositeOperation = mode;
+  x.globalAlpha = alpha;
+  x.translate(cx, cy);
+  x.scale(1, flatten);
+  x.rotate(RING.anchor);
+  x.drawImage(buf, -sc / 2, -sc / 2, sc, sc);
+  x.restore();
+}
+
 function drawSatellites(
   x: Ctx,
   bx: number,
@@ -82,13 +125,15 @@ function drawSatellites(
   fade: number,
   ink: string,
   out: FocusSatellite[] | null = null,
+  emerge = 1,
 ) {
   if (fade <= 0.01) return;
   x.save();
   for (const sat of m.satellites) {
     if (sat.weight <= 0.02) continue;
-    const px = bx + Math.cos(sat.angle) * sat.dist * R;
-    const py = by + Math.sin(sat.angle) * sat.dist * R * m.flatten;
+    const at = emergeOf(sat, emerge);
+    const px = bx + Math.cos(at.angle) * at.dist * R;
+    const py = by + Math.sin(at.angle) * at.dist * R * m.flatten;
     const r = satRadiusOf(m, sat) * R;
     const a = fade * sat.weight;
     const rr = r * (1 + MORPH.satRim * 0.5);
@@ -135,6 +180,7 @@ function trackLabels(
   const bounds = boundsOf(A.signature, N);
   const flatten = m.flatten;
   const silent = L.ringLabels === "none";
+  const labels = stagesOf(s).labels;
   x.save();
   x.textBaseline = "middle";
   ls(x, "0.2em");
@@ -152,7 +198,7 @@ function trackLabels(
       const hidden = Math.cos(a) > 0.3 || (py > H * 0.6 && px < W * 0.46);
       if (hidden && !on) continue;
 
-      x.globalAlpha = s.fadeSel * (on ? 0.95 : 0.42);
+      x.globalAlpha = labels * (on ? 0.95 : 0.42);
       x.fillStyle = on ? rgba(A.inkA, 1) : COLOR.dust;
       x.textAlign = Math.cos(a) < 0 ? "right" : "left";
       x.fillText(
@@ -164,7 +210,7 @@ function trackLabels(
 
     const tick = outerAt(m, t) * R;
     const far = silent ? tick * 1.3 : reach - R * 0.05;
-    x.globalAlpha = s.fadeSel * (on ? 0.6 : 0.18);
+    x.globalAlpha = labels * (on ? 0.6 : 0.18);
     x.strokeStyle = on ? rgba(A.inkA, 1) : COLOR.dust;
     x.lineWidth = 1;
     x.beginPath();
@@ -201,6 +247,7 @@ export function drawBack(
   const x = ctx as Ctx;
   const { fonts, covers, rings, weights, parts, C, morph, morphOf } = deps;
   const labels = deps.labels ?? CANVAS_LABELS;
+  const breathOf = deps.breath ?? (() => ({ mass: 0, light: 0 }));
   const field = deps.field ?? null;
   const fieldVersion = deps.fieldVersion ?? 0;
   const A = ALBUMS[s.alb];
@@ -222,6 +269,7 @@ export function drawBack(
     frame.m = morph;
   }
 
+  const stage = stagesOf(s);
   x.fillStyle = COLOR.void;
   x.fillRect(0, 0, W, H);
 
@@ -232,48 +280,95 @@ export function drawBack(
   x.fillStyle = g0;
   x.fillRect(0, 0, W, H);
 
-  for (let i = 0; i < ALBUMS.length; i++) {
-    if (i === s.alb) continue;
+  const order = ALBUMS.map((_, i) => i).sort(
+    (p, q) => Math.abs(q - s.nav) - Math.abs(p - s.nav),
+  );
+  for (const i of order) {
+    if (i === s.alb) {
+      const alpha = (1 - stage.open) * (1 - s.mix * 0.7);
+      if (alpha <= 0.01) continue;
+      const fg = L.recede > 0 ? collectionBody(W, H, s, L, i, morphOf(i)) : g;
+      const sil = rings.silhouette(i);
+      const glow = 1 + BREATH.rim * breathOf(i).light;
+      drawSilhouette(x, sil.sharp, fg.cx, fg.cy, fg.R, alpha, fg.flatten);
+      const rim = alpha * SILHOUETTE.focusRim * glow;
+      drawSilhouette(x, sil.rim, fg.cx, fg.cy, fg.R, rim, fg.flatten, "lighter");
+      continue;
+    }
     const p = albPos(i, s, L);
-    const a = Math.max(0, 0.62 * p.depth * (1 - s.zoom));
-    if (a < 0.02) continue;
     const mi = morphOf(i);
     const ns = neighborScale(mi);
-    const nx = p.x * W;
-    const ny = L.staged ? box.cy : p.y * H;
-    const R = M * (0.16 + 0.24 * p.depth) * L.ringScale * ns;
-    drawRing(x, rings.arc(i), nx, ny, R, RING.anchor + i * RING.neighborPhase, a, mi.flatten);
+    const recede = L.recede > 0;
+    const a = recede
+      ? atmosphereOf(p.d) * (1 - s.zoom)
+      : Math.max(0, 0.62 * p.depth * (1 - s.zoom));
+    if (a < 0.02) continue;
+    const nb = recede
+      ? collectionBody(W, H, s, L, i, mi)
+      : {
+          cx: p.x * W,
+          cy: L.staged ? box.cy : p.y * H,
+          R: M * (0.16 + 0.24 * p.depth) * L.ringScale * ns,
+          flatten: mi.flatten,
+        };
+    const pulse = breathOf(i);
+    nb.R *= 1 + BREATH.scale * pulse.mass;
+    const nx = nb.cx;
+    const ny = nb.cy;
+    const reach = nb.R * (mi.rMax + 0.1);
+    if (nx + reach < 0 || nx - reach > W) continue;
 
+    const sil = rings.silhouette(i);
+    const blur = recede ? defocusOf(p.d) : 0;
+    if (blur > 0.01) drawSilhouette(x, sil.soft, nx, ny, nb.R, a, mi.flatten);
+    if (blur < 0.99) {
+      drawSilhouette(x, sil.sharp, nx, ny, nb.R, a * (1 - blur), mi.flatten);
+      drawSilhouette(
+        x,
+        sil.rim,
+        nx,
+        ny,
+        nb.R,
+        a * (1 - blur) * (1 + BREATH.rim * pulse.light),
+        mi.flatten,
+        "lighter",
+      );
+    }
+
+    const away = recede ? smooth01((Math.abs(p.d) - 0.5) / 0.4) : 1;
+    const legible = recede ? smooth01((p.depth - 0.12) / 0.2) : 1;
     x.save();
-    const br = M * GEO.neighborR * p.depth * ns;
-    x.globalAlpha = a * 0.9;
+    const br = recede ? nb.R * mi.coreRatio * 0.96 : M * GEO.neighborR * p.depth * ns;
+    x.globalAlpha = a * 0.9 * away;
     x.fillStyle = COLOR.body;
     x.beginPath();
-    x.ellipse(nx, ny, br, br, 0, 0, 6.2832);
+    x.ellipse(nx, ny, br, br * (recede ? mi.flatten : 1), 0, 0, 6.2832);
     x.fill();
 
     x.strokeStyle = rgba(ALBUMS[i].inkA, 0.9);
     x.lineWidth = 1.6;
     x.beginPath();
-    x.arc(nx, ny, br, 2.0, 4.1);
+    x.ellipse(nx, ny, br, br * (recede ? mi.flatten : 1), 0, 2.0, 4.1);
     x.stroke();
 
     x.textAlign = "center";
     ls(x, "-0.035em");
-    x.globalAlpha = a * (i === s.hoverBody ? 1 : 0.66);
+    x.globalAlpha = a * (i === s.hoverBody ? 1 : 0.66) * away * legible;
     x.fillStyle = COLOR.inkText;
 
     const nw = weights[i];
-    x.font = `${nw} ${M * GEO.neighborR * p.depth}px ${fonts.archivo}`;
-    x.fillText(ALBUMS[i].artist, nx, ny + br + M * 0.075 * p.depth);
+    const tsz = M * GEO.neighborR * p.depth;
+    const ty = ny + br * (recede ? mi.flatten : 1) + M * 0.075 * p.depth;
+    x.font = `${nw} ${tsz}px ${fonts.archivo}`;
+    x.fillText(ALBUMS[i].artist, nx, ty);
 
     ls(x, "0.2em");
-    x.globalAlpha = a * (i === s.hoverBody ? 0.95 : 0.5);
+    x.globalAlpha = a * (i === s.hoverBody ? 0.95 : 0.5) * away * legible;
     x.font = `500 ${W * 0.0092}px ${fonts.mono}`;
     x.fillText(
       `${ALBUMS[i].cat} · ${labels.tracks(ALBUMS[i].tracks.length)}`,
       nx,
-      ny + br + M * 0.105 * p.depth,
+      ty + M * 0.03 * p.depth,
     );
     x.textAlign = "left";
     x.restore();
@@ -286,24 +381,13 @@ export function drawBack(
     by,
     R,
     morph,
-    s.fadeSel * (1 - s.mix),
+    stage.satellites * (1 - s.mix),
     inkA(0.9),
     frame ? frame.satellites : null,
+    stage.satellites,
   );
 
-  if (s.fadeSel < 0.98) {
-    drawRing(
-      x,
-      rings.arc(s.alb),
-      bx,
-      by,
-      R,
-      s.ringRot,
-      (1 - s.fadeSel) * (1 - s.mix * 0.7) * 0.85,
-      morph.flatten,
-    );
-  }
-  if (s.fadeSel > 0.02) {
+  if (stage.light > 0.02) {
     const activeTrk =
       s.playAlb === s.alb && (isEngaged(s.mode) || s.mode === "fusion")
         ? s.trk
@@ -320,7 +404,7 @@ export function drawBack(
       fieldVersion,
       deps.compare ?? null,
     );
-    drawRing(x, seg, bx, by, R, s.ringRot, s.fadeSel * (1 - s.mix * 0.6), morph.flatten);
+    drawRing(x, seg, bx, by, R, s.ringRot, stage.light * (1 - s.mix * 0.6), morph.flatten);
     if (deps.facing && deps.facing > 0.005) {
       drawFacing(
         x,
@@ -403,22 +487,28 @@ export function drawBack(
   x.save();
   x.textBaseline = "alphabetic";
   ls(x, "-0.035em");
-  let asz = lk.size;
-  const wgt = Math.round(C.artistWeight);
-  x.font = `${wgt} ${asz}px ${fonts.archivo}`;
   const fit = s.scale === "collection" ? L.fitCollection : L.fitAlbum;
-  if (fit > 0) {
-    const maxW = L.staged ? W - lk.margin * 2 : W * fit - lk.margin;
-    const mw = x.measureText(A.artist).width;
-    if (mw > maxW) {
-      asz = Math.max(asz * lk.floor, asz * (maxW / mw));
-      x.font = `${wgt} ${asz}px ${fonts.archivo}`;
+  const plates = namePlates(s, ALBUMS.length);
+  for (const plate of plates) {
+    const name = ALBUMS[plate.alb].artist;
+    const settled = plates.length === 1 && plate.alb === s.alb;
+    const wgt = settled ? Math.round(C.artistWeight) : weights[plate.alb];
+    let asz = lk.size;
+    x.font = `${wgt} ${asz}px ${fonts.archivo}`;
+    if (fit > 0) {
+      const maxW = L.staged ? W - lk.margin * 2 : W * fit - lk.margin;
+      const mw = x.measureText(name).width;
+      if (mw > maxW) {
+        asz = Math.max(asz * lk.floor, asz * (maxW / mw));
+        x.font = `${wgt} ${asz}px ${fonts.archivo}`;
+      }
     }
+    const nx = lk.margin + plate.shift * W * NAMES.slide;
+    x.globalAlpha = (1 - s.mix) * (0.92 - s.play * 0.25) * plate.alpha;
+    x.fillStyle = COLOR.paper;
+    x.fillText(name, nx, lk.ay);
+    if (frame && plate.alb === s.alb) frame.name = { text: name, font: x.font, x: nx, y: lk.ay };
   }
-  x.globalAlpha = (1 - s.mix) * (0.92 - s.play * 0.25);
-  x.fillStyle = COLOR.paper;
-  x.fillText(A.artist, lk.margin, lk.ay);
-  if (frame) frame.name = { text: A.artist, font: x.font, x: lk.margin, y: lk.ay };
   if (s.mix > 0 && ALBUMS[s.fuseAlb]) {
     x.globalAlpha = s.mix * (0.92 - s.play * 0.25);
     x.fillText(

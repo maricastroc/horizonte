@@ -1,8 +1,14 @@
 import { ALBUMS, boundsOf } from "../content";
 import { clamp } from "../math";
-import { crownAt, morphologyOf, shellsAt, type AlbumMorphology } from "../morphology";
+import {
+  crownAt,
+  morphologyOf,
+  shellsAt,
+  wholeCrownAt,
+  type AlbumMorphology,
+} from "../morphology";
 import { STRAIN_BINS } from "./strain";
-import { RING, STRAIN } from "../tokens";
+import { COLOR, DEPTH, LIGHT, RING, SILHOUETTE, STRAIN, rgba, type Rgb } from "../tokens";
 import type { CoverAsset } from "./cover";
 import { COVER_SIZE } from "./cover";
 
@@ -222,6 +228,112 @@ interface SegCacheKey {
   shape: number;
 }
 
+function crownPath(x: CanvasRenderingContext2D, m: AlbumMorphology, ox: number, oy: number) {
+  const { unitR } = RING;
+  const n = SILHOUETTE.step;
+  const rows: { inner: number; outer: number }[] = [];
+  for (let i = 0; i <= n; i++) rows.push(wholeCrownAt(m, i / n, SILHOUETTE.smooth));
+  x.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const a = (i / n) * 6.2832;
+    const r = rows[i].outer * unitR;
+    if (i === 0) x.moveTo(ox + Math.cos(a) * r, oy + Math.sin(a) * r);
+    else x.lineTo(ox + Math.cos(a) * r, oy + Math.sin(a) * r);
+  }
+  x.closePath();
+  for (let i = n; i >= 0; i--) {
+    const a = (i / n) * 6.2832;
+    const r = rows[i].inner * unitR;
+    if (i === n) x.moveTo(ox + Math.cos(a) * r, oy + Math.sin(a) * r);
+    else x.lineTo(ox + Math.cos(a) * r, oy + Math.sin(a) * r);
+  }
+  x.closePath();
+}
+
+export function lightInBuffer(flatten: number, rot: number): [number, number] {
+  const lx = LIGHT.base[0];
+  const ly = -LIGHT.base[1] / Math.max(0.05, flatten);
+  const c = Math.cos(-rot);
+  const sn = Math.sin(-rot);
+  const vx = lx * c - ly * sn;
+  const vy = lx * sn + ly * c;
+  const len = Math.hypot(vx, vy) || 1;
+  return [vx / len, vy / len];
+}
+
+const brighten = (v: Rgb, k: number): Rgb => [
+  v[0] + (1 - v[0]) * k,
+  v[1] + (1 - v[1]) * k,
+  v[2] + (1 - v[2]) * k,
+];
+
+export interface Silhouette {
+  sharp: HTMLCanvasElement;
+  rim: HTMLCanvasElement;
+  soft: HTMLCanvasElement;
+}
+
+export function bakeSilhouette(
+  cover: HTMLCanvasElement,
+  m: AlbumMorphology,
+  ink: Rgb,
+  rot: number,
+): Silhouette {
+  const plates = buffer();
+  new SectorBake(cover, m.bounds, m, -1, -1, -1, plates).run(Number.POSITIVE_INFINITY);
+  const sharp = buffer();
+  const x = sharp.getContext("2d")!;
+  x.save();
+  x.filter = `blur(${SILHOUETTE.veil}px)`;
+  x.drawImage(plates, 0, 0);
+  x.filter = "none";
+  x.globalCompositeOperation = "destination-in";
+  crownPath(x, m, C, C);
+  x.fill();
+  x.globalCompositeOperation = "destination-over";
+  x.fillStyle = COLOR.body;
+  crownPath(x, m, C, C);
+  x.fill();
+  x.globalCompositeOperation = "source-atop";
+  x.globalAlpha = SILHOUETTE.face;
+  x.fillRect(0, 0, RING.buffer, RING.buffer);
+  x.restore();
+
+  const [lx, ly] = lightInBuffer(m.flatten, rot);
+  const half = RING.buffer * SILHOUETTE.rimScale;
+  const rim = document.createElement("canvas");
+  rim.width = half;
+  rim.height = half;
+  const r = rim.getContext("2d")!;
+  const color = rgba(brighten(ink, SILHOUETTE.rimWhite), 1);
+  SILHOUETTE.rim.forEach((shift, i) => {
+    const layer = document.createElement("canvas");
+    layer.width = half;
+    layer.height = half;
+    const l = layer.getContext("2d")!;
+    l.scale(SILHOUETTE.rimScale, SILHOUETTE.rimScale);
+    l.fillStyle = color;
+    crownPath(l, m, C, C);
+    l.fill();
+    l.globalCompositeOperation = "destination-out";
+    crownPath(l, m, C - lx * shift, C - ly * shift);
+    l.fill();
+    r.globalAlpha = SILHOUETTE.rimAlpha[i];
+    r.filter = `blur(${SILHOUETTE.rimBlur}px)`;
+    r.drawImage(layer, 0, 0);
+  });
+
+  const soft = document.createElement("canvas");
+  soft.width = DEPTH.soft;
+  soft.height = DEPTH.soft;
+  const sx = soft.getContext("2d")!;
+  sx.filter = `blur(${DEPTH.softBlur}px)`;
+  sx.drawImage(sharp, 0, 0, DEPTH.soft, DEPTH.soft);
+  sx.globalCompositeOperation = "lighter";
+  sx.drawImage(rim, 0, 0, DEPTH.soft, DEPTH.soft);
+  return { sharp, rim, soft };
+}
+
 export interface SegShape {
   m: AlbumMorphology;
   version: number;
@@ -231,6 +343,8 @@ export interface SegShape {
 export class RingBakery {
   private arcs: (HTMLCanvasElement | null)[];
   private arcVersion: number[];
+  private silhouettes: (Silhouette | null)[];
+  private silhouetteVersion: number[];
   private segKey: SegCacheKey | null = null;
   private segSlices: HTMLCanvasElement | null = null;
   private segSpare: HTMLCanvasElement | null = null;
@@ -246,16 +360,22 @@ export class RingBakery {
   constructor(private covers: CoverAsset[]) {
     this.arcs = covers.map(() => null);
     this.arcVersion = covers.map(() => -1);
+    this.silhouettes = covers.map(() => null);
+    this.silhouetteVersion = covers.map(() => -1);
   }
 
   sync() {
     while (this.arcs.length > this.covers.length) {
       this.arcs.pop();
       this.arcVersion.pop();
+      this.silhouettes.pop();
+      this.silhouetteVersion.pop();
     }
     while (this.arcs.length < this.covers.length) {
       this.arcs.push(null);
       this.arcVersion.push(-1);
+      this.silhouettes.push(null);
+      this.silhouetteVersion.push(-1);
     }
     this.segKey = null;
   }
@@ -267,6 +387,15 @@ export class RingBakery {
       this.arcVersion[i] = cover.version;
     }
     return this.arcs[i]!;
+  }
+
+  silhouette(i: number): Silhouette {
+    const cover = this.covers[i];
+    if (!this.silhouettes[i] || this.silhouetteVersion[i] !== cover.version) {
+      this.silhouettes[i] = bakeSilhouette(cover.canvas, this.morph(i), ALBUMS[i].inkA, RING.anchor);
+      this.silhouetteVersion[i] = cover.version;
+    }
+    return this.silhouettes[i]!;
   }
 
   bounds(alb: number): number[] {

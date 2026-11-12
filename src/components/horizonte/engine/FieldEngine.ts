@@ -20,15 +20,20 @@ import {
   bandsFor,
   baseRadius,
   bodyGeom,
+  collectionBody,
   hitTest,
   layoutFor,
   ringRotationTarget,
   variantFor,
+  type BodyGeom,
   type Hit,
   type WorldLayout,
 } from "../composition/layout";
 import { bandsOf, sameBands, stageBox, FULL_BANDS } from "../composition/bands";
 import { RingBakery, type SegShape } from "../composition/ring";
+import { profileOf, writeProfile, type ReliefBand } from "../composition/relief";
+import { emergeOf, stagesOf } from "../composition/approach";
+import { breathAt, temperamentOf } from "../breath";
 import {
   crownAt,
   mixMorphology,
@@ -94,6 +99,10 @@ import {
   INTAKE,
   MOTION,
   MORPH,
+  APPROACH,
+  BREATH,
+  RELIEF,
+  RING,
   SECOND_MASS,
   SEQ,
   TRACK_BIAS,
@@ -169,6 +178,13 @@ export class FieldEngine implements InputActions {
   private hzK = 1;
   private bias: TrackBias = { ...NEUTRAL_BIAS };
   private lightSweep = 0;
+  private breathGain = 0;
+  private breathMass = 0;
+  private breathLight = 0;
+  private readonly reliefProfile = new Float32Array(RELIEF.texels * 8);
+  private reliefKey = "";
+  private reliefBand: ReliefBand = { lo: 0, hi: 0 };
+  private reliefShape: SegShape | null = null;
   private m1 = { x: 0, y: 0, k: 0, h: 0, alb: -1, ready: false };
   private readonly motion: MotionResponse = { ...NEUTRAL_MOTION };
   private motionTarget: MotionResponse = NEUTRAL_MOTION;
@@ -854,6 +870,8 @@ export class FieldEngine implements InputActions {
   };
 
   private backDeps(): BackDeps {
+    const compare = this.compareBake();
+    this.reliefShape = compare;
     return {
       labels: this.labels,
       fonts: this.fonts,
@@ -866,7 +884,8 @@ export class FieldEngine implements InputActions {
       morphOf: (a) => this.morphAt(a),
       field: this.deformation(),
       fieldVersion: this.strain.version,
-      compare: this.compareBake(),
+      compare,
+      breath: (i) => this.breathOf(i),
       frame: this.focusFrame(),
       facing: this.focusPart() === "posture" ? ease(this.focusAmt) : 0,
       ghost:
@@ -945,6 +964,10 @@ export class FieldEngine implements InputActions {
       tgt.spin = 0.16 * C.swirl;
     }
 
+    this.breathStep(dt);
+    tgt.m0k *= 1 + BREATH.mass * this.breathMass;
+    tgt.m0h *= 1 + BREATH.horizon * this.breathMass;
+
     if (s.mode === "collapse") this.collapse(tgt, K);
     if (isEngaged(s.mode)) this.playing(tgt, K);
     if (s.mode === "fusion") this.fusion(tgt, K);
@@ -966,7 +989,7 @@ export class FieldEngine implements InputActions {
 
     this.ringRotation(dt);
     this.lightAngle(dt);
-    s.fadeSel += ((s.scale === "collection" ? 0 : 1) - s.fadeSel) * Math.min(1, dt * 4);
+    this.approachStep(dt);
     s.form +=
       ((s.scale === "collection" ? MORPH.collectionForm : 1) - s.form) * Math.min(1, dt * 4);
     this.tideStep(dt);
@@ -1030,9 +1053,52 @@ export class FieldEngine implements InputActions {
     this.bus.setResponse(this.motion);
   }
 
+  breathOf(i: number): { mass: number; light: number } {
+    const album = ALBUMS[i];
+    const T = album ? temperamentOf(album) : null;
+    if (!T || this.reduced) return { mass: 0, light: 0 };
+    const b = breathAt(T, this.st.t, (i * BREATH.phase) % 1);
+    return { mass: b * T.mass, light: b * T.light };
+  }
+
+  private breathStep(dt: number) {
+    const s = this.st;
+    const live = s.mode === "playing" || s.mode === "collapse" || s.mode === "fusion";
+    const target = this.reduced || live ? 0 : 1;
+    this.breathGain += (target - this.breathGain) * Math.min(1, dt * BREATH.lerp);
+    let mass = 0;
+    let light = 0;
+    if (s.scale === "collection") {
+      const lo = clamp(Math.floor(s.nav), 0, ALBUMS.length - 1);
+      const hi = clamp(lo + 1, 0, ALBUMS.length - 1);
+      const f = clamp(s.nav - lo, 0, 1);
+      const a = this.breathOf(lo);
+      const b = this.breathOf(hi);
+      mass = a.mass + (b.mass - a.mass) * f;
+      light = a.light + (b.light - a.light) * f;
+    } else {
+      const a = this.breathOf(s.alb);
+      mass = a.mass;
+      light = a.light;
+    }
+    this.breathMass = mass * this.breathGain;
+    this.breathLight = light * this.breathGain;
+  }
+
+  private approachStep(dt: number) {
+    const s = this.st;
+    const inside = s.scale !== "collection";
+    if (this.reduced) {
+      s.fadeSel = inside ? 1 : 0;
+      return;
+    }
+    const rate = inside ? 1 / APPROACH.enter : -1 / APPROACH.leave;
+    s.fadeSel = clamp(s.fadeSel + rate * dt, 0, 1);
+  }
+
   private ringRotation(dt: number) {
     const s = this.st;
-    const onAir = s.playAlb >= 0 && s.playAlb === s.alb;
+    const onAir = s.playAlb >= 0 && s.playAlb === s.alb && s.scale !== "collection";
     const target = ringRotationTarget(this.rings.bounds(s.alb), s.trk, progressOf(s), onAir);
     const raw = target - s.ringRot;
     const d = (((raw + Math.PI) % 6.2832) + 6.2832) % 6.2832 - Math.PI;
@@ -1080,9 +1146,13 @@ export class FieldEngine implements InputActions {
     const k = this.intake
       ? SECOND_MASS.k * INTAKE.mass
       : SECOND_MASS.k * C.massScale * gain;
+    const body =
+      this.L.recede > 0 ? collectionBody(this.W, this.H, s, this.L, at, mm) : null;
     const h = this.intake
       ? SECOND_MASS.h * INTAKE.horizon
-      : SECOND_MASS.h * (mm.coreRatio / MORPH.coreRef) * mm.circuit;
+      : body
+        ? (body.R * mm.coreRatio * SECOND_MASS.core * mm.flatten) / Math.max(1, this.H)
+        : SECOND_MASS.h * (mm.coreRatio / MORPH.coreRef) * mm.circuit;
 
     const m = this.m1;
     if (!m.ready || m.alb !== at) m.alb = at;
@@ -1098,8 +1168,21 @@ export class FieldEngine implements InputActions {
     const e = Math.min(1, dt * SECOND_MASS.lerp);
     m.x += (p.x - m.x) * e;
     m.y += (p.y - m.y) * e;
+    const away = Math.hypot((p.x - m.x) * this.W, (p.y - m.y) * this.H) / Math.max(1, this.H);
+    const settled = body
+      ? clamp(1 - Math.max(0, away - SECOND_MASS.drift) / SECOND_MASS.settle, 0, 1)
+      : 1;
+    let exposed = 1;
+    if (body && at !== focused) {
+      const fm = this.morphAt(focused);
+      const front = collectionBody(this.W, this.H, s, this.L, focused, fm);
+      const reach =
+        Math.hypot(body.cx - front.cx, (body.cy - front.cy) / front.flatten) / Math.max(1, front.R);
+      exposed = clamp((reach - fm.rMax) / SECOND_MASS.behind, 0, 1);
+    }
     m.k += (k - m.k) * e;
-    m.h += (h - m.h) * e;
+    const veil = this.intake ? 1 : settled * exposed;
+    m.h += (h * veil - m.h) * Math.min(1, dt * SECOND_MASS.lerp * 2);
   }
 
   private lightAngle(dt: number) {
@@ -1245,12 +1328,14 @@ export class FieldEngine implements InputActions {
     } else if (s.scale !== "collection" && s.mode !== "fusion" && s.m1k <= 1e-4) {
       const sat = this.leadSatellite();
       if (sat) {
-        const sx = (geo.cx + Math.cos(sat.angle) * sat.dist * geo.R) / this.W;
-        const sy = (geo.cy + Math.sin(sat.angle) * sat.dist * geo.R * geo.flatten) / this.H;
+        const e = stagesOf(s).satellites;
+        const at = emergeOf(sat, e);
+        const sx = (geo.cx + Math.cos(at.angle) * at.dist * geo.R) / this.W;
+        const sy = (geo.cy + Math.sin(at.angle) * at.dist * geo.R * geo.flatten) / this.H;
         m1x = (sx - 0.5) * aspect;
         m1y = 0.5 - sy;
-        m1k = SECOND_MASS.k * this.C.massScale * sat.weight * s.form;
-        m1h = ((sat.size * geo.R) / this.H) * (0.4 + 0.6 * sat.weight);
+        m1k = SECOND_MASS.k * this.C.massScale * sat.weight * s.form * e;
+        m1h = ((sat.size * geo.R) / this.H) * (0.4 + 0.6 * sat.weight) * e;
       }
     }
 
@@ -1287,11 +1372,55 @@ export class FieldEngine implements InputActions {
     u.uReach.value = this.reachAmp;
     const dBright = clamp(this.audioState.centroid - A.signature.brightness, -0.5, 0.5);
     u.uRim.value = this.C.rimHardness * (1 + dBright * this.C.reactionCap * this.motion.light);
-    const light = lightDirection(this.lightSweep);
+    const light = lightDirection(this.lightSweep + APPROACH.turn * stagesOf(s).push);
     u.uLight.value.set(light[0], light[1]);
     (u.uInk.value as THREE.Vector3).set(A.inkA[0], A.inkA[1], A.inkA[2]);
+    this.reliefSync(geo);
     this.focusRender();
     this.gl.render();
+  }
+
+  private reliefSync(geo: BodyGeom) {
+    const s = this.st;
+    const u = this.gl.uniforms;
+    const amount = 1 - s.mix;
+    const stage = stagesOf(s);
+    if (amount <= 0.001) {
+      u.uRelief.value.w = 0;
+      return;
+    }
+    const shape = this.reliefShape;
+    const m = shape ? shape.m : this.morphAt(s.alb);
+    const inside = s.scale !== "collection";
+    const active =
+      inside && s.playAlb === s.alb && (isEngaged(s.mode) || s.mode === "fusion") ? s.trk : -1;
+    const sel = inside ? s.sel : -1;
+    const field = inside ? this.deformation() : null;
+    const open = Math.round(stage.open * RELIEF.steps) / RELIEF.steps;
+    const strain = field ? this.strain.version : -1;
+    const key = `${s.alb}:${shape ? shape.version : -1}:${sel}:${active}:${strain}:${open}`;
+    if (key !== this.reliefKey) {
+      this.reliefKey = key;
+      this.reliefBand = profileOf(m, sel, active, field, this.reliefProfile, open);
+      writeProfile(u.uShape.value, this.reliefProfile);
+    }
+    const k = stage.open;
+    const far =
+      this.L.recede > 0 ? collectionBody(this.W, this.H, s, this.L, s.alb, this.morphAt(s.alb)) : geo;
+    const R = far.R + (geo.R - far.R) * k;
+    const cx = far.cx + (geo.cx - far.cx) * k;
+    const cy = far.cy + (geo.cy - far.cy) * k;
+    const flatten = far.flatten + (geo.flatten - far.flatten) * k;
+    const rot = RING.anchor + (s.ringRot - RING.anchor) * k;
+    const aspect = this.W / this.H;
+    u.uRelief.value.set(R / this.H, flatten, rot, amount);
+    u.uReliefAt.value.set((cx / this.W - 0.5) * aspect, 0.5 - cy / this.H);
+    u.uReliefBand.value.set(
+      this.reliefBand.lo - RELIEF.margin,
+      this.reliefBand.hi + RELIEF.margin,
+      1 - stage.light,
+      BREATH.light * this.breathLight,
+    );
   }
 
   private buildSnapshot(force = false): Snapshot {
