@@ -95,8 +95,8 @@ describe("the anatomy writers", () => {
 
   it("near the typical length, nobody says 'no' where they mean 'none'", () => {
     const near = sat(0, 0, { near: true });
-    expect(ANATOMY_EN.phrase(near).answer).toMatch(/this length makes none\.$/);
-    expect(ANATOMY_PT.phrase(near).answer).toMatch(/com esta duração, nenhum aparece\.$/);
+    expect(ANATOMY_EN.phrase(near).answer).toMatch(/this record has none:/);
+    expect(ANATOMY_PT.phrase(near).answer).toMatch(/este disco não tem nenhum:/);
     expect(ANATOMY_EN.phrase(near).what).toBeNull();
     expect(ANATOMY_PT.phrase(near).what).toBeNull();
   });
@@ -108,7 +108,7 @@ describe("the anatomy writers", () => {
       "pulse",
     );
     expect(ANATOMY_PT.phrase(steady).answer).toContain("Nenhum disco da coleção é tão regular.");
-    expect(ANATOMY_PT.phrase(free).answer).toContain("nenhum disco da coleção tem menos.");
+    expect(ANATOMY_PT.phrase(free).answer).toContain("Nenhum disco da coleção tem um ritmo tão livre.");
     expect(ANATOMY_EN.phrase(steady).answer).toContain("No record here is as regular.");
     const dark = ask(
       { part: "posture", ...base, high: false, strong: true, bottom: true },

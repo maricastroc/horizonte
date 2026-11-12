@@ -645,7 +645,7 @@ describe("why this shape", () => {
     openShape();
     const q = screen.getByRole("heading", { level: 3 });
     expect(q.textContent).toBe("Where do the four small bodies come from?");
-    expect(screen.getByText(/From its length: 75 minutes/)).toBeDefined();
+    expect(screen.getByText(/They come from its length\. At 75 minutes/)).toBeDefined();
     expect(screen.getByRole("button", { name: "What if the record were shorter? ▸" })).toBeDefined();
     expect(screen.queryByText(/median|dB|Hz/)).toBeNull();
   });

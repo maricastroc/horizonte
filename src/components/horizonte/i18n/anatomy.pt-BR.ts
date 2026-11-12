@@ -19,23 +19,23 @@ const NEAR: Record<Exclude<Finding["part"], "satellites">, { ask: string; answer
   gaps: {
     ask: "O que abre fendas no anel?",
     answer:
-      "A diferença de ritmo entre as faixas. Cada setor do anel é uma faixa, e as fendas entre " +
-      "eles se alargam quanto mais as faixas diferem em regularidade; neste disco, a diferença " +
-      "é a típica da coleção.",
+      "O quanto as faixas diferem no ritmo. Cada setor do anel é uma faixa, e as fendas se " +
+      "alargam quando umas seguem uma batida regular e outras não; aqui a diferença é a típica " +
+      "da coleção.",
   },
   strata: {
     ask: "O que dividiria o anel em camadas?",
     answer:
       "Um ritmo regular. Quando as notas caem numa grade que se repete, o anel se divide em " +
-      "camadas, mais afastadas quanto mais regular é o ritmo; a regularidade deste disco é a " +
-      "típica da coleção.",
+      "camadas, mais afastadas quanto mais constante é a grade; o ritmo deste disco é tão " +
+      "regular quanto o de um disco típico.",
   },
   contour: {
     ask: "O que recorta a borda?",
     answer:
-      "O contraste entre os trechos calmos e os intensos. A borda acompanha a intensidade ao " +
-      "longo do disco, avançando onde a música cresce; aqui o contraste é o típico da coleção, " +
-      "e os recortes também.",
+      "A distância entre os trechos calmos e os intensos. A borda acompanha a intensidade ao " +
+      "longo do disco, avançando onde a música cresce; aqui essa distância é a típica da " +
+      "coleção, e os recortes também.",
   },
   posture: {
     ask: "O que define a inclinação da forma?",
@@ -47,8 +47,9 @@ const NEAR: Record<Exclude<Finding["part"], "satellites">, { ask: string; answer
   core: {
     ask: "O que define o tamanho do centro escuro?",
     answer:
-      "O volume médio. No Horizonte, volume é massa: discos mais altos ganham um corpo maior e " +
-      "um centro que estreita o anel; os mais baixos, o contrário. Este fica no meio da coleção.",
+      "O quanto o disco soa alto. No Horizonte, volume é massa: discos mais altos ganham um " +
+      "corpo maior e um centro que estreita o anel; os mais baixos, o contrário. Este fica no " +
+      "meio da coleção.",
   },
 };
 
@@ -61,23 +62,24 @@ function satellites(f: Of<"satellites">): Phrasing {
       : n === 1
         ? "De onde vem o pequeno corpo ao lado?"
         : `De onde vêm os ${count(n)} pequenos corpos?`;
-  const rule =
-    "O Horizonte representa o tempo com pequenos corpos ao redor da forma, mais numerosos " +
-    "quanto mais longo é o disco";
+  const come = n === 1 ? "Ele vem da duração." : "Eles vêm da duração.";
+  const each =
+    "o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho " +
+    "de duração";
   const answer = f.near
-    ? `Da duração: ${minutes(min)}, perto da duração típica da coleção. ${rule}; com esta ` +
-      `duração, ${n === 0 ? "nenhum aparece" : n === 1 ? "aparece um" : `aparecem ${count(n)}`}.`
+    ? `${n === 0 ? "É uma questão de duração." : come} Com ${minutes(min)}, perto da duração ` +
+      `típica da coleção, este disco ${n === 0 ? "não tem nenhum" : `tem ${count(n)}`}: ${each}.`
     : n === 0
       ? `Porque o disco é curto: ${minutes(min)}${when(f.bottom, ", o mais curto da coleção")}. ` +
-        "A duração ganha forma em pequenos corpos que vão surgindo à medida que o disco se " +
-        "alonga, e este termina antes de ganhar o primeiro."
+        "O Horizonte mostra o tempo com pequenos corpos que vão surgindo em volta da forma à " +
+        "medida que o disco se alonga, e este termina antes do primeiro."
       : high
-        ? `Da duração: ${minutes(min)}, ` +
-          `${f.top ? "o disco mais longo da coleção" : "mais longo que a maioria da coleção"}. Em vez ` +
-          "de aumentar a forma principal, o Horizonte representa o tempo com pequenos corpos ao " +
-          "redor dela: quanto mais longo o disco, mais corpos."
-        : `Da duração: ${minutes(min)}, mais curto que a maioria da coleção. ${rule}; com ` +
-          `esta duração, há só ${count(n)}.`;
+        ? `${come} Este disco tem ${minutes(min)}, ` +
+          `${f.top ? "mais que qualquer outro da coleção" : "mais que a maioria da coleção"}, e ` +
+          "o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um " +
+          "pequeno corpo em volta dela."
+        : `${come} Com ${minutes(min)}, mais curto que a maioria da coleção, este disco ganha só ` +
+          `${n === 1 ? "um" : count(n)}: ${each}.`;
   const extra = Math.abs(f.extra) === 1 ? "o 1 minuto" : `os ${minutes(Math.abs(f.extra))}`;
   const change =
     after < n
@@ -122,16 +124,17 @@ function gaps(f: Of<"gaps">): Phrasing {
       ? "Por que o anel tem fendas?"
       : "Por que o anel é quase contínuo?";
   const answer = f.open
-    ? "Porque as faixas diferem muito no ritmo: umas seguem uma batida regular, outras fluem " +
-      "sem grade. Cada setor do anel é uma faixa, e a largura das fendas entre eles mede essa " +
-      `diferença no disco como um todo${when(top, "; aqui, a maior da coleção")}.`
+    ? "Algumas faixas deste disco seguem uma batida regular; outras fluem sem uma. " +
+      "Cada setor do anel é uma faixa, e quanto mais as faixas diferem nesse ponto, mais as " +
+      "fendas se abrem, todas por igual, em volta do anel inteiro" +
+      `${when(top, ". Nenhum disco da coleção tem faixas tão diferentes")}.`
     : high
-      ? "Porque as faixas diferem um pouco no ritmo: algumas são mais regulares que outras. Cada " +
-        "setor do anel é uma faixa, e as fendas entre eles medem essa diferença no disco como um " +
-        "todo; aqui ela passa da típica, mas ainda é pequena."
-      : "Porque as faixas se parecem no ritmo, quase igualmente regulares. Cada setor do anel é " +
-        "uma faixa, e as fendas entre eles só se alargam quando as faixas diferem nesse ponto" +
-        `${when(bottom, "; em nenhum disco da coleção elas diferem tão pouco")}.`;
+      ? "Algumas faixas deste disco têm um ritmo mais regular que outras. Cada setor do anel é " +
+        "uma faixa, e essa diferença abre fendas entre todos eles; aqui, um pouco mais largas que " +
+        "o típico, mas ainda estreitas."
+      : "As faixas deste disco têm ritmos parecidos. Cada setor do anel é uma faixa, e as fendas " +
+        "só se abrem quando as faixas diferem no ritmo; aqui, quase não há o que separar" +
+        `${when(bottom, ". Nenhum disco da coleção tem faixas tão parecidas")}.`;
   return {
     ask,
     answer,
@@ -149,9 +152,9 @@ function gaps(f: Of<"gaps">): Phrasing {
 
 function strata(f: Of<"strata">): Phrasing {
   const { high, top, bottom } = f;
-  const shape =
-    "Na forma, essa regularidade se traduz em anéis paralelos, mais afastados quanto mais " +
-    "regular é o ritmo";
+  const draw =
+    "O Horizonte desenha essa regularidade como anéis paralelos: quanto mais regular o ritmo, " +
+    "mais afastados eles ficam";
   const ask =
     f.beat === "steady"
       ? "Por que o anel tem camadas?"
@@ -162,26 +165,30 @@ function strata(f: Of<"strata">): Phrasing {
           : "Por que as camadas do anel mal aparecem?";
   const answer =
     f.beat === "steady"
-      ? "Porque o ritmo é muito regular: as notas caem numa grade que se repete do começo ao " +
-        `fim. ${shape}${when(top, ". Nenhum disco da coleção é tão regular")}.`
+      ? "As notas deste disco caem numa grade constante, como um pulso que se repete do começo " +
+        `ao fim. ${draw}${when(top, ". Nenhum disco da coleção é tão regular")}.`
       : f.beat === "none"
-        ? "Porque a música não segue uma grade rítmica: os sons chegam sem uma batida que se " +
-          "repita. As camadas só aparecem quando o ritmo tem regularidade" +
-          `${when(bottom, ", e nenhum disco da coleção tem menos")}.`
+        ? "Os sons deste disco chegam sem uma batida que se repita, livres de qualquer grade. O " +
+          "anel só se divide em camadas quando o ritmo é regular" +
+          `${when(bottom, ". Nenhum disco da coleção tem um ritmo tão livre")}.`
         : high
-          ? `Porque o ritmo é bastante regular, mais que o da maioria da coleção. ${shape}.`
-          : "Porque o ritmo é pouco regular: há uma grade, mas fraca. As camadas existem, coladas " +
-            "umas às outras, e só se separam quando o ritmo fica mais regular.";
+          ? "As notas deste disco caem numa grade bastante regular, mais que na maioria da " +
+            `coleção. ${draw}.`
+          : "O ritmo deste disco tem alguma regularidade, mas pouca. As camadas estão lá, " +
+            "coladas umas às outras; só se separam quando o ritmo fica mais constante.";
   return {
     ask,
     answer,
     what: high ? "E se o ritmo fosse menos regular?" : "E se o ritmo fosse mais regular?",
     label: high ? "Menos regular" : "Mais regular",
     result: high
-      ? "Com a regularidade de um disco típico, as camadas se aproximam umas das outras."
+      ? "Com um ritmo tão regular quanto o de um disco típico, as camadas se aproximam umas das " +
+        "outras."
       : f.beat === "none"
-        ? "Com a regularidade de um disco típico, o anel se divide em camadas, ainda bem juntas."
-        : "Com a regularidade de um disco típico, as camadas se afastam e ficam mais nítidas.",
+        ? "Com um ritmo tão regular quanto o de um disco típico, o anel se divide em camadas, " +
+          "ainda bem juntas."
+        : "Com um ritmo tão regular quanto o de um disco típico, as camadas se afastam e ficam " +
+          "mais nítidas.",
   };
 }
 
@@ -194,35 +201,31 @@ function contour(f: Of<"contour">): Phrasing {
     : strong
       ? "Por que a borda é tão lisa?"
       : "Por que a borda é quase lisa?";
+  const follow =
+    "O anel percorre o disco do começo ao fim, e a borda acompanha esse vaivém: avança onde a " +
+    "música cresce e recua onde ela se acalma.";
   const answer = high
-    ? (strong
-        ? "Por causa do forte contraste entre os trechos calmos e os intensos."
-        : "Por causa do contraste entre os trechos calmos e os intensos, maior que o da maioria " +
-          "da coleção.") +
-      " Como o anel percorre o disco do começo ao fim, a borda avança onde a música cresce e " +
-      "recua onde ela se acalma; quanto maior o contraste, mais fundo o recorte." +
-      (top
-        ? " Nenhum disco da coleção tem tanto. Ao tocar, é também o que mais pulsa com o som."
-        : strong
-          ? " Ao tocar, a forma também pulsa bastante com o som."
-          : "")
-    : (strong
-        ? "Porque o volume quase não varia: do trecho mais calmo ao mais intenso, a diferença é " +
-          "pequena."
-        : "Porque o volume varia menos que na maioria da coleção.") +
-      " A borda acompanha a intensidade ao longo do disco e, com pouco contraste, quase não se " +
-      `move${when(bottom, "; nenhum disco da coleção varia tão pouco")}.` +
-      when(strong, " Ao tocar, a forma também pulsa pouco.");
+    ? strong
+      ? `Este disco vai de trechos muito calmos a trechos muito intensos. ${follow} Quanto maior ` +
+        "a distância entre calma e intensidade, mais fundo o recorte" +
+        `${when(top, ", e nenhum disco da coleção vai tão longe")}.`
+      : `Este disco alterna trechos calmos e intensos mais que a maioria da coleção. ${follow}`
+    : strong
+      ? "A intensidade deste disco quase não muda: o trecho mais calmo e o mais intenso ficam " +
+        "próximos. Como a borda acompanha essa intensidade ao longo do disco, ela quase não se " +
+        `move${when(bottom, "; nenhum disco da coleção varia tão pouco")}.`
+      : "A intensidade deste disco varia menos que a da maioria da coleção. Como a borda " +
+        "acompanha essa intensidade ao longo do disco, os recortes ficam rasos.";
   return {
     ask,
     answer,
     what: high ? "E se o volume variasse menos?" : "E se o volume variasse mais?",
     label: high ? "Menos contraste" : "Mais contraste",
     result: high
-      ? "Com o contraste de um disco típico, os recortes ficam mais rasos, mas continuam nos " +
-        "mesmos lugares: acompanham os mesmos trechos do disco."
-      : "Com o contraste de um disco típico, os recortes se aprofundam, justo onde a música já " +
-        "crescia e se acalmava.",
+      ? "Com trechos calmos e intensos tão próximos quanto num disco típico, os recortes ficam " +
+        "mais rasos, mas não saem do lugar."
+      : "Com trechos calmos e intensos tão distantes quanto num disco típico, os recortes se " +
+        "aprofundam, nos mesmos lugares.",
   };
 }
 
@@ -237,27 +240,26 @@ function posture(f: Of<"posture">): Phrasing {
       : "Por que a forma está achatada?";
   const answer = high
     ? strong
-      ? "Esta música concentra muita energia nos sons agudos: ela soa brilhante. Para " +
-        "representar esse brilho, o Horizonte inclina a forma na direção de quem olha; quanto " +
-        "mais agudos, mais ela aparece de frente, quase redonda." +
-        when(top, " Nenhum disco da coleção é tão brilhante.")
-      : "Esta música tem mais energia nos agudos que a maioria da coleção, então soa mais " +
-        "brilhante. Na forma, esse brilho vira inclinação: quanto mais agudos, mais ela se " +
-        "mostra de frente, arredondada."
+      ? "Boa parte da energia desta música está nos sons agudos, e é isso que a faz soar " +
+        "brilhante. O Horizonte vira a forma para quem olha conforme esse brilho: quanto mais " +
+        `agudos, mais ela aparece de frente, quase redonda${when(top, ". Nenhum disco da coleção é tão brilhante")}.`
+      : "Esta música tem mais agudos que a maioria da coleção, então soa um pouco mais " +
+        "brilhante. O Horizonte vira a forma para quem olha conforme esse brilho, e ela mostra " +
+        "uma face mais redonda."
     : strong
       ? "Quase toda a energia desta música está nos graves, com poucos agudos por cima: ela soa " +
-        "escura. Para representar isso, o Horizonte deita a forma, achatada, como se a víssemos " +
-        `de lado.${when(bottom, " Nenhum disco da coleção é tão escuro.")}`
-      : "Esta música tem menos energia nos agudos que a maioria da coleção, então soa um pouco " +
-        "escura. Na forma, isso vira inclinação: com menos agudos, ela se deita e se achata.";
+        "escura. Para mostrar isso, o Horizonte deita a forma, achatada, como se a víssemos de " +
+        `lado${when(bottom, ". Nenhum disco da coleção é tão escuro")}.`
+      : "Esta música tem menos agudos que a maioria da coleção, então soa um pouco escura. Para " +
+        "mostrar isso, o Horizonte inclina a forma para trás, e ela se achata.";
   return {
     ask,
     answer,
     what: high ? "E se o som tivesse menos agudos?" : "E se o som tivesse mais agudos?",
     label: high ? "Menos agudos" : "Mais agudos",
     result: high
-      ? "Com o brilho de um disco típico, a forma se inclina para trás e fica mais achatada."
-      : "Com o brilho de um disco típico, a forma se levanta e se arredonda.",
+      ? "Com os agudos de um disco típico, a forma se inclina para trás e se achata."
+      : "Com os agudos de um disco típico, a forma se levanta e se arredonda.",
   };
 }
 
@@ -272,27 +274,27 @@ function core(f: Of<"core">): Phrasing {
       : "Por que o centro escuro é pequeno?";
   const answer = high
     ? strong
-      ? "Porque o disco soa alto, em média, do início ao fim. No Horizonte, " +
-        "volume é massa: quanto mais alto o disco, maior o corpo e maior o centro escuro, que vai " +
-        `tomando o lugar do anel em volta.${when(top, " Este é o disco mais alto da coleção.")}`
-      : "O disco soa mais alto que a maioria da coleção, do início ao fim. No Horizonte, volume " +
-        "é massa: o corpo cresce e o centro escuro avança sobre o anel."
+      ? "Este disco soa alto do começo ao fim. No Horizonte, volume é massa: quanto mais alto o " +
+        "disco, maior o corpo e maior o centro escuro, que vai tomando o lugar do anel em volta" +
+        `${when(top, ". Nenhum disco da coleção soa tão alto")}.`
+      : "Este disco soa mais alto que a maioria da coleção. No Horizonte, volume é massa, então " +
+        "o corpo cresce e o centro escuro avança sobre o anel."
     : strong
-      ? "Porque o disco soa baixo do início ao fim. No Horizonte, volume é massa: com pouca " +
-        "massa, o corpo encolhe e o centro escuro deixa um anel largo à sua volta." +
-        when(bottom, " Nenhum disco da coleção soa tão baixo.")
-      : "O disco soa um pouco mais baixo que a maioria da coleção. Como volume é massa no " +
-        "Horizonte, o corpo fica menor e o centro escuro deixa mais espaço ao anel.";
+      ? "Este disco soa baixo do começo ao fim. No Horizonte, volume é massa: com pouca, o corpo " +
+        "encolhe e o centro escuro deixa um anel largo à sua volta" +
+        `${when(bottom, ". Nenhum disco da coleção soa tão baixo")}.`
+      : "Este disco soa um pouco mais baixo que a maioria da coleção. No Horizonte, volume é " +
+        "massa, então o corpo fica menor e o anel ganha espaço.";
   return {
     ask,
     answer,
     what: high ? "E se o volume médio fosse mais baixo?" : "E se o volume médio fosse mais alto?",
     label: high ? "Mais baixo" : "Mais alto",
     result: high
-      ? "Com o volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve " +
-        "espaço ao anel."
-      : "Com o volume de um disco típico, o corpo inteiro cresce e o centro escuro avança sobre " +
-        "o anel.",
+      ? "No volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve espaço " +
+        "ao anel."
+      : "No volume de um disco típico, o corpo inteiro cresce e o centro escuro avança sobre o " +
+        "anel.",
   };
 }
 

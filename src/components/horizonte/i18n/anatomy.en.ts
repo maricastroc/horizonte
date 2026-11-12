@@ -13,23 +13,22 @@ const NEAR: Record<Exclude<Finding["part"], "satellites">, { ask: string; answer
   gaps: {
     ask: "What opens breaks in the ring?",
     answer:
-      "Differences in rhythm between tracks. Each sector of the ring is a track, and the breaks " +
-      "between them widen the more the tracks differ in regularity; here the difference is " +
+      "How much the tracks differ in rhythm. Each sector of the ring is a track, and the breaks " +
+      "widen when some tracks keep a steady beat and others don't; here the difference is " +
       "typical of the collection.",
   },
   strata: {
     ask: "What would split the ring into layers?",
     answer:
       "A regular rhythm. When the notes land on a repeating grid, the ring splits into layers, " +
-      "set further apart the more regular the rhythm; this record's regularity is typical of " +
-      "the collection.",
+      "further apart the steadier the grid; this record's rhythm is as regular as a typical one.",
   },
   contour: {
     ask: "What carves its edge?",
     answer:
-      "The contrast between quiet and intense passages. The edge follows intensity across the " +
-      "record, pushing out where the music swells; this record's contrast is typical of the " +
-      "collection, and so are its cuts.",
+      "The gap between calm and intense passages. The edge follows intensity across the record, " +
+      "pushing out where the music swells; here that gap is typical of the collection, and so " +
+      "are the cuts.",
   },
   posture: {
     ask: "What sets the shape's tilt?",
@@ -41,9 +40,9 @@ const NEAR: Record<Exclude<Finding["part"], "satellites">, { ask: string; answer
   core: {
     ask: "What sets the size of its dark center?",
     answer:
-      "Average loudness. In Horizonte, loudness is mass: louder records get a bigger body and a " +
-      "center that narrows the ring; quieter ones, the reverse. This one sits in the middle of " +
-      "the collection.",
+      "How loud the record plays. In Horizonte, loudness is mass: louder records get a bigger " +
+      "body and a center that narrows the ring; quieter ones, the reverse. This one sits in the " +
+      "middle of the collection.",
   },
 };
 
@@ -56,21 +55,21 @@ function satellites(f: Of<"satellites">): Phrasing {
       : n === 1
         ? "Where does the small body beside it come from?"
         : `Where do the ${count(n)} small bodies come from?`;
-  const rule = "Horizonte shows time as small bodies around the shape, more of them the longer it runs";
+  const come = n === 1 ? "It comes from its length." : "They come from its length.";
+  const each =
+    "Horizonte shows time as small bodies around the shape, one more for each added stretch";
   const answer = f.near
-    ? `From its length: ${min} minutes, close to the collection's typical length. ${rule}; ` +
-      `this length makes ${n === 0 ? "none" : count(n)}.`
+    ? `${n === 0 ? "It's down to its length." : come} At ${min} minutes, close to the ` +
+      `collection's typical length, this record has ${n === 0 ? "none" : count(n)}: ${each}.`
     : n === 0
       ? `Because the record is short: ${min} minutes${when(f.bottom, ", the shortest here")}. ` +
-        "Horizonte shows length as small bodies gathering around the shape as a record runs " +
+        "Horizonte shows time as small bodies that gather around the shape as a record grows " +
         "longer, and this one ends before the first appears."
       : high
-        ? `From its length: ${min} minutes, ` +
-          `${f.top ? "the longest record here" : "longer than most here"}. Rather ` +
-          "than enlarge the main shape, Horizonte shows time as small bodies around it: the " +
-          "longer the record, the more of them."
-        : `From its length: ${min} minutes, shorter than most here. ${rule}; at this length ` +
-          `there ${n === 1 ? "is just one" : `are only ${count(n)}`}.`;
+        ? `${come} At ${min} minutes, ${f.top ? "the longest record here" : "longer than most here"}, ` +
+          "it doesn't get a bigger shape: each added stretch of time becomes a small body around it."
+        : `${come} At ${min} minutes, shorter than most here, this record earns just ` +
+          `${n === 1 ? "one" : count(n)}: ${each}.`;
   const extra = mins(Math.abs(f.extra));
   const change =
     after < n
@@ -115,17 +114,17 @@ function gaps(f: Of<"gaps">): Phrasing {
       ? "Why does the ring have breaks?"
       : "Why is the ring almost unbroken?";
   const answer = f.open
-    ? "Because its tracks differ a lot in rhythm: some keep a regular beat, others drift free " +
-      "of any grid. Each sector of the ring is a track, and the width of the breaks between " +
-      "them measures that difference across the whole record" +
-      `${when(top, ", here the largest in the collection")}.`
+    ? "Some tracks on this record keep a steady beat; others move without one. Each " +
+      "sector of the ring is a track, and the more the tracks differ in this way, the wider the " +
+      "breaks open, all of them equally, around the whole ring" +
+      `${when(top, ". No record here has tracks this different")}.`
     : high
-      ? "Because its tracks differ somewhat in rhythm: some are more regular than others. Each " +
-        "sector of the ring is a track, and the breaks between them measure that difference " +
-        "across the whole record; here it is larger than typical, though still small."
-      : "Because its tracks are alike in rhythm, nearly equally regular. Each sector of the ring " +
-        "is a track, and the breaks between them only widen when tracks differ in that way" +
-        `${when(bottom, "; here they differ less than anywhere else in the collection")}.`;
+      ? "Some tracks on this record keep a steadier rhythm than others. Each sector of the ring is " +
+        "a track, and that difference opens breaks between all of them; here they are a little " +
+        "wider than typical, though still narrow."
+      : "The tracks on this record share a similar rhythm. Each sector of the ring is a track, and " +
+        "breaks only open when tracks differ in rhythm, so here there is little to separate" +
+        `${when(bottom, ". No record here has tracks this alike")}.`;
   return {
     ask,
     answer,
@@ -141,9 +140,9 @@ function gaps(f: Of<"gaps">): Phrasing {
 
 function strata(f: Of<"strata">): Phrasing {
   const { high, top, bottom } = f;
-  const shape =
-    "In the shape, that regularity becomes parallel rings, set further apart the more regular " +
-    "the rhythm";
+  const draw =
+    "Horizonte draws that regularity as parallel rings: the more regular the rhythm, the " +
+    "further apart they sit";
   const ask =
     f.beat === "steady"
       ? "Why does the ring have layers?"
@@ -154,26 +153,28 @@ function strata(f: Of<"strata">): Phrasing {
           : "Why are the ring's layers so faint?";
   const answer =
     f.beat === "steady"
-      ? "Because its rhythm is very regular: the notes land on a grid that repeats from start to " +
-        `end. ${shape}${when(top, ". No record here is as regular")}.`
+      ? "The notes on this record land on a steady grid, like a pulse that repeats from start to " +
+        `end. ${draw}${when(top, ". No record here is as regular")}.`
       : f.beat === "none"
-        ? "Because the music follows no rhythmic grid: sounds arrive without a beat that repeats. " +
-          "Layers only appear when a rhythm is regular" +
-          `${when(bottom, ", and no record here is less so")}.`
+        ? "The sounds on this record arrive without a repeating beat, free of any grid. The ring " +
+          "only splits into layers when a rhythm is regular" +
+          `${when(bottom, ". No record here moves as freely")}.`
         : high
-          ? `Because its rhythm is fairly regular, more than most records here. ${shape}.`
-          : "Because its rhythm is only loosely regular: there is a grid, but a weak one. The " +
-            "layers are there, pressed close together; they separate as a rhythm grows more regular.";
+          ? "The notes on this record fall on a fairly steady grid, more than on most records " +
+            `here. ${draw}.`
+          : "This record's rhythm has some regularity, but not much. The layers are there, " +
+            "pressed together; they only pull apart as a rhythm grows steadier.";
   return {
     ask,
     answer,
     what: high ? "What if the rhythm were less regular?" : "What if the rhythm were more regular?",
     label: high ? "Less regular" : "More regular",
     result: high
-      ? "With a typical record's regularity, the layers draw closer together."
+      ? "With a rhythm as regular as a typical record's, the layers draw closer together."
       : f.beat === "none"
-        ? "With a typical record's regularity, the ring splits into layers, still close together."
-        : "With a typical record's regularity, the layers pull apart and sharpen.",
+        ? "With a rhythm as regular as a typical record's, the ring splits into layers, still " +
+          "close together."
+        : "With a rhythm as regular as a typical record's, the layers pull apart and sharpen.",
   };
 }
 
@@ -186,35 +187,30 @@ function contour(f: Of<"contour">): Phrasing {
     : strong
       ? "Why is its edge so smooth?"
       : "Why is its edge nearly smooth?";
+  const follow =
+    "The ring runs through the record from start to end, and the edge follows that swing: it " +
+    "pushes out where the music swells and pulls in where it settles.";
   const answer = high
-    ? (strong
-        ? "Because of the strong contrast between its quiet and intense passages."
-        : "Because of the contrast between its quiet and intense passages, greater than in most " +
-          "records here.") +
-      " The ring runs through the record from start to end, so the edge pushes out where the " +
-      "music swells and pulls in where it settles; the stronger the contrast, the deeper the cut." +
-      (top
-        ? " No record here has more. Playing, it also pulses with the sound more than any other."
-        : strong
-          ? " Playing, the shape also pulses strongly with the sound."
-          : "")
-    : (strong
-        ? "Because its volume barely changes: from its quietest passage to its most intense, the " +
-          "difference is small."
-        : "Because its volume varies less than in most records here.") +
-      " The edge follows intensity across the record, and with little contrast it barely moves" +
-      `${when(bottom, "; no record here varies less")}.` +
-      when(strong, " Playing, the shape pulses only a little.");
+    ? strong
+      ? `This record swings from very calm passages to very intense ones. ${follow} The bigger ` +
+        `the gap between calm and intense, the deeper the cut${when(top, ", and no record here has a bigger one")}.`
+      : `This record moves between calm and intense passages more than most here. ${follow}`
+    : strong
+      ? "This record's intensity barely changes: its calmest and most intense passages sit close " +
+        "together. The edge follows that intensity across the record, so it hardly moves" +
+        `${when(bottom, "; no record here varies less")}.`
+      : "This record's intensity varies less than most here. The edge follows that intensity " +
+        "across the record, so its cuts stay shallow.";
   return {
     ask,
     answer,
     what: high ? "What if its volume varied less?" : "What if its volume varied more?",
     label: high ? "Less contrast" : "More contrast",
     result: high
-      ? "With a typical record's contrast, the cuts grow shallower but stay in place, following " +
-        "the same passages."
-      : "With a typical record's contrast, the cuts deepen, right where the music already rose " +
-        "and settled.",
+      ? "With calm and intense passages as close as in a typical record, the cuts grow shallower " +
+        "but stay where they are."
+      : "With calm and intense passages as far apart as in a typical record, the cuts deepen in " +
+        "the same places.",
   };
 }
 
@@ -229,25 +225,25 @@ function posture(f: Of<"posture">): Phrasing {
       : "Why is the shape flattened?";
   const answer = high
     ? strong
-      ? "This music carries a lot of its energy in the treble: it sounds bright. To show that " +
-        "brightness, Horizonte turns the shape toward you; the more treble, the more it faces " +
-        `you, almost round.${when(top, " No record here is brighter.")}`
-      : "This music carries more treble than most records here, so it sounds brighter. In the " +
-        "shape, brightness becomes tilt: the more treble, the more it faces you, rounded."
+      ? "Much of this music's energy sits in the treble, which is what makes it sound bright. " +
+        "Horizonte turns the shape toward you by that brightness: the more treble, the more it " +
+        `faces you, almost round${when(top, ". No record here is brighter")}.`
+      : "This music carries more treble than most here, so it sounds a little brighter. " +
+        "Horizonte turns the shape toward you by that brightness, and it shows a rounder face."
     : strong
       ? "Nearly all of this music's energy sits in the low end, with little treble on top: it " +
         "sounds dark. To show that, Horizonte lays the shape down, flattened, as if seen from " +
-        `the side.${when(bottom, " No record here is darker.")}`
-      : "This music carries less treble than most records here, so it sounds a little dark. In " +
-        "the shape, that becomes tilt: with less treble, it lies down and flattens.";
+        `the side${when(bottom, ". No record here is darker")}.`
+      : "This music carries less treble than most here, so it sounds a little dark. To show " +
+        "that, Horizonte tilts the shape back, and it flattens.";
   return {
     ask,
     answer,
     what: high ? "What if it had less treble?" : "What if it had more treble?",
     label: high ? "Less treble" : "More treble",
     result: high
-      ? "With a typical record's brightness, the shape tips back and flattens."
-      : "With a typical record's brightness, the shape lifts and rounds out.",
+      ? "With a typical record's treble, the shape tips back and flattens."
+      : "With a typical record's treble, the shape lifts and rounds out.",
   };
 }
 
@@ -262,17 +258,17 @@ function core(f: Of<"core">): Phrasing {
       : "Why is its dark center small?";
   const answer = high
     ? strong
-      ? "Because it plays loud, on average, from start to end. In Horizonte, " +
-        "loudness is mass: the louder the record, the bigger the body and its dark center, which " +
-        `takes over the ring around it.${when(top, " This is the loudest record here.")}`
-      : "It plays louder than most records here, start to end. In Horizonte, loudness is mass: " +
-        "the body grows and the dark center presses into the ring."
+      ? "This record plays loud from start to end. In Horizonte, loudness is mass: the louder " +
+        "the record, the bigger the body and its dark center, which takes over the ring around " +
+        `it${when(top, ". No record here is louder")}.`
+      : "This record plays louder than most here. In Horizonte, loudness is mass, so the body " +
+        "grows and the dark center presses into the ring."
     : strong
-      ? "Because it plays quietly from start to end. In Horizonte, loudness is mass: with little " +
-        "of it, the body shrinks and the dark center leaves a wide ring around it." +
-        when(bottom, " No record here is quieter.")
-      : "It plays a little quieter than most records here. Since loudness is mass in Horizonte, " +
-        "the body stays smaller and the dark center leaves the ring more room.";
+      ? "This record plays quietly from start to end. In Horizonte, loudness is mass: with " +
+        "little of it, the body shrinks and the dark center leaves a wide ring around it" +
+        `${when(bottom, ". No record here is quieter")}.`
+      : "This record plays a little quieter than most here. In Horizonte, loudness is mass, so " +
+        "the body stays smaller and the ring keeps more room.";
   return {
     ask,
     answer,

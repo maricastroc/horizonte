@@ -164,7 +164,7 @@ describe("the anatomy in Portuguese", () => {
     expect(screen.getByRole("heading", { level: 3 }).textContent).toBe(
       "De onde vêm os quatro pequenos corpos?",
     );
-    expect(screen.getByText(/Da duração: 75 minutos/)).toBeDefined();
+    expect(screen.getByText(/Eles vêm da duração\. Este disco tem 75 minutos/)).toBeDefined();
     expect(screen.getByRole("button", { name: "E se o disco fosse mais curto? ▸" })).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: /Em números/ }));
     expect(screen.getByText("34 min (mediana dos 14)")).toBeDefined();

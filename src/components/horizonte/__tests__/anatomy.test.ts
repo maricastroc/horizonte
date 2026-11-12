@@ -159,9 +159,9 @@ describe("the questions a record asks", () => {
   it("gaps are explained by the rhythm between tracks, never by dynamics", () => {
     const gaps = part(DARK, "gaps");
     expect(gaps.reading.axis).toBe("spread");
-    expect(say(gaps).answer).toMatch(/rhythm/);
+    expect(say(gaps).answer).toMatch(/beat|rhythm/);
     expect(say(gaps).answer).not.toMatch(/dynamic|volume|loud/i);
-    expect(ANATOMY_PT.phrase(gaps).answer).toMatch(/ritmo/);
+    expect(ANATOMY_PT.phrase(gaps).answer).toMatch(/batida|ritmo/);
     expect(ANATOMY_PT.phrase(gaps).answer).not.toMatch(/dinâmic|volume|forte|suave/i);
   });
 
@@ -173,8 +173,8 @@ describe("the questions a record asks", () => {
       expect(en).not.toMatch(/each change/i);
       expect(pt).not.toMatch(/cada mudança/i);
       if (q.finding.near) continue;
-      expect(en).toMatch(/whole record|only widen/);
-      expect(pt).toMatch(/como um todo|só se alargam/);
+      expect(en).toMatch(/whole ring|only open|all of them/);
+      expect(pt).toMatch(/anel inteiro|só se abrem|todos eles/);
       expect(say(q).result).toMatch(/all around the ring/);
       expect(ANATOMY_PT.phrase(q).result).toMatch(/em todo o anel/);
     }
@@ -213,6 +213,14 @@ describe("the questions a record asks", () => {
       }
       expect(say(q).what).toMatch(/overall/);
       expect(ANATOMY_PT.phrase(q).what).toMatch(/volume médio/);
+    }
+  });
+
+  it("the edge is explained by its shape alone, not by how it moves while playing", () => {
+    for (let i = 0; i < CURATED_COUNT; i++) {
+      const q = part(i, "contour");
+      expect(say(q).answer).not.toMatch(/playing|pulses/i);
+      expect(ANATOMY_PT.phrase(q).answer).not.toMatch(/ao tocar|pulsa/i);
     }
   });
 
