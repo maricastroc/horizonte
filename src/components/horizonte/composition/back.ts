@@ -5,6 +5,7 @@ import { isEngaged, progressOf } from "../state";
 import { BINARY, COLOR, GEO, MORPH, PARTICLES, RING, TRACK_RING, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
+import type { BodyFrame, FocusSatellite } from "./focus";
 import type { RingBakery, SectionLayer, SegShape } from "./ring";
 import { drawTrackRingHalf, type TrackRingView } from "./trackRing";
 import { drawRibbon, satelliteDistance, toScreen, type RibbonView } from "./ribbon";
@@ -36,6 +37,8 @@ export interface BackDeps {
   ribbon?: RibbonView | null;
   ringDim?: number;
   layer?: SectionLayer | null;
+  compare?: SegShape | null;
+  frame?: BodyFrame | null;
 }
 
 export interface LandscapeView {
@@ -93,6 +96,7 @@ function drawSatellites(
   fade: number,
   ink: string,
   ribbon: RibbonView | null = null,
+  out: FocusSatellite[] | null = null,
 ) {
   if (fade <= 0.01) return;
   x.save();
@@ -105,6 +109,8 @@ function drawSatellites(
     const py = by + Math.sin(sat.angle) * dist * R * m.flatten;
     const r = satRadiusOf(m, sat) * R;
     const a = fade * sat.weight;
+    const rr = r * (1 + MORPH.satRim * 0.5);
+    out?.push({ x: px, y: py, r: rr, ry: rr * m.flatten, w: a });
 
     x.globalAlpha = a * 0.95;
     x.fillStyle = COLOR.body;
@@ -300,6 +306,15 @@ export function drawBack(
   const bx = g.cx;
   const by = g.cy;
   const M = L.staged ? Math.min(W, 2 * box.halfH) : Math.min(W, H);
+  const frame = deps.frame ?? null;
+  if (frame) {
+    frame.bx = bx;
+    frame.by = by;
+    frame.R = g.R;
+    frame.flatten = morph.flatten;
+    frame.rot = s.ringRot;
+    frame.m = morph;
+  }
 
   x.fillStyle = COLOR.void;
   x.fillRect(0, 0, W, H);
@@ -361,7 +376,17 @@ export function drawBack(
   const R = g.R;
   const ribbon = deps.ribbon ?? null;
   const rib = ribbon ? ribbon.alpha : 0;
-  drawSatellites(x, bx, by, R, morph, s.fadeSel * (1 - s.mix), inkA(0.9), ribbon);
+  drawSatellites(
+    x,
+    bx,
+    by,
+    R,
+    morph,
+    s.fadeSel * (1 - s.mix),
+    inkA(0.9),
+    ribbon,
+    frame ? frame.satellites : null,
+  );
 
   if (s.fadeSel < 0.98) {
     drawRing(
@@ -394,7 +419,7 @@ export function drawBack(
             inkA(1),
             field,
             fieldVersion,
-            land ? land.shape : null,
+            land ? land.shape : (deps.compare ?? null),
             deps.layer ?? null,
           );
     drawRing(
@@ -516,6 +541,7 @@ export function drawBack(
   x.globalAlpha = (1 - s.mix) * (0.92 - s.play * 0.25);
   x.fillStyle = COLOR.paper;
   x.fillText(A.artist, lk.margin, lk.ay);
+  if (frame) frame.name = { text: A.artist, font: x.font, x: lk.margin, y: lk.ay };
   if (s.mix > 0 && ALBUMS[s.fuseAlb]) {
     x.globalAlpha = s.mix * (0.92 - s.play * 0.25);
     x.fillText(

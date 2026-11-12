@@ -26,6 +26,9 @@ const BASE: Snapshot = {
   variant: "desktop",
   announce: "",
   fault: null,
+  focus: null,
+  compare: false,
+  invite: null,
 };
 
 function fakeEngine(initial: Partial<Snapshot> = {}) {
@@ -66,6 +69,11 @@ function fakeEngine(initial: Partial<Snapshot> = {}) {
     seekFraction: register("seekFraction"),
     setVolume: register("setVolume"),
     setMuted: register("setMuted"),
+    openAnatomy: register("openAnatomy"),
+    closeAnatomy: register("closeAnatomy"),
+    setAnatomyFocus: register("setAnatomyFocus"),
+    previewAnatomy: register("previewAnatomy"),
+    setCompare: register("setCompare"),
     volume: 1,
     muted: false,
     frameOut: frame,
@@ -691,5 +699,120 @@ describe("compact composition — device edges and touch targets", () => {
     mount();
     const tc = screen.getByText(/00:00 \/ 00:00/);
     expect(tc.parentElement?.className).toContain("flex-wrap");
+  });
+});
+
+describe("anatomy", () => {
+  const EWORLD = ALBUMS.findIndex((a) => a.id === "zero-project-e-world");
+  const MKULTRA = ALBUMS.findIndex((a) => a.id === "meho-mkultra");
+
+  const openAnatomy = () => fireEvent.click(screen.getByRole("tab", { name: "Anatomy" }));
+
+  it("sits beside the tracks as a second view of the same rail", () => {
+    mount({ scale: "album", alb: EWORLD });
+    const tabs = within(trackRail()).getAllByRole("tab");
+    expect(tabs.map((t) => t.textContent)).toEqual(["Tracks", "Anatomy"]);
+    expect(tabs[0].getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("opening it tells the engine and lists the parts of the record", () => {
+    const fake = mount({ scale: "album", alb: EWORLD });
+    openAnatomy();
+    expect(fake.last("openAnatomy")).toBeDefined();
+    const panel = screen.getByRole("tabpanel");
+    const rows = within(panel)
+      .getAllByRole("button")
+      .map((b) => b.getAttribute("aria-label"));
+    expect(rows).toHaveLength(7);
+    expect(rows).toEqual(expect.arrayContaining(["Satellites: four", "Gaps: narrow", "Name: 704"]));
+  });
+
+  it("pointing a part previews it, and clicking pins it", () => {
+    const fake = mount({ scale: "album", alb: EWORLD });
+    openAnatomy();
+    const row = screen.getByRole("button", { name: "Strata: deep" });
+    fireEvent.focus(row);
+    expect(fake.last("previewAnatomy")?.args).toEqual(["strata"]);
+    fireEvent.click(row);
+    expect(fake.last("setAnatomyFocus")?.args).toEqual(["strata"]);
+    expect(row.getAttribute("aria-expanded")).toBe("false");
+    act(() => fake.update({ focus: "strata" }));
+    const pinned = screen.getByRole("button", { name: "Strata: deep" });
+    expect(pinned.getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("a pinned part explains itself with its measurement and offers the median", () => {
+    mount({ scale: "album", alb: EWORLD, focus: "satellites" });
+    openAnatomy();
+    expect(screen.getByText(/becomes territory/)).toBeDefined();
+    expect(screen.getByText("75 min · longest of 14")).toBeDefined();
+    const offer = screen.getByRole("button", { name: /median length of the 14 albums, 34 min/ });
+    expect(offer).toBeDefined();
+  });
+
+  it("the comparison is a visible toggle, not a hidden gesture", () => {
+    const fake = mount({ scale: "album", alb: EWORLD, focus: "satellites" });
+    openAnatomy();
+    const button = screen.getByRole("button", { name: /median length/ });
+    expect(button.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(button);
+    expect(fake.last("setCompare")?.args).toEqual([true]);
+  });
+
+  it("while comparing, the rail says what changed, from and to what, and that it is temporary", () => {
+    mount({ scale: "album", alb: EWORLD, focus: "satellites", compare: true });
+    openAnatomy();
+    const panel = screen.getByRole("tabpanel");
+    expect(panel.textContent).toContain("Length · 75 min → 34 min");
+    expect(panel.textContent).toContain("Median of the 14 · temporary");
+    const back = screen.getByRole("button", { name: /Back to the record/ });
+    expect(back.getAttribute("aria-pressed")).toBe("true");
+    expect(panel.querySelector("[aria-live]")?.textContent).toBe(
+      "Length set to the median of the 14 albums: 34 min instead of 75 min. Temporary.",
+    );
+  });
+
+  it("Escape returns to the record before it leaves the album", () => {
+    const fake = mount({ scale: "album", alb: EWORLD, focus: "satellites", compare: true });
+    openAnatomy();
+    fireEvent.keyDown(screen.getByRole("tabpanel"), { key: "Escape" });
+    expect(fake.last("setCompare")?.args).toEqual([false]);
+  });
+
+  it("a record already at the median says so instead of comparing", () => {
+    mount({ scale: "album", alb: MKULTRA, focus: "core" });
+    openAnatomy();
+    expect(screen.getByText(/Already at the median of the 14/)).toBeDefined();
+    expect(screen.queryByRole("button", { name: /median loudness/ })).toBeNull();
+  });
+
+  it("the invitation names the record's own fact and opens the anatomy on it", () => {
+    const fake = mount({
+      scale: "album",
+      alb: EWORLD,
+      invite: { part: "satellites", line: "Four satellites. The music put them there." },
+    });
+    expect(screen.getByText("Four satellites. The music put them there.")).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: /See why/ }));
+    expect(fake.last("openAnatomy")).toBeDefined();
+    expect(fake.last("setAnatomyFocus")?.args).toEqual(["satellites"]);
+    expect(screen.getByRole("tab", { name: "Anatomy" }).getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("going back to the tracks releases the part", () => {
+    const fake = mount({ scale: "album", alb: EWORLD });
+    openAnatomy();
+    fireEvent.click(screen.getByRole("tab", { name: "Tracks" }));
+    expect(fake.last("closeAnatomy")).toBeDefined();
+    expect(within(trackRail()).getByText(ALBUMS[EWORLD].tracks[0].title)).toBeDefined();
+  });
+
+  it("on touch every target is large enough", () => {
+    mount({ scale: "album", alb: EWORLD, variant: "mobile", focus: "satellites" });
+    openAnatomy();
+    for (const tab of screen.getAllByRole("tab")) expect(tab.className).toContain("min-h-[44px]");
+    const rows = screen.getAllByRole("button", { expanded: false });
+    for (const row of rows) expect(row.className).toContain("min-h-[48px]");
+    expect(screen.getByRole("button", { name: /median length/ }).className).toContain("min-h-[44px]");
   });
 });

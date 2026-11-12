@@ -53,7 +53,7 @@ diferenciação real em nove álbuns para ganhar 0,00003 num.
 | P2 | Volume + duração (peso) | Força da lente `m0k` | ×0,88 → ×1,16 | Massa maior entorta mais espaço. Um disco "pesado" é denso *e* extenso, daí a combinação 0,68/0,32. | ±16%: acima disso a tipografia monumental se dobra sobre si mesma e o lockup quebra. |
 | P3 | Volume | Raio do horizonte `m0h` | — | **Substituído por M3.** O horizonte deixou de ser um multiplicador de ±7% sobre um raio fixo e passou a ser derivado de `coreRatio`, que é uma fração do circuito do álbum. | — |
 | P4 | Dinâmica | **Teto de perturbação ao vivo** | 0,05 → 0,20 | A correção estrutural: a amplitude com que o mundo reage passa a ser propriedade do disco. Comprimido quase não respira; dinâmico incha visivelmente. | Teto duro 0,20 (o handoff fixa ±15% como referência). `prefers-reduced-motion` zera. |
-| P5 | Dinâmica | Amplitude do envelope na espessura do anel | — | **Substituído por M4 e M5.** A dinâmica saiu da espessura e foi para o contorno: ela agora esculpe o relevo do corpo e abre as falhas entre setores. | — |
+| P5 | Dinâmica | Amplitude do envelope na espessura do anel | — | **Substituído por M4.** A dinâmica saiu da espessura e foi para o contorno: ela agora esculpe o relevo do corpo. As falhas entre setores são de M10, não da dinâmica. | — |
 | P6 | Brilho | Achatamento do anel | — | **Substituído por M2**, com o intervalo alargado de [0,57; 0,67] para [0,46; 0,90] e aplicado ao corpo inteiro, não só ao anel. | — |
 | P7 | Brilho | Dureza do rim light (expoente `uRim`) | 2,6 → 5,0 | Brilho de timbre = dureza de luz. Mesma direção que a direção de arte propôs para bordas de sombra. | **O brilho move só o expoente.** Lóbulo e direção continuam fora do alcance do timbre — a direção agora pertence ao tempo (P12), e nada mais escreve nela. |
 | P8 | Duração | Inércia da navegação (lerp de `nav`) | 6,2 → 4,3 | Disco longo é mais pesado de atravessar. | Nunca abaixo de 4,2, senão o snap parece travamento. **A inércia é só do gesto no mundo** — réguas, teclado e clique continuam exatos. |
@@ -95,12 +95,12 @@ desenho — que fazem dez mundos diferentes continuarem sendo o mesmo produto:
 | M2 | Brilho | Achatamento do corpo | 0,543 → 0,900 (1,66×) | Discos escuros deitam; brilhantes abrem. Mesma direção de P6, com o intervalo alargado de ±13% para ±66% e aplicado ao corpo inteiro. | Nunca fora de [0,46; 0,90]: abaixo vira linha, acima perde a leitura de perfil. |
 | M3 | Volume | Raio do núcleo / circuito | 0,250 → 0,465 (1,86×) | Disco alto tem núcleo que engole o próprio circuito; disco silencioso tem núcleo pequeno num campo aberto. A coroa é o resto: `(1 − núcleo) × 0,62`. | O alvo do corpo no hit-test nunca pode invadir a coroa — é limitado por `rMin`. |
 | M4 | Dinâmica | Relevo do contorno | 0,055 → 0,313 (5,66×) | Disco dinâmico tem silhueta esculpida; comprimido tem contorno liso. É P5 promovido de espessura para forma. | Reconstrução de baixa ordem (harmônicos 2–7): morfologia, nunca serrilhado. |
-| M5 | Dinâmica | Largura das falhas entre setores | 0,008 → 0,052 volta (6,34×) | Mesma dinâmica de M4, no mesmo gesto: o que esculpe o contorno também rasga a coroa. **Não são dois eixos independentes** — é um fato musical em dois registros. | Falha limitada a 42% do próprio setor, para que nenhum setor suma. |
+| M5 | Dinâmica | Largura das falhas entre setores | — | **Substituído por M10, e nunca implementado assim.** Desde a primeira versão da morfologia (`93519a8`), a largura das falhas vem só da heterogeneidade de pulso entre faixas (`fragment`, `morphology.ts`); a dinâmica fica inteira no relevo (M4). Corrigido em 11/11/2026, quando a Anatomia passou a explicar as falhas na tela e o texto precisava dizer o mesmo que o código. | — |
 | M6 | Espectro do envelope (harmônicos 2–7) | Distribuição dos lobos | curvas quase ortogonais entre discos (r = 0,007) | A macroforma do disco — como ele sobe e desce ao longo da duração inteira — vira a forma do corpo. É o sinal mais distintivo que o acervo tem, e antes era gasto num tremor de espessura. | Normalizado por álbum: a *distribuição* dos lobos é a identidade, a *amplitude* pertence a M4. Sem isso, o eixo correlacionaria −0,77 com o brilho. |
 | M7 | Harmônico 1 do envelope | Excentricidade do corpo | 0,018 → 0,240 (13,2×) | Um disco que cresce ou decai ao longo da duração tem a massa deslocada para o lado onde a energia está. | Amortecida por `zoom`: na coleção o corpo volta à âncora, senão dez corpos deslocados viram ruído. |
 | M8 | Pulso | Estratificação em camadas | 0,052 → 0,824 (15,9×) | Periodicidade é repetição; repetição no espaço são camadas. As conchas também **expandem** a coroa, senão a estratificação seria só alta frequência e sumiria de relance. | Mesmo fato musical de P15 (giro do campo) em outro registro — um é campo, o outro é forma. Máximo de três conchas. |
 | M9 | Duração | Dispersão e satélites | 0 → 4 corpos | Um disco extenso é território: o mundo se espalha em corpos secundários em vez de crescer. Contagem contínua por peso, nunca discreta. | Arco permitido de −2,6 a +2,0 rad, para que nenhum satélite caia sobre o lockup. Nenhum satélite passa de 0,68 do núcleo (`MORPH.satCap`): acima disso a cena lê dois corpos disputando o centro, não um corpo com satélite. O teto reescala a órbita inteira de uma vez, preservando a hierarquia de M11 entre os satélites. |
-| M10 | Heterogeneidade de pulso entre faixas | Fragmentação da coroa | 0,175 → 0,879 (5,0×) | Um disco cujas faixas não compartilham grade se estilhaça; um disco coeso é banda contínua. **Eixo novo, e o mais independente do conjunto**: máximo \|r\| = 0,35 contra os cinco descritores de álbum. | Combina-se com M5, que responde à dinâmica. |
+| M10 | Heterogeneidade de pulso entre faixas (p90 − p10 do pulso por faixa) | Largura das falhas entre setores: a fragmentação da coroa | 0,004 → 0,052 volta de falha, ancorada em 0,12 → 0,75 de espalhamento; no acervo, de 0,00 (*Dust. Time.. Gravity*) a 0,88 (*Dark Thoughts*) | Um disco cujas faixas não compartilham grade se estilhaça; um disco coeso é banda contínua. **Eixo novo, e o mais independente do conjunto**: máximo \|r\| = 0,35 contra os cinco descritores de álbum. | Falha limitada a 42% do próprio setor (`ring.ts`), para que nenhum setor suma. É o único canal das falhas: a dinâmica não as alarga (ver M5). |
 | M11 | Heterogeneidade de nível entre faixas | Desigualdade entre os corpos | 0,072 → 0,476 (6,6×) | Um disco de peças desiguais tem um corpo dominante e satélites pequenos; um disco parelho tem corpos comparáveis. Máximo \|r\| = 0,31 contra os cinco descritores. | Só a hierarquia; a contagem pertence a M9. |
 | M12 | Nível médio da faixa | Espessura da placa do setor | 0,52 → 1,34 da banda | Cada faixa é uma placa de espessura própria. Constante dentro do setor: é o que separa morfologia de waveform. | Substitui a modulação contínua de P5, que produzia serrilhado na borda interna. |
 
@@ -1093,6 +1093,90 @@ de *Чайка* e *lebar* caía de 4,6 para 3,8 Hz e de 2,1 para 1,7 Hz.
 * Discos trazidos pelo usuário não têm essa análise no navegador e ficam com a
   resposta neutra.
 * O jato continua fora de P4, como registrado na auditoria acima.
+
+## Leitura — a Anatomia e a Contraprova
+
+**É o comportamento padrão.** Sem nada aberto, o quadro é o de antes: o shader
+só lê a máscara quando a intensidade do isolamento passa de zero, e o plano de
+trás só registra geometria quando há uma parte em foco.
+
+O mundo continua sem palavras e sem tooltip (ver "o cursor sabe o que está sob
+ele"). As palavras entram só na régua mono, e só quando o visitante abre a aba
+**Anatomy**, ao lado de **Tracks**. O mundo prova; a régua nomeia.
+
+### O que cada linha diz
+
+Cada linha é uma parte do corpo, uma palavra, o valor medido e a posição entre
+os discos. As frases ficam em `anatomy.ts` e dizem só o que o código faz:
+
+| Parte | Descritor | Onde nasce | Contraprova muda | Assada na coroa |
+| --- | --- | --- | --- | --- |
+| Satellites | Duração (M9); tamanhos pela desigualdade de nível entre faixas (M11) | `morphologyOf` → `satellites` | `circuit`, `spread`, satélites | não |
+| Gaps | Espalhamento do pulso entre faixas (M10) | `fragment` → `gapOf` | `fragment` | sim |
+| Strata | Pulso (M8) | `strata` → `shellsAt` | `strata` | sim |
+| Contour | Dinâmica (M4); os lobos seguem o envelope (M6) | `relief` → `outerAt` | `relief` | sim |
+| Posture | Brilho (M2, P7) | `flatten` | `flatten` | não |
+| Core | Volume (M1, M3) | `coreRatio`, `circuit`, `bandRatio` | os três | sim |
+| Name | Volume (P1) | `artistWeight` | — | — |
+
+A cor não tem linha: a régua termina dizendo que ela vem da capa, não do som.
+
+### Isolamento: subtrair, e dar contraluz ao que é escuro
+
+A parte é desenhada numa máscara pequena (¼ da composição) com a mesma
+geometria do plano de trás: satélites pelas elipses de `drawSatellites`, coroa
+por polígonos de `shellsAt` e `gapOf`, núcleo pelo horizonte do shader, nome
+pelo mesmo texto. O shader lê a máscara em `uv + offUv`, a coordenada já
+deslocada pela lente, então o destaque cai exatamente sobre o que se vê, mesmo
+perto da massa. Nenhum elemento DOM é posicionado sobre o canvas.
+
+O canal vermelho mantém a parte; fora dela a exposição cai 80%. Satélites e
+núcleo são escuros e sumiam assim. Para eles o canal verde desenha uma
+contraluz suave na tinta do disco atrás do corpo (alcance 2,4 e 1,55 do raio,
+intensidade 0,3), que recorta a silhueta sem contorno e sem brilho. A máscara
+só é redesenhada quando a geometria muda.
+
+### Contraprova: a mediana dos 14, só para a forma
+
+A Contraprova recalcula a morfologia com **um único descritor** trocado pela
+mediana dos 14 discos curados (`compareSignature`, `compareMorphology`). Nada
+no disco é alterado: assinatura e `MORPH` continuam os mesmos objetos, e a
+reação ao vivo segue a do disco. Para o espalhamento do pulso, os desvios de
+cada faixa em torno da mediana do disco são escalados até a mediana do acervo;
+num disco sem espalhamento (*Dust. Time.. Gravity*), uma rampa entre as faixas.
+
+As partes desenhadas a cada quadro (postura, satélites, escala) mudam de forma
+contínua em 1,1 s. As assadas na coroa (falhas, estratos, contorno, núcleo)
+passam por três assados incrementais (4 ms por quadro) com a mesma dissolução
+de 0,45 s da paisagem. A régua mostra a característica, o valor do disco, a
+mediana e que a mudança é temporária; o botão é um alternador visível, e
+segurar faz uma espiada. Esc, a volta para Tracks, outro disco ou a coleção
+devolvem o disco.
+
+Medido com o motor real: a volta é exata (0,00% dos pixels diferem do quadro
+anterior à Contraprova). Segurando, mudam de 1,6% (*e-world*, satélites, numa
+cena escurecida) a 22% (*All Systems Go*, que ganha dois satélites). Um disco
+cujo valor já está a menos de 0,03 da mediana diz isso em vez de oferecer a
+comparação (*MKUltra*, volume).
+
+### O convite
+
+Uma vez por navegador (`horizonte:anatomy` no `localStorage`): depois de 9 s
+num disco, sem cerimônia em curso, a aba de faixas mostra uma linha com o fato
+mais extremo daquele disco ("Those breaks in the crown were measured, not
+drawn.") e "See why ›", que abre a Anatomia nessa parte. Some em 16 s, ao sair
+do disco ou ao abrir a Anatomia, e não volta. Quem abre a Anatomia antes nunca
+é convidado.
+
+### O que não fica resolvido
+
+* Apontar uma parte no mundo ainda não acende a linha: o vínculo vai da régua
+  para o mundo, não do mundo para a régua. O `hitTest` só distingue corpo,
+  setor e vazio.
+* Discos trazidos pelo visitante ganham a Anatomia inteira, mas as posições
+  passam a ser "de 15" e a mediana continua a dos 14.
+* No celular, a Anatomia ocupa a faixa da lista; com o palco a 46% da altura, o
+  isolamento é visível, mas pequeno.
 
 ## O que não muda
 

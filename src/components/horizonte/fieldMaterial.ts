@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import frag from "@/shaders/field.frag.glsl";
 import vert from "@/shaders/field.vert.glsl";
-import { DPR_MAX } from "./tokens";
+import { ANATOMY, DPR_MAX } from "./tokens";
 
 export interface FieldUniforms {
   uBack: { value: THREE.Texture | null };
@@ -29,6 +29,8 @@ export interface FieldUniforms {
   uFlat: { value: number };
   uWorld: { value: number };
   uGuard: { value: THREE.Vector3 };
+  uFocus: { value: THREE.Texture | null };
+  uFocusMix: { value: THREE.Vector3 };
   [key: string]: THREE.IUniform;
 }
 
@@ -59,6 +61,8 @@ export function createFieldUniforms(): FieldUniforms {
     uFlat: { value: 1 },
     uWorld: { value: 1 },
     uGuard: { value: new THREE.Vector3(0, 1, 1) },
+    uFocus: { value: null },
+    uFocusMix: { value: new THREE.Vector3(0, ANATOMY.focus.dim, ANATOMY.focus.light) },
   };
 }
 
@@ -96,6 +100,7 @@ export function createFieldGL(
   canvas: HTMLCanvasElement,
   backCanvas: HTMLCanvasElement,
   frontCanvas: HTMLCanvasElement,
+  focusCanvas: HTMLCanvasElement | null = null,
 ): FieldGL {
   THREE.ColorManagement.enabled = false;
 
@@ -113,6 +118,8 @@ export function createFieldGL(
   const front = planeTexture(frontCanvas);
   uniforms.uBack.value = back;
   uniforms.uFront.value = front;
+  const focus = focusCanvas ? planeTexture(focusCanvas) : null;
+  uniforms.uFocus.value = focus;
 
   const material = new THREE.RawShaderMaterial({
     vertexShader: vert,
@@ -148,12 +155,14 @@ export function createFieldGL(
     invalidate: () => {
       back.dispose();
       front.dispose();
+      focus?.dispose();
     },
     dispose: () => {
       mesh.geometry.dispose();
       material.dispose();
       back.dispose();
       front.dispose();
+      focus?.dispose();
       renderer.dispose();
     },
   };

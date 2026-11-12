@@ -17,7 +17,10 @@ import { COVER_SIZE } from "./cover";
 
 const C = RING.buffer / 2;
 
-const MIN_TURN = 1.4 / 360;
+export const MIN_TURN = 1.4 / 360;
+
+export const gapOf = (m: Pick<AlbumMorphology, "fragment">, span: number) =>
+  Math.min(m.fragment, Math.max(0, span - MIN_TURN), span * 0.42) / 2;
 
 function buffer(): HTMLCanvasElement {
   const c = document.createElement("canvas");
@@ -126,7 +129,7 @@ export class SectorBake {
       const b0 = bounds[k];
       const b1 = bounds[k + 1];
       const span = b1 - b0;
-      const g = Math.min(m.fragment, Math.max(0, span - MIN_TURN), span * 0.42) / 2;
+      const g = gapOf(m, span);
       const t0 = b0 + g;
       const t1 = b1 - g;
 
@@ -340,6 +343,7 @@ export interface SegShape {
   version: number;
   time: number;
   span?: number;
+  density?: number;
 }
 
 export class RingBakery {
@@ -429,7 +433,16 @@ export class RingBakery {
       if (shape) {
         const target = this.job ? this.job.canvas : (this.segSpare ?? buffer());
         this.segSpare = null;
-        this.job = new SectorBake(cover.canvas, m.bounds, m, sel, hover, active, target, RING.landscapeDensity);
+        this.job = new SectorBake(
+          cover.canvas,
+          m.bounds,
+          m,
+          sel,
+          hover,
+          active,
+          target,
+          shape.density ?? RING.landscapeDensity,
+        );
       } else {
         const baked = bakeSectors(cover.canvas, m.bounds, m, sel, hover, active);
         this.segSlices = baked.canvas;

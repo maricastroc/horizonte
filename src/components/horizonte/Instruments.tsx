@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { AnatomyInvite, AnatomyPanel, AnatomyTabs, type AlbumView } from "./AnatomyRail";
 import Ceremony from "./Ceremony";
 import { ALBUMS } from "./content";
 import { FULL_BANDS } from "./composition/bands";
@@ -28,6 +29,9 @@ const DEFAULT_SNAPSHOT: Snapshot = {
   variant: "desktop",
   announce: `Collection · ${ALBUMS.length} bodies`,
   fault: null,
+  focus: null,
+  compare: false,
+  invite: null,
 };
 
 const noop = () => () => {};
@@ -85,6 +89,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
+  const [view, setView] = useState<AlbumView>("tracks");
 
   useEffect(() => {
     if (!engine) return;
@@ -125,6 +130,22 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   }, [engine, snap.variant]);
 
   const intent = useCallback(() => engine?.markIntent(), [engine]);
+
+  const onView = useCallback(
+    (v: AlbumView) => {
+      setView(v);
+      if (v === "anatomy") engine?.openAnatomy();
+      else engine?.closeAnatomy();
+    },
+    [engine],
+  );
+
+  const openInvite = useCallback(() => {
+    const part = snap.invite?.part ?? null;
+    setView("anatomy");
+    engine?.openAnatomy();
+    if (part) engine?.setAnatomyFocus(part);
+  }, [engine, snap.invite]);
 
   const pick = useCallback(() => fileRef.current?.click(), []);
 
@@ -443,6 +464,33 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     />
   );
 
+  const albumView = (dense: boolean) => (
+    <>
+      <AnatomyTabs
+        view={view}
+        onView={onView}
+        invited={!!snap.invite}
+        compact={dense}
+        ink={ink}
+        enabled={trackRailOn}
+      />
+      {view === "tracks" ? (
+        <div id="album-panel-tracks" role="tabpanel" aria-labelledby="album-tab-tracks">
+          <AnatomyInvite
+            invite={snap.invite}
+            onOpen={openInvite}
+            compact={dense}
+            ink={ink}
+            enabled={trackRailOn}
+          />
+          <ul>{trackRows}</ul>
+        </div>
+      ) : (
+        <AnatomyPanel engine={engine} snap={snap} compact={dense} ink={ink} enabled={trackRailOn} />
+      )}
+    </>
+  );
+
   const hint = snap.scale === "collection" && (
     <p
       aria-hidden
@@ -578,7 +626,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             bottom: pct(1 - b.list),
           }}
         >
-          <ul>{trackRows}</ul>
+          {albumView(true)}
         </nav>
 
         <div
@@ -657,7 +705,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               : "pointer-events-none max-h-0 flex-none overflow-hidden opacity-0",
           ].join(" ")}
         >
-          <ul>{trackRows}</ul>
+          {albumView(false)}
         </nav>
       </div>
 
