@@ -15,7 +15,7 @@ vi.mock("../fieldMaterial", async (importReal) => {
 });
 
 import { AudioAnalysis, NEUTRAL_RESPONSE, type Response } from "../audio/analysis";
-import { ALBUMS, type AlbumWithSignature } from "../content";
+import { ALBUMS, registerAlbum, resetCatalog, type AlbumWithSignature } from "../content";
 import { MOTIONS } from "../content/motion.generated";
 import { boundsOf } from "../content/signature";
 import { FieldEngine } from "../engine/FieldEngine";
@@ -306,18 +306,15 @@ describe("engine wiring", () => {
     env.restore();
   });
 
-  it("without the experiment the bus keeps the neutral response", () => {
+  it("at rest, before anything plays, the response is neutral", () => {
     start();
-    const alb = ALBUMS.findIndex((a) => a.id === "jono-terbakar-lebar");
-    engine.playTrack(alb, 1);
-    run(6);
-    expect(internals().bus.response).toBe(NEUTRAL_RESPONSE);
+    run(2);
     expect(internals().motion).toEqual(NEUTRAL_MOTION);
+    expect(internals().bus.response).toBe(internals().motion);
   });
 
-  it("with the experiment the playing track's response reaches the bus", () => {
+  it("the playing track's response reaches the bus", () => {
     start();
-    engine.experiments.motion = true;
     const alb = ALBUMS.findIndex((a) => a.id === "jono-terbakar-lebar");
     engine.playTrack(alb, 1);
     run(8);
@@ -328,14 +325,19 @@ describe("engine wiring", () => {
     expect(internals().bus.response).toBe(motion);
   });
 
-  it("turning the experiment off restores the neutral response at once", () => {
+  it("a record without a motion analysis keeps the neutral response", () => {
     start();
-    engine.experiments.motion = true;
-    engine.playTrack(0, 0);
-    run(4);
-    engine.experiments.motion = false;
-    run(0.1);
-    expect(internals().bus.response).toBe(NEUTRAL_RESPONSE);
-    expect(internals().motion).toEqual(NEUTRAL_MOTION);
+    const local = registerAlbum({ ...ALBUMS[0], id: "local-without-motion" });
+    try {
+      engine.playTrack(local, 0);
+      run(8);
+      expect(motionQualitiesOf(ALBUMS[local], 0)).toBeNull();
+      const motion = internals().motion;
+      for (const key of Object.keys(NEUTRAL_MOTION) as (keyof MotionResponse)[]) {
+        expect(motion[key]).toBeCloseTo(NEUTRAL_MOTION[key], 6);
+      }
+    } finally {
+      resetCatalog();
+    }
   });
 });

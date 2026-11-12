@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { NEUTRAL_RESPONSE, curvature } from "../audio/analysis";
+import { curvature } from "../audio/analysis";
 import { AudioBus, type VisualAudioState } from "../audio/bus";
 import type { PlaybackFault } from "../audio/playback";
 import {
@@ -123,12 +123,6 @@ const approach = (v: number, target: number, step: number) =>
 
 const HORIZON_REF = 0.096;
 
-function readExperiment(name: string) {
-  const search = (globalThis as { location?: { search?: string } }).location?.search ?? "";
-  if (!search) return false;
-  return (new URLSearchParams(search).get("x") ?? "").split(",").includes(name);
-}
-
 const CATALOG: Catalog = {
   get size() {
     return ALBUMS.length;
@@ -174,9 +168,6 @@ export class FieldEngine implements InputActions {
   private bias: TrackBias = { ...NEUTRAL_BIAS };
   private lightSweep = 0;
   private m1 = { x: 0, y: 0, k: 0, h: 0, alb: -1, ready: false };
-  readonly experiments = {
-    motion: false,
-  };
   private readonly motion: MotionResponse = { ...NEUTRAL_MOTION };
   private motionTarget: MotionResponse = NEUTRAL_MOTION;
   private motionAlb = -2;
@@ -251,7 +242,6 @@ export class FieldEngine implements InputActions {
     this.unsubscribeCatalog = onCatalogChange((i) => this.syncCatalog(i));
 
     this.audioState = this.bus.update(0);
-    this.experiments.motion = readExperiment("motion");
     this.reduced = prefersReducedMotion();
     this.coarse = hasCoarsePointer();
     try {
@@ -1017,16 +1007,6 @@ export class FieldEngine implements InputActions {
   }
 
   private motionStep(dt: number) {
-    if (!this.experiments.motion) {
-      if (this.motionAlb !== -2) {
-        this.motionAlb = -2;
-        this.motionTrk = -2;
-        this.motionTarget = NEUTRAL_MOTION;
-        Object.assign(this.motion, NEUTRAL_MOTION);
-        this.bus.setResponse(NEUTRAL_RESPONSE);
-      }
-      return;
-    }
     const s = this.st;
     if (s.playAlb !== this.motionAlb || s.trk !== this.motionTrk) {
       this.motionAlb = s.playAlb;
