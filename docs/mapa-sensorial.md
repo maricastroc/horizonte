@@ -314,8 +314,8 @@ temperamento dele: quão rápido sobe, quanto sustenta, quanto do teto P4 o even
 típico alcança e se vai para a massa ou para a luz. Parado, e para discos sem essa
 análise (os trazidos pelo visitante, ou um disco novo antes de rodar o script), a
 análise recebe a resposta neutra (τ 0,12 s e 1,2 s, acento relativo ao hábito,
-roteamento 1:1), e o mundo em repouso não muda. `motionStep` desliza para a
-resposta da faixa nova em cerca de um segundo.
+roteamento 1:1). `motionStep` desliza para a resposta da faixa nova em cerca de
+um segundo. Em repouso, a mesma assinatura vira respiração (abaixo).
 
 `scripts/analyze-motion.py` mede cada faixa no cache de WAV e gera
 `content/motion.generated.ts`. A qualidade da faixa é a âncora do disco
@@ -337,6 +337,31 @@ neutra), lente variando 1,9% a 6,2% durante a reprodução (0,2–3,4% com a neu
 teto alcançado em
 0,6% a 12,8% dos quadros, e o disco reconhecível só pelo movimento em 26% dos
 casos (acaso 7%).
+
+### Parado: a respiração
+
+Sem música, cada disco respira com o temperamento que teria tocando. A âncora
+do disco (média das faixas ponderada pela duração, a mesma das qualidades por
+faixa) é posta contra a amplitude do acervo, para que os quatorze discos ocupem
+a faixa inteira (`breath.ts`):
+
+| Qualidade | Respiração | No acervo |
+| --- | --- | --- |
+| Nitidez | Subida: 3% a 42% do período | um tique em *Чайка* e *e-world*, um inchaço em *The Sheltering Sky* |
+| Sustentação | Período sem grade (3,6 a 6,8 s) e queda (7% a 55% do período) | 4,0 s (*All Systems Go*, *Sounds to Ascension*) a 6,8 s (*lebar*) |
+| Grade | Com pulso em ≥ 50% da duração, o período é um número inteiro de batidas (4, 8 ou 16; mediana ponderada das batidas), nunca abaixo de 3,2 s | *Le Morte d'Abby* e *e-world*: 8 × 0,67 s = 5,4 s; *Чайка*: 4 × 0,93 s = 3,7 s |
+| Microdinâmica | Profundidade 0,6 a 1 | |
+| Peso do grave | Divide entre massa (lente +14%, horizonte +6%) e luz (borda e especular até +80%) | |
+
+Cada pulso é uma subida exponencial seguida de queda exponencial, somado
+periodicamente com as caudas dos ciclos anteriores: o ciclo nunca salta.
+O foco respira em massa e luz; durante a navegação, a respiração é a mistura dos
+dois discos vizinhos pela fração de `nav`. Cada vizinho respira na própria fase
+(razão áurea × índice): escala até 1,4% e borda até +60%.
+
+Tocando, colapsando ou fundindo, o ganho cai a zero em cerca de um segundo e a
+música assume. Com movimento reduzido, ou num disco sem análise de movimento,
+não há respiração. Medido em 1440×900: o brilho da região do foco varia 3–4%.
 
 ## A leitura — "Why this shape?"
 

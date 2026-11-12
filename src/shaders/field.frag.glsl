@@ -108,13 +108,13 @@ vec3 relief(vec3 col, vec2 q, float smear){
     float base = pow(hv.z, 22.0);
     float sp = max(0.0, pow(max(dot(n, hv), 0.0), 22.0) - base) / (1.0 - base);
     float body = smoothstep(0.03, 0.16, max(col.r, max(col.g, col.b)));
-    vec3 keyed = col * lit + mix(uInk, vec3(1.0), 0.4) * sp * body * 0.5;
+    vec3 keyed = col * lit + mix(uInk, vec3(1.0), 0.4) * sp * body * 0.5 * (1.0 + uReliefBand.w);
     float slope = length(g);
     vec2 gn = slope > 1e-4 ? -g / slope : vec2(0.0);
     float facing = max(dot(gn, ld), 0.0);
     float side = 0.5 + 0.5 * max(dot(rad, ld), 0.0);
     float edge = smoothstep(0.08, 0.9, slope) * facing * facing * side;
-    vec3 backlit = col * 0.9 + mix(uInk, vec3(1.0), 0.4) * edge * 1.1;
+    vec3 backlit = col * 0.9 + mix(uInk, vec3(1.0), 0.4) * edge * 1.1 * (1.0 + uReliefBand.w);
     vec3 shaded = mix(keyed, backlit, uReliefBand.z);
     return mix(col, shaded, w * cov);
   }

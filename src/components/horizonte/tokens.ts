@@ -57,6 +57,24 @@ export const APPROACH = {
   satSwing: 0.9,
 } as const;
 
+export const BREATH = {
+  period: [3.6, 6.8],
+  bars: [4, 8, 16],
+  minPeriod: 3.2,
+  grid: 0.5,
+  rise: [0.03, 0.42],
+  fall: [0.07, 0.55],
+  depth: [0.6, 1],
+  mass: 0.14,
+  horizon: 0.06,
+  light: 0.8,
+  scale: 0.014,
+  rim: 0.6,
+  samples: 96,
+  lerp: 1.2,
+  phase: 0.6180339887498949,
+} as const;
+
 export const NAMES = { slide: 0.08, lag: 0.7 } as const;
 
 export const SILHOUETTE = {

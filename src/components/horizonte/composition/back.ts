@@ -3,7 +3,18 @@ import { CANVAS_LABELS, type CanvasLabels } from "../i18n/canvas";
 import type { FieldConstants } from "../field";
 import { neighborScale, outerAt, satRadiusOf, type AlbumMorphology } from "../morphology";
 import { isEngaged, progressOf } from "../state";
-import { ANATOMY, COLOR, GEO, MORPH, NAMES, PARTICLES, RING, SILHOUETTE, rgba } from "../tokens";
+import {
+  ANATOMY,
+  BREATH,
+  COLOR,
+  GEO,
+  MORPH,
+  NAMES,
+  PARTICLES,
+  RING,
+  SILHOUETTE,
+  rgba,
+} from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
 import { drawFacing, drawGhost, type BodyFrame, type FocusSatellite } from "./focus";
@@ -39,6 +50,7 @@ export interface BackDeps {
   ghost?: { m: AlbumMorphology; alpha: number } | null;
   facing?: number;
   labels?: CanvasLabels;
+  breath?: (alb: number) => { mass: number; light: number };
 }
 
 export function makeParticles(): Particle[] {
@@ -235,6 +247,7 @@ export function drawBack(
   const x = ctx as Ctx;
   const { fonts, covers, rings, weights, parts, C, morph, morphOf } = deps;
   const labels = deps.labels ?? CANVAS_LABELS;
+  const breathOf = deps.breath ?? (() => ({ mass: 0, light: 0 }));
   const field = deps.field ?? null;
   const fieldVersion = deps.fieldVersion ?? 0;
   const A = ALBUMS[s.alb];
@@ -276,8 +289,10 @@ export function drawBack(
       if (alpha <= 0.01) continue;
       const fg = L.recede > 0 ? collectionBody(W, H, s, L, i, morphOf(i)) : g;
       const sil = rings.silhouette(i);
+      const glow = 1 + BREATH.rim * breathOf(i).light;
       drawSilhouette(x, sil.sharp, fg.cx, fg.cy, fg.R, alpha, fg.flatten);
-      drawSilhouette(x, sil.rim, fg.cx, fg.cy, fg.R, alpha * SILHOUETTE.focusRim, fg.flatten, "lighter");
+      const rim = alpha * SILHOUETTE.focusRim * glow;
+      drawSilhouette(x, sil.rim, fg.cx, fg.cy, fg.R, rim, fg.flatten, "lighter");
       continue;
     }
     const p = albPos(i, s, L);
@@ -296,6 +311,8 @@ export function drawBack(
           R: M * (0.16 + 0.24 * p.depth) * L.ringScale * ns,
           flatten: mi.flatten,
         };
+    const pulse = breathOf(i);
+    nb.R *= 1 + BREATH.scale * pulse.mass;
     const nx = nb.cx;
     const ny = nb.cy;
     const reach = nb.R * (mi.rMax + 0.1);
@@ -306,7 +323,16 @@ export function drawBack(
     if (blur > 0.01) drawSilhouette(x, sil.soft, nx, ny, nb.R, a, mi.flatten);
     if (blur < 0.99) {
       drawSilhouette(x, sil.sharp, nx, ny, nb.R, a * (1 - blur), mi.flatten);
-      drawSilhouette(x, sil.rim, nx, ny, nb.R, a * (1 - blur), mi.flatten, "lighter");
+      drawSilhouette(
+        x,
+        sil.rim,
+        nx,
+        ny,
+        nb.R,
+        a * (1 - blur) * (1 + BREATH.rim * pulse.light),
+        mi.flatten,
+        "lighter",
+      );
     }
 
     const away = recede ? smooth01((Math.abs(p.d) - 0.5) / 0.4) : 1;

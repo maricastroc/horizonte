@@ -33,6 +33,7 @@ import { bandsOf, sameBands, stageBox, FULL_BANDS } from "../composition/bands";
 import { RingBakery, type SegShape } from "../composition/ring";
 import { profileOf, writeProfile, type ReliefBand } from "../composition/relief";
 import { emergeOf, stagesOf } from "../composition/approach";
+import { breathAt, temperamentOf } from "../breath";
 import {
   crownAt,
   mixMorphology,
@@ -99,6 +100,7 @@ import {
   MOTION,
   MORPH,
   APPROACH,
+  BREATH,
   RELIEF,
   RING,
   SECOND_MASS,
@@ -176,6 +178,9 @@ export class FieldEngine implements InputActions {
   private hzK = 1;
   private bias: TrackBias = { ...NEUTRAL_BIAS };
   private lightSweep = 0;
+  private breathGain = 0;
+  private breathMass = 0;
+  private breathLight = 0;
   private readonly reliefProfile = new Float32Array(RELIEF.texels * 8);
   private reliefKey = "";
   private reliefBand: ReliefBand = { lo: 0, hi: 0 };
@@ -880,6 +885,7 @@ export class FieldEngine implements InputActions {
       field: this.deformation(),
       fieldVersion: this.strain.version,
       compare,
+      breath: (i) => this.breathOf(i),
       frame: this.focusFrame(),
       facing: this.focusPart() === "posture" ? ease(this.focusAmt) : 0,
       ghost:
@@ -957,6 +963,10 @@ export class FieldEngine implements InputActions {
       tgt.m0h = 0.096 * hzK;
       tgt.spin = 0.16 * C.swirl;
     }
+
+    this.breathStep(dt);
+    tgt.m0k *= 1 + BREATH.mass * this.breathMass;
+    tgt.m0h *= 1 + BREATH.horizon * this.breathMass;
 
     if (s.mode === "collapse") this.collapse(tgt, K);
     if (isEngaged(s.mode)) this.playing(tgt, K);
@@ -1041,6 +1051,38 @@ export class FieldEngine implements InputActions {
     }
     approachMotion(this.motion, this.motionTarget, Math.min(1, dt * MOTION.lerp));
     this.bus.setResponse(this.motion);
+  }
+
+  breathOf(i: number): { mass: number; light: number } {
+    const album = ALBUMS[i];
+    const T = album ? temperamentOf(album) : null;
+    if (!T || this.reduced) return { mass: 0, light: 0 };
+    const b = breathAt(T, this.st.t, (i * BREATH.phase) % 1);
+    return { mass: b * T.mass, light: b * T.light };
+  }
+
+  private breathStep(dt: number) {
+    const s = this.st;
+    const live = s.mode === "playing" || s.mode === "collapse" || s.mode === "fusion";
+    const target = this.reduced || live ? 0 : 1;
+    this.breathGain += (target - this.breathGain) * Math.min(1, dt * BREATH.lerp);
+    let mass = 0;
+    let light = 0;
+    if (s.scale === "collection") {
+      const lo = clamp(Math.floor(s.nav), 0, ALBUMS.length - 1);
+      const hi = clamp(lo + 1, 0, ALBUMS.length - 1);
+      const f = clamp(s.nav - lo, 0, 1);
+      const a = this.breathOf(lo);
+      const b = this.breathOf(hi);
+      mass = a.mass + (b.mass - a.mass) * f;
+      light = a.light + (b.light - a.light) * f;
+    } else {
+      const a = this.breathOf(s.alb);
+      mass = a.mass;
+      light = a.light;
+    }
+    this.breathMass = mass * this.breathGain;
+    this.breathLight = light * this.breathGain;
   }
 
   private approachStep(dt: number) {
@@ -1355,7 +1397,8 @@ export class FieldEngine implements InputActions {
     const sel = inside ? s.sel : -1;
     const field = inside ? this.deformation() : null;
     const open = Math.round(stage.open * RELIEF.steps) / RELIEF.steps;
-    const key = `${s.alb}:${shape ? shape.version : -1}:${sel}:${active}:${field ? this.strain.version : -1}:${open}`;
+    const strain = field ? this.strain.version : -1;
+    const key = `${s.alb}:${shape ? shape.version : -1}:${sel}:${active}:${strain}:${open}`;
     if (key !== this.reliefKey) {
       this.reliefKey = key;
       this.reliefBand = profileOf(m, sel, active, field, this.reliefProfile, open);
@@ -1376,7 +1419,7 @@ export class FieldEngine implements InputActions {
       this.reliefBand.lo - RELIEF.margin,
       this.reliefBand.hi + RELIEF.margin,
       1 - stage.light,
-      0,
+      BREATH.light * this.breathLight,
     );
   }
 

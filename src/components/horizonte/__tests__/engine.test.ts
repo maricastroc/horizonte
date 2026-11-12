@@ -1159,3 +1159,43 @@ describe("the approach has a duration, not a decay", () => {
     expect(hidden).toBeGreaterThan(0);
   });
 });
+
+describe("breathing at rest", () => {
+  const horizon = () =>
+    (engine as unknown as { gl: { uniforms: { uM0: { value: { w: number } } } } }).gl.uniforms.uM0
+      .value.w;
+  const light = () =>
+    (engine as unknown as { gl: { uniforms: { uReliefBand: { value: { w: number } } } } }).gl
+      .uniforms.uReliefBand.value.w;
+  const sweep = (seconds: number) => {
+    const h: number[] = [];
+    const l: number[] = [];
+    const n = Math.ceil(seconds * 20);
+    for (let i = 0; i < n; i++) {
+      run(0.05);
+      h.push(horizon());
+      l.push(light());
+    }
+    return { h: Math.max(...h) - Math.min(...h), l: Math.max(...l) - Math.min(...l) };
+  };
+
+  it("in the collection the focused record breathes in horizon and light", () => {
+    run(3);
+    const swing = sweep(8);
+    expect(swing.h).toBeGreaterThan(0.001);
+    expect(swing.l).toBeGreaterThan(0.05);
+  });
+
+  it("the music takes over: while playing, the breath goes quiet", () => {
+    engine.playTrack(0, 1);
+    run(6);
+    expect(sweep(6).l).toBeLessThan(1e-3);
+  });
+
+  it("with reduced motion nothing breathes", () => {
+    engine.setReducedMotion(true);
+    run(3);
+    const swing = sweep(8);
+    expect(swing.l).toBe(0);
+  });
+});
