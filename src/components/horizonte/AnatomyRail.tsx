@@ -328,7 +328,7 @@ export function ShapePanel({
             <div
               role="group"
               aria-label={t.compare}
-              className={["mt-4.5 flex border border-rule", compact ? "w-full" : "w-fit"].join(" ")}
+              className="mt-4.5 flex w-full border border-rule"
               onKeyDown={(e) => {
                 if (e.key === "ArrowLeft") engine?.setCompare(false);
                 else if (e.key === "ArrowRight") engine?.setCompare(true);
@@ -347,8 +347,9 @@ export function ShapePanel({
                   aria-pressed={b.on}
                   onClick={() => engine?.setCompare(b.value)}
                   className={[
-                    "cursor-pointer whitespace-nowrap transition-colors duration-150",
-                    compact ? "min-h-[46px] flex-1 px-3" : "px-4 py-2",
+                    "min-w-0 flex-1 cursor-pointer text-center leading-[1.5]",
+                    "transition-colors duration-150",
+                    compact ? "min-h-[46px] px-3" : "px-3 py-2",
                     i > 0 ? "border-l border-rule" : "",
                     b.on ? "text-ink-text" : "text-ink-faint hover:text-ink-text",
                   ].join(" ")}
