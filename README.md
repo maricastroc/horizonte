@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <img src="public/favicon.png" alt="Horizonte" width="40">
+  <img src="src/app/icon.png" alt="Horizonte" width="40">
   <br>
   Horizonte
   <br>

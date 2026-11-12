@@ -37,7 +37,7 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      # 691 tests run here, including the browser↔Python conformance vector
+      # The suite runs here, including the browser↔Python conformance vector
       # (ingest-parity-fixture), which ships its own 10 s excerpts and the numbers
       # the offline pipeline produced from them. The full-catalogue parity suite
       # still skips: it reads .cache/analysis, 2.1 GB and gitignored.
