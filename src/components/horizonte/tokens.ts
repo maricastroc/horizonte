@@ -73,12 +73,27 @@ export const BREATH = {
   phase: 0.6180339887498949,
 } as const;
 
+export const SATELLITE = {
+  white: 0.3,
+  face: 0.3,
+  offset: 0.45,
+  rim: 0.1,
+  rimAlpha: 0.75,
+  span: 1.05,
+} as const;
+
+export const LENS = { soft: 0.014, cap: 0.85, gain: 0.13 } as const;
+
 export const NAMES = {
   slide: 0.08,
   lag: 0.7,
-  clear: 1.2,
+  gap: 0.45,
+  ceiling: 0.12,
+  strong: 0.9,
+  near: 1.5,
+  floor: 0.86,
   halo: "rgba(7,7,10,0.72)",
-  edge: 0.06,
+  edge: 0.035,
   probe: 100,
   pool: 0.9,
 } as const;
@@ -151,6 +166,15 @@ export const MORPH = {
   satFalloff: 0.72,
   satCap: 0.68,
   neighborDamp: 0.45,
+} as const;
+
+export const IDENTITY = {
+  gain: 2.2,
+  cap: 0.45,
+  contrast: 1.6,
+  plateFloor: 0.3,
+  follow: 0.3,
+  keep: 0.45,
 } as const;
 
 export const REACH = {

@@ -1,7 +1,7 @@
 import type { AlbumSignature } from "./content/signature";
 import { ENVELOPE_N, envelopeOf, boundsOf } from "./content/signature";
 import { clamp, lerp } from "./math";
-import { MORPH } from "./tokens";
+import { IDENTITY, MORPH } from "./tokens";
 
 export interface Satellite {
   angle: number;
@@ -186,6 +186,28 @@ function boxPass(src: Float32Array, half: number): Float32Array {
   return out;
 }
 
+const identityCache = new WeakMap<AlbumMorphology, AlbumMorphology>();
+
+export function identityOf(m: AlbumMorphology): AlbumMorphology {
+  const hit = identityCache.get(m);
+  if (hit) return hit;
+  const avg = m.plate.reduce((a, b) => a + b, 0) / Math.max(1, m.plate.length);
+  const out: AlbumMorphology = {
+    ...m,
+    relief: IDENTITY.cap * Math.tanh((m.relief * IDENTITY.gain) / IDENTITY.cap),
+    plate: m.plate.map((p) => Math.max(IDENTITY.plateFloor, avg + (p - avg) * IDENTITY.contrast)),
+  };
+  identityCache.set(m, out);
+  return out;
+}
+
+export function wholeReachOf(m: AlbumMorphology): number {
+  const [, outer] = wholeCrownOf(m, 0);
+  let top = 0;
+  for (let i = 0; i < outer.length; i++) top = Math.max(top, outer[i]);
+  return top;
+}
+
 function wholeCrownOf(m: AlbumMorphology, reach: number): Float32Array[] {
   let byReach = wholeCache.get(m);
   if (!byReach) {
@@ -196,10 +218,16 @@ function wholeCrownOf(m: AlbumMorphology, reach: number): Float32Array[] {
   if (hit) return hit;
   const inner = new Float32Array(WHOLE_N);
   const outer = new Float32Array(WHOLE_N);
+  const id = identityOf(m);
+  const settle = 1 - IDENTITY.follow;
   for (let i = 0; i < WHOLE_N; i++) {
-    const sh = shellsAt(m, i / WHOLE_N);
-    inner[i] = sh[0].inner;
-    outer[i] = sh[sh.length - 1].outer;
+    const t = i / WHOLE_N;
+    const sh = shellsAt(id, t);
+    const top = sh[sh.length - 1].outer;
+    const swell = id.relief * lobeAt(id, t) * settle;
+    const floor = top - (top - sh[0].inner) * IDENTITY.keep;
+    inner[i] = Math.min(Math.max(m.coreRatio * 1.06, sh[0].inner - swell), floor);
+    outer[i] = top;
   }
   const half = Math.max(1, Math.round((reach * WHOLE_N) / 2));
   const out = [boxPass(boxPass(inner, half), half), boxPass(boxPass(outer, half), half)];

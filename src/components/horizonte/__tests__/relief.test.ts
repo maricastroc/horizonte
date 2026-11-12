@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ALBUMS } from "../content";
-import { morphologyOf, shellsAt, wholeCrownAt } from "../morphology";
+import { morphologyOf, outerAt, shellsAt, wholeCrownAt, wholeReachOf } from "../morphology";
+import { ncc } from "../perception/silhouette";
 import { profileOf, createReliefTexture, writeProfile } from "../composition/relief";
 import { gapOf } from "../composition/ring";
 import { STRAIN_BINS } from "../composition/strain";
@@ -126,14 +127,32 @@ describe("the whole crown seen from the collection", () => {
     expect(rawWorst).toBeGreaterThan(0.04);
   });
 
-  it("stays within the reach of the album it hides", () => {
+  it("is the album's own contour, read from further away: same lobes, more of them", () => {
     for (let alb = 0; alb < ALBUMS.length; alb++) {
       const m = morphOf(alb);
-      for (let i = 0; i < 64; i++) {
-        const c = wholeCrownAt(m, i / 64, SILHOUETTE.smooth);
-        expect(c.inner).toBeGreaterThanOrEqual(m.rMin - 1e-6);
-        expect(c.outer).toBeLessThanOrEqual(m.rMax + 1e-6);
+      const n = 256;
+      const real = new Float32Array(n);
+      const seen = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        real[i] = outerAt(m, i / n);
+        seen[i] = wholeCrownAt(m, i / n, SILHOUETTE.smooth).outer;
       }
+      expect(ncc(real, seen)).toBeGreaterThan(0.9);
+      const swing = (a: Float32Array) => Math.max(...a) - Math.min(...a);
+      expect(swing(seen)).toBeGreaterThan(swing(real));
+    }
+  });
+
+  it("never thins out, never reaches the core, and fits the bake buffer", () => {
+    const room = RING.buffer / 2 / RING.unitR;
+    for (let alb = 0; alb < ALBUMS.length; alb++) {
+      const m = morphOf(alb);
+      for (let i = 0; i < 360; i++) {
+        const c = wholeCrownAt(m, i / 360, SILHOUETTE.smooth);
+        expect(c.outer - c.inner).toBeGreaterThan(0.05);
+        expect(c.inner).toBeGreaterThanOrEqual(m.coreRatio * 1.06 - 1e-6);
+      }
+      expect(wholeReachOf(m)).toBeLessThan(room - 0.03);
     }
   });
 

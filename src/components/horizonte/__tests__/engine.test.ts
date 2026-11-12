@@ -35,7 +35,7 @@ import { EXPLORED_KEY, HINT_MS, TIDE } from "../tokens";
 import { FieldEngine } from "../engine/FieldEngine";
 import { albPos, bodyGeom, collectionBody, layoutFor, variantFor } from "../composition/layout";
 import { fieldConstantsOf } from "../field";
-import { morphologyOf } from "../morphology";
+import { morphologyOf, wholeReachOf } from "../morphology";
 import { peakOf, scarCount, STRAIN_BINS } from "../composition/strain";
 import {
   IDLE_MS,
@@ -1150,7 +1150,7 @@ describe("the approach has a duration, not a decay", () => {
       const front = collectionBody(dims.W, dims.H, s, L, alb, fm);
       const back = collectionBody(dims.W, dims.H, s, L, at, am);
       const reach = Math.hypot(back.cx - front.cx, (back.cy - front.cy) / front.flatten) / front.R;
-      if (reach < fm.rMax) {
+      if (reach < wholeReachOf(fm)) {
         hidden++;
         expect(m1().h).toBeLessThan(1e-3);
         expect(m1().k).toBeGreaterThan(0);

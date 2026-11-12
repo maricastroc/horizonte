@@ -261,7 +261,7 @@ export function lightInBuffer(flatten: number, rot: number): [number, number] {
   return [vx / len, vy / len];
 }
 
-const brighten = (v: Rgb, k: number): Rgb => [
+export const brighten = (v: Rgb, k: number): Rgb => [
   v[0] + (1 - v[0]) * k,
   v[1] + (1 - v[1]) * k,
   v[2] + (1 - v[2]) * k,
