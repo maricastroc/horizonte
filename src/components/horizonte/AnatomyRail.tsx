@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { COLOUR_NOTE, nameFactOf, questionsOf, type Invite, type Question } from "./anatomy";
+import { questionsOf, type Finding, type Invite, type Question } from "./anatomy";
+import { CURATED_COUNT } from "./content";
 import type { FieldEngine } from "./engine/FieldEngine";
+import { useCopy, type Phrasing } from "./i18n";
 import type { Snapshot } from "./types";
 
 export type AlbumView = "tracks" | "shape";
@@ -12,7 +14,7 @@ const SHOWN = 3;
 
 const QUESTION = "font-bodoni italic normal-case tracking-normal text-ink-text";
 const PROSE = "font-archivo normal-case tracking-[.005em]";
-const HINT = "normal-case tracking-[.06em] text-ink-faint";
+const HINT = "normal-case tracking-[.06em] text-ink-mute";
 
 export function AnatomyTabs({
   view,
@@ -29,6 +31,7 @@ export function AnatomyTabs({
   ink: string;
   enabled: boolean;
 }) {
+  const t = useCopy().anatomy;
   const tab = (v: AlbumView, label: string) => {
     const on = view === v;
     return (
@@ -50,7 +53,7 @@ export function AnatomyTabs({
         className={[
           "relative cursor-pointer whitespace-nowrap transition-colors duration-150",
           compact ? "min-h-[44px]" : "py-1",
-          on ? "text-ink-text" : "text-ink-faint hover:text-ink-text",
+          on ? "text-ink-text" : "text-ink-mute hover:text-ink-text",
         ].join(" ")}
         style={on ? { boxShadow: `inset 0 -1px 0 ${ink}` } : undefined}
       >
@@ -68,34 +71,39 @@ export function AnatomyTabs({
   return (
     <div
       role="tablist"
-      aria-label="Album views"
+      aria-label={t.views}
       className={[
-        "flex items-center gap-6 border-b border-rule-2",
+        "flex items-center gap-6 border-b border-rule-2 tablet:tracking-[.14em]",
         compact ? "sticky top-0 z-10 bg-void/92 backdrop-blur-sm" : "pb-1",
       ].join(" ")}
     >
-      {tab("tracks", "Tracks")}
-      {tab("shape", "Why this shape?")}
+      {tab("tracks", t.tracks)}
+      {tab("shape", t.shape)}
     </div>
   );
 }
 
 export function AnatomyInvite({
+  alb,
   invite,
   onOpen,
   compact,
   ink,
   enabled,
 }: {
+  alb: number;
   invite: Invite | null;
   onOpen: () => void;
   compact: boolean;
   ink: string;
   enabled: boolean;
 }) {
+  const t = useCopy().anatomy;
   const [shown, setShown] = useState<Invite | null>(invite);
   if (invite && invite !== shown) setShown(invite);
   if (!shown) return null;
+  const lead = questionsOf(alb).find((q) => q.part === shown.part);
+  const line = lead ? t.write.phrase(lead).ask : t.shape;
   return (
     <button
       type="button"
@@ -116,10 +124,10 @@ export function AnatomyInvite({
       <span aria-hidden className="mt-[5px] block h-[14px] w-[3px]" style={{ background: ink }} />
       <span className="flex flex-col gap-2">
         <span className={`${QUESTION} ${compact ? "text-[18px]" : "text-[16px]"} leading-[1.28]`}>
-          {shown.line}
+          {line}
         </span>
         <span className="text-ink-text group-hover:underline group-focus-visible:underline">
-          Find out ›
+          {t.findOut}
         </span>
       </span>
     </button>
@@ -127,26 +135,30 @@ export function AnatomyInvite({
 }
 
 function Numbers({ q, extra }: { q: Question; extra: string[] }) {
+  const t = useCopy().anatomy;
+  const w = t.write;
   const r = q.reading;
   const rows: [string, string][] = [
-    ["Measure", r.label],
-    ["This record", r.shown],
-    ["Usual here", `${r.medianShown} (median of the 14)`],
-    ["Standing", r.standing],
-    ["Drawn as", q.drawn],
+    [t.rows.measure, w.measure[r.axis]],
+    [t.rows.record, w.shown(r.axis, r.value)],
+    [t.rows.usual, t.usual(w.shown(r.axis, r.median), CURATED_COUNT)],
+    [t.rows.standing, w.standing(r)],
+    [t.rows.drawn, w.drawn[q.part]],
+    ...w.details(q),
   ];
+  const depth = w.depth(q);
   return (
     <div className="flex flex-col gap-2 pt-1.5">
-      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[9.5px]">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[10px]">
         {rows.map(([k, v]) => (
           <div key={k} className="contents">
-            <dt className="text-ink-faint">{k}</dt>
+            <dt className="text-ink-mute">{k}</dt>
             <dd className="normal-case tracking-[.06em] text-ink-text-2">{v}</dd>
           </div>
         ))}
       </dl>
-      {extra.map((line) => (
-        <p key={line} className={`${PROSE} text-[11.5px] leading-[1.45] text-ink-dim`}>
+      {[...(depth ? [depth] : []), ...extra].map((line) => (
+        <p key={line} className={`${PROSE} text-[12px] leading-[1.5] text-ink-mute`}>
           {line}
         </p>
       ))}
@@ -167,7 +179,13 @@ export function ShapePanel({
   ink: string;
   enabled: boolean;
 }) {
+  const t = useCopy().anatomy;
   const questions = useMemo(() => questionsOf(snap.alb), [snap.alb]);
+  const phrased = useMemo(
+    () => new Map<Question, Phrasing>(questions.map((q) => [q, t.write.phrase(q)])),
+    [questions, t],
+  );
+  const say = (q: Question) => phrased.get(q)!;
   const lead = questions[0];
   const open = questions.find((q) => q.part === snap.focus) ?? lead;
   const key = `${snap.alb}:${open?.part}`;
@@ -220,8 +238,10 @@ export function ShapePanel({
   const others = questions.filter((q) => q !== open);
   const also = others.filter((q) => questions.indexOf(q) < SHOWN).slice(0, SHOWN - 1);
   const rest = others.filter((q) => !also.includes(q));
-  const extra = [nameFactOf(snap.alb), COLOUR_NOTE];
-  const said = trying ? (alt ? `${open.label}. ${open.result}` : "As it is.") : "";
+  const core = questions.find((q) => q.part === "core")!.finding as Extract<Finding, { part: "core" }>;
+  const extra = [t.write.nameFact(core), t.write.colourNote];
+  const o = say(open);
+  const said = trying ? (alt ? `${o.label}. ${o.result}` : `${t.asItIs}.`) : "";
 
   const askButton = (q: Question) => (
     <li key={q.part}>
@@ -237,12 +257,12 @@ export function ShapePanel({
         onBlur={() => engine?.previewAnatomy(null)}
         className={[
           "grid w-full cursor-pointer grid-cols-[1fr_auto] items-baseline gap-3 border-b border-rule-2",
-          "text-left text-ink-mute transition-colors duration-150 hover:text-ink-text",
+          "text-left text-ink-text-2/80 transition-colors duration-150 hover:text-ink-text",
           compact ? "min-h-[48px] py-2.5" : "py-2",
         ].join(" ")}
       >
-        <span className={`${PROSE} text-[12.5px] leading-[1.35]`}>{q.ask}</span>
-        <span aria-hidden className="text-ink-faint">›</span>
+        <span className={`${PROSE} text-[12.5px] leading-[1.35]`}>{say(q).ask}</span>
+        <span aria-hidden className="text-ink-mute">›</span>
       </button>
     </li>
   );
@@ -262,11 +282,11 @@ export function ShapePanel({
       }}
     >
       <section
-        aria-label={open.ask}
+        aria-label={o.ask}
         className={["flex flex-col border-b border-rule-2", compact ? "py-4" : "py-4.5"].join(" ")}
       >
         <h3 className={`${QUESTION} ${compact ? "text-[18px]" : "text-[17px]"} leading-[1.26]`}>
-          {trying && open.what ? open.what : open.ask}
+          {trying && o.what ? o.what : o.ask}
         </h3>
         <p
           className={[
@@ -276,11 +296,11 @@ export function ShapePanel({
             trying && alt ? "text-ink-text" : "text-ink-text-2",
           ].join(" ")}
         >
-          {trying && alt ? open.result : open.answer}
+          {trying && alt ? o.result : o.answer}
         </p>
 
         {!trying &&
-          (open.what ? (
+          (o.what ? (
             <button
               type="button"
               tabIndex={enabled ? 0 : -1}
@@ -289,16 +309,17 @@ export function ShapePanel({
                 engine?.setCompare(true);
               }}
               className={[
-                "mt-4.5 w-fit cursor-pointer whitespace-nowrap text-ink-text hover:text-white",
+                "mt-4.5 w-fit cursor-pointer text-left leading-[1.7] text-ink-text hover:text-white",
                 compact ? "min-h-[44px]" : "pb-1",
               ].join(" ")}
               style={{ boxShadow: `inset 0 -1px 0 ${ink}` }}
             >
-              {open.what} ▸
+              {o.what.slice(0, o.what.lastIndexOf(" ") + 1)}
+              <span className="whitespace-nowrap">{o.what.slice(o.what.lastIndexOf(" ") + 1)} ▸</span>
             </button>
           ) : (
-            <p className={`${PROSE} mt-4 text-[12px] leading-[1.45] text-ink-dim`}>
-              It already sits where most records here do, so there is nothing to change.
+            <p className={`${PROSE} mt-4 text-[12px] leading-[1.5] text-ink-mute`}>
+              {t.settled}
             </p>
           ))}
 
@@ -306,8 +327,8 @@ export function ShapePanel({
           <>
             <div
               role="group"
-              aria-label="Compare"
-              className={["mt-4.5 flex border border-rule", compact ? "w-full" : "w-fit"].join(" ")}
+              aria-label={t.compare}
+              className="mt-4.5 flex w-full border border-rule"
               onKeyDown={(e) => {
                 if (e.key === "ArrowLeft") engine?.setCompare(false);
                 else if (e.key === "ArrowRight") engine?.setCompare(true);
@@ -316,8 +337,8 @@ export function ShapePanel({
               }}
             >
               {[
-                { on: !alt, label: "As it is", value: false },
-                { on: alt, label: open.label, value: true },
+                { on: !alt, label: t.asItIs, value: false },
+                { on: alt, label: o.label, value: true },
               ].map((b, i) => (
                 <button
                   key={b.label}
@@ -326,10 +347,11 @@ export function ShapePanel({
                   aria-pressed={b.on}
                   onClick={() => engine?.setCompare(b.value)}
                   className={[
-                    "cursor-pointer whitespace-nowrap transition-colors duration-150",
-                    compact ? "min-h-[46px] flex-1 px-3" : "px-4 py-2",
+                    "min-w-0 flex-1 cursor-pointer text-center leading-[1.5]",
+                    "transition-colors duration-150",
+                    compact ? "min-h-[46px] px-3" : "px-3 py-2",
                     i > 0 ? "border-l border-rule" : "",
-                    b.on ? "text-ink-text" : "text-ink-faint hover:text-ink-text",
+                    b.on ? "text-ink-text" : "text-ink-mute hover:text-ink-text",
                   ].join(" ")}
                   style={b.on ? { boxShadow: `inset 0 -1px 0 ${ink}` } : undefined}
                 >
@@ -337,8 +359,14 @@ export function ShapePanel({
                 </button>
               ))}
             </div>
-            <p className={`${HINT} mt-3 text-[9.5px]`}>
-              {compact ? "Hold the image to compare" : "Hold the image to compare · Esc returns"}
+            <p className={`${HINT} mt-3 text-[10px] leading-[1.6]`}>
+              <span className="whitespace-nowrap">{t.hold}</span>
+              {!compact && (
+                <>
+                  {" "}
+                  <span className="whitespace-nowrap">· {t.keys}</span>
+                </>
+              )}
             </p>
           </>
         )}
@@ -349,11 +377,11 @@ export function ShapePanel({
           aria-expanded={nums}
           onClick={() => setNums((v) => !v)}
           className={[
-            "mt-4 w-fit cursor-pointer text-[9.5px] text-ink-dim hover:text-ink-text",
+            "mt-4 w-fit cursor-pointer text-[10px] text-ink-mute hover:text-ink-text",
             compact ? "min-h-[40px]" : "",
           ].join(" ")}
         >
-          In numbers {nums ? "▾" : "›"}
+          {t.inNumbers} {nums ? "▾" : "›"}
         </button>
         {nums && <Numbers q={open} extra={compact ? extra : []} />}
         {compact && (
@@ -363,29 +391,29 @@ export function ShapePanel({
             onClick={() => pick(next)}
             className="mt-1 min-h-[44px] w-fit cursor-pointer text-ink-text-2 hover:text-ink-text"
           >
-            Next question ›
+            {t.nextQuestion}
           </button>
         )}
       </section>
 
       {!compact && (
         <>
-          <p className="pt-3.5 pb-1 text-ink-faint">Also</p>
+          <p className="pt-4 pb-1 text-ink-mute">{t.also}</p>
           <ul>{also.map(askButton)}</ul>
           <button
             type="button"
             tabIndex={enabled ? 0 : -1}
             aria-expanded={more}
             onClick={() => setMore((v) => !v)}
-            className="mt-3 cursor-pointer text-ink-dim hover:text-ink-text"
+            className="mt-3 cursor-pointer text-ink-mute hover:text-ink-text"
           >
-            More about this shape {more ? "▾" : "›"}
+            {t.more} {more ? "▾" : "›"}
           </button>
           {more && (
             <div className="flex flex-col gap-2.5 pt-2">
               <ul>{rest.map(askButton)}</ul>
               {extra.map((line) => (
-                <p key={line} className={`${PROSE} text-[11.5px] leading-[1.45] text-ink-dim`}>
+                <p key={line} className={`${PROSE} text-[12px] leading-[1.5] text-ink-mute`}>
                   {line}
                 </p>
               ))}

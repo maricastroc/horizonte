@@ -1,6 +1,7 @@
 import { decodeToMono, MAX_ALBUM_SECONDS, type DecodeResult } from "./decode";
 import type { AlbumMeasurement, AlbumProbe } from "./dsp";
 import type { IngestRequest, IngestResponse } from "./protocol";
+import { IngestFailure } from "./types";
 
 export class Cancelled extends Error {
   constructor() {
@@ -82,7 +83,7 @@ export class Measurer {
         analysisMs = performance.now() - analysisStart;
         resolveResult(msg.measurement);
       } else if (msg.type === "error") {
-        rejectResult(new Error(msg.message));
+        rejectResult(new IngestFailure({ kind: "failed" }));
       }
     };
     worker.addEventListener("message", onMessage);
@@ -102,14 +103,15 @@ export class Measurer {
         try {
           decoded = await (this.deps.decode ?? decodeToMono)(files[i]);
         } catch (e) {
-          throw new Error(`could not read "${files[i].name}": ${(e as Error).message}`);
+          if (e instanceof IngestFailure) throw e;
+          throw new IngestFailure({ kind: "unreadable", file: files[i].name });
         }
         decodeMs += performance.now() - t0;
         this.guard();
 
         albumSeconds += decoded.seconds;
         if (albumSeconds > MAX_ALBUM_SECONDS) {
-          throw new Error("record too long to measure in one pass");
+          throw new IngestFailure({ kind: "recordTooLong" });
         }
         durations.push(decoded.seconds);
         hooks.onDecoded?.(i, decoded.seconds);

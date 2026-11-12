@@ -81,7 +81,6 @@ export interface Snapshot {
   hint: "drag" | "swipe" | null;
   hintDir: number;
   variant: Variant;
-  announce: string;
   fault: Fault | null;
   focus: AnatomyPart | null;
   compare: boolean;

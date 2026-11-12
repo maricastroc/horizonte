@@ -1,42 +1,17 @@
 "use client";
 
+import { useCopy } from "./i18n";
 import { COLOR } from "./tokens";
 import type { IngestProbe, IngestStatus } from "./ingest/types";
 
-interface Reading {
-  key: keyof IngestProbe;
-  label: string;
-  at: number;
-  words: [string, string, string];
-}
-
-const READINGS: Reading[] = [
-  { key: "loudness", label: "its weight", at: 0.2, words: ["light", "dense", "heavy"] },
-  {
-    key: "dynamics",
-    label: "its dynamics",
-    at: 0.42,
-    words: ["compressed", "breathing", "open"],
-  },
-  { key: "brightness", label: "its light", at: 0.62, words: ["dark", "warm", "cutting"] },
-  { key: "duration", label: "its crossing", at: 0.82, words: ["short", "long", "vast"] },
+const READINGS: { key: keyof IngestProbe; at: number }[] = [
+  { key: "loudness", at: 0.2 },
+  { key: "dynamics", at: 0.42 },
+  { key: "brightness", at: 0.62 },
+  { key: "duration", at: 0.82 },
 ];
 
-const wordFor = (r: Reading, probe: IngestProbe | null) => {
-  if (!probe) return null;
-  const v = probe[r.key];
-  return r.words[v < 1 / 3 ? 0 : v < 2 / 3 ? 1 : 2];
-};
-
-const HEADLINE: Record<IngestStatus["phase"], string> = {
-  reading: "opening the record",
-  decoding: "measuring the record",
-  measuring: "measuring the record",
-  composing: "tracing the horizon",
-  done: "the record is in",
-  failed: "could not measure it",
-  cancelled: "measurement stopped",
-};
+const band = (v: number) => (v < 1 / 3 ? 0 : v < 2 / 3 ? 1 : 2);
 
 export default function Ceremony({
   status,
@@ -45,6 +20,7 @@ export default function Ceremony({
   status: IngestStatus;
   onCancel: () => void;
 }) {
+  const t = useCopy().ceremony;
   const failed = status.phase === "failed";
   const settled = status.phase === "done" || failed || status.phase === "cancelled";
   const name = [status.artist, status.title].filter(Boolean).join(" · ");
@@ -60,7 +36,7 @@ export default function Ceremony({
       ].join(" ")}
     >
       <div className="flex items-baseline justify-between gap-4">
-        <span className="text-ink-text">{HEADLINE[status.phase]}</span>
+        <span className="text-ink-text">{t.phase[status.phase]}</span>
         {status.groupCount > 1 && !settled && (
           <span className="text-ink-faint">
             {status.groupIndex + 1}/{status.groupCount}
@@ -81,19 +57,22 @@ export default function Ceremony({
       </div>
 
       {failed ? (
-        <p className="normal-case tracking-[.08em] text-ink-mute">{status.error}</p>
+        <p className="normal-case tracking-[.08em] text-ink-mute">
+          {status.error && t.error(status.error)}
+        </p>
       ) : (
         <ul className="flex flex-col gap-1.5">
           {READINGS.map((r) => {
             const shown = status.progress >= r.at || settled;
-            const word = wordFor(r, status.probe);
+            const reading = t.readings[r.key];
+            const word = status.probe ? reading.words[band(status.probe[r.key])] : null;
             return (
               <li
                 key={r.key}
                 className="flex items-baseline justify-between gap-4 transition-opacity duration-500"
                 style={{ opacity: shown ? 1 : 0 }}
               >
-                <span className="text-ink-mute">{r.label}</span>
+                <span className="text-ink-mute">{reading.label}</span>
                 <span style={{ color: word ? COLOR.inkText2 : COLOR.inkGhost }}>
                   {word ?? "—"}
                 </span>
@@ -105,7 +84,7 @@ export default function Ceremony({
 
       <div className="flex items-baseline justify-between gap-4">
         <span className="text-ink-faint normal-case tracking-[.08em]">
-          Nothing leaves this device.
+          {t.private}
         </span>
         {!settled && (
           <button
@@ -113,7 +92,7 @@ export default function Ceremony({
             onClick={onCancel}
             className="cursor-pointer whitespace-nowrap text-ink-faint hover:text-ink-text"
           >
-            Stop
+            {t.stop}
           </button>
         )}
       </div>

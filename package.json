@@ -16,6 +16,7 @@
     "media:check": "node scripts/upload-media.mjs --check",
     "media:dry": "node scripts/upload-media.mjs --dry-run",
     "analyze": "python3 scripts/analyze-audio.py --report",
+    "anatomy:report": "node scripts/anatomy-report.mjs",
     "curadoria": "python3 scripts/curadoria.py"
   },
   "dependencies": {

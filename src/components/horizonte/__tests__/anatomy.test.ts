@@ -20,17 +20,21 @@ import {
   compareSignature,
   inviteOf,
   medianOf,
-  nameFactOf,
+  nameWeightOf,
+  satelliteOnsets,
   questionsOf,
   readingOf,
   visibleSatellites,
   type CompareAxis,
+  type Question,
 } from "../anatomy";
 import { ALBUMS, CURATED_COUNT } from "../content";
+import { ANATOMY_EN } from "../i18n/anatomy.en";
+import { ANATOMY_PT } from "../i18n/anatomy.pt-BR";
 import { FieldEngine } from "../engine/FieldEngine";
 import type { FieldUniforms } from "../fieldMaterial";
-import { morphologyOf, pulseSpreadOf, type AlbumMorphology } from "../morphology";
-import { drawFocus, drawGhost, emptyFrame } from "../composition/focus";
+import { morphologyOf, pulseSpreadOf, shellsAt, type AlbumMorphology } from "../morphology";
+import { drawFacing, drawFocus, drawGhost, emptyFrame } from "../composition/focus";
 import { ANATOMY, IDLE_MS } from "../tokens";
 import { engineHarness, paintContext, type EngineHarness } from "./fakes";
 
@@ -67,6 +71,9 @@ const OWNS: Record<CompareAxis, readonly (typeof MORPH_FIELDS)[number][]> = {
   loudness: ["circuit", "coreRatio", "bandRatio"],
 };
 
+const say = (q: Question) => ANATOMY_EN.phrase(q);
+const part = (alb: number, p: Question["part"]) => questionsOf(alb).find((q) => q.part === p)!;
+
 const changed = (a: AlbumMorphology, b: AlbumMorphology) =>
   MORPH_FIELDS.filter((k) => Math.abs(a[k] - b[k]) > 1e-9);
 
@@ -78,84 +85,215 @@ describe("the questions a record asks", () => {
       expect(new Set(qs.map((q) => q.part)).size).toBe(6);
       for (let k = 1; k < qs.length; k++) expect(qs[k - 1].score).toBeGreaterThanOrEqual(qs[k].score);
       for (const q of qs) {
-        expect(q.ask.endsWith("?")).toBe(true);
-        expect(q.answer.length).toBeGreaterThan(20);
+        for (const w of [ANATOMY_EN, ANATOMY_PT]) {
+          const p = w.phrase(q);
+          expect(p.ask.endsWith("?")).toBe(true);
+          expect(p.answer.length).toBeGreaterThan(20);
+          expect(p.what === null).toBe(!q.experiment);
+        }
         expect(q.reading.axis).toBe(AXIS_OF[q.part]);
+        expect(q.finding.part).toBe(q.part);
       }
     }
   });
 
   it("each record leads with what stands out in it", () => {
-    expect(questionsOf(EWORLD)[0].ask).toBe("Why are there four small bodies around it?");
-    expect(questionsOf(DARK)[0].ask).toBe("Why is the ring broken into pieces?");
-    expect(questionsOf(MKULTRA)[0].ask).toBe("Why does it lie so flat?");
-    expect(questionsOf(ASG)[0].ask).toBe("Why does it stand so open?");
-    expect(questionsOf(LEBAR)[0].ask).toBe("Why is its edge so jagged?");
+    expect(say(questionsOf(EWORLD)[0]).ask).toBe("Where do the four small bodies come from?");
+    expect(say(questionsOf(DARK)[0]).ask).toBe("Why is the ring broken apart?");
+    expect(say(questionsOf(MKULTRA)[0]).ask).toBe("Why is the shape so flat?");
+    expect(say(questionsOf(ASG)[0]).ask).toBe("Why does the shape look so open?");
+    expect(say(questionsOf(LEBAR)[0]).ask).toBe("Why is its edge so jagged?");
+    expect(ANATOMY_PT.phrase(questionsOf(EWORLD)[0]).ask).toBe("De onde vêm os quatro pequenos corpos?");
+    expect(ANATOMY_PT.phrase(questionsOf(MKULTRA)[0]).ask).toBe("Por que a forma está tão achatada?");
   });
 
   it("the experiment says which way the record would change", () => {
-    const sat = (i: number) => questionsOf(i).find((q) => q.part === "satellites")!;
-    const pos = (i: number) => questionsOf(i).find((q) => q.part === "posture")!;
-    expect([sat(EWORLD).what, sat(EWORLD).label]).toEqual(["What if it were shorter?", "Shorter"]);
-    expect([sat(ASG).what, sat(ASG).label]).toEqual(["What if it were longer?", "Longer"]);
-    expect([pos(MKULTRA).what, pos(MKULTRA).label]).toEqual([
-      "What if it sounded brighter?",
-      "Brighter",
-    ]);
-    expect([pos(ASG).what, pos(ASG).label]).toEqual(["What if it sounded darker?", "Darker"]);
+    const sat = (i: number) => say(part(i, "satellites"));
+    const pos = (i: number) => say(part(i, "posture"));
+    expect([sat(EWORLD).what, sat(EWORLD).label]).toEqual(["What if the record were shorter?", "Shorter"]);
+    expect([sat(ASG).what, sat(ASG).label]).toEqual(["What if the record were longer?", "Longer"]);
+    expect([pos(MKULTRA).what, pos(MKULTRA).label]).toEqual(["What if it had more treble?", "More treble"]);
+    expect([pos(ASG).what, pos(ASG).label]).toEqual(["What if it had less treble?", "Less treble"]);
+    const ptPos = ANATOMY_PT.phrase(part(MKULTRA, "posture"));
+    expect([ptPos.what, ptPos.label]).toEqual(["E se o som tivesse mais agudos?", "Mais agudos"]);
   });
 
   it("the result names what the eye will see, counted by the real morphology", () => {
-    const sat = (i: number) => questionsOf(i).find((q) => q.part === "satellites")!;
-    expect(sat(EWORLD).result).toContain("two of its four small bodies dissolve");
+    const sat = (i: number) => say(part(i, "satellites"));
+    expect(sat(EWORLD).result).toBe(
+      "At 34 minutes, the collection's typical length, two small bodies remain. " +
+        "The ones that go stood for this record's extra 41 minutes.",
+    );
     expect(sat(ASG).result).toContain("two small bodies appear");
+    expect(ANATOMY_PT.phrase(part(EWORLD, "satellites")).result).toBe(
+      "Com 34 minutos, a duração típica da coleção, restam dois pequenos corpos. " +
+        "Os que somem representavam os 41 minutos a mais deste disco.",
+    );
     expect(visibleSatellites(compareMorphology(EWORLD, "duration"))).toBe(2);
   });
 
   it("speaks without technical numbers, except minutes", () => {
     for (let i = 0; i < CURATED_COUNT; i++) {
       for (const q of questionsOf(i)) {
-        for (const text of [q.ask, q.answer, q.what ?? "", q.result]) {
+        const en = say(q);
+        for (const text of [en.ask, en.answer, en.what ?? "", en.result]) {
           expect(text.replace(/\d+ minutes/g, "")).not.toMatch(/\d|dB|Hz|median/);
+        }
+        const pt = ANATOMY_PT.phrase(q);
+        for (const text of [pt.ask, pt.answer, pt.what ?? "", pt.result]) {
+          expect(text.replace(/\d+ minutos?/g, "")).not.toMatch(/\d|dB|Hz|mediana/);
         }
       }
     }
   });
 
   it("a record close to the usual gets a neutral question and no experiment", () => {
-    const core = questionsOf(MKULTRA).find((q) => q.part === "core")!;
-    expect(core.what).toBeNull();
-    expect(core.ask).toBe("What sets the size of its dark center?");
+    const core = part(MKULTRA, "core");
+    expect(core.experiment).toBe(false);
+    expect(say(core).what).toBeNull();
+    expect(say(core).ask).toBe("What sets the size of its dark center?");
+    expect(ANATOMY_PT.phrase(core).ask).toBe("O que define o tamanho do centro escuro?");
     expect(core.score).toBeCloseTo(0, 4);
   });
 
-  it("gaps are explained by the pulse between tracks, never by dynamics", () => {
-    const gaps = questionsOf(DARK).find((q) => q.part === "gaps")!;
+  it("gaps are explained by the rhythm between tracks, never by dynamics", () => {
+    const gaps = part(DARK, "gaps");
     expect(gaps.reading.axis).toBe("spread");
-    expect(gaps.answer).toMatch(/pulse/);
-    expect(gaps.answer).not.toMatch(/dynamic|volume|loud/i);
+    expect(say(gaps).answer).toMatch(/beat|rhythm/);
+    expect(say(gaps).answer).not.toMatch(/dynamic|volume|loud/i);
+    expect(ANATOMY_PT.phrase(gaps).answer).toMatch(/batida|ritmo/);
+    expect(ANATOMY_PT.phrase(gaps).answer).not.toMatch(/dinâmic|volume|forte|suave/i);
+  });
+
+  it("gaps are one measure of the whole record, not a break at each change", () => {
+    for (let i = 0; i < CURATED_COUNT; i++) {
+      const q = part(i, "gaps");
+      const en = say(q).answer;
+      const pt = ANATOMY_PT.phrase(q).answer;
+      expect(en).not.toMatch(/each change/i);
+      expect(pt).not.toMatch(/cada mudança/i);
+      if (q.finding.near) continue;
+      expect(en).toMatch(/whole ring|only open|all of them/);
+      expect(pt).toMatch(/anel inteiro|só se abrem|todos eles/);
+      expect(say(q).result).toMatch(/all around the ring/);
+      expect(ANATOMY_PT.phrase(q).result).toMatch(/em todo o anel/);
+    }
+  });
+
+  it("layers are asked about in the same direction the experiment moves them", () => {
+    for (let i = 0; i < CURATED_COUNT; i++) {
+      const q = part(i, "strata");
+      if (!q.experiment || q.finding.part !== "strata") continue;
+      const en = say(q);
+      const pt = ANATOMY_PT.phrase(q);
+      if (q.finding.high) {
+        expect(en.ask).not.toMatch(/faint|no layers/);
+        expect(pt.ask).not.toMatch(/mal aparecem|não tem/);
+        expect(en.what).toBe("What if the rhythm were less regular?");
+        expect(pt.what).toBe("E se o ritmo fosse menos regular?");
+      } else {
+        expect(en.ask).not.toMatch(/^Why (does the ring have|does the ring split into) layers/);
+        expect(en.what).toBe("What if the rhythm were more regular?");
+        expect(pt.what).toBe("E se o ritmo fosse mais regular?");
+      }
+      for (const text of [en.ask, en.answer, en.what, pt.ask, pt.answer, pt.what]) {
+        expect(text).not.toMatch(/\bfirm\b|\bloos(e|er)\b|strong beat|firme|solta|batida forte/i);
+      }
+    }
+  });
+
+  it("the dark center's experiment changes the whole body, and never the name", () => {
+    for (let i = 0; i < CURATED_COUNT; i++) {
+      const q = part(i, "core");
+      if (!q.experiment) continue;
+      expect(say(q).result).toMatch(/whole body/);
+      expect(ANATOMY_PT.phrase(q).result).toMatch(/corpo inteiro/);
+      for (const text of [say(q).answer, say(q).result, ANATOMY_PT.phrase(q).result]) {
+        expect(text).not.toMatch(/\bname\b|\bnome\b/i);
+      }
+      expect(say(q).what).toMatch(/overall/);
+      expect(ANATOMY_PT.phrase(q).what).toMatch(/volume médio/);
+    }
+  });
+
+  it("the edge is explained by its shape alone, not by how it moves while playing", () => {
+    for (let i = 0; i < CURATED_COUNT; i++) {
+      const q = part(i, "contour");
+      expect(say(q).answer).not.toMatch(/playing|pulses/i);
+      expect(ANATOMY_PT.phrase(q).answer).not.toMatch(/ao tocar|pulsa/i);
+    }
+  });
+
+  it("posture points the reader to the dashed line it draws", () => {
+    for (let i = 0; i < CURATED_COUNT; i++) {
+      const q = part(i, "posture");
+      expect(say(q).answer).toMatch(/dashed line/);
+      expect(ANATOMY_PT.phrase(q).answer).toMatch(/linha tracejada/);
+      if (!q.experiment) continue;
+      expect(say(q).result).toMatch(/dashed line/);
+      expect(ANATOMY_PT.phrase(q).result).toMatch(/linha tracejada/);
+    }
+  });
+
+  it("length never claims the main body would grow", () => {
+    for (let i = 0; i < CURATED_COUNT; i++) {
+      const q = part(i, "satellites");
+      expect(say(q).answer).not.toMatch(/instead of growing|grows? with/i);
+      expect(ANATOMY_PT.phrase(q).answer).not.toMatch(/em vez de crescer|cresce com/i);
+    }
+  });
+
+  it("the typical length is the median the counterproof uses", () => {
+    const f = part(EWORLD, "satellites").finding;
+    if (f.part !== "satellites") throw new Error("satellites");
+    expect(f.usual).toBe(Math.round(readingOf(EWORLD, "duration").median / 60));
+    expect(f.usual).toBe(34);
+    expect(f.extra).toBe(f.minutes - f.usual);
+    expect(compareSignature(ALBUMS[EWORLD].signature, "duration").duration).toBe(medianOf("duration"));
+  });
+
+  it("the minutes at which small bodies appear are the morphology's own", () => {
+    const onsets = satelliteOnsets();
+    expect(onsets.map(Math.round)).toEqual([23, 33, 44, 54]);
+    const sig = ALBUMS[EWORLD].signature;
+    const at = (min: number) =>
+      visibleSatellites(morphologyOf({ ...sig, duration: (min * 60 - 900) / 4500 }, 12));
+    onsets.forEach((min, i) => {
+      expect(at(min - 0.1)).toBe(i);
+      expect(at(min + 0.1)).toBe(i + 1);
+    });
   });
 
   it("the invitation is the record's leading question", () => {
     for (let i = 0; i < CURATED_COUNT; i++) {
-      expect(inviteOf(i)).toEqual({ part: questionsOf(i)[0].part, line: questionsOf(i)[0].ask });
+      expect(inviteOf(i)).toEqual({ part: questionsOf(i)[0].part });
     }
   });
 
   it("the deeper layer keeps the measurements and their standing", () => {
-    expect(readingOf(EWORLD, "duration").standing).toBe("longest of 14");
-    expect(readingOf(EWORLD, "pulse").standing).toBe("steadiest of 14");
-    expect(readingOf(ASG, "duration").standing).toBe("shortest of 14");
-    expect(readingOf(ASG, "brightness").standing).toBe("brightest of 14");
-    expect(readingOf(ASG, "dynamics").standing).toBe("most compressed of 14");
-    expect(readingOf(LEBAR, "dynamics").standing).toBe("most dynamic of 14");
-    expect(readingOf(DARK, "spread").standing).toBe("most uneven of 14");
-    expect(readingOf(MKULTRA, "brightness").standing).toBe("darkest of 14");
-    expect(readingOf(DUST, "pulse").standing).toBe("loosest of 14");
-    expect(readingOf(LEBAR, "brightness").standing).toBe("12th brightest of 14");
-    expect(nameFactOf(EWORLD)).toBe(
-      "The name is set at weight 704: the louder the record, the heavier the type.",
+    const standing = (alb: number, axis: CompareAxis) => ANATOMY_EN.standing(readingOf(alb, axis));
+    expect(standing(EWORLD, "duration")).toBe("longest of 14");
+    expect(standing(EWORLD, "pulse")).toBe("most regular of 14");
+    expect(standing(ASG, "duration")).toBe("shortest of 14");
+    expect(standing(ASG, "brightness")).toBe("brightest of 14");
+    expect(standing(ASG, "dynamics")).toBe("lowest contrast of 14");
+    expect(standing(LEBAR, "dynamics")).toBe("highest contrast of 14");
+    expect(standing(DARK, "spread")).toBe("most uneven of 14");
+    expect(standing(MKULTRA, "brightness")).toBe("darkest of 14");
+    expect(standing(DUST, "pulse")).toBe("least regular of 14");
+    expect(standing(LEBAR, "brightness")).toBe("12th brightest of 14");
+    expect(nameWeightOf(EWORLD)).toBe(704);
+    const core = part(EWORLD, "core").finding;
+    if (core.part !== "core") throw new Error("core");
+    expect(core.nameWeight).toBe(704);
+    expect(ANATOMY_EN.details(part(EWORLD, "core"))).toEqual([["Name weight", "704"]]);
+    expect(ANATOMY_EN.nameFact(core)).toBe(
+      "The name follows average loudness too: the louder the record, the thicker its letters. " +
+        "This one is set a little heavier than most.",
     );
+    expect(ANATOMY_PT.details(part(EWORLD, "satellites"))).toEqual([
+      ["Corpos surgem em", "23 · 33 · 44 · 54 min"],
+    ]);
   });
 
   it("medians come from the fourteen curated records only", () => {
@@ -165,7 +303,7 @@ describe("the questions a record asks", () => {
         .sort((a, b) => a - b);
       expect(medianOf(axis)).toBeCloseTo((xs[6] + xs[7]) / 2, 9);
     }
-    expect(readingOf(EWORLD, "duration").medianShown).toBe("34 min");
+    expect(ANATOMY_EN.shown("duration", readingOf(EWORLD, "duration").median)).toBe("34 min");
   });
 });
 
@@ -217,14 +355,112 @@ describe("the isolation mask", () => {
     return f;
   };
   const core = { x: 640, y: 400, rx: 80, ry: 56 };
-  const fills = (calls: string[]) => calls.filter((c) => c === "fill").length;
+
+  const KEEP = "rgb(255,0,0)";
+  const LIGHT = "rgb(0,255,0)";
+  const record = () => {
+    const paint = paintContext();
+    const ops: { op: string; style: string; alpha: number }[] = [];
+    const ctx = new Proxy(paint.ctx as unknown as Record<string, unknown>, {
+      get(target, key: string) {
+        const value = target[key];
+        if (key === "moveTo") {
+          return (...args: number[]) => {
+            ops.push({ op: key, style: args.map((v) => Math.round(v)).join(","), alpha: 1 });
+            return (value as (...a: unknown[]) => unknown)(...args);
+          };
+        }
+        if (key !== "fill" && key !== "stroke") return value;
+        return (...args: unknown[]) => {
+          const style = paint.props[key === "fill" ? "fillStyle" : "strokeStyle"];
+          ops.push({ op: key, style: String(style), alpha: Number(paint.props.globalAlpha ?? 1) });
+          return (value as (...a: unknown[]) => unknown)(...args);
+        };
+      },
+      set(target, key: string, value) {
+        target[key] = value;
+        return true;
+      },
+    }) as unknown as CanvasRenderingContext2D;
+    return { ctx, ops, calls: paint.calls };
+  };
+  const lit = (ops: { op: string; style: string }[], op: string, style: string) =>
+    ops.filter((o) => o.op === op && o.style === style).length;
 
   it("draws the crown from the morphology, one closed sector per track", () => {
     const paint = paintContext();
-    expect(drawFocus(paint.ctx, 1280, frameOf(DARK), "gaps", core)).toBe(true);
+    expect(drawFocus(paint.ctx, 1280, frameOf(DARK), "contour", core)).toBe(true);
     expect(paint.calls.filter((c) => c === "closePath")).toHaveLength(ALBUMS[DARK].tracks.length);
-    expect(fills(paint.calls)).toBe(1);
     expect(paint.calls).not.toContain("drawImage");
+  });
+
+  it("the parts that live in the ring keep it at half light, each with a light of its own", () => {
+    for (const part of ["gaps", "strata", "contour"] as const) {
+      const r = record();
+      expect(drawFocus(r.ctx, 1280, frameOf(EWORLD), part, core)).toBe(true);
+      const half = r.ops.filter((o) => o.op === "fill" && o.style === KEEP);
+      expect(half).toHaveLength(1);
+      expect(half[0].alpha).toBeCloseTo(ANATOMY.focus.part.crown, 5);
+    }
+  });
+
+  it("gaps light a slit inside every break, with a faint glow across it", () => {
+    const r = record();
+    drawFocus(r.ctx, 1280, frameOf(DARK), "gaps", core);
+    expect(lit(r.ops, "fill", LIGHT)).toBe(3 * ALBUMS[DARK].tracks.length);
+    expect(lit(r.ops, "stroke", LIGHT)).toBe(0);
+  });
+
+  it("layers light the space between them, in every sector", () => {
+    const r = record();
+    const f = frameOf(EWORLD);
+    drawFocus(r.ctx, 1280, f, "strata", core);
+    const layers = shellsAt(f.m!, 0.01).length;
+    expect(layers).toBe(3);
+    expect(lit(r.ops, "fill", LIGHT)).toBe(ALBUMS[EWORLD].tracks.length * (layers - 1));
+  });
+
+  it("a ring of a single layer falls back to lighting the whole crown", () => {
+    const r = record();
+    drawFocus(r.ctx, 1280, frameOf(DUST), "strata", core);
+    expect(lit(r.ops, "fill", LIGHT)).toBe(0);
+    expect(r.ops.some((o) => o.op === "fill" && o.style === KEEP && o.alpha === 1)).toBe(true);
+  });
+
+  it("the edge keeps a band along the outline, with a glow that follows it", () => {
+    const r = record();
+    drawFocus(r.ctx, 1280, frameOf(LEBAR), "contour", core);
+    expect(lit(r.ops, "stroke", KEEP)).toBe(1);
+    const glow = r.ops.filter((o) => o.op === "stroke" && o.style === LIGHT);
+    expect(glow).toHaveLength(1);
+    expect(glow[0].alpha).toBeCloseTo(ANATOMY.focus.part.glow, 5);
+    expect(lit(r.ops, "fill", LIGHT)).toBe(0);
+  });
+
+  it("posture keeps the face-on outline lit, so the reference is never dimmed", () => {
+    const r = record();
+    expect(drawFocus(r.ctx, 1280, frameOf(MKULTRA), "posture", core)).toBe(true);
+    expect(lit(r.ops, "stroke", KEEP)).toBe(1);
+  });
+
+  it("the face-on reference is one closed dashed outline, round whatever the tilt", () => {
+    const paint = paintContext();
+    const m = morphologyOf(ALBUMS[MKULTRA].signature, ALBUMS[MKULTRA].tracks.length);
+    drawFacing(paint.ctx, m, 640, 400, 260, 0.3, "rgba(239,235,227,0.5)", 1.1);
+    expect(paint.calls.filter((c) => c === "setLineDash")).toHaveLength(1);
+    expect(paint.calls.filter((c) => c === "closePath")).toHaveLength(1);
+    expect(paint.calls.filter((c) => c === "stroke")).toHaveLength(1);
+    expect(paint.calls).not.toContain("fill");
+    expect(paint.calls).not.toContain("ellipse");
+  });
+
+  it("gaps, layers and edge no longer light the same thing", () => {
+    const sign = (part: "gaps" | "strata" | "contour") => {
+      const r = record();
+      drawFocus(r.ctx, 1280, frameOf(EWORLD), part, core);
+      return JSON.stringify(r.ops.map((o) => [o.op, o.style]));
+    };
+    expect(new Set([sign("gaps"), sign("strata"), sign("contour")]).size).toBe(3);
   });
 
   it("the ghost of the original is the same geometry, stroked", () => {
@@ -345,6 +581,20 @@ describe("anatomy in the engine", () => {
     expect(inner().compareBake()).toBeNull();
   });
 
+  it("during the counterproof the mask follows each baked step of the ring", () => {
+    start();
+    enter(DARK);
+    engine.setAnatomyFocus("gaps");
+    run(0.5);
+    const keys = new Set<string>();
+    engine.setCompare(true);
+    for (let i = 0; i < 80; i++) {
+      env.advance(16);
+      keys.add((engine as unknown as { focusKey: string }).focusKey.split("|").at(-1)!);
+    }
+    expect(keys.size).toBeGreaterThanOrEqual(ANATOMY.compare.steps);
+  });
+
   it("comparing needs a measured part", () => {
     start();
     enter(EWORLD);
@@ -451,6 +701,26 @@ describe("anatomy in the engine", () => {
     run(0.1);
     expect(engine.getSnapshot().compare).toBe(false);
     expect(engine.getSnapshot().scale).toBe("album");
+  });
+
+  it("the face-on reference appears only while posture is asked about", () => {
+    start();
+    enter(MKULTRA);
+    const facing = () => (inner().backDeps() as unknown as { facing: number }).facing;
+    expect(facing()).toBe(0);
+    engine.setAnatomyFocus("contour");
+    run(1);
+    expect(facing()).toBe(0);
+    engine.setAnatomyFocus("posture");
+    run(1);
+    expect(facing()).toBeCloseTo(1, 5);
+    engine.setCompare(true);
+    run(2);
+    expect(facing()).toBeCloseTo(1, 5);
+    engine.setCompare(false);
+    engine.setAnatomyFocus(null);
+    run(1);
+    expect(facing()).toBe(0);
   });
 
   it("the ghost of the original is drawn only while the form is changed", () => {

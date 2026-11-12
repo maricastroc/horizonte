@@ -1,100 +1,11 @@
-import { FULL_BANDS } from "../composition/bands";
 import { afterEach, describe, expect, it } from "vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import Instruments, { isInstrumentsTarget } from "../Instruments";
 import { ALBUMS } from "../content";
-import type { FrameOut } from "../engine/frame";
-import type { FieldEngine } from "../engine/FieldEngine";
 import { timecode } from "../format";
 import { COLOR, rgba } from "../tokens";
 import type { Snapshot } from "../types";
-
-const BASE: Snapshot = {
-  scale: "collection",
-  bands: FULL_BANDS,
-  mode: "stopped",
-  alb: 0,
-  navAlb: 0,
-  sel: 0,
-  trk: 0,
-  playAlb: -1,
-  hoverTrk: -1,
-  hoverAlb: -1,
-  idle: false,
-  hint: null,
-  hintDir: 1,
-  variant: "desktop",
-  announce: "",
-  fault: null,
-  focus: null,
-  compare: false,
-  peek: false,
-  invite: null,
-};
-
-function fakeEngine(initial: Partial<Snapshot> = {}) {
-  let snap: Snapshot = { ...BASE, ...initial };
-  const subscribers = new Set<() => void>();
-  let sink: ((f: FrameOut) => void) | null = null;
-  const frame: FrameOut = { progress: 0, position: 0, duration: 0 };
-  const calls: { label: string; args: unknown[] }[] = [];
-
-  const register =
-    (label: string) =>
-    (...args: unknown[]) => {
-      calls.push({ label, args });
-    };
-
-  const engine = {
-    subscribe: (fn: () => void) => {
-      subscribers.add(fn);
-      return () => subscribers.delete(fn);
-    },
-    getSnapshot: () => snap,
-    onFrame: (fn: (f: FrameOut) => void) => {
-      sink = fn;
-      return () => {
-        sink = null;
-      };
-    },
-    markIntent: register("markIntent"),
-    goScale: register("goScale"),
-    enterAlbum: register("enterAlbum"),
-    playTrack: register("playTrack"),
-    setRailAlb: register("setRailAlb"),
-    setIntake: register("setIntake"),
-    setRailTrk: register("setRailTrk"),
-    skip: register("skip"),
-    transport: register("transport"),
-    back: register("back"),
-    seekFraction: register("seekFraction"),
-    setVolume: register("setVolume"),
-    setMuted: register("setMuted"),
-    openAnatomy: register("openAnatomy"),
-    closeAnatomy: register("closeAnatomy"),
-    setAnatomyFocus: register("setAnatomyFocus"),
-    previewAnatomy: register("previewAnatomy"),
-    setCompare: register("setCompare"),
-    volume: 1,
-    muted: false,
-    frameOut: frame,
-  };
-
-  return {
-    engine: engine as unknown as FieldEngine,
-    calls,
-    last: (label: string) => [...calls].reverse().find((c) => c.label === label),
-    update(partial: Partial<Snapshot>) {
-      snap = { ...snap, ...partial };
-      for (const fn of subscribers) fn();
-    },
-    frame(f: FrameOut) {
-      Object.assign(frame, f);
-      sink?.(f);
-    },
-    hasFrame: () => sink !== null,
-  };
-}
+import { fakeEngine } from "./fakeInstruments";
 
 const numbers = (color: string) => {
   const hex = color.match(/#([0-9a-f]{6})/i);
@@ -539,10 +450,16 @@ describe("credit and announcement", () => {
     expect(credit.getAttribute("title")).toBe(ALBUMS[i].license.attribution);
   });
 
-  it("publishes the engine's announcement in a live region", () => {
-    mount({ announce: "01 · Le Manoir — Tristan Lohengrin" });
+  it("announces the playing track in a live region", () => {
+    mount({ playAlb: 1, trk: 0 });
     const region = document.querySelector("[aria-live='polite']");
     expect(region?.textContent).toBe("01 · Le Manoir — Tristan Lohengrin");
+  });
+
+  it("announces the collection when nothing is playing", () => {
+    mount();
+    const region = document.querySelector("[aria-live='polite']");
+    expect(region?.textContent).toBe(`Collection · ${ALBUMS.length} bodies`);
   });
 });
 
@@ -727,22 +644,22 @@ describe("why this shape", () => {
     mount({ scale: "album", alb: EWORLD, focus: "satellites" });
     openShape();
     const q = screen.getByRole("heading", { level: 3 });
-    expect(q.textContent).toBe("Why are there four small bodies around it?");
-    expect(screen.getByText(/Because it is long: 75 minutes/)).toBeDefined();
-    expect(screen.getByRole("button", { name: "What if it were shorter? ▸" })).toBeDefined();
+    expect(q.textContent).toBe("Where do the four small bodies come from?");
+    expect(screen.getByText(/They come from its length\. At 75 minutes/)).toBeDefined();
+    expect(screen.getByRole("button", { name: "What if the record were shorter? ▸" })).toBeDefined();
     expect(screen.queryByText(/median|dB|Hz/)).toBeNull();
   });
 
   it("trying it turns into a switch between the record and its other version", () => {
     const fake = mount({ scale: "album", alb: EWORLD, focus: "satellites" });
     openShape();
-    fireEvent.click(screen.getByRole("button", { name: "What if it were shorter? ▸" }));
+    fireEvent.click(screen.getByRole("button", { name: "What if the record were shorter? ▸" }));
     expect(fake.last("setCompare")?.args).toEqual([true]);
     act(() => fake.update({ compare: true }));
-    expect(screen.getByRole("heading", { level: 3 }).textContent).toBe("What if it were shorter?");
+    expect(screen.getByRole("heading", { level: 3 }).textContent).toBe("What if the record were shorter?");
     const shorter = screen.getByRole("button", { name: "Shorter" });
     expect(shorter.getAttribute("aria-pressed")).toBe("true");
-    const said = screen.getAllByText(/two of its four small bodies dissolve/);
+    const said = screen.getAllByText(/two small bodies remain/);
     expect(said).toHaveLength(2);
     expect(said.some((el) => el.getAttribute("aria-live") === "polite")).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "As it is" }));
@@ -752,7 +669,7 @@ describe("why this shape", () => {
   it("while peeking, the switch shows the record as it is", () => {
     const fake = mount({ scale: "album", alb: EWORLD, focus: "satellites" });
     openShape();
-    fireEvent.click(screen.getByRole("button", { name: "What if it were shorter? ▸" }));
+    fireEvent.click(screen.getByRole("button", { name: "What if the record were shorter? ▸" }));
     act(() => fake.update({ compare: true, peek: true }));
     expect(screen.getByRole("button", { name: "As it is" }).getAttribute("aria-pressed")).toBe("true");
   });
@@ -760,17 +677,17 @@ describe("why this shape", () => {
   it("Escape inside the panel leaves the experiment", () => {
     const fake = mount({ scale: "album", alb: EWORLD, focus: "satellites" });
     openShape();
-    fireEvent.click(screen.getByRole("button", { name: "What if it were shorter? ▸" }));
+    fireEvent.click(screen.getByRole("button", { name: "What if the record were shorter? ▸" }));
     act(() => fake.update({ compare: true }));
     fireEvent.keyDown(screen.getByRole("tabpanel"), { key: "Escape" });
     expect(fake.last("setCompare")?.args).toEqual([false]);
-    expect(screen.getByRole("button", { name: "What if it were shorter? ▸" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "What if the record were shorter? ▸" })).toBeDefined();
   });
 
   it("two more of the record's questions are at hand, and pointing one previews it", () => {
     const fake = mount({ scale: "album", alb: EWORLD, focus: "satellites" });
     openShape();
-    const layers = screen.getByRole("button", { name: /Why is the ring made of layers\?/ });
+    const layers = screen.getByRole("button", { name: /Why does the ring have layers\?/ });
     fireEvent.focus(layers);
     expect(fake.last("previewAnatomy")?.args).toEqual(["strata"]);
     fireEvent.click(layers);
@@ -780,19 +697,22 @@ describe("why this shape", () => {
   it("the numbers stay one step away", () => {
     mount({ scale: "album", alb: EWORLD, focus: "satellites" });
     openShape();
-    expect(screen.queryByText("Usual here")).toBeNull();
+    expect(screen.queryByText("Typical here")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /In numbers/ }));
-    expect(screen.getByText("Usual here")).toBeDefined();
+    expect(screen.getByText("Typical here")).toBeDefined();
     expect(screen.getByText("34 min (median of the 14)")).toBeDefined();
     expect(screen.getByText("longest of 14")).toBeDefined();
+    expect(screen.getByText("Bodies appear at")).toBeDefined();
+    expect(screen.getByText("23 · 33 · 44 · 54 min")).toBeDefined();
+    expect(screen.getByText(/The ring always makes one full turn/)).toBeDefined();
   });
 
   it("more about the shape holds the other questions and the plain facts", () => {
     mount({ scale: "album", alb: EWORLD, focus: "satellites" });
     openShape();
     fireEvent.click(screen.getByRole("button", { name: /More about this shape/ }));
-    expect(screen.getByText(/Colour comes from the cover/)).toBeDefined();
-    expect(screen.getByText(/The name is set at weight 704/)).toBeDefined();
+    expect(screen.getByText(/The colours come from the cover/)).toBeDefined();
+    expect(screen.getByText(/The name follows average loudness/)).toBeDefined();
   });
 
   it("a record close to the usual explains itself without an experiment", () => {
@@ -801,7 +721,7 @@ describe("why this shape", () => {
     expect(screen.getByRole("heading", { level: 3 }).textContent).toBe(
       "What sets the size of its dark center?",
     );
-    expect(screen.getByText(/nothing to change/)).toBeDefined();
+    expect(screen.getByText(/nothing to compare/)).toBeDefined();
     expect(screen.queryByRole("button", { name: /What if/ })).toBeNull();
   });
 
@@ -809,9 +729,9 @@ describe("why this shape", () => {
     const fake = mount({
       scale: "album",
       alb: EWORLD,
-      invite: { part: "satellites", line: "Why are there four small bodies around it?" },
+      invite: { part: "satellites" },
     });
-    expect(screen.getByText("Why are there four small bodies around it?")).toBeDefined();
+    expect(screen.getByText("Where do the four small bodies come from?")).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: /Find out/ }));
     expect(fake.last("openAnatomy")).toBeDefined();
     expect(fake.last("setAnatomyFocus")?.args).toEqual(["satellites"]);
@@ -846,7 +766,7 @@ describe("why this shape", () => {
     expect(next.className).toContain("min-h-[44px]");
     fireEvent.click(next);
     expect(fake.last("setAnatomyFocus")?.args).toEqual(["strata"]);
-    fireEvent.click(screen.getByRole("button", { name: "What if it were shorter? ▸" }));
+    fireEvent.click(screen.getByRole("button", { name: "What if the record were shorter? ▸" }));
     for (const b of within(screen.getByRole("group", { name: "Compare" })).getAllByRole("button")) {
       expect(b.className).toContain("min-h-[46px]");
     }

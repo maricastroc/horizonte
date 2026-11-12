@@ -121,13 +121,157 @@ export function traceCrown(
   return true;
 }
 
-function crown(x: CanvasRenderingContext2D, f: BodyFrame): boolean {
+function crown(x: CanvasRenderingContext2D, f: BodyFrame, alpha = 1): boolean {
   if (!f.m) return false;
   x.beginPath();
   const any = traceCrown(x, f.m, f.bx, f.by, f.R, f.flatten, f.rot);
+  x.globalAlpha = alpha;
   x.fillStyle = KEEP;
   if (any) x.fill();
+  x.globalAlpha = 1;
   return any;
+}
+
+const LIGHT = "rgb(0,255,0)";
+
+interface Span {
+  t0: number;
+  t1: number;
+}
+
+function spansOf(m: AlbumMorphology): Span[] {
+  const out: Span[] = [];
+  for (let k = 0; k < m.bounds.length - 1; k++) {
+    const b0 = m.bounds[k];
+    const b1 = m.bounds[k + 1];
+    const g = gapOf(m, b1 - b0);
+    if (b1 - g > b0 + g) out.push({ t0: b0 + g, t1: b1 - g });
+  }
+  return out;
+}
+
+function pointAt(f: BodyFrame, t: number, r: number): [number, number] {
+  const a = t * TAU + f.rot;
+  return [f.bx + Math.cos(a) * r * f.R, f.by + Math.sin(a) * r * f.R * f.flatten];
+}
+
+function band(
+  x: CanvasRenderingContext2D,
+  f: BodyFrame,
+  t0: number,
+  t1: number,
+  outer: (t: number) => number,
+  inner: (t: number) => number,
+) {
+  const steps = Math.max(2, Math.ceil((t1 - t0) * 160));
+  for (let i = 0; i <= steps; i++) {
+    const t = t0 + ((t1 - t0) * i) / steps;
+    const [px, py] = pointAt(f, t, outer(t));
+    if (i === 0) x.moveTo(px, py);
+    else x.lineTo(px, py);
+  }
+  for (let i = steps; i >= 0; i--) {
+    const t = t0 + ((t1 - t0) * i) / steps;
+    const [px, py] = pointAt(f, t, inner(t));
+    x.lineTo(px, py);
+  }
+  x.closePath();
+}
+
+const topOf = (m: AlbumMorphology, t: number) => {
+  const sh = shellsAt(m, t);
+  return sh[sh.length - 1].outer;
+};
+
+function openings(x: CanvasRenderingContext2D, f: BodyFrame, px: number): boolean {
+  const m = f.m!;
+  const n = m.bounds.length - 1;
+  if (n < 2) return false;
+  const P = ANATOMY.focus.part;
+  const spanOf = (k: number) => m.bounds[k + 1] - m.bounds[k];
+  const minT = (P.line * px) / (TAU * f.R * Math.max(m.rMax, 1e-3));
+  x.fillStyle = LIGHT;
+  for (let k = 0; k < n; k++) {
+    const b = m.bounds[k];
+    const before = gapOf(m, spanOf((k + n - 1) % n));
+    const after = gapOf(m, spanOf(k));
+    const half = Math.max(minT / 2, (before + after) / 2);
+    const slit = Math.min(half, minT * P.slit);
+    const mid = b + (after - before) / 2;
+    for (const [w, a] of [[half, P.glow * P.slit / 4], [slit + minT / 2, P.glow], [slit, 1]] as const) {
+      x.globalAlpha = a;
+      x.beginPath();
+      band(x, f, mid - w, mid + w, (t) => topOf(m, t) * 1.04, (t) => shellsAt(m, t)[0].inner * 0.96);
+      x.fill();
+    }
+  }
+  x.globalAlpha = 1;
+  return true;
+}
+
+function interlayers(x: CanvasRenderingContext2D, f: BodyFrame, px: number): boolean {
+  const m = f.m!;
+  const spans = spansOf(m);
+  if (!spans.length || shellsAt(m, spans[0].t0).length < 2) return false;
+  const half = (ANATOMY.focus.part.line * px) / (2 * f.R);
+  x.fillStyle = LIGHT;
+  for (const { t0, t1 } of spans) {
+    const steps = Math.max(2, Math.ceil((t1 - t0) * 160));
+    const ts = Array.from({ length: steps + 1 }, (_, i) => t0 + ((t1 - t0) * i) / steps);
+    const shells = ts.map((t) => shellsAt(m, t));
+    for (let i = 0; i < shells[0].length - 1; i++) {
+      const edge = (j: number, side: 1 | -1) => {
+        const lo = shells[j][i].outer;
+        const hi = shells[j][i + 1].inner;
+        return (lo + hi) / 2 + side * Math.max(half, (hi - lo) / 2);
+      };
+      x.beginPath();
+      ts.forEach((t, j) => {
+        const [px2, py2] = pointAt(f, t, edge(j, 1));
+        if (j === 0) x.moveTo(px2, py2);
+        else x.lineTo(px2, py2);
+      });
+      for (let j = steps; j >= 0; j--) {
+        const [px2, py2] = pointAt(f, ts[j], edge(j, -1));
+        x.lineTo(px2, py2);
+      }
+      x.closePath();
+      x.fill();
+    }
+  }
+  return true;
+}
+
+function outline(x: CanvasRenderingContext2D, f: BodyFrame, px: number): boolean {
+  const m = f.m!;
+  const spans = spansOf(m);
+  if (!spans.length) return false;
+  const P = ANATOMY.focus.part;
+  const trace = () => {
+    x.beginPath();
+    for (const { t0, t1 } of spans) {
+      const steps = Math.max(2, Math.ceil((t1 - t0) * 160));
+      for (let i = 0; i <= steps; i++) {
+        const t = t0 + ((t1 - t0) * i) / steps;
+        const [ox, oy] = pointAt(f, t, topOf(m, t));
+        if (i === 0) x.moveTo(ox, oy);
+        else x.lineTo(ox, oy);
+      }
+    }
+  };
+  x.lineJoin = "round";
+  x.lineCap = "round";
+  x.strokeStyle = LIGHT;
+  x.globalAlpha = P.glow;
+  x.lineWidth = P.edge * 4 * px;
+  trace();
+  x.stroke();
+  x.globalAlpha = 1;
+  x.strokeStyle = KEEP;
+  x.lineWidth = P.edge * px;
+  trace();
+  x.stroke();
+  return true;
 }
 
 export function drawGhost(
@@ -167,6 +311,51 @@ export function drawGhost(
   x.restore();
 }
 
+export function traceOutline(
+  x: CanvasRenderingContext2D,
+  m: AlbumMorphology,
+  cx: number,
+  cy: number,
+  R: number,
+  flatten: number,
+  rot: number,
+) {
+  const steps = 360;
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const a = t * TAU + rot;
+    const r = topOf(m, t) * R;
+    const px = cx + Math.cos(a) * r;
+    const py = cy + Math.sin(a) * r * flatten;
+    if (i === 0) x.moveTo(px, py);
+    else x.lineTo(px, py);
+  }
+  x.closePath();
+}
+
+export function drawFacing(
+  x: CanvasRenderingContext2D,
+  m: AlbumMorphology,
+  cx: number,
+  cy: number,
+  R: number,
+  rot: number,
+  color: string,
+  width: number,
+) {
+  x.save();
+  x.globalAlpha = 1;
+  x.globalCompositeOperation = "source-over";
+  x.strokeStyle = color;
+  x.lineWidth = width;
+  x.lineJoin = "round";
+  x.setLineDash(ANATOMY.facing.dash.map((d) => d * width));
+  x.beginPath();
+  traceOutline(x, m, cx, cy, R, 1, rot);
+  x.stroke();
+  x.restore();
+}
+
 export function drawFocus(
   mask: CanvasRenderingContext2D,
   W: number,
@@ -174,7 +363,9 @@ export function drawFocus(
   part: AnatomyPart,
   core: CoreShape,
 ): boolean {
-  const sc = mask.canvas.width / Math.max(1, W);
+  const ratio = mask.canvas?.width / Math.max(1, W);
+  const sc = Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
+  const px = 1 / sc;
   const m = ANATOMY.focus.margin;
   mask.setTransform(1, 0, 0, 1, 0, 0);
   mask.globalCompositeOperation = "source-over";
@@ -199,10 +390,22 @@ export function drawFocus(
     ellipse(mask, core.x, core.y, core.rx * m, core.ry * m);
     any = core.rx > 0;
   } else if (part === "gaps" || part === "strata" || part === "contour") {
-    any = crown(mask, f);
+    const draw = part === "gaps" ? openings : part === "strata" ? interlayers : outline;
+    const half = crown(mask, f, ANATOMY.focus.part.crown);
+    const own = half && draw(mask, f, px);
+    if (half && !own) crown(mask, f);
+    any = half;
   } else if (part === "posture") {
     const ring = crown(mask, f);
     ellipse(mask, core.x, core.y, core.rx * m, core.ry * m);
+    if (ring) {
+      mask.strokeStyle = KEEP;
+      mask.lineWidth = ANATOMY.focus.part.line * 2 * px;
+      mask.lineJoin = "round";
+      mask.beginPath();
+      traceOutline(mask, f.m!, f.bx, f.by, f.R, 1, f.rot);
+      mask.stroke();
+    }
     any = ring || core.rx > 0;
   } else if (part === "name" && f.name) {
     mask.font = f.name.font;

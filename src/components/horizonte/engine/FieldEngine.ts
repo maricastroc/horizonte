@@ -13,6 +13,7 @@ import {
 import { drawBack, makeParticles, type BackDeps } from "../composition/back";
 import { drawFocus, emptyFrame, resetFrame, type BodyFrame } from "../composition/focus";
 import { drawFront, type FrontDeps } from "../composition/front";
+import { CANVAS_LABELS, type CanvasLabels } from "../i18n/canvas";
 import { loadCovers, makeCover, type CoverAsset } from "../composition/cover";
 import {
   albPos,
@@ -218,6 +219,7 @@ export class FieldEngine implements InputActions {
   private dragNav = 0;
   private audioState: VisualAudioState;
 
+  private labels: CanvasLabels = CANVAS_LABELS;
   private snap: Snapshot;
   private listeners = new Set<() => void>();
 
@@ -464,6 +466,10 @@ export class FieldEngine implements InputActions {
     this.L = layoutFor(variantFor(w, h));
   }
 
+  setLabels(labels: CanvasLabels) {
+    this.labels = labels;
+  }
+
   setRailAlb(i: number) {
     this.railAlb = i;
   }
@@ -613,13 +619,16 @@ export class FieldEngine implements InputActions {
       const core = { x: body.bx, y: body.by, rx, ry: rx * u.uFlat.value };
       const r = (v: number) => Math.round(v * 2);
       const sats = body.satellites.map((q) => `${r(q.x)},${r(q.y)},${r(q.r)},${r(q.w * 50)}`);
+      const baked = this.compareBake();
+      const frame = baked && body.m ? { ...body, m: baked.m } : body;
       const key = [part, r(body.bx), r(body.by), r(body.R), r(body.flatten * 400), r(body.rot * 400),
-        r(rx), r(core.ry), this.st.sel, this.st.hover, this.W, sats.join(";")].join("|");
+        r(rx), r(core.ry), this.st.sel, this.st.hover, this.W, sats.join(";"),
+        baked ? baked.version : 0].join("|");
       this.focusAge++;
       if (key !== this.focusKey || this.focusAge >= ANATOMY.focus.refresh) {
         this.focusKey = key;
         this.focusAge = 0;
-        this.focusLive = drawFocus(this.ctxFocus, this.W, body, part, core);
+        this.focusLive = drawFocus(this.ctxFocus, this.W, frame, part, core);
         const tex = u.uFocus.value;
         if (tex) tex.needsUpdate = true;
       }
@@ -845,6 +854,7 @@ export class FieldEngine implements InputActions {
 
   private backDeps(): BackDeps {
     return {
+      labels: this.labels,
       fonts: this.fonts,
       covers: this.covers,
       rings: this.rings,
@@ -857,6 +867,7 @@ export class FieldEngine implements InputActions {
       fieldVersion: this.strain.version,
       compare: this.compareBake(),
       frame: this.focusFrame(),
+      facing: this.focusPart() === "posture" ? ease(this.focusAmt) : 0,
       ghost:
         this.compareAxis && this.compareK > 0.001 && this.compareAlb === this.st.alb
           ? { m: this.morphAt(this.st.alb), alpha: ANATOMY.ghost.alpha * ease(this.compareK) }
@@ -865,7 +876,7 @@ export class FieldEngine implements InputActions {
   }
 
   private frontDeps(): FrontDeps {
-    return { fonts: this.fonts, covers: this.covers };
+    return { fonts: this.fonts, covers: this.covers, labels: this.labels };
   }
 
 
@@ -1313,12 +1324,6 @@ export class FieldEngine implements InputActions {
       compare: this.compareOn,
       peek: this.peeking,
       invite: this.invite,
-      announce:
-        s.playAlb >= 0
-          ? `${String(s.trk + 1).padStart(2, "0")} · ${
-              ALBUMS[s.playAlb].tracks[s.trk]?.title ?? ""
-            } — ${ALBUMS[s.playAlb].artist}`
-          : `Collection · ${ALBUMS.length} bodies`,
     };
     if (force) return next;
     const prev = this.snap;
@@ -1341,8 +1346,7 @@ export class FieldEngine implements InputActions {
       prev.compare === next.compare &&
       prev.peek === next.peek &&
       prev.invite === next.invite &&
-      sameBands(prev.bands, next.bands) &&
-      prev.announce === next.announce;
+      sameBands(prev.bands, next.bands);
     return same ? prev : next;
   }
 

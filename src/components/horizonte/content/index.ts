@@ -30,8 +30,21 @@ export function onCatalogChange(fn: (index: number) => void) {
   };
 }
 
+let unnamedAs: { artist: string; title: string } | null = null;
+
+function nameAlbum(album: Album) {
+  if (!unnamedAs || !album.unnamed) return;
+  for (const field of album.unnamed) album[field] = unnamedAs[field];
+}
+
+export function nameUnnamed(names: { artist: string; title: string }) {
+  unnamedAs = names;
+  ALBUMS.forEach(nameAlbum);
+}
+
 export function registerAlbum(album: AlbumWithSignature): number {
   const index = ALBUMS.length;
+  nameAlbum(album);
   ALBUMS.push(album);
   listeners.forEach((fn) => fn(index));
   return index;

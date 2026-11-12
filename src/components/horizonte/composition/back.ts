@@ -1,11 +1,12 @@
 import { ALBUMS, boundsOf } from "../content";
+import { CANVAS_LABELS, type CanvasLabels } from "../i18n/canvas";
 import type { FieldConstants } from "../field";
 import { neighborScale, outerAt, satRadiusOf, type AlbumMorphology } from "../morphology";
 import { isEngaged, progressOf } from "../state";
 import { ANATOMY, COLOR, GEO, MORPH, PARTICLES, RING, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
-import { drawGhost, type BodyFrame, type FocusSatellite } from "./focus";
+import { drawFacing, drawGhost, type BodyFrame, type FocusSatellite } from "./focus";
 import type { RingBakery, SegShape } from "./ring";
 import { ls, type Ctx } from "./ctx";
 import { stageBox, type Bands } from "./bands";
@@ -32,6 +33,8 @@ export interface BackDeps {
   compare?: SegShape | null;
   frame?: BodyFrame | null;
   ghost?: { m: AlbumMorphology; alpha: number } | null;
+  facing?: number;
+  labels?: CanvasLabels;
 }
 
 export function makeParticles(): Particle[] {
@@ -197,6 +200,7 @@ export function drawBack(
 ) {
   const x = ctx as Ctx;
   const { fonts, covers, rings, weights, parts, C, morph, morphOf } = deps;
+  const labels = deps.labels ?? CANVAS_LABELS;
   const field = deps.field ?? null;
   const fieldVersion = deps.fieldVersion ?? 0;
   const A = ALBUMS[s.alb];
@@ -267,7 +271,7 @@ export function drawBack(
     x.globalAlpha = a * (i === s.hoverBody ? 0.95 : 0.5);
     x.font = `500 ${W * 0.0092}px ${fonts.mono}`;
     x.fillText(
-      `${ALBUMS[i].cat} · ${ALBUMS[i].tracks.length} TRACKS`,
+      `${ALBUMS[i].cat} · ${labels.tracks(ALBUMS[i].tracks.length)}`,
       nx,
       ny + br + M * 0.105 * p.depth,
     );
@@ -317,6 +321,18 @@ export function drawBack(
       deps.compare ?? null,
     );
     drawRing(x, seg, bx, by, R, s.ringRot, s.fadeSel * (1 - s.mix * 0.6), morph.flatten);
+    if (deps.facing && deps.facing > 0.005) {
+      drawFacing(
+        x,
+        morph,
+        bx,
+        by,
+        R,
+        s.ringRot,
+        rgba(ANATOMY.ghost.color, ANATOMY.facing.alpha * deps.facing),
+        ANATOMY.ghost.width * Math.max(1, W / 1440),
+      );
+    }
     if (deps.ghost && deps.ghost.alpha > 0.005) {
       const gg = bodyGeom(W, H, s, L, deps.ghost.m);
       drawGhost(

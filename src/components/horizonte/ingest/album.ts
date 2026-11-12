@@ -121,7 +121,7 @@ export function signatureOf(m: AlbumMeasurement, inkA: Ink, inkB: Ink): AlbumSig
 }
 
 export const LOCAL_LICENSE: License = {
-  name: "Arquivo local",
+  name: "Local file",
   url: "",
   source: "",
   attribution: "A file from your device. Nothing was sent to any server.",
@@ -149,11 +149,18 @@ export function assembleAlbum(input: AssembleInput): Album & { signature: AlbumS
     source: { kind: "file", url: input.urls[i], name: t.file.name },
   }));
 
+  const artist = input.draft.artist || FALLBACK_ARTIST;
+  const title = input.draft.title || FALLBACK_TITLE;
+  const unnamed = [
+    ...(artist === FALLBACK_ARTIST ? (["artist"] as const) : []),
+    ...(title === FALLBACK_TITLE ? (["title"] as const) : []),
+  ];
   return {
     id: input.id,
     provider: "local",
-    artist: input.draft.artist || FALLBACK_ARTIST,
-    title: input.draft.title || FALLBACK_TITLE,
+    artist,
+    title,
+    ...(unnamed.length ? { unnamed } : {}),
     year: input.draft.year,
     cat: input.cat,
     cover: input.cover,

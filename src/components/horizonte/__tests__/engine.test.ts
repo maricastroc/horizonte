@@ -285,17 +285,16 @@ describe("snapshot for React", () => {
     expect(warnings).toBe(1);
   });
 
-  it("announces the current track to screen readers", () => {
+  it("publishes the playing track, for screen readers to announce", () => {
     engine.playTrack(1, 2);
     env.advance();
-    const announcement = engine.getSnapshot().announce;
-    expect(announcement).toContain("03");
-    expect(announcement).toContain(ALBUMS[1].tracks[2].title);
-    expect(announcement).toContain(ALBUMS[1].artist);
+    const snap = engine.getSnapshot();
+    expect(snap.playAlb).toBe(1);
+    expect(snap.trk).toBe(2);
   });
 
-  it("announces the collection when nothing is playing", () => {
-    expect(engine.getSnapshot().announce).toContain(String(ALBUMS.length));
+  it("publishes that nothing is playing while in the collection", () => {
+    expect(engine.getSnapshot().playAlb).toBe(-1);
   });
 
   it("the hint waits for stillness, names the gesture, and points where there is room", () => {
