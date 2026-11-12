@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { curvature } from "../audio/analysis";
+import { NEUTRAL_RESPONSE, curvature } from "../audio/analysis";
 import { AudioBus, type VisualAudioState } from "../audio/bus";
 import type { PlaybackFault } from "../audio/playback";
 import { drawBack, makeParticles, type BackDeps } from "../composition/back";
@@ -52,6 +52,13 @@ import {
 } from "../field";
 import { createFieldGL, type FieldGL } from "../fieldMaterial";
 import { clamp } from "../math";
+import {
+  NEUTRAL_MOTION,
+  approachMotion,
+  motionQualitiesOf,
+  motionResponseOf,
+  type MotionResponse,
+} from "../motion";
 import { albumProgressOf, initialState, isEngaged, progressOf, tideAt } from "../state";
 import * as T from "./transport";
 import type { AudioEffect, Catalog } from "./transport";
@@ -73,6 +80,7 @@ import {
   TIDE,
   LERP,
   INTAKE,
+  MOTION,
   MORPH,
   SECOND_MASS,
   SEQ,
@@ -97,6 +105,12 @@ const PAN = {
 const CURSOR_GAIN = 9;
 
 const HORIZON_REF = 0.096;
+
+function readExperiment(name: string) {
+  const search = (globalThis as { location?: { search?: string } }).location?.search ?? "";
+  if (!search) return false;
+  return (new URLSearchParams(search).get("x") ?? "").split(",").includes(name);
+}
 
 const CATALOG: Catalog = {
   get size() {
@@ -143,6 +157,13 @@ export class FieldEngine implements InputActions {
   private bias: TrackBias = { ...NEUTRAL_BIAS };
   private lightSweep = 0;
   private m1 = { x: 0, y: 0, k: 0, h: 0, alb: -1, ready: false };
+  readonly experiments = {
+    motion: false,
+  };
+  private readonly motion: MotionResponse = { ...NEUTRAL_MOTION };
+  private motionTarget: MotionResponse = NEUTRAL_MOTION;
+  private motionAlb = -2;
+  private motionTrk = -2;
   readonly strain: Strain = emptyStrain();
   private railAlb = -1;
   private railTrk = -1;
@@ -187,6 +208,7 @@ export class FieldEngine implements InputActions {
     this.unsubscribeCatalog = onCatalogChange((i) => this.syncCatalog(i));
 
     this.audioState = this.bus.update(0);
+    this.experiments.motion = readExperiment("motion");
     this.reduced = prefersReducedMotion();
     this.coarse = hasCoarsePointer();
     try {
@@ -627,6 +649,7 @@ export class FieldEngine implements InputActions {
     s.seqT += dt;
     if (s.segueT < SEQ.segue.total) s.segueT += dt;
     this.trackBias(dt);
+    this.motionStep(dt);
     this.C = this.fieldFor();
     this.M = this.morphFor();
 
@@ -710,12 +733,14 @@ export class FieldEngine implements InputActions {
     this.tideStep(dt);
 
     const k = Math.min(1, dt * LERP.field);
-    s.m0k += (tgt.m0k - s.m0k) * k;
+    const kr =
+      s.mode === "playing" ? Math.min(1, dt * Math.max(LERP.field, 1 / this.motion.attack)) : k;
+    s.m0k += (tgt.m0k - s.m0k) * kr;
     s.m0h += (tgt.m0h - s.m0h) * k;
-    s.spin += (tgt.spin - s.spin) * k;
-    s.blur += (tgt.blur - s.blur) * k;
+    s.spin += (tgt.spin - s.spin) * kr;
+    s.blur += (tgt.blur - s.blur) * kr;
     s.fade += (tgt.fade - s.fade) * Math.min(1, dt * LERP.fade);
-    s.jet += (tgt.jet - s.jet) * k;
+    s.jet += (tgt.jet - s.jet) * kr;
     s.play += (tgt.play - s.play) * Math.min(1, dt * LERP.play);
 
     const pull = s.mode === "collapse" && s.seqT < SEQ.collapse.valleyEnd;
@@ -752,6 +777,28 @@ export class FieldEngine implements InputActions {
     this.bias.dynamics += (target.dynamics - this.bias.dynamics) * k;
     this.bias.brightness += (target.brightness - this.bias.brightness) * k;
     this.bias.pulse += (target.pulse - this.bias.pulse) * k;
+  }
+
+  private motionStep(dt: number) {
+    if (!this.experiments.motion) {
+      if (this.motionAlb !== -2) {
+        this.motionAlb = -2;
+        this.motionTrk = -2;
+        this.motionTarget = NEUTRAL_MOTION;
+        Object.assign(this.motion, NEUTRAL_MOTION);
+        this.bus.setResponse(NEUTRAL_RESPONSE);
+      }
+      return;
+    }
+    const s = this.st;
+    if (s.playAlb !== this.motionAlb || s.trk !== this.motionTrk) {
+      this.motionAlb = s.playAlb;
+      this.motionTrk = s.trk;
+      const album = s.playAlb >= 0 ? ALBUMS[s.playAlb] : undefined;
+      this.motionTarget = motionResponseOf(album ? motionQualitiesOf(album, s.trk) : null);
+    }
+    approachMotion(this.motion, this.motionTarget, Math.min(1, dt * MOTION.lerp));
+    this.bus.setResponse(this.motion);
   }
 
   private ringRotation(dt: number) {
@@ -880,15 +927,20 @@ export class FieldEngine implements InputActions {
     const a = this.audioState;
     const C = this.C;
     const cap = C.reactionCap;
+    const { mass, light } = this.motion;
     tgt.play = isPlaying ? 1 : 0.86;
     tgt.m0k =
-      curvature(0.075 * C.massScale, isPlaying ? a.accent.bass : a.accent.bass * 0.25, cap) * K;
+      curvature(
+        0.075 * C.massScale,
+        (isPlaying ? a.accent.bass : a.accent.bass * 0.25) * mass,
+        cap,
+      ) * K;
     tgt.m0h = 0.082 * this.hzK;
     tgt.spin = isPlaying
       ? curvature(0.42 * C.swirl, a.accent.mid * 0.7 + a.flux * 0.3, cap)
       : 0.06 * C.swirl;
-    tgt.jet = isPlaying ? 0.06 + a.flux * 0.22 + a.bass * 0.06 : 0.02;
-    tgt.blur = isPlaying ? a.bass * 0.12 : 0;
+    tgt.jet = isPlaying ? 0.06 + a.flux * 0.22 * light + a.bass * 0.06 * mass : 0.02;
+    tgt.blur = isPlaying ? a.bass * 0.12 * mass : 0;
     if (s.scale === "album") tgt.play *= 0.25;
   }
 
@@ -1000,11 +1052,12 @@ export class FieldEngine implements InputActions {
     u.uFade.value = Math.max(0, s.fade);
     u.uGrain.value = 0.035;
     u.uDisp.value =
-      curvature(0.014, this.audioState.accent.treb, this.C.reactionCap * 0.6) + s.blur * 0.01;
+      curvature(0.014, this.audioState.accent.treb * this.motion.light, this.C.reactionCap * 0.6) +
+      s.blur * 0.01;
     u.uJet.value = s.jet;
     u.uReach.value = this.reachAmp;
     const dBright = clamp(this.audioState.centroid - A.signature.brightness, -0.5, 0.5);
-    u.uRim.value = this.C.rimHardness * (1 + dBright * this.C.reactionCap);
+    u.uRim.value = this.C.rimHardness * (1 + dBright * this.C.reactionCap * this.motion.light);
     const light = lightDirection(this.lightSweep);
     u.uLight.value.set(light[0], light[1]);
     (u.uInk.value as THREE.Vector3).set(A.inkA[0], A.inkA[1], A.inkA[2]);

@@ -26,6 +26,8 @@ export const FFT_SIZE = 1024;
 export const SMOOTHING = 0.7;
 const BAND_TAU = 0.12;
 const SLOW_TAU = 1.2;
+const DEVIATION_FLOOR = 0.02;
+const DEVIATION_SPAN = 2.5;
 
 const BRIGHT_LO = Math.log2(200);
 const BRIGHT_HI = Math.log2(2600);
@@ -38,6 +40,20 @@ const BYTE_TO_LINEAR = (() => {
   }
   return t;
 })();
+
+export interface Response {
+  attack: number;
+  release: number;
+  habit: number;
+  depth: number;
+}
+
+export const NEUTRAL_RESPONSE: Response = {
+  attack: BAND_TAU,
+  release: BAND_TAU,
+  habit: SLOW_TAU,
+  depth: 0,
+};
 
 export const curvature = (base: number, accent: number, cap: number) =>
   base * (1 + clamp(accent, -1, 1) * cap);
@@ -59,11 +75,13 @@ export class AudioAnalysis {
   private freq: Uint8Array<ArrayBuffer>;
   private time: Uint8Array<ArrayBuffer>;
   private slow: Bands = { bass: 0, mid: 0, treb: 0 };
+  private deviation: Bands = { bass: 0, mid: 0, treb: 0 };
   private prev: Bands = { bass: 0, mid: 0, treb: 0 };
   private binRanges: [number, number][];
   private binHz: Float32Array;
 
   private ref: AlbumSignature["reference"] | null = null;
+  private response: Response = NEUTRAL_RESPONSE;
 
   constructor(ctx: AudioContext) {
     const analyser = ctx.createAnalyser();
@@ -85,6 +103,10 @@ export class AudioAnalysis {
 
   setReference(ref: AlbumSignature["reference"]) {
     this.ref = ref;
+  }
+
+  setResponse(response: Response) {
+    this.response = response;
   }
 
   private norm(key: keyof Bands, raw: number) {
@@ -112,8 +134,11 @@ export class AudioAnalysis {
     }
 
     const f = this.frame;
+    const r = this.response;
     const kBand = 1 - Math.exp(-dt / BAND_TAU);
-    const kSlow = 1 - Math.exp(-dt / SLOW_TAU);
+    const kUp = 1 - Math.exp(-dt / r.attack);
+    const kDown = r.release === r.attack ? kUp : 1 - Math.exp(-dt / r.release);
+    const kSlow = 1 - Math.exp(-dt / r.habit);
 
     this.analyser.getByteFrequencyData(this.freq);
     this.analyser.getByteTimeDomainData(this.time);
@@ -128,7 +153,7 @@ export class AudioAnalysis {
     const energy = rmsRef
       ? clamp((rms - rmsRef[0]) / Math.max(1e-5, rmsRef[1] - rmsRef[0]), 0, 1)
       : clamp(rms * 2.6, 0, 1);
-    f.energy += (energy - f.energy) * kBand;
+    f.energy += (energy - f.energy) * (energy > f.energy ? kUp : kDown);
 
     let flux = 0;
     KEYS.forEach((key, i) => {
@@ -141,12 +166,18 @@ export class AudioAnalysis {
       flux += Math.max(0, level - this.prev[key]);
       this.prev[key] = level;
 
-      f[key] += (level - f[key]) * kBand;
+      f[key] += (level - f[key]) * (level > f[key] ? kUp : kDown);
       this.slow[key] += (f[key] - this.slow[key]) * kSlow;
-      const spread = Math.max(0.12, this.slow[key]);
-      f.accent[key] = clamp((f[key] - this.slow[key]) / spread, -1, 1);
+      const lead = f[key] - this.slow[key];
+      this.deviation[key] += (Math.abs(lead) - this.deviation[key]) * kSlow;
+      const spread =
+        r.depth > 0
+          ? Math.max(DEVIATION_FLOOR, this.deviation[key] * DEVIATION_SPAN) / r.depth
+          : Math.max(0.12, this.slow[key]);
+      f.accent[key] = clamp(lead / spread, -1, 1);
     });
-    f.flux += (clamp(flux / 0.18, 0, 1) - f.flux) * kBand;
+    const fluxLevel = clamp(flux / 0.18, 0, 1);
+    f.flux += (fluxLevel - f.flux) * (fluxLevel > f.flux ? kUp : kDown);
 
     let num = 0;
     let den = 0;

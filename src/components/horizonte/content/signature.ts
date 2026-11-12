@@ -150,12 +150,12 @@ const GATE = {
 
 const clampBias = (v: number) => (v < -BIAS_CAP ? -BIAS_CAP : v > BIAS_CAP ? BIAS_CAP : v);
 
-function rankAt(sorted: number[], q: number): number {
+export function rankAt(sorted: number[], q: number): number {
   const i = Math.round(q * (sorted.length - 1));
   return sorted[i < 0 ? 0 : i >= sorted.length ? sorted.length - 1 : i];
 }
 
-function softKnee(value: number, cap: number, knee: number): number {
+export function softKnee(value: number, cap: number, knee: number): number {
   const linear = cap * knee;
   const above = cap - linear;
   const size = Math.abs(value);
