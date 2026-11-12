@@ -4,14 +4,14 @@ import vert from "@/shaders/field.vert.glsl";
 import { drawBack, makeParticles } from "../composition/back";
 import { loadCovers, type CoverAsset } from "../composition/cover";
 import { drawFront, frontTitle } from "../composition/front";
-import { collectionBody, layoutFor } from "../composition/layout";
+import { albPos, collectionBody, layoutFor } from "../composition/layout";
 import { RingBakery } from "../composition/ring";
 import { ALBUMS, boundsOf } from "../content";
 import { fieldConstantsOf } from "../field";
 import { morphologyOf, wholeReachOf } from "../morphology";
 import { createFieldUniforms } from "../fieldMaterial";
 import { initialState } from "../state";
-import { NAMES, PARTICLES } from "../tokens";
+import { GEO, NAMES, PARTICLES } from "../tokens";
 import type { FieldState, Mode, Scale, Variant } from "../types";
 import { engineHarness, paintContext, type EngineHarness } from "./fakes";
 
@@ -314,13 +314,38 @@ describe("neighbour names in the collection", () => {
       expect(screenY).toBeGreaterThanOrEqual(H * NAMES.ceiling);
       expect(screenY).toBeLessThanOrEqual(H * NAMES.floor);
     }
-    expect(checked).toBeGreaterThan(2);
+    expect(checked).toBeGreaterThan(0);
   });
 
-  it("a neighbour whose caption would cover the lockup is named above its body instead", () => {
-    const name = texts().find((t) => t.text === ALBUMS[4].artist)!;
-    const body = bodyOf(4);
-    expect(name.y).toBeLessThan(body.cy - body.half);
+  it("a neighbour whose caption would cover the lockup goes unnamed rather than climbing to the top", () => {
+    expect(texts().some((t) => t.text === ALBUMS[4].artist)).toBe(false);
+  });
+
+  it("only the nearest neighbours are named; further ones only when pointed at", () => {
+    const named = (list: { text: string }[]) =>
+      ALBUMS.map((a, i) => (list.some((t) => t.text === a.artist) ? i : -1)).filter(
+        (i) => i >= 0 && i !== s.alb,
+      );
+    expect(named(texts())).toEqual([6]);
+    const pointed = { ...s, hoverBody: 8 };
+    const reg = paintContext(10);
+    const seen: { text: string }[] = [];
+    const ctx = new Proxy(reg.ctx, {
+      get(base, key: string) {
+        if (key === "fillText") return (text: string) => seen.push({ text });
+        return Reflect.get(base, key);
+      },
+    });
+    drawBack(ctx, W, H, pointed, L, backDeps());
+    expect(named(seen)).toContain(8);
+  });
+
+  it("the meta line sits under the name, never on it", () => {
+    const list = texts();
+    const name = list.find((t) => t.text === ALBUMS[6].artist)!;
+    const meta = list.find((t) => t.text.startsWith(ALBUMS[6].cat))!;
+    const size = Math.min(W, H) * GEO.neighborR * albPos(6, s, L).depth;
+    expect(meta.y - name.y).toBeGreaterThan(size * NAMES.descent);
   });
 
   it("otherwise a neighbour is captioned below its body", () => {
