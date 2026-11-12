@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { BOOT_SCRIPT } from "@/components/horizonte/i18n/locale";
 import { archivo, bodoni, inter, mono, playfair } from "./fonts";
 import "./globals.css";
 
@@ -19,8 +20,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${archivo.variable} ${bodoni.variable} ${mono.variable} ${playfair.variable} ${inter.variable}`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
+      </head>
       <body>{children}</body>
     </html>
   );
