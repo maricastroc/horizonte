@@ -1,28 +1,45 @@
 """
 Cobertura do acervo — ferramenta de curadoria do Horizonte.
 
-    python3 scripts/curadoria.py
-    python3 scripts/curadoria.py --candidato public/music/<slug>
-    python3 scripts/curadoria.py --ranquear ~/candidatos
-    python3 scripts/curadoria.py --prospectar --limite 30
-    python3 scripts/curadoria.py --vetor 0.15,0.85,0.10,0.80,0.75
+    npm run curadoria                                       # relatório do acervo
+    npm run curadoria -- --candidato public/music/<slug>    # avalia um candidato
+    npm run curadoria -- --ranquear ~/candidatos            # mede um lote e ordena
+    npm run curadoria -- --prospectar --limite 30           # busca, mede e ranqueia
+    npm run curadoria -- --vetor 0.15,0.85,0.10,0.80,0.75   # perfil hipotético
+    npm run curadoria -- --json                             # resumo para máquina
 
 Responde a uma pergunta só: **um disco novo aumenta a diversidade do acervo, ou
-cai em cima do que já existe?**
+cai em cima do que já existe?** Gênero não entra: a decisão sai dos descritores.
 
-Os cinco eixos são os mesmos que definem o mundo de cada álbum — volume,
-dinâmica, brilho, duração e pulso — e a normalização é a de `analyze-audio.py`,
-importada daqui, nunca reescrita. Âncoras absolutas: acrescentar um disco não
-reescala nenhum outro, então cobrir o espaço é sempre ganho, jamais distorção.
+Os cinco eixos são os que definem o mundo de cada álbum (volume, dinâmica,
+brilho, duração e pulso), medidos por `analyze_album` e normalizados por `norm`,
+importados de `analyze-audio.py` e nunca reescritos: medir um disco do acervo
+devolve o vetor publicado com distância 0. A distância é a mesma de
+`musicalDistance` em `perception/measure.ts`. As âncoras são absolutas, então
+acrescentar um disco nunca reescala outro: cobrir espaço é sempre ganho.
 
-**Distância contínua, não contagem de células.** Dividir o espaço em regiões e
-contar quantas estão ocupadas trataria dois discos nos cantos opostos da mesma
-célula como redundantes. A métrica principal aqui é o *raio de cobertura*: para
-cada ponto do espaço, a distância até o álbum mais próximo. As regiões entram só
-como leitura descritiva.
+**Métrica.** O raio de cobertura: para cada ponto de uma grade 11⁵, a distância
+até o álbum mais próximo (média, p90 e maior vazio, no espaço inteiro e dentro
+do envelope já ocupado). Os 32 octantes entram só como leitura descritiva.
 
-Isto **não é teste**. Cobertura de catálogo é decisão de curadoria, não condição
-de correção do software — nada aqui entra na suíte nem trava CI.
+**Utilidade de um candidato**, pela distância `d` ao vizinho mais próximo, com
+limiares tirados do próprio acervo a cada execução: baixa se `d` ≤ a mediana das
+distâncias entre os discos atuais, média até o máximo delas, alta acima. Redução
+dos maiores vazios e ocupação de octantes novos aparecem como evidência, não
+como peso. `--ranquear` dá duas leituras: cada candidato contra o acervo
+(independente) e a melhor sequência para levar mais de um (incremental).
+
+**Prospecção.** Busca no Internet Archive por CC BY 4.0, reconfere a licença no
+metadata de cada item, exige ao menos 3 faixas e 8 minutos, baixa o item inteiro
+(amostrar faixas erra a dinâmica do disco) e mede. O áudio fica em
+`.cache/prospeccao/audio/` e é apagado depois de medido, junto do WAV que a
+medição deixa em `.cache/analysis`; persistem os metadados e
+`.cache/prospeccao/vetores.json`. `.cache/curadoria.json` guarda vetores
+indexados pelo conteúdo das pastas, para repetir um lote sem medir de novo.
+
+Isto **não é teste**: cobertura é decisão de curadoria, nada aqui entra na suíte
+nem trava CI. O guardrail que trava é o de distância perceptual
+(`perception.test.ts`).
 """
 import argparse
 import glob

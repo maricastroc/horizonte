@@ -6,11 +6,8 @@ export const COLOR = {
   inkText: "#E8E4DC",
   inkText2: "#CFC9C0",
   inkHover: "#C9C4BB",
-  inkMute: "#8C867E",
   inkFaint: "#5A554F",
   inkGhost: "#3A3631",
-  rule: "rgba(232,228,220,.14)",
-  rule2: "rgba(232,228,220,.08)",
   dust: "#CFCAC2",
   body: "#0B0A0E",
 } as const;
@@ -21,13 +18,8 @@ export const rgba = (v: Rgb, a: number) =>
   `rgba(${Math.round(v[0] * 255)},${Math.round(v[1] * 255)},${Math.round(v[2] * 255)},${a})`;
 
 export const GEO = {
-  marginText: 0.028,
-  lockup: 0.115,
-  lockupZoom: 0.018,
-  marginTitle: 0.032,
   anchorCollection: { x: 0.46, y: 0.425 },
   anchorAlbum: { x: 0.6, y: 0.44 },
-  flatten: 0.62,
   spreadX: 0.285,
   spreadY: 0.1,
   neighborR: 0.062,
@@ -44,9 +36,9 @@ export const RING = {
   arcOut: 1,
   Rin: 350,
   Rout: 475,
-  gap: 0.02,
-  slices: 44,
   arcSlices: 280,
+  bakeBudget: 4,
+  dissolve: 0.45,
   alpha: { normal: 0.42, hover: 0.8, selected: 0.92, playing: 1 },
   lift: 0.035,
   anchor: -1.9,
@@ -184,7 +176,25 @@ export const LIGHT = {
   arc: 1,
 } as const;
 
-export const TRACK_BIAS = { blend: 0.55, cap: 0.25, lerp: 1.2 } as const;
+export const TRACK_BIAS = { lerp: 1.2 } as const;
+
+export const MOTION = {
+  attack: [0.24, 0.04],
+  release: [0.14, 1.2],
+  beatRelease: 0.45,
+  habitRatio: 5,
+  habit: [1.2, 6],
+  depth: [0.825, 1.5],
+  route: { floor: 0.35, slope: 1.3 },
+  track: { cap: 0.2, knee: 0.5 },
+  gate: {
+    sharpness: { floor: 0.074, knee: 0.12 },
+    sustain: { floor: 0.053, knee: 0.12 },
+    weight: { floor: 0.071, knee: 0.12 },
+    contrast: { floor: 0.109, knee: 0.12 },
+  },
+  lerp: 1.2,
+} as const;
 
 export const CHARGE = {
   fastSeconds: 20,
@@ -217,7 +227,6 @@ export const SECOND_MASS = { k: 0.03, h: 0.052, pointGain: 1.9, lerp: 3.5 } as c
 export const INTAKE = { mass: 0.45, horizon: 1.3 } as const;
 
 export const LERP = {
-  nav: 5.5,
   zoom: 4.2,
   play: 3.4,
   field: 9,
@@ -226,7 +235,6 @@ export const LERP = {
   energy: 4,
   ringRot: 2.6,
   light: 2.2,
-  lead: 1.6,
   reach: 8,
 } as const;
 
@@ -254,3 +262,19 @@ export const COMPOSITION_FALLBACK_W = 1440;
 export const PARTICLES = 240;
 
 export const BREAKPOINT = { mobile: 768, tablet: 1200, short: 520 } as const;
+
+export const ANATOMY = {
+  key: "horizonte:anatomy",
+  focus: {
+    fade: 0.32,
+    dim: { ask: 0.55, what: 0.35 },
+    light: 0.3,
+    scale: 0.25,
+    halo: { satellite: 2.4, core: 1.55 },
+    margin: 1.12,
+    refresh: 12,
+  },
+  compare: { duration: 1.1, steps: 3, peek: 0.35 },
+  ghost: { alpha: 0.42, width: 1.1, color: [0.937, 0.922, 0.89] as Rgb },
+  invite: { dwell: 9, shown: 16 },
+} as const;

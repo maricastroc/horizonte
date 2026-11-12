@@ -1,73 +1,14 @@
 import fs from "node:fs";
-import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { SIGNATURES } from "../content/signature.generated";
 import { ENVELOPE_N, envelopeOf } from "../content/signature";
 import { analyzeTrackPcm, composeAlbum, encodeEnvelope, norm } from "../ingest/dsp";
-
-const CACHE = path.resolve(__dirname, "../../../../.cache/analysis");
-const has = fs.existsSync(CACHE);
-
-function readWav(file: string): Float32Array {
-  const buf = fs.readFileSync(file);
-  let at = 12;
-  let dataOff = -1;
-  let dataLen = 0;
-  let bits = 16;
-  while (at + 8 <= buf.length) {
-    const id = buf.toString("ascii", at, at + 4);
-    const size = buf.readUInt32LE(at + 4);
-    if (id === "fmt ") bits = buf.readUInt16LE(at + 22);
-    if (id === "data") {
-      dataOff = at + 8;
-      dataLen = size;
-      break;
-    }
-    at += 8 + size + (size & 1);
-  }
-  if (dataOff < 0 || bits !== 16) throw new Error(`wav inesperado: ${file}`);
-  const n = Math.floor(dataLen / 2);
-  const out = new Float32Array(n);
-  for (let i = 0; i < n; i++) out[i] = buf.readInt16LE(dataOff + i * 2) / 32768;
-  return out;
-}
-
-function tracksOf(slug: string): string[] {
-  if (!has) return [];
-  return fs
-    .readdirSync(CACHE)
-    .filter((f) => f.startsWith(`${slug}--`) && f.endsWith(".wav"))
-    .sort()
-    .map((f) => path.join(CACHE, f));
-}
-
-function pearson(a: Float32Array, b: Float32Array): number {
-  const n = a.length;
-  let ma = 0;
-  let mb = 0;
-  for (let i = 0; i < n; i++) {
-    ma += a[i];
-    mb += b[i];
-  }
-  ma /= n;
-  mb /= n;
-  let num = 0;
-  let da = 0;
-  let db = 0;
-  for (let i = 0; i < n; i++) {
-    const x = a[i] - ma;
-    const y = b[i] - mb;
-    num += x * y;
-    da += x * x;
-    db += y * y;
-  }
-  return num / Math.sqrt(da * db);
-}
+import { hasCorpus, pearson, readWav, tracksOf } from "./wav";
 
 const rel = (got: number, want: number) =>
   want === 0 ? Math.abs(got) : Math.abs((got - want) / want);
 
-describe.skipIf(!has)("paridade browser ↔ pipeline offline", () => {
+describe.skipIf(!hasCorpus)("browser ↔ offline pipeline parity on the catalogue", () => {
   const slugs = Object.keys(SIGNATURES).filter((s) => tracksOf(s).length > 0);
 
   it("finds the analysis cache", () => {

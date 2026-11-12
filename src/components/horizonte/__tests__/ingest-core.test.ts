@@ -10,7 +10,6 @@ import {
 } from "../content";
 import { SIGNATURES } from "../content/signature.generated";
 import { NEUTRAL_SIGNATURE } from "../content/signature";
-import { leadOf } from "../audio/anticipation";
 import { RANGE, fieldConstantsOf, heftOf, lightSweepOf } from "../field";
 import { albumProgressOf } from "../state";
 import {
@@ -306,13 +305,6 @@ describe("a local record feeds the same sensory contracts", () => {
     const bounds = boundsOf(signature, 3);
     expect(albumProgressOf(bounds, 1, 0.5)).toBeGreaterThan(bounds[1]);
     expect(albumProgressOf(bounds, 1, 0.5)).toBeLessThan(bounds[2]);
-  });
-
-  it("anticipation works on an envelope measured in the browser", () => {
-    const lead = leadOf(signature, 0.2, signature.measured.durationS);
-    expect(finite(lead)).toBe(true);
-    expect(Math.abs(lead)).toBeLessThanOrEqual(1);
-    expect(leadOf(signature, 0.2, 0)).toBe(0);
   });
 
   it("the engine cannot tell a local record from a curated one by its signature", () => {

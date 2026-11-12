@@ -1,36 +1,49 @@
 {
   "_comment": "Vetor de conformidade: gerado por scripts/make-parity-fixture.py a partir do pipeline offline (scripts/analyze-audio.py). Não editar à mão — regenerar.",
-  "sourceSlug": "accasari",
+  "sourceSlug": "madison-kenny-all-systems-go",
+  "source": {
+    "artist": "Madison Kenny",
+    "title": "All Systems Go",
+    "url": "https://archive.org/details/MadKen001A",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "Madison Kenny — All Systems Go (Madison Kenny (self-released), 2006). Licensed under CC BY 4.0.",
+    "changes": "10 s excerpts of each track, starting 30 s in, decoded to 22050 Hz mono 16-bit WAV."
+  },
   "seconds": 10.0,
   "sampleRate": 22050,
   "tracks": [
     "track-01.wav",
     "track-02.wav",
-    "track-03.wav"
+    "track-03.wav",
+    "track-04.wav"
   ],
   "expected": {
-    "durationS": 30.0,
-    "loudnessDb": -18.81,
-    "dynamicsDb": 8.08,
-    "brightnessHz": 543.6,
-    "rolloffHz": 892.5,
-    "bassRatio": 0.4129,
-    "pulse": 0.1856,
+    "durationS": 40.0,
+    "loudnessDb": -14.19,
+    "dynamicsDb": 10.0,
+    "brightnessHz": 2619.5,
+    "rolloffHz": 5415.8,
+    "bassRatio": 0.1666,
+    "pulse": 0.2342,
     "trackPulse": [
-      0.121,
-      0.3051,
-      0.1307
+      0.3891,
+      0.1582,
+      0.1057,
+      0.2841
     ],
     "trackBrightnessHz": [
-      752.2,
-      356.0,
-      522.6
+      2870.1,
+      2639.5,
+      2381.6,
+      2586.7
     ],
     "spans": [
-      0.333333,
-      0.333333,
-      0.333333
+      0.25,
+      0.25,
+      0.25,
+      0.25
     ],
-    "envelopeBase64": "/+rUvqucjH+DhoqOkpeWhXVkVEU2JxoNAAQIDBUiLzgpGgsCAAAAAAAAAAAAACBEaJnK+/O+il1iaG5ZOhoECQ4TKUNchcT/////////////////////y5NbUVFQSDUiDw8ODhUkM0NbdI2UkpCSoa+90OP2///9+/Dk2MGgf19AIgMAAAEbfuH////QsKihmai4yLqRaUVKT1NXW15ianF4ip2xw9Tk9MaUYkdAOTM1ODs7OTc4QUpUUk5JPSQLAAADDBYhKzQsJBwWEAsGAgAAAAAAAB1CZ1pJOCwmHxo0TmhrY1pRRDYpLzpFT1ZdZIGfvc/V2+Hg4ODMrpB3cm1nYlxWUlNUVVpfZG5+jpyYk4+NjIuOnKu5wsnR1tbX17yfgniBiZGCc2RxkK/HxMLAs6KShoJ+e3RsZXCQr8y5ppN5WjwlMDtGSEdGTWF2i3xqWFhrf5KMhoB9fHt4cGhgVktAO0NLUktCOkNigZ2Ic15UT0tHREA9QUhOWW6DmIx9bWp1gIuMjo+QkZKSi4V/jaK4wrSllp+qtbevpp6vwNDY297cxa6Xh3lrY2tyeYiXpqOJb1ZWVlZWVVVXY297fXt5eoGIj3dZPDZMYXeLnrK9wsjJtqOQhn53cnJzc36Kl6W1xdW7oYeCjJWdlIyDhYyTmJueobza+fbHmWo="
+    "envelopeBase64": "No7l9qpeXWdtaWRgW1pre2AmAEyo1cvA0OPOYgApktRyESN90KmBgq3ZrHdon9akVRw6WXeVroxqaIWjh2hcb4KHipCjtYtDC2bCyohHg8LJeSlVmczO0NHS0LmjjXlmndXTgjCN//+0MEym9f//////0aOm5f/3u5y93trLuqeTm7TM2ebx+f/jwK/B09LMyMzQzsrI7f///+rt8ff//////9+jpsrlrnd+wP/RnI+/79q2lHNTfMf/3reah3OCkpiOg6bR8O/vzqB/q9jIi06Z5P/u2Mq9tbm9sZ6Y0P//4r2+v769u8XQ2+Xw6uDSu6OirbVzMR8+XWlzfoqWsdHjyK2Te2NVRzwzKiwuOVRvVS8aOltbTD4+PT5CRV96lKvCpHthb316cGludHyFjnpmWltcanqBc2VyipyOgG5bRyQBAChQVVRMMRYYJSwWAAAOHSs4MxgACBYjLjkxJBMAAAAAByA4LQAAAAAAAAAAAAsMDgsHAwAAAB0+OjRHgbyvk4GLlpudnpWNi42Qm6ewt762q6WttayejXBTYI26o42Dh4uCdm5vb3V8f29gUEAyZJakh2tzf4R8dGhbVGuBj5mjp6udfFx4mK2trJyIfJKnpZiLgnmJstqxhG15hXJYTXOYoJmSiH6BkJ+dmpSJfZi7zbSbmaGopqWdkII="
   }
 }

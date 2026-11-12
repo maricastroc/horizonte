@@ -26,6 +26,10 @@ const BASE: Snapshot = {
   variant: "desktop",
   announce: "",
   fault: null,
+  focus: null,
+  compare: false,
+  peek: false,
+  invite: null,
 };
 
 function fakeEngine(initial: Partial<Snapshot> = {}) {
@@ -66,6 +70,11 @@ function fakeEngine(initial: Partial<Snapshot> = {}) {
     seekFraction: register("seekFraction"),
     setVolume: register("setVolume"),
     setMuted: register("setMuted"),
+    openAnatomy: register("openAnatomy"),
+    closeAnatomy: register("closeAnatomy"),
+    setAnatomyFocus: register("setAnatomyFocus"),
+    previewAnatomy: register("previewAnatomy"),
+    setCompare: register("setCompare"),
     volume: 1,
     muted: false,
     frameOut: frame,
@@ -691,5 +700,155 @@ describe("compact composition — device edges and touch targets", () => {
     mount();
     const tc = screen.getByText(/00:00 \/ 00:00/);
     expect(tc.parentElement?.className).toContain("flex-wrap");
+  });
+});
+
+describe("why this shape", () => {
+  const EWORLD = ALBUMS.findIndex((a) => a.id === "zero-project-e-world");
+  const MKULTRA = ALBUMS.findIndex((a) => a.id === "meho-mkultra");
+
+  const openShape = () => fireEvent.click(screen.getByRole("tab", { name: "Why this shape?" }));
+
+  it("sits beside the tracks, named as a question", () => {
+    mount({ scale: "album", alb: EWORLD });
+    const tabs = within(trackRail()).getAllByRole("tab");
+    expect(tabs.map((t) => t.textContent)).toEqual(["Tracks", "Why this shape?"]);
+    expect(tabs[0].getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("opening it tells the engine and lights the record's leading question", () => {
+    const fake = mount({ scale: "album", alb: EWORLD });
+    openShape();
+    expect(fake.last("openAnatomy")).toBeDefined();
+    expect(fake.last("setAnatomyFocus")?.args).toEqual(["satellites"]);
+  });
+
+  it("the open question comes with its answer and a concrete experiment", () => {
+    mount({ scale: "album", alb: EWORLD, focus: "satellites" });
+    openShape();
+    const q = screen.getByRole("heading", { level: 3 });
+    expect(q.textContent).toBe("Why are there four small bodies around it?");
+    expect(screen.getByText(/Because it is long: 75 minutes/)).toBeDefined();
+    expect(screen.getByRole("button", { name: "What if it were shorter? ▸" })).toBeDefined();
+    expect(screen.queryByText(/median|dB|Hz/)).toBeNull();
+  });
+
+  it("trying it turns into a switch between the record and its other version", () => {
+    const fake = mount({ scale: "album", alb: EWORLD, focus: "satellites" });
+    openShape();
+    fireEvent.click(screen.getByRole("button", { name: "What if it were shorter? ▸" }));
+    expect(fake.last("setCompare")?.args).toEqual([true]);
+    act(() => fake.update({ compare: true }));
+    expect(screen.getByRole("heading", { level: 3 }).textContent).toBe("What if it were shorter?");
+    const shorter = screen.getByRole("button", { name: "Shorter" });
+    expect(shorter.getAttribute("aria-pressed")).toBe("true");
+    const said = screen.getAllByText(/two of its four small bodies dissolve/);
+    expect(said).toHaveLength(2);
+    expect(said.some((el) => el.getAttribute("aria-live") === "polite")).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "As it is" }));
+    expect(fake.last("setCompare")?.args).toEqual([false]);
+  });
+
+  it("while peeking, the switch shows the record as it is", () => {
+    const fake = mount({ scale: "album", alb: EWORLD, focus: "satellites" });
+    openShape();
+    fireEvent.click(screen.getByRole("button", { name: "What if it were shorter? ▸" }));
+    act(() => fake.update({ compare: true, peek: true }));
+    expect(screen.getByRole("button", { name: "As it is" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("Escape inside the panel leaves the experiment", () => {
+    const fake = mount({ scale: "album", alb: EWORLD, focus: "satellites" });
+    openShape();
+    fireEvent.click(screen.getByRole("button", { name: "What if it were shorter? ▸" }));
+    act(() => fake.update({ compare: true }));
+    fireEvent.keyDown(screen.getByRole("tabpanel"), { key: "Escape" });
+    expect(fake.last("setCompare")?.args).toEqual([false]);
+    expect(screen.getByRole("button", { name: "What if it were shorter? ▸" })).toBeDefined();
+  });
+
+  it("two more of the record's questions are at hand, and pointing one previews it", () => {
+    const fake = mount({ scale: "album", alb: EWORLD, focus: "satellites" });
+    openShape();
+    const layers = screen.getByRole("button", { name: /Why is the ring made of layers\?/ });
+    fireEvent.focus(layers);
+    expect(fake.last("previewAnatomy")?.args).toEqual(["strata"]);
+    fireEvent.click(layers);
+    expect(fake.last("setAnatomyFocus")?.args).toEqual(["strata"]);
+  });
+
+  it("the numbers stay one step away", () => {
+    mount({ scale: "album", alb: EWORLD, focus: "satellites" });
+    openShape();
+    expect(screen.queryByText("Usual here")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /In numbers/ }));
+    expect(screen.getByText("Usual here")).toBeDefined();
+    expect(screen.getByText("34 min (median of the 14)")).toBeDefined();
+    expect(screen.getByText("longest of 14")).toBeDefined();
+  });
+
+  it("more about the shape holds the other questions and the plain facts", () => {
+    mount({ scale: "album", alb: EWORLD, focus: "satellites" });
+    openShape();
+    fireEvent.click(screen.getByRole("button", { name: /More about this shape/ }));
+    expect(screen.getByText(/Colour comes from the cover/)).toBeDefined();
+    expect(screen.getByText(/The name is set at weight 704/)).toBeDefined();
+  });
+
+  it("a record close to the usual explains itself without an experiment", () => {
+    mount({ scale: "album", alb: MKULTRA, focus: "core" });
+    openShape();
+    expect(screen.getByRole("heading", { level: 3 }).textContent).toBe(
+      "What sets the size of its dark center?",
+    );
+    expect(screen.getByText(/nothing to change/)).toBeDefined();
+    expect(screen.queryByRole("button", { name: /What if/ })).toBeNull();
+  });
+
+  it("the invitation is the leading question, and opens it", () => {
+    const fake = mount({
+      scale: "album",
+      alb: EWORLD,
+      invite: { part: "satellites", line: "Why are there four small bodies around it?" },
+    });
+    expect(screen.getByText("Why are there four small bodies around it?")).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: /Find out/ }));
+    expect(fake.last("openAnatomy")).toBeDefined();
+    expect(fake.last("setAnatomyFocus")?.args).toEqual(["satellites"]);
+    const tab = screen.getByRole("tab", { name: "Why this shape?" });
+    expect(tab.getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("the album list folds to one line while the shape is open, and unfolds on demand", () => {
+    mount({ scale: "album", alb: EWORLD });
+    openShape();
+    const fold = screen.getByRole("button", { name: new RegExp(`${ALBUMS.length} albums`) });
+    expect(fold.getAttribute("aria-expanded")).toBe("false");
+    expect(fold.textContent).toContain(ALBUMS[EWORLD].artist);
+    fireEvent.click(fold);
+    expect(fold.getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("going back to the tracks releases the shape", () => {
+    const fake = mount({ scale: "album", alb: EWORLD });
+    openShape();
+    fireEvent.click(screen.getByRole("tab", { name: "Tracks" }));
+    expect(fake.last("closeAnatomy")).toBeDefined();
+    expect(within(trackRail()).getByText(ALBUMS[EWORLD].tracks[0].title)).toBeDefined();
+  });
+
+  it("on touch it shows one question at a time with large targets", () => {
+    const fake = mount({ scale: "album", alb: EWORLD, variant: "mobile", focus: "satellites" });
+    openShape();
+    for (const tab of screen.getAllByRole("tab")) expect(tab.className).toContain("min-h-[44px]");
+    expect(screen.queryByText("Also")).toBeNull();
+    const next = screen.getByRole("button", { name: /Next question/ });
+    expect(next.className).toContain("min-h-[44px]");
+    fireEvent.click(next);
+    expect(fake.last("setAnatomyFocus")?.args).toEqual(["strata"]);
+    fireEvent.click(screen.getByRole("button", { name: "What if it were shorter? ▸" }));
+    for (const b of within(screen.getByRole("group", { name: "Compare" })).getAllByRole("button")) {
+      expect(b.className).toContain("min-h-[46px]");
+    }
   });
 });

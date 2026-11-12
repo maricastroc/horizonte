@@ -1,7 +1,7 @@
 import type { AlbumSignature } from "../content/signature";
 import type { AudioSource, Track } from "../content/types";
 import { clamp } from "../math";
-import { AudioAnalysis, type AudioFrame } from "./analysis";
+import { AudioAnalysis, NEUTRAL_RESPONSE, type AudioFrame, type Response } from "./analysis";
 import { FilePlayback, LocalPlayback, type Playback, type PlaybackFault } from "./playback";
 
 export interface VisualAudioState extends AudioFrame {
@@ -54,6 +54,7 @@ export class AudioBus {
     this.ctx = new Ctor();
     this.analysis = new AudioAnalysis(this.ctx);
     if (this.reference) this.analysis.setReference(this.reference);
+    this.analysis.setResponse(this.response);
     this.gain = this.ctx.createGain();
     this.gain.gain.value = this.effectiveLevel();
     this.analysis.analyser.connect(this.gain);
@@ -62,10 +63,17 @@ export class AudioBus {
   }
 
   private reference: AlbumSignature["reference"] | null = null;
+  private response: Response = NEUTRAL_RESPONSE;
 
   setSignature(sig: AlbumSignature) {
     this.reference = sig.reference;
     this.analysis?.setReference(sig.reference);
+  }
+
+  setResponse(response: Response) {
+    if (response === this.response) return;
+    this.response = response;
+    this.analysis?.setResponse(response);
   }
 
   private effectiveLevel() {

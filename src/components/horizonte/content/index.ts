@@ -7,8 +7,6 @@ export interface AlbumWithSignature extends Album {
   signature: AlbumSignature;
 }
 
-export type CuratedAlbumWithSignature = AlbumWithSignature;
-
 const CURATED: AlbumWithSignature[] = CURATION.map((album) => {
   const signature = SIGNATURES[album.id] ?? NEUTRAL_SIGNATURE;
   return {

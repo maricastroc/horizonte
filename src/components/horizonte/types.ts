@@ -1,3 +1,4 @@
+import type { AnatomyPart, Invite } from "./anatomy";
 import type { Bands } from "./composition/bands";
 
 export type Scale = "collection" | "album" | "track";
@@ -82,6 +83,10 @@ export interface Snapshot {
   variant: Variant;
   announce: string;
   fault: Fault | null;
+  focus: AnatomyPart | null;
+  compare: boolean;
+  peek: boolean;
+  invite: Invite | null;
 }
 
 export type Reach = "none" | "enter" | "leave";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { AnatomyInvite, AnatomyTabs, ShapePanel, type AlbumView } from "./AnatomyRail";
 import Ceremony from "./Ceremony";
 import { ALBUMS } from "./content";
 import { FULL_BANDS } from "./composition/bands";
@@ -28,6 +29,10 @@ const DEFAULT_SNAPSHOT: Snapshot = {
   variant: "desktop",
   announce: `Collection · ${ALBUMS.length} bodies`,
   fault: null,
+  focus: null,
+  compare: false,
+  peek: false,
+  invite: null,
 };
 
 const noop = () => () => {};
@@ -85,6 +90,8 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
+  const [view, setView] = useState<AlbumView>("tracks");
+  const [albumsOpen, setAlbumsOpen] = useState(false);
 
   useEffect(() => {
     if (!engine) return;
@@ -125,6 +132,24 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   }, [engine, snap.variant]);
 
   const intent = useCallback(() => engine?.markIntent(), [engine]);
+
+  const onView = useCallback(
+    (v: AlbumView) => {
+      setView(v);
+      setAlbumsOpen(false);
+      if (v === "shape") engine?.openAnatomy();
+      else engine?.closeAnatomy();
+    },
+    [engine],
+  );
+
+  const openInvite = useCallback(() => {
+    const part = snap.invite?.part ?? null;
+    setView("shape");
+    setAlbumsOpen(false);
+    engine?.openAnatomy();
+    if (part) engine?.setAnatomyFocus(part);
+  }, [engine, snap.invite]);
 
   const pick = useCallback(() => fileRef.current?.click(), []);
 
@@ -176,6 +201,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   const trackRailOn = snap.scale !== "collection";
   const compact = snap.variant === "mobile";
   const albumRailOn = compact ? snap.scale === "collection" && railOpen : true;
+  const albumsFolded = !compact && view === "shape" && trackRailOn && !albumsOpen;
   const b = snap.bands;
 
   const focusStyle = useMemo(
@@ -443,6 +469,33 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     />
   );
 
+  const albumView = (dense: boolean) => (
+    <>
+      <AnatomyTabs
+        view={view}
+        onView={onView}
+        invited={!!snap.invite}
+        compact={dense}
+        ink={ink}
+        enabled={trackRailOn}
+      />
+      {view === "tracks" ? (
+        <div id="album-panel-tracks" role="tabpanel" aria-labelledby="album-tab-tracks">
+          <AnatomyInvite
+            invite={snap.invite}
+            onOpen={openInvite}
+            compact={dense}
+            ink={ink}
+            enabled={trackRailOn}
+          />
+          <ul>{trackRows}</ul>
+        </div>
+      ) : (
+        <ShapePanel engine={engine} snap={snap} compact={dense} ink={ink} enabled={trackRailOn} />
+      )}
+    </>
+  );
+
   const hint = snap.scale === "collection" && (
     <p
       aria-hidden
@@ -578,7 +631,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             bottom: pct(1 - b.list),
           }}
         >
-          <ul>{trackRows}</ul>
+          {albumView(true)}
         </nav>
 
         <div
@@ -624,7 +677,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           aria-hidden={!albumRailOn}
           className={[
             "isolate relative flex min-h-0 flex-col w-53.5 border-t border-rule",
-            trackRailOn ? "flex-1 basis-0" : "shrink",
+            albumsFolded ? "flex-none" : trackRailOn ? "flex-1 basis-0" : "shrink",
             "pointer-events-auto tablet:w-47.5",
             "-mx-3 px-3 pt-2 pb-1",
           ].join(" ")}
@@ -636,11 +689,38 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               "[mask-image:linear-gradient(to_right,transparent,black_2.5rem)]",
             ].join(" ")}
           />
-          <p className="pb-1.5 text-ink-faint">{ALBUMS.length} albums</p>
-          <ul className="rail-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            {albumRows}
-          </ul>
-          {intake}
+          {view === "shape" && trackRailOn ? (
+            <button
+              type="button"
+              aria-expanded={!albumsFolded}
+              aria-controls="album-list"
+              onClick={() => setAlbumsOpen((v) => !v)}
+              className={[
+                "grid cursor-pointer grid-cols-[auto_1fr] gap-3 pb-1.5 text-left",
+                "text-ink-faint hover:text-ink-text",
+              ].join(" ")}
+            >
+              <span>
+                {ALBUMS.length} albums {albumsFolded ? "▾" : "▴"}
+              </span>
+              {albumsFolded && (
+                <span className="truncate text-right text-ink-text">{album.artist}</span>
+              )}
+            </button>
+          ) : (
+            <p className="pb-1.5 text-ink-faint">{ALBUMS.length} albums</p>
+          )}
+          {!albumsFolded && (
+            <>
+              <ul
+                id="album-list"
+                className="rail-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
+              >
+                {albumRows}
+              </ul>
+              {intake}
+            </>
+          )}
         </nav>
 
         <nav
@@ -657,7 +737,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               : "pointer-events-none max-h-0 flex-none overflow-hidden opacity-0",
           ].join(" ")}
         >
-          <ul>{trackRows}</ul>
+          {albumView(false)}
         </nav>
       </div>
 

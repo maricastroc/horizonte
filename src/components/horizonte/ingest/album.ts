@@ -7,7 +7,7 @@ import type { LocalGroupDraft, LocalTrackDraft } from "./types";
 
 const collator = new Intl.Collator("pt", { numeric: true, sensitivity: "base" });
 
-export const FALLBACK_ARTIST = "Disco local";
+export const FALLBACK_ARTIST = "Local album";
 export const FALLBACK_TITLE = "Untitled";
 
 const stripExtension = (name: string) => {

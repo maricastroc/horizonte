@@ -12,18 +12,19 @@ const glsl = (): Plugin => ({
 
 const alias = { "@": fileURLToPath(new URL("./src", import.meta.url)) };
 
+const CORPUS = "src/**/*.corpus.test.ts";
+
 export default defineConfig({
-  resolve: { alias },
-  plugins: [glsl()],
   test: {
     projects: [
       {
         plugins: [glsl()],
         resolve: { alias },
         test: {
-          name: "unidade",
+          name: "unit",
           environment: "node",
           include: ["src/**/*.test.ts"],
+          exclude: [CORPUS],
         },
       },
       {
@@ -33,6 +34,15 @@ export default defineConfig({
           name: "dom",
           environment: "jsdom",
           include: ["src/**/*.test.tsx"],
+        },
+      },
+      {
+        resolve: { alias },
+        test: {
+          name: "corpus",
+          environment: "node",
+          include: [CORPUS],
+          fileParallelism: false,
         },
       },
     ],
