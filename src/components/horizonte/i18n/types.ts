@@ -83,7 +83,7 @@ export interface Copy {
     asItIs: string;
     compare: string;
     hold: string;
-    holdKeys: string;
+    keys: string;
     settled: string;
     rows: { measure: string; record: string; usual: string; standing: string; drawn: string };
     usual: (shown: string, of: number) => string;

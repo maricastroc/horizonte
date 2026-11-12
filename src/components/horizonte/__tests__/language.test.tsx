@@ -224,3 +224,30 @@ describe("the credit and local records", () => {
     expect(screen.getByText("Trazer um disco")).toBeDefined();
   });
 });
+
+describe("room for the longer language", () => {
+  const LE_MORTE = ALBUMS.findIndex((a) => a.id === "le-morte-dabby-0p");
+
+  it("a long experiment wraps inside the panel, with its arrow kept on the last word", () => {
+    browser(["pt-BR"]);
+    mount({ scale: "album", alb: LE_MORTE, focus: "gaps" });
+    fireEvent.click(screen.getByRole("tab", { name: "Por que esta forma?" }));
+    const button = screen.getByRole("button", {
+      name: "E se cada faixa seguisse seu próprio pulso? ▸",
+    });
+    expect(button.className).not.toMatch(/whitespace-nowrap/);
+    const tail = button.querySelector("span.whitespace-nowrap");
+    expect(tail?.textContent).toBe("pulso? ▸");
+  });
+
+  it("the comparison hint breaks only at its separator", () => {
+    browser(["pt-BR"]);
+    mount({ scale: "album", alb: EWORLD });
+    fireEvent.click(screen.getByRole("tab", { name: "Por que esta forma?" }));
+    fireEvent.click(screen.getByRole("button", { name: "E se fosse mais curto? ▸" }));
+    const hold = screen.getByText("Segure a imagem para comparar");
+    expect(hold.className).toMatch(/whitespace-nowrap/);
+    expect(hold.parentElement?.textContent).toBe("Segure a imagem para comparar · Esc volta");
+    expect(screen.getByText("· Esc volta").className).toMatch(/whitespace-nowrap/);
+  });
+});

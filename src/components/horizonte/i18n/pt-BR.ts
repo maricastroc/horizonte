@@ -117,7 +117,7 @@ export const PT_BR: Copy = {
     asItIs: "Como é",
     compare: "Comparar",
     hold: "Segure a imagem para comparar",
-    holdKeys: "Segure a imagem para comparar · Esc volta",
+    keys: "Esc volta",
     settled: "Este disco já está onde a maioria da coleção está, então não há o que mudar.",
     rows: {
       measure: "Medida",

@@ -105,7 +105,7 @@ export const EN: Copy = {
     asItIs: "As it is",
     compare: "Compare",
     hold: "Hold the image to compare",
-    holdKeys: "Hold the image to compare · Esc returns",
+    keys: "Esc returns",
     settled: "It already sits where most records here do, so there is nothing to change.",
     rows: {
       measure: "Measure",

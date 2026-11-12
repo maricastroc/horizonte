@@ -73,7 +73,7 @@ export function AnatomyTabs({
       role="tablist"
       aria-label={t.views}
       className={[
-        "flex items-center gap-6 border-b border-rule-2",
+        "flex items-center gap-6 border-b border-rule-2 tablet:tracking-[.14em]",
         compact ? "sticky top-0 z-10 bg-void/92 backdrop-blur-sm" : "pb-1",
       ].join(" ")}
     >
@@ -306,12 +306,13 @@ export function ShapePanel({
                 engine?.setCompare(true);
               }}
               className={[
-                "mt-4.5 w-fit cursor-pointer whitespace-nowrap text-ink-text hover:text-white",
+                "mt-4.5 w-fit cursor-pointer text-left leading-[1.7] text-ink-text hover:text-white",
                 compact ? "min-h-[44px]" : "pb-1",
               ].join(" ")}
               style={{ boxShadow: `inset 0 -1px 0 ${ink}` }}
             >
-              {o.what} ▸
+              {o.what.slice(0, o.what.lastIndexOf(" ") + 1)}
+              <span className="whitespace-nowrap">{o.what.slice(o.what.lastIndexOf(" ") + 1)} ▸</span>
             </button>
           ) : (
             <p className={`${PROSE} mt-4 text-[12px] leading-[1.45] text-ink-dim`}>
@@ -355,7 +356,13 @@ export function ShapePanel({
               ))}
             </div>
             <p className={`${HINT} mt-3 text-[9.5px]`}>
-              {compact ? t.hold : t.holdKeys}
+              <span className="whitespace-nowrap">{t.hold}</span>
+              {!compact && (
+                <>
+                  {" "}
+                  <span className="whitespace-nowrap">· {t.keys}</span>
+                </>
+              )}
             </p>
           </>
         )}
