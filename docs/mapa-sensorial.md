@@ -279,6 +279,11 @@ pergunta é neutra e não há experimento.
   no celular. Uma coroa de camada única volta a acender a coroa inteira. Na
   Contraprova, a máscara usa o mesmo passo assado que a coroa mostra, e a luz
   acompanha a mudança.
+* **Postura.** Inclinação é uma relação, então nenhuma região a mostra. Com a
+  postura em foco, o plano de trás desenha uma silhueta tracejada da mesma forma
+  vista de frente (mesmo centro e raio, achatamento 1). O espaço entre ela e o
+  contorno real é a inclinação. A máscara mantém essa linha acesa, e na
+  Contraprova ela fica parada enquanto a forma sobe ou se deita.
 * **"What if…?"** recalcula a morfologia com um descritor na mediana dos 14
   (`compareMorphology`), só para a forma: a reação segue a do disco. Partes
   desenhadas mudam de forma contínua em 1,1 s; as assadas na coroa passam por
