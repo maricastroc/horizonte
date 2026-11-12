@@ -4,7 +4,10 @@ Assinatura sensorial do Horizonte — análise offline do áudio de cada álbum.
 Roda depois de `fetch-curation.py`, sobre os arquivos já publicados em
 `public/music/`, e gera `src/components/horizonte/content/signature.generated.ts`.
 
-    python3 scripts/analyze-audio.py [--only <slug>] [--force] [--report]
+    python3 scripts/analyze-audio.py [--only <slug>] [--report]
+
+Com `--only`, mede só aquele álbum e imprime o relatório sem regravar o arquivo
+gerado, que precisa conter o acervo inteiro.
 
 Princípio: **a música define as constantes do mundo; a reprodução só as perturba.**
 Tudo o que um disco *é* — volume, dinâmica, brilho, duração, forma — é medido aqui,
@@ -461,10 +464,13 @@ def main():
         entries.append(entry)
         print(f"  · {slug}: {len(files)} faixas, {sig['duration']/60:.1f} min")
 
-    emit(entries)
-    print(f"\n{len(entries)} álbuns → {os.path.relpath(OUT_TS, ROOT)}")
+    if args.only:
+        print(f"\n--only: {os.path.relpath(OUT_TS, ROOT)} não foi regravado")
+    else:
+        emit(entries)
+        print(f"\n{len(entries)} álbuns → {os.path.relpath(OUT_TS, ROOT)}")
 
-    if args.report:
+    if args.report or args.only:
         print(
             f"\n{'álbum':30}{'loud':>7}{'dyn':>7}{'bright':>8}{'dur':>7}{'pulso':>8}"
             "   normalizados"
