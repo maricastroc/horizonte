@@ -12,7 +12,7 @@ catálogo curado    arquivo do usuário
       │                    │
       └──── AlbumSignature ┘
                  │
-        field.ts · ring.ts · anticipation.ts · FieldEngine
+        field.ts · ring.ts · FieldEngine
 ```
 
 `content/index.ts` publica um único `ALBUMS`. O curado entra no boot; o local
@@ -168,7 +168,6 @@ Todos. Um disco local alimenta P1–P14 pelos mesmos caminhos do curado:
 | P13 rotação do anel | posição no álbum |
 | P14 peso do disco apontado | constantes do próprio disco |
 | Reação ao vivo | `AnalyserNode` sobre o `<audio>` do arquivo, normalizado pelas âncoras p10/p90 medidas do próprio disco |
-| Antecipação | envelope medido, lido 6 s à frente |
 
 Verificado em reprodução real de um disco local (4 faixas, medidas no
 navegador), 150 quadros: desvio padrão de `energy` 0,159, `bass` 0,137, `mid`
