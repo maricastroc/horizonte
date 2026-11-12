@@ -214,11 +214,15 @@ escoamento é excedido, guarda parte como cicatriz.
 
 No toque não há anel.
 
-## Assinatura de movimento (`?x=motion`)
+## Assinatura de movimento
 
-**Desligada por padrão.** Com `?x=motion` (ou `__horizonte.experiments.motion =
-true`), a reação ao vivo ganha o temperamento do disco. Desligada, a análise
-recebe exatamente a resposta neutra e o mundo é bit a bit o de antes.
+**Comportamento padrão.** Enquanto um disco toca, a reação ao vivo ganha o
+temperamento dele: quão rápido sobe, quanto sustenta, quanto do teto P4 o evento
+típico alcança e se vai para a massa ou para a luz. Parado, e para discos sem essa
+análise (os trazidos pelo visitante, ou um disco novo antes de rodar o script), a
+análise recebe a resposta neutra (τ 0,12 s e 1,2 s, acento relativo ao hábito,
+roteamento 1:1), e o mundo em repouso não muda. `motionStep` desliza para a
+resposta da faixa nova em cerca de um segundo.
 
 `scripts/analyze-motion.py` mede cada faixa no cache de WAV e gera
 `content/motion.generated.ts`. A qualidade da faixa é a âncora do disco
@@ -235,8 +239,9 @@ P16/P17 e teto de 0,2.
 
 A profundidade foi recalibrada de 0,55–1 para 0,825–1,5 depois da primeira
 escuta. Medido numa bancada headless com o motor real (14 discos × 3 faixas ×
-30 s): subida da reação de 117 a 1633 ms entre discos (antes 200–483 ms), lente
-variando 1,9% a 6,2% durante a reprodução (antes 0,2–3,4%), teto alcançado em
+30 s): subida da reação de 117 a 1633 ms entre discos (200–483 ms com a resposta
+neutra), lente variando 1,9% a 6,2% durante a reprodução (0,2–3,4% com a neutra),
+teto alcançado em
 0,6% a 12,8% dos quadros, e o disco reconhecível só pelo movimento em 26% dos
 casos (acaso 7%).
 
@@ -302,6 +307,6 @@ pergunta é neutra e não há experimento.
 ```bash
 python3 scripts/fetch-curation.py            # licenças, download, transcodificação
 python3 scripts/analyze-audio.py --report    # assinatura sensorial
-python3 scripts/analyze-motion.py --report   # assinatura de movimento
+python3 scripts/analyze-motion.py --report   # assinatura de movimento (a cada disco novo)
 npm run test:corpus                          # paridade com o acervo (.cache/analysis)
 ```

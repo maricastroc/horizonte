@@ -168,6 +168,8 @@ So the audio is analysed **once, offline** ([`scripts/analyze-audio.py`](scripts
 | **Track spans** | Real proportional widths of each sector in the ring              |
 | **Pulse spread between tracks** | Breaks between the sectors                       |
 
+Records also differ in how they move. While one plays, its **motion signature**, measured per track by [`scripts/analyze-motion.py`](scripts/analyze-motion.py) (attack sharpness, sustain, microdynamics and low-end weight), sets how fast the reaction rises and falls, how far into the record's ceiling a typical event reaches, and whether it bends the lens or the light. At rest, and for records brought by a listener, the response is neutral.
+
 Two determinism guarantees hold the design together: every descriptor is normalised against **fixed absolute anchors** rather than against the other albums, so adding a record never changes anyone else's signature; and the fallback ink for achromatic covers is derived from **that album's own spectral balance**, never from its position in the list.
 
 The result is the split the whole project rests on: **identity is measured and constant, reaction is live and bounded.** Playback perturbs the constants by at most each record's own ceiling, 5% to 20% — bass nudges mass, dynamics tension the field's spin, treble interferes with light through chromatic dispersion. Never an equaliser, never bars, never a sphere pulsing on the beat.
