@@ -37,9 +37,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      # The suite runs here, including the browser↔Python conformance vector
-      # (ingest-parity-fixture), which ships its own 10 s excerpts and the numbers
-      # the offline pipeline produced from them. The full-catalogue parity suite
-      # still skips: it reads .cache/analysis, 2.1 GB and gitignored.
+      # `npm run test` runs the unit and DOM projects, including the browser↔Python
+      # conformance vector (ingest-parity-fixture), which ships its own 10 s excerpts
+      # and the numbers the offline pipeline produced from them. The corpus project
+      # (`npm run test:corpus`) reads .cache/analysis, which is local and gitignored.
       - name: Unit tests
         run: npm run test
