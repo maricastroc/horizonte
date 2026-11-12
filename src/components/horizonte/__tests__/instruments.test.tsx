@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import Instruments, { isInstrumentsTarget } from "../Instruments";
-import { ALBUMS } from "../content";
+import { ALBUMS, OPENING } from "../content";
 import { timecode } from "../format";
 import { COLOR, rgba } from "../tokens";
 import type { Snapshot } from "../types";
@@ -755,6 +755,11 @@ describe("why this shape", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Tracks" }));
     expect(fake.last("closeAnatomy")).toBeDefined();
     expect(within(trackRail()).getByText(ALBUMS[EWORLD].tracks[0].title)).toBeDefined();
+  });
+
+  it("the default view, before the engine starts, is the opening record", () => {
+    render(<Instruments engine={null} />);
+    expect(screen.getByText(`Collection · ${OPENING + 1}/${ALBUMS.length}`)).toBeDefined();
   });
 
   it("on touch it shows one question at a time with large targets", () => {

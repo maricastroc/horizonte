@@ -18,7 +18,7 @@ vi.mock("../fieldMaterial", async (importReal) => {
   };
 });
 
-import { ALBUMS } from "../content";
+import { ALBUMS, OPENING } from "../content";
 import { FieldEngine } from "../engine/FieldEngine";
 import { SEQ } from "../tokens";
 import { GEO } from "../tokens";
@@ -183,14 +183,14 @@ describe("flow: gesture reaches the world", () => {
     world();
     env.fire("wheel", { deltaY: 625, deltaX: 0 });
     run(2);
-    expect(engine.st.alb).toBe(1);
+    expect(engine.st.alb).toBe(OPENING + 1);
   });
 
   it("the arrow advances one record", () => {
     world();
     env.fire("keydown", { key: "ArrowRight", code: "ArrowRight" });
     run(2);
-    expect(engine.st.alb).toBe(1);
+    expect(engine.st.alb).toBe(OPENING + 1);
   });
 
   it("a tap on the record's body opens the album", () => {

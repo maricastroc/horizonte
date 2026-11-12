@@ -39,6 +39,7 @@ import {
 import {
   ALBUMS,
   NEUTRAL_BIAS,
+  OPENING,
   chargeAt,
   onCatalogChange,
   trackBiasOf,
@@ -134,7 +135,7 @@ const CATALOG: Catalog = {
 };
 
 export class FieldEngine implements InputActions {
-  readonly st: FieldState = initialState();
+  readonly st: FieldState = initialState(OPENING);
   readonly bus = new AudioBus();
   private readonly frame: FrameOut = { progress: 0, position: 0, duration: 0 };
   private frameSink: FrameSink | null = null;
@@ -240,7 +241,7 @@ export class FieldEngine implements InputActions {
     this.rings = new RingBakery(this.covers);
     this.gl = createFieldGL(canvas, this.cvB, this.cvF, this.cvFocus);
     this.syncCatalog(-1);
-    this.C = this.FIELD[0];
+    this.C = this.FIELD[this.st.alb];
     this.unsubscribeCatalog = onCatalogChange((i) => this.syncCatalog(i));
 
     this.audioState = this.bus.update(0);

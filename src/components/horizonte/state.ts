@@ -2,14 +2,14 @@ import { clamp } from "./math";
 import { MORPH, SEQ, TIDE } from "./tokens";
 import type { FieldState, Mode } from "./types";
 
-export function initialState(): FieldState {
+export function initialState(opening = 0): FieldState {
   return {
     scale: "collection",
     zoom: 0,
     zoomT: 0,
-    nav: 0,
-    navT: 0,
-    alb: 0,
+    nav: opening,
+    navT: opening,
+    alb: opening,
     playAlb: -1,
     trk: 0,
     sel: 0,

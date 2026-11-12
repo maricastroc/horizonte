@@ -19,6 +19,10 @@ const CURATED: AlbumWithSignature[] = CURATION.map((album) => {
 
 export const CURATED_COUNT = CURATED.length;
 
+export const OPENING_ID = "zero-project-e-world";
+
+export const OPENING = Math.max(0, CURATED.findIndex((a) => a.id === OPENING_ID));
+
 export const ALBUMS: AlbumWithSignature[] = [...CURATED];
 
 const listeners = new Set<(index: number) => void>();

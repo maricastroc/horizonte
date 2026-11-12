@@ -30,7 +30,7 @@ vi.mock("../fieldMaterial", async (importReal) => {
   };
 });
 
-import { ALBUMS } from "../content";
+import { ALBUMS, OPENING } from "../content";
 import { EXPLORED_KEY, HINT_MS, TIDE } from "../tokens";
 import { FieldEngine } from "../engine/FieldEngine";
 import { albPos, bodyGeom, layoutFor } from "../composition/layout";
@@ -79,10 +79,13 @@ afterEach(() => {
 });
 
 describe("lifecycle", () => {
-  it("opens on the collection with the first record focused", () => {
+  it("opens on the collection with zero-project's e-world focused", () => {
     expect(engine.st.scale).toBe("collection");
     expect(engine.st.mode).toBe("stopped");
-    expect(engine.getSnapshot().navAlb).toBe(0);
+    expect(ALBUMS[OPENING].id).toBe("zero-project-e-world");
+    expect(engine.getSnapshot().navAlb).toBe(OPENING);
+    expect(engine.getSnapshot().alb).toBe(OPENING);
+    expect(engine.st.nav).toBe(OPENING);
   });
 
   it("draws one frame per requested animation", () => {
@@ -108,14 +111,15 @@ describe("lifecycle", () => {
 
 describe("state integration", () => {
   it("navigation chases the target without overshooting it", () => {
-    engine.st.navT = 3;
+    const target = OPENING + 3;
+    engine.st.navT = target;
     const visited: number[] = [];
     for (let i = 0; i < 120; i++) {
       env.advance();
       visited.push(engine.st.nav);
     }
-    expect(Math.max(...visited)).toBeLessThanOrEqual(3.0001);
-    expect(engine.st.nav).toBeCloseTo(3, 2);
+    expect(Math.max(...visited)).toBeLessThanOrEqual(target + 0.0001);
+    expect(engine.st.nav).toBeCloseTo(target, 2);
   });
 
   it("the navigation target never leaves the catalogue", () => {

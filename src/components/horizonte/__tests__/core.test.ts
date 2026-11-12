@@ -109,6 +109,11 @@ describe("initialState", () => {
     expect(b.alb).toBe(0);
   });
 
+  it("can open on any record, keeping navigation and focus on it", () => {
+    const s = initialState(5);
+    expect([s.nav, s.navT, s.alb]).toEqual([5, 5, 5]);
+  });
+
   it("has no undefined or NaN field", () => {
     const s = initialState() as unknown as Record<string, unknown>;
     for (const [k, v] of Object.entries(s)) {
