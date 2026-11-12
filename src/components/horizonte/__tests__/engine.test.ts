@@ -34,7 +34,7 @@ import { ALBUMS } from "../content";
 import { EXPLORED_KEY, HINT_MS, TIDE } from "../tokens";
 import { FieldEngine } from "../engine/FieldEngine";
 import { albPos, bodyGeom, layoutFor } from "../composition/layout";
-import { fieldConstantsOf, reduceMotion } from "../field";
+import { fieldConstantsOf } from "../field";
 import { morphologyOf } from "../morphology";
 import { peakOf, scarCount, STRAIN_BINS } from "../composition/strain";
 import {
@@ -657,53 +657,6 @@ describe("the light crosses the track (P12)", () => {
 
     expect(Math.hypot(end.x - start.x, end.y - start.y)).toBeGreaterThan(0.05);
     expect(Math.hypot(end.x, end.y)).toBeCloseTo(Math.hypot(start.x, start.y), 6);
-  });
-});
-
-describe("experiment: the field anticipates (off by default)", () => {
-  it("is born switched off", () => {
-    expect(engine.experiments.anticipation).toBe(false);
-  });
-
-  it("switched off, the anticipation signal stays at zero even while playing", () => {
-    engine.playTrack(0, 1);
-    run(8);
-    expect(engine.lead).toBe(0);
-  });
-
-  it("switched off, the world is identical to the pre-experiment one", () => {
-    engine.playTrack(0, 1);
-    run(8);
-    const withoutExperiment = { m0h: engine.st.m0h, fade: engine.st.fade };
-
-    engine.experiments.anticipation = true;
-    run(8);
-    engine.experiments.anticipation = false;
-    run(8);
-
-    expect(engine.st.m0h).toBeCloseTo(withoutExperiment.m0h, 6);
-    expect(engine.st.fade).toBeCloseTo(withoutExperiment.fade, 6);
-  });
-
-  it("switched on, the horizon shifts inside the record's reaction ceiling", () => {
-    engine.experiments.anticipation = true;
-    engine.playTrack(0, 1);
-    run(10);
-
-    const c = fieldConstantsOf(ALBUMS[0].signature);
-    expect(Math.abs(engine.lead)).toBeLessThanOrEqual(1);
-    const deviation = Math.abs(engine.lead) * c.reactionCap;
-    expect(deviation).toBeLessThanOrEqual(c.reactionCap + 1e-9);
-  });
-
-  it("reduced-motion zeroes the experiment's amplitude", () => {
-    on({ reduced: true });
-    engine.experiments.anticipation = true;
-    engine.playTrack(0, 1);
-    run(8);
-
-    const c = reduceMotion(fieldConstantsOf(ALBUMS[0].signature));
-    expect(c.reactionCap).toBe(0);
   });
 });
 

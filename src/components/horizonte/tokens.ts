@@ -226,7 +226,6 @@ export const LERP = {
   energy: 4,
   ringRot: 2.6,
   light: 2.2,
-  lead: 1.6,
   reach: 8,
 } as const;
 

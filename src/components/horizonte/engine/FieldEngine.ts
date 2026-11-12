@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { curvature } from "../audio/analysis";
-import { leadOf } from "../audio/anticipation";
 import { AudioBus, type VisualAudioState } from "../audio/bus";
 import type { PlaybackFault } from "../audio/playback";
 import { drawBack, makeParticles, type BackDeps } from "../composition/back";
@@ -99,14 +98,6 @@ const CURSOR_GAIN = 9;
 
 const HORIZON_REF = 0.096;
 
-
-
-function readExperiment(name: string) {
-  const search = (globalThis as { location?: { search?: string } }).location?.search ?? "";
-  if (!search) return false;
-  return (new URLSearchParams(search).get("x") ?? "").split(",").includes(name);
-}
-
 const CATALOG: Catalog = {
   get size() {
     return ALBUMS.length;
@@ -152,12 +143,7 @@ export class FieldEngine implements InputActions {
   private bias: TrackBias = { ...NEUTRAL_BIAS };
   private lightSweep = 0;
   private m1 = { x: 0, y: 0, k: 0, h: 0, alb: -1, ready: false };
-  readonly experiments = {
-    anticipation: false,
-    anticipationGain: 1,
-  };
   readonly strain: Strain = emptyStrain();
-  lead = 0;
   private railAlb = -1;
   private railTrk = -1;
   private intake = false;
@@ -201,7 +187,6 @@ export class FieldEngine implements InputActions {
     this.unsubscribeCatalog = onCatalogChange((i) => this.syncCatalog(i));
 
     this.audioState = this.bus.update(0);
-    this.experiments.anticipation = readExperiment("anticipate");
     this.reduced = prefersReducedMotion();
     this.coarse = hasCoarsePointer();
     try {
@@ -711,13 +696,6 @@ export class FieldEngine implements InputActions {
       tgt.m0h *= 1 - Math.sin(e * Math.PI) * SEQ.segue.depth * K;
     }
 
-    this.anticipation(dt);
-    if (this.lead !== 0) {
-      const amp = C.reactionCap * this.experiments.anticipationGain;
-      tgt.m0h *= 1 - this.lead * amp;
-      tgt.fade *= 1 + this.lead * amp * 0.4;
-    }
-
     if (this.reduced) tgt.blur = 0;
 
     if (s.waveR >= 0) {
@@ -808,18 +786,6 @@ export class FieldEngine implements InputActions {
       ? loadOf(chargeAt(album.signature, turn), complianceOf(album.signature.dynamics), amp)
       : 0;
     strainStep(this.strain, s.playAlb, turn, load, amp, dt, live);
-  }
-
-  private anticipation(dt: number) {
-    const s = this.st;
-    const onAir = this.experiments.anticipation && s.playAlb >= 0 && s.playAlb === s.alb;
-    let target = 0;
-    if (onAir) {
-      const sig = ALBUMS[s.playAlb].signature;
-      const pos = albumProgressOf(this.rings.bounds(s.playAlb), s.trk, progressOf(s));
-      target = leadOf(sig, pos, sig.measured.durationS);
-    }
-    this.lead += (target - this.lead) * Math.min(1, dt * LERP.lead);
   }
 
   private secondMass(dt: number) {
