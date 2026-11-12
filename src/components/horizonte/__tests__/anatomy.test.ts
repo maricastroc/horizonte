@@ -33,7 +33,7 @@ import { ANATOMY_EN } from "../i18n/anatomy.en";
 import { ANATOMY_PT } from "../i18n/anatomy.pt-BR";
 import { FieldEngine } from "../engine/FieldEngine";
 import type { FieldUniforms } from "../fieldMaterial";
-import { morphologyOf, pulseSpreadOf, type AlbumMorphology } from "../morphology";
+import { morphologyOf, pulseSpreadOf, shellsAt, type AlbumMorphology } from "../morphology";
 import { drawFocus, drawGhost, emptyFrame } from "../composition/focus";
 import { ANATOMY, IDLE_MS } from "../tokens";
 import { engineHarness, paintContext, type EngineHarness } from "./fakes";
@@ -344,14 +344,95 @@ describe("the isolation mask", () => {
     return f;
   };
   const core = { x: 640, y: 400, rx: 80, ry: 56 };
-  const fills = (calls: string[]) => calls.filter((c) => c === "fill").length;
+
+  const KEEP = "rgb(255,0,0)";
+  const LIGHT = "rgb(0,255,0)";
+  const record = () => {
+    const paint = paintContext();
+    const ops: { op: string; style: string; alpha: number }[] = [];
+    const ctx = new Proxy(paint.ctx as unknown as Record<string, unknown>, {
+      get(target, key: string) {
+        const value = target[key];
+        if (key === "moveTo") {
+          return (...args: number[]) => {
+            ops.push({ op: key, style: args.map((v) => Math.round(v)).join(","), alpha: 1 });
+            return (value as (...a: unknown[]) => unknown)(...args);
+          };
+        }
+        if (key !== "fill" && key !== "stroke") return value;
+        return (...args: unknown[]) => {
+          const style = paint.props[key === "fill" ? "fillStyle" : "strokeStyle"];
+          ops.push({ op: key, style: String(style), alpha: Number(paint.props.globalAlpha ?? 1) });
+          return (value as (...a: unknown[]) => unknown)(...args);
+        };
+      },
+      set(target, key: string, value) {
+        target[key] = value;
+        return true;
+      },
+    }) as unknown as CanvasRenderingContext2D;
+    return { ctx, ops, calls: paint.calls };
+  };
+  const lit = (ops: { op: string; style: string }[], op: string, style: string) =>
+    ops.filter((o) => o.op === op && o.style === style).length;
 
   it("draws the crown from the morphology, one closed sector per track", () => {
     const paint = paintContext();
-    expect(drawFocus(paint.ctx, 1280, frameOf(DARK), "gaps", core)).toBe(true);
+    expect(drawFocus(paint.ctx, 1280, frameOf(DARK), "contour", core)).toBe(true);
     expect(paint.calls.filter((c) => c === "closePath")).toHaveLength(ALBUMS[DARK].tracks.length);
-    expect(fills(paint.calls)).toBe(1);
     expect(paint.calls).not.toContain("drawImage");
+  });
+
+  it("the parts that live in the ring keep it at half light, each with a light of its own", () => {
+    for (const part of ["gaps", "strata", "contour"] as const) {
+      const r = record();
+      expect(drawFocus(r.ctx, 1280, frameOf(EWORLD), part, core)).toBe(true);
+      const half = r.ops.filter((o) => o.op === "fill" && o.style === KEEP);
+      expect(half).toHaveLength(1);
+      expect(half[0].alpha).toBeCloseTo(ANATOMY.focus.part.crown, 5);
+    }
+  });
+
+  it("gaps light a slit inside every break, with a faint glow across it", () => {
+    const r = record();
+    drawFocus(r.ctx, 1280, frameOf(DARK), "gaps", core);
+    expect(lit(r.ops, "fill", LIGHT)).toBe(3 * ALBUMS[DARK].tracks.length);
+    expect(lit(r.ops, "stroke", LIGHT)).toBe(0);
+  });
+
+  it("layers light the space between them, in every sector", () => {
+    const r = record();
+    const f = frameOf(EWORLD);
+    drawFocus(r.ctx, 1280, f, "strata", core);
+    const layers = shellsAt(f.m!, 0.01).length;
+    expect(layers).toBe(3);
+    expect(lit(r.ops, "fill", LIGHT)).toBe(ALBUMS[EWORLD].tracks.length * (layers - 1));
+  });
+
+  it("a ring of a single layer falls back to lighting the whole crown", () => {
+    const r = record();
+    drawFocus(r.ctx, 1280, frameOf(DUST), "strata", core);
+    expect(lit(r.ops, "fill", LIGHT)).toBe(0);
+    expect(r.ops.some((o) => o.op === "fill" && o.style === KEEP && o.alpha === 1)).toBe(true);
+  });
+
+  it("the edge keeps a band along the outline, with a glow that follows it", () => {
+    const r = record();
+    drawFocus(r.ctx, 1280, frameOf(LEBAR), "contour", core);
+    expect(lit(r.ops, "stroke", KEEP)).toBe(1);
+    const glow = r.ops.filter((o) => o.op === "stroke" && o.style === LIGHT);
+    expect(glow).toHaveLength(1);
+    expect(glow[0].alpha).toBeCloseTo(ANATOMY.focus.part.glow, 5);
+    expect(lit(r.ops, "fill", LIGHT)).toBe(0);
+  });
+
+  it("gaps, layers and edge no longer light the same thing", () => {
+    const sign = (part: "gaps" | "strata" | "contour") => {
+      const r = record();
+      drawFocus(r.ctx, 1280, frameOf(EWORLD), part, core);
+      return JSON.stringify(r.ops.map((o) => [o.op, o.style]));
+    };
+    expect(new Set([sign("gaps"), sign("strata"), sign("contour")]).size).toBe(3);
   });
 
   it("the ghost of the original is the same geometry, stroked", () => {
@@ -470,6 +551,20 @@ describe("anatomy in the engine", () => {
     engine.setCompare(true);
     run(0.2);
     expect(inner().compareBake()).toBeNull();
+  });
+
+  it("during the counterproof the mask follows each baked step of the ring", () => {
+    start();
+    enter(DARK);
+    engine.setAnatomyFocus("gaps");
+    run(0.5);
+    const keys = new Set<string>();
+    engine.setCompare(true);
+    for (let i = 0; i < 80; i++) {
+      env.advance(16);
+      keys.add((engine as unknown as { focusKey: string }).focusKey.split("|").at(-1)!);
+    }
+    expect(keys.size).toBeGreaterThanOrEqual(ANATOMY.compare.steps);
   });
 
   it("comparing needs a measured part", () => {

@@ -276,6 +276,7 @@ export const ANATOMY = {
     halo: { satellite: 2.4, core: 1.55 },
     margin: 1.12,
     refresh: 12,
+    part: { crown: 0.42, line: 2.5, edge: 2.5, glow: 0.5, slit: 0.6 },
   },
   compare: { duration: 1.1, steps: 3, peek: 0.35 },
   ghost: { alpha: 0.42, width: 1.1, color: [0.937, 0.922, 0.89] as Rgb },
