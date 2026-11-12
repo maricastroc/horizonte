@@ -271,7 +271,14 @@ pergunta é neutra e não há experimento.
 * **Isolamento.** A parte é desenhada numa máscara de ¼ da composição com a mesma
   geometria do plano de trás e lida no shader na coordenada já deslocada pela
   lente. Fora da parte a exposição cai 55% na pergunta e 35% no experimento;
-  partes escuras ganham contraluz na tinta do disco.
+  partes escuras ganham contraluz na tinta do disco. As três partes da coroa
+  acendem cada uma o que a resposta nomeia, sobre a coroa a meia-luz: as fendas
+  ganham uma fresta de luz no meio de cada vão, as camadas, linhas de luz entre
+  as conchas, e a borda, uma faixa ao longo do contorno com um halo que segue o
+  relevo. Traços finos têm largura mínima em pixels da máscara, para não sumirem
+  no celular. Uma coroa de camada única volta a acender a coroa inteira. Na
+  Contraprova, a máscara usa o mesmo passo assado que a coroa mostra, e a luz
+  acompanha a mudança.
 * **"What if…?"** recalcula a morfologia com um descritor na mediana dos 14
   (`compareMorphology`), só para a forma: a reação segue a do disco. Partes
   desenhadas mudam de forma contínua em 1,1 s; as assadas na coroa passam por
