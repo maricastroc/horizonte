@@ -99,7 +99,7 @@ movimento: sem a análise offline, o disco local fica com a resposta neutra.
   reserva é a medição do disco: o eixo horizontal é o tempo do álbum e cada
   coluna carrega luz proporcional ao envelope, nas tintas do próprio espectro.
   As tintas caem no mesmo corredor `oklch(L .50–.62, C .13–.18)` do acervo.
-* **Fallbacks** — sem tag de artista, **Disco local**; sem álbum e sem pasta,
+* **Fallbacks** — sem tag de artista, **Local album**; sem álbum e sem pasta,
   **Untitled**; sem ano, o ano não aparece. O catálogo local numera `L—001`,
   `L—002`… contra o `H—` da curadoria.
 
