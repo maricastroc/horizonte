@@ -41,8 +41,8 @@ const NEAR: Record<Exclude<Finding["part"], "satellites">, { ask: string; answer
     ask: "O que define a inclinação da forma?",
     answer:
       "O brilho do som, isto é, o peso dos agudos. Quanto mais agudos, mais a forma se mostra " +
-      "de frente, redonda; quanto menos, mais ela se deita. O brilho deste disco é o típico da " +
-      "coleção, e a inclinação também.",
+      "de frente, redonda, como a linha tracejada; quanto menos, mais ela se deita. O brilho " +
+      "deste disco é o típico da coleção, e a inclinação também.",
   },
   core: {
     ask: "O que define o tamanho do centro escuro?",
@@ -229,6 +229,8 @@ function contour(f: Of<"contour">): Phrasing {
   };
 }
 
+const FACING = " A linha tracejada mostra como ela seria vista de frente.";
+
 function posture(f: Of<"posture">): Phrasing {
   const { high, strong, top, bottom } = f;
   const ask = high
@@ -254,12 +256,14 @@ function posture(f: Of<"posture">): Phrasing {
         "mostrar isso, o Horizonte inclina a forma para trás, e ela se achata.";
   return {
     ask,
-    answer,
+    answer: answer + FACING,
     what: high ? "E se o som tivesse menos agudos?" : "E se o som tivesse mais agudos?",
     label: high ? "Menos agudos" : "Mais agudos",
     result: high
-      ? "Com os agudos de um disco típico, a forma se inclina para trás e se achata."
-      : "Com os agudos de um disco típico, a forma se levanta e se arredonda.",
+      ? "Com os agudos de um disco típico, a forma se inclina para trás e se achata, " +
+        "afastando-se da linha tracejada."
+      : "Com os agudos de um disco típico, a forma se levanta e se arredonda, aproximando-se " +
+        "da linha tracejada.",
   };
 }
 

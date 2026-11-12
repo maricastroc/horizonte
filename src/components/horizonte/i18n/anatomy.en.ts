@@ -34,8 +34,8 @@ const NEAR: Record<Exclude<Finding["part"], "satellites">, { ask: string; answer
     ask: "What sets the shape's tilt?",
     answer:
       "Brightness: how much of the sound's energy sits in the treble. More treble turns the " +
-      "shape toward you, round; less lays it down. This record's brightness is typical of the " +
-      "collection, and so is its tilt.",
+      "shape toward you, round like the dashed line; less lays it down. This record's " +
+      "brightness is typical of the collection, and so is its tilt.",
   },
   core: {
     ask: "What sets the size of its dark center?",
@@ -214,6 +214,8 @@ function contour(f: Of<"contour">): Phrasing {
   };
 }
 
+const FACING = " The dashed line shows it face-on.";
+
 function posture(f: Of<"posture">): Phrasing {
   const { high, strong, top, bottom } = f;
   const ask = high
@@ -238,12 +240,13 @@ function posture(f: Of<"posture">): Phrasing {
         "that, Horizonte tilts the shape back, and it flattens.";
   return {
     ask,
-    answer,
+    answer: answer + FACING,
     what: high ? "What if it had less treble?" : "What if it had more treble?",
     label: high ? "Less treble" : "More treble",
     result: high
-      ? "With a typical record's treble, the shape tips back and flattens."
-      : "With a typical record's treble, the shape lifts and rounds out.",
+      ? "With a typical record's treble, the shape tips back and flattens, away from the " +
+        "dashed line."
+      : "With a typical record's treble, the shape lifts and rounds out, toward the dashed line.",
   };
 }
 

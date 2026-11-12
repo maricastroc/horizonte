@@ -79,16 +79,16 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - Por que a forma parece aberta?
-- Esta música tem mais agudos que a maioria da coleção, então soa um pouco mais brilhante. O Horizonte vira a forma para quem olha conforme esse brilho, e ela mostra uma face mais redonda.
+- Esta música tem mais agudos que a maioria da coleção, então soa um pouco mais brilhante. O Horizonte vira a forma para quem olha conforme esse brilho, e ela mostra uma face mais redonda. A linha tracejada mostra como ela seria vista de frente.
 - E se o som tivesse menos agudos? · *Menos agudos*
-- Com os agudos de um disco típico, a forma se inclina para trás e se achata.
+- Com os agudos de um disco típico, a forma se inclina para trás e se achata, afastando-se da linha tracejada.
 
 **EN**
 
 - Why does the shape look open?
-- This music carries more treble than most here, so it sounds a little brighter. Horizonte turns the shape toward you by that brightness, and it shows a rounder face.
+- This music carries more treble than most here, so it sounds a little brighter. Horizonte turns the shape toward you by that brightness, and it shows a rounder face. The dashed line shows it face-on.
 - What if it had less treble? · *Less treble*
-- With a typical record's treble, the shape tips back and flattens.
+- With a typical record's treble, the shape tips back and flattens, away from the dashed line.
 
 ### 5. Centro escuro · core
 
@@ -236,12 +236,12 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - O que define a inclinação da forma?
-- O brilho do som, isto é, o peso dos agudos. Quanto mais agudos, mais a forma se mostra de frente, redonda; quanto menos, mais ela se deita. O brilho deste disco é o típico da coleção, e a inclinação também.
+- O brilho do som, isto é, o peso dos agudos. Quanto mais agudos, mais a forma se mostra de frente, redonda, como a linha tracejada; quanto menos, mais ela se deita. O brilho deste disco é o típico da coleção, e a inclinação também.
 
 **EN**
 
 - What sets the shape's tilt?
-- Brightness: how much of the sound's energy sits in the treble. More treble turns the shape toward you, round; less lays it down. This record's brightness is typical of the collection, and so is its tilt.
+- Brightness: how much of the sound's energy sits in the treble. More treble turns the shape toward you, round like the dashed line; less lays it down. This record's brightness is typical of the collection, and so is its tilt.
 
 ## H—002 · Jono Terbakar — lebar
 
@@ -273,16 +273,16 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - Por que a forma está tão achatada?
-- Quase toda a energia desta música está nos graves, com poucos agudos por cima: ela soa escura. Para mostrar isso, o Horizonte deita a forma, achatada, como se a víssemos de lado.
+- Quase toda a energia desta música está nos graves, com poucos agudos por cima: ela soa escura. Para mostrar isso, o Horizonte deita a forma, achatada, como se a víssemos de lado. A linha tracejada mostra como ela seria vista de frente.
 - E se o som tivesse mais agudos? · *Mais agudos*
-- Com os agudos de um disco típico, a forma se levanta e se arredonda.
+- Com os agudos de um disco típico, a forma se levanta e se arredonda, aproximando-se da linha tracejada.
 
 **EN**
 
 - Why is the shape so flat?
-- Nearly all of this music's energy sits in the low end, with little treble on top: it sounds dark. To show that, Horizonte lays the shape down, flattened, as if seen from the side.
+- Nearly all of this music's energy sits in the low end, with little treble on top: it sounds dark. To show that, Horizonte lays the shape down, flattened, as if seen from the side. The dashed line shows it face-on.
 - What if it had more treble? · *More treble*
-- With a typical record's treble, the shape lifts and rounds out.
+- With a typical record's treble, the shape lifts and rounds out, toward the dashed line.
 
 ### 3. Pequenos corpos · satellites
 
@@ -432,16 +432,16 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - Por que a forma está achatada?
-- Esta música tem menos agudos que a maioria da coleção, então soa um pouco escura. Para mostrar isso, o Horizonte inclina a forma para trás, e ela se achata.
+- Esta música tem menos agudos que a maioria da coleção, então soa um pouco escura. Para mostrar isso, o Horizonte inclina a forma para trás, e ela se achata. A linha tracejada mostra como ela seria vista de frente.
 - E se o som tivesse mais agudos? · *Mais agudos*
-- Com os agudos de um disco típico, a forma se levanta e se arredonda.
+- Com os agudos de um disco típico, a forma se levanta e se arredonda, aproximando-se da linha tracejada.
 
 **EN**
 
 - Why is the shape flattened?
-- This music carries less treble than most here, so it sounds a little dark. To show that, Horizonte tilts the shape back, and it flattens.
+- This music carries less treble than most here, so it sounds a little dark. To show that, Horizonte tilts the shape back, and it flattens. The dashed line shows it face-on.
 - What if it had more treble? · *More treble*
-- With a typical record's treble, the shape lifts and rounds out.
+- With a typical record's treble, the shape lifts and rounds out, toward the dashed line.
 
 ### 5. Camadas · strata
 
@@ -561,12 +561,12 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - O que define a inclinação da forma?
-- O brilho do som, isto é, o peso dos agudos. Quanto mais agudos, mais a forma se mostra de frente, redonda; quanto menos, mais ela se deita. O brilho deste disco é o típico da coleção, e a inclinação também.
+- O brilho do som, isto é, o peso dos agudos. Quanto mais agudos, mais a forma se mostra de frente, redonda, como a linha tracejada; quanto menos, mais ela se deita. O brilho deste disco é o típico da coleção, e a inclinação também.
 
 **EN**
 
 - What sets the shape's tilt?
-- Brightness: how much of the sound's energy sits in the treble. More treble turns the shape toward you, round; less lays it down. This record's brightness is typical of the collection, and so is its tilt.
+- Brightness: how much of the sound's energy sits in the treble. More treble turns the shape toward you, round like the dashed line; less lays it down. This record's brightness is typical of the collection, and so is its tilt.
 
 ### 6. Centro escuro · core
 
@@ -636,16 +636,16 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - Por que a forma parece tão aberta?
-- Boa parte da energia desta música está nos sons agudos, e é isso que a faz soar brilhante. O Horizonte vira a forma para quem olha conforme esse brilho: quanto mais agudos, mais ela aparece de frente, quase redonda.
+- Boa parte da energia desta música está nos sons agudos, e é isso que a faz soar brilhante. O Horizonte vira a forma para quem olha conforme esse brilho: quanto mais agudos, mais ela aparece de frente, quase redonda. A linha tracejada mostra como ela seria vista de frente.
 - E se o som tivesse menos agudos? · *Menos agudos*
-- Com os agudos de um disco típico, a forma se inclina para trás e se achata.
+- Com os agudos de um disco típico, a forma se inclina para trás e se achata, afastando-se da linha tracejada.
 
 **EN**
 
 - Why does the shape look so open?
-- Much of this music's energy sits in the treble, which is what makes it sound bright. Horizonte turns the shape toward you by that brightness: the more treble, the more it faces you, almost round.
+- Much of this music's energy sits in the treble, which is what makes it sound bright. Horizonte turns the shape toward you by that brightness: the more treble, the more it faces you, almost round. The dashed line shows it face-on.
 - What if it had less treble? · *Less treble*
-- With a typical record's treble, the shape tips back and flattens.
+- With a typical record's treble, the shape tips back and flattens, away from the dashed line.
 
 ### 4. Fendas · gaps
 
@@ -733,16 +733,16 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - Por que a forma parece tão aberta?
-- Boa parte da energia desta música está nos sons agudos, e é isso que a faz soar brilhante. O Horizonte vira a forma para quem olha conforme esse brilho: quanto mais agudos, mais ela aparece de frente, quase redonda.
+- Boa parte da energia desta música está nos sons agudos, e é isso que a faz soar brilhante. O Horizonte vira a forma para quem olha conforme esse brilho: quanto mais agudos, mais ela aparece de frente, quase redonda. A linha tracejada mostra como ela seria vista de frente.
 - E se o som tivesse menos agudos? · *Menos agudos*
-- Com os agudos de um disco típico, a forma se inclina para trás e se achata.
+- Com os agudos de um disco típico, a forma se inclina para trás e se achata, afastando-se da linha tracejada.
 
 **EN**
 
 - Why does the shape look so open?
-- Much of this music's energy sits in the treble, which is what makes it sound bright. Horizonte turns the shape toward you by that brightness: the more treble, the more it faces you, almost round.
+- Much of this music's energy sits in the treble, which is what makes it sound bright. Horizonte turns the shape toward you by that brightness: the more treble, the more it faces you, almost round. The dashed line shows it face-on.
 - What if it had less treble? · *Less treble*
-- With a typical record's treble, the shape tips back and flattens.
+- With a typical record's treble, the shape tips back and flattens, away from the dashed line.
 
 ### 3. Borda · contour
 
@@ -834,16 +834,16 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - Por que a forma parece tão aberta?
-- Boa parte da energia desta música está nos sons agudos, e é isso que a faz soar brilhante. O Horizonte vira a forma para quem olha conforme esse brilho: quanto mais agudos, mais ela aparece de frente, quase redonda. Nenhum disco da coleção é tão brilhante.
+- Boa parte da energia desta música está nos sons agudos, e é isso que a faz soar brilhante. O Horizonte vira a forma para quem olha conforme esse brilho: quanto mais agudos, mais ela aparece de frente, quase redonda. Nenhum disco da coleção é tão brilhante. A linha tracejada mostra como ela seria vista de frente.
 - E se o som tivesse menos agudos? · *Menos agudos*
-- Com os agudos de um disco típico, a forma se inclina para trás e se achata.
+- Com os agudos de um disco típico, a forma se inclina para trás e se achata, afastando-se da linha tracejada.
 
 **EN**
 
 - Why does the shape look so open?
-- Much of this music's energy sits in the treble, which is what makes it sound bright. Horizonte turns the shape toward you by that brightness: the more treble, the more it faces you, almost round. No record here is brighter.
+- Much of this music's energy sits in the treble, which is what makes it sound bright. Horizonte turns the shape toward you by that brightness: the more treble, the more it faces you, almost round. No record here is brighter. The dashed line shows it face-on.
 - What if it had less treble? · *Less treble*
-- With a typical record's treble, the shape tips back and flattens.
+- With a typical record's treble, the shape tips back and flattens, away from the dashed line.
 
 ### 2. Pequenos corpos · satellites
 
@@ -949,16 +949,16 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - Por que a forma está tão achatada?
-- Quase toda a energia desta música está nos graves, com poucos agudos por cima: ela soa escura. Para mostrar isso, o Horizonte deita a forma, achatada, como se a víssemos de lado. Nenhum disco da coleção é tão escuro.
+- Quase toda a energia desta música está nos graves, com poucos agudos por cima: ela soa escura. Para mostrar isso, o Horizonte deita a forma, achatada, como se a víssemos de lado. Nenhum disco da coleção é tão escuro. A linha tracejada mostra como ela seria vista de frente.
 - E se o som tivesse mais agudos? · *Mais agudos*
-- Com os agudos de um disco típico, a forma se levanta e se arredonda.
+- Com os agudos de um disco típico, a forma se levanta e se arredonda, aproximando-se da linha tracejada.
 
 **EN**
 
 - Why is the shape so flat?
-- Nearly all of this music's energy sits in the low end, with little treble on top: it sounds dark. To show that, Horizonte lays the shape down, flattened, as if seen from the side. No record here is darker.
+- Nearly all of this music's energy sits in the low end, with little treble on top: it sounds dark. To show that, Horizonte lays the shape down, flattened, as if seen from the side. No record here is darker. The dashed line shows it face-on.
 - What if it had more treble? · *More treble*
-- With a typical record's treble, the shape lifts and rounds out.
+- With a typical record's treble, the shape lifts and rounds out, toward the dashed line.
 
 ### 2. Pequenos corpos · satellites
 
@@ -1064,16 +1064,16 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - Por que a forma está tão achatada?
-- Quase toda a energia desta música está nos graves, com poucos agudos por cima: ela soa escura. Para mostrar isso, o Horizonte deita a forma, achatada, como se a víssemos de lado.
+- Quase toda a energia desta música está nos graves, com poucos agudos por cima: ela soa escura. Para mostrar isso, o Horizonte deita a forma, achatada, como se a víssemos de lado. A linha tracejada mostra como ela seria vista de frente.
 - E se o som tivesse mais agudos? · *Mais agudos*
-- Com os agudos de um disco típico, a forma se levanta e se arredonda.
+- Com os agudos de um disco típico, a forma se levanta e se arredonda, aproximando-se da linha tracejada.
 
 **EN**
 
 - Why is the shape so flat?
-- Nearly all of this music's energy sits in the low end, with little treble on top: it sounds dark. To show that, Horizonte lays the shape down, flattened, as if seen from the side.
+- Nearly all of this music's energy sits in the low end, with little treble on top: it sounds dark. To show that, Horizonte lays the shape down, flattened, as if seen from the side. The dashed line shows it face-on.
 - What if it had more treble? · *More treble*
-- With a typical record's treble, the shape lifts and rounds out.
+- With a typical record's treble, the shape lifts and rounds out, toward the dashed line.
 
 ### 2. Fendas · gaps
 
@@ -1219,16 +1219,16 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - Por que a forma está tão achatada?
-- Quase toda a energia desta música está nos graves, com poucos agudos por cima: ela soa escura. Para mostrar isso, o Horizonte deita a forma, achatada, como se a víssemos de lado.
+- Quase toda a energia desta música está nos graves, com poucos agudos por cima: ela soa escura. Para mostrar isso, o Horizonte deita a forma, achatada, como se a víssemos de lado. A linha tracejada mostra como ela seria vista de frente.
 - E se o som tivesse mais agudos? · *Mais agudos*
-- Com os agudos de um disco típico, a forma se levanta e se arredonda.
+- Com os agudos de um disco típico, a forma se levanta e se arredonda, aproximando-se da linha tracejada.
 
 **EN**
 
 - Why is the shape so flat?
-- Nearly all of this music's energy sits in the low end, with little treble on top: it sounds dark. To show that, Horizonte lays the shape down, flattened, as if seen from the side.
+- Nearly all of this music's energy sits in the low end, with little treble on top: it sounds dark. To show that, Horizonte lays the shape down, flattened, as if seen from the side. The dashed line shows it face-on.
 - What if it had more treble? · *More treble*
-- With a typical record's treble, the shape lifts and rounds out.
+- With a typical record's treble, the shape lifts and rounds out, toward the dashed line.
 
 ### 4. Fendas · gaps
 
@@ -1316,16 +1316,16 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - Por que a forma parece tão aberta?
-- Boa parte da energia desta música está nos sons agudos, e é isso que a faz soar brilhante. O Horizonte vira a forma para quem olha conforme esse brilho: quanto mais agudos, mais ela aparece de frente, quase redonda.
+- Boa parte da energia desta música está nos sons agudos, e é isso que a faz soar brilhante. O Horizonte vira a forma para quem olha conforme esse brilho: quanto mais agudos, mais ela aparece de frente, quase redonda. A linha tracejada mostra como ela seria vista de frente.
 - E se o som tivesse menos agudos? · *Menos agudos*
-- Com os agudos de um disco típico, a forma se inclina para trás e se achata.
+- Com os agudos de um disco típico, a forma se inclina para trás e se achata, afastando-se da linha tracejada.
 
 **EN**
 
 - Why does the shape look so open?
-- Much of this music's energy sits in the treble, which is what makes it sound bright. Horizonte turns the shape toward you by that brightness: the more treble, the more it faces you, almost round.
+- Much of this music's energy sits in the treble, which is what makes it sound bright. Horizonte turns the shape toward you by that brightness: the more treble, the more it faces you, almost round. The dashed line shows it face-on.
 - What if it had less treble? · *Less treble*
-- With a typical record's treble, the shape tips back and flattens.
+- With a typical record's treble, the shape tips back and flattens, away from the dashed line.
 
 ### 3. Centro escuro · core
 
@@ -1509,12 +1509,12 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - O que define a inclinação da forma?
-- O brilho do som, isto é, o peso dos agudos. Quanto mais agudos, mais a forma se mostra de frente, redonda; quanto menos, mais ela se deita. O brilho deste disco é o típico da coleção, e a inclinação também.
+- O brilho do som, isto é, o peso dos agudos. Quanto mais agudos, mais a forma se mostra de frente, redonda, como a linha tracejada; quanto menos, mais ela se deita. O brilho deste disco é o típico da coleção, e a inclinação também.
 
 **EN**
 
 - What sets the shape's tilt?
-- Brightness: how much of the sound's energy sits in the treble. More treble turns the shape toward you, round; less lays it down. This record's brightness is typical of the collection, and so is its tilt.
+- Brightness: how much of the sound's energy sits in the treble. More treble turns the shape toward you, round like the dashed line; less lays it down. This record's brightness is typical of the collection, and so is its tilt.
 
 ## H—020 · Awake In The Dew — Sounds To Ascension
 
@@ -1624,9 +1624,9 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - O que define a inclinação da forma?
-- O brilho do som, isto é, o peso dos agudos. Quanto mais agudos, mais a forma se mostra de frente, redonda; quanto menos, mais ela se deita. O brilho deste disco é o típico da coleção, e a inclinação também.
+- O brilho do som, isto é, o peso dos agudos. Quanto mais agudos, mais a forma se mostra de frente, redonda, como a linha tracejada; quanto menos, mais ela se deita. O brilho deste disco é o típico da coleção, e a inclinação também.
 
 **EN**
 
 - What sets the shape's tilt?
-- Brightness: how much of the sound's energy sits in the treble. More treble turns the shape toward you, round; less lays it down. This record's brightness is typical of the collection, and so is its tilt.
+- Brightness: how much of the sound's energy sits in the treble. More treble turns the shape toward you, round like the dashed line; less lays it down. This record's brightness is typical of the collection, and so is its tilt.

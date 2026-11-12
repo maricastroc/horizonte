@@ -224,6 +224,17 @@ describe("the questions a record asks", () => {
     }
   });
 
+  it("posture points the reader to the dashed line it draws", () => {
+    for (let i = 0; i < CURATED_COUNT; i++) {
+      const q = part(i, "posture");
+      expect(say(q).answer).toMatch(/dashed line/);
+      expect(ANATOMY_PT.phrase(q).answer).toMatch(/linha tracejada/);
+      if (!q.experiment) continue;
+      expect(say(q).result).toMatch(/dashed line/);
+      expect(ANATOMY_PT.phrase(q).result).toMatch(/linha tracejada/);
+    }
+  });
+
   it("length never claims the main body would grow", () => {
     for (let i = 0; i < CURATED_COUNT; i++) {
       const q = part(i, "satellites");
