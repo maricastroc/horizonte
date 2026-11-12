@@ -9,6 +9,7 @@ import { ACCEPT } from "./ingest/formats";
 import { useIngest } from "./ingest/useIngest";
 import { timecode } from "./format";
 import { useCopy } from "./i18n";
+import LanguageSwitch from "./LanguageSwitch";
 import { COLOR, IDLE_OPACITY, rgba } from "./tokens";
 import type { Scale, Snapshot } from "./types";
 import type { FieldEngine } from "./engine/FieldEngine";
@@ -649,16 +650,19 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               <span aria-hidden> / </span>
               <span ref={durRef}>00:00</span>
             </span>
-            <button
-              type="button"
-              aria-pressed={muted}
-              onClick={toggleMute}
-              className={`-mr-2 flex h-full cursor-pointer items-center whitespace-nowrap px-2 ${
-                muted ? "text-ink-text" : ""
-              }`}
-            >
-              {muted ? t.sound.muted : t.sound.on}
-            </button>
+            <div className="flex h-full items-center gap-3">
+              <LanguageSwitch compact ink={ink} />
+              <button
+                type="button"
+                aria-pressed={muted}
+                onClick={toggleMute}
+                className={`-mr-2 flex h-full cursor-pointer items-center whitespace-nowrap px-2 ${
+                  muted ? "text-ink-text" : ""
+                }`}
+              >
+                {muted ? t.sound.muted : t.sound.on}
+              </button>
+            </div>
           </div>
           <div className="flex min-h-[44px] items-center justify-between">{transport(true)}</div>
         </div>
@@ -671,6 +675,10 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       <div className="pointer-events-auto absolute left-8.5 top-7.5 flex flex-col gap-3">
         <h1 className="text-ink-text">{t.title}</h1>
         {breadcrumb}
+      </div>
+
+      <div className="pointer-events-auto absolute right-8.5 top-7.5">
+        <LanguageSwitch compact={false} ink={ink} />
       </div>
 
       <div className="absolute right-8.5 top-14 bottom-37.5 flex flex-col items-end gap-6.5">
