@@ -10,17 +10,13 @@ consumidas **pelo canvas e pelo DOM a partir da mesma fonte** — o `Snapshot`
 publicado pelo motor. Canvas e interface não podem discordar sobre onde termina
 o palco porque leem o mesmo número.
 
-## Por que a versão anterior quebrava
+## Por que é uma composição própria
 
-| Sintoma | Causa |
-| --- | --- |
-| Tipografia gigante, cortada, atravessando a lista | A lente do shader é cega ao aspecto. `field.frag.glsl` trabalha em `p = (uv − 0,5) · (aspect, 1)`, e `pullOf` devolvia um desvio em unidades de `p`. Com aspecto 1,6 no desktop e 0,46 no telefone, **o mesmo `m0k` arrastava três vezes mais fração de largura** num celular. |
-| Nome do álbum no meio da lista de faixas | `lockup()` não recebia o `WorldLayout`. Escala, linha de base (`H · 0,555`), corpo do título e da linha de metadados eram constantes de desktop escaladas pela largura. Em 390 px a linha de metadados saía com ~4 px. |
-| Título e metadados cortados na borda | `drawFront` recebia `_L` e não aplicava fit de largura nenhum — só o nome do artista, em `drawBack`, tinha `measureText`. |
-| Arte cruzando a coluna de duração | O estilhaço de capa era posicionado em coordenadas de desktop (`W · 0,855`, altura `H · 0,62`): ao lado da régua no desktop, em cima dela no telefone. |
-| Um álbum cabia, outro não | Nada limitava o alcance da morfologia. `dist + size` vai de 1,11 (Madison Kenny) a 2,47 (zero-project) raios — 2,2× de variação sem referência de palco. |
-| Topo congestionado, controles espalhados | Marcação de desktop com remendos `compact:`: as duas réguas dividiam uma coluna absoluta, e o transporte quebrava em três linhas soltas a partir de 360 px. |
-| Texto secundário apagado | `text-ink-mute` (#8C867E) a 10,5 px sobre campo, e o fade de ocioso (32%) disparava em telas de toque, onde não existe movimento de ponteiro. |
+A lente do shader trabalha em `p = (uv − 0,5) · (aspecto, 1)`: com aspecto 0,46
+no telefone, o mesmo desvio arrasta três vezes mais fração de largura que no
+desktop. E a extensão de um disco (corpo, coroa e satélites) varia 2,2× entre o
+mais compacto e o mais espalhado. Sem regiões declaradas, tipografia, lista e
+transporte disputavam o mesmo espaço com a morfologia.
 
 ## As regiões
 
@@ -78,35 +74,26 @@ Não é `scale()`. `placeInStage()` recalcula a ocupação do espaço:
 - **profundidade aparente** — `uWorld` mede distância e desvio da lente em
   unidades de mundo. No desktop vale 1 e o shader é bit a bit o de antes.
 
-`ringScale` no mobile subiu de 0,70 para **1,15**. Não é ajuste de gosto: com
-0,70 o mundo ocupava 24% do palco e, sob o borrão de relance, os dez discos
-correlacionavam 0,70 entre si. A varredura em `perception` mostra o mínimo de
-convergência em 1,15–1,20; acima de 1,50 o corte do palco começa a nivelar as
-morfologias e a correlação volta a subir.
-
-| `ringScale` | média de relance | pior par | segue a música | discos cortados |
-| --: | --: | --: | --: | --: |
-| 0,70 | 0,701 | 0,958 | 0,514 | 0 |
-| 1,00 | 0,524 | 0,925 | 0,395 | 1 |
-| **1,15** | **0,478** | **0,913** | **0,339** | **3** |
-| 1,35 | 0,498 | 0,905 | 0,282 | 7 |
-| 1,70 | 0,536 | 0,957 | 0,311 | 9 |
+`ringScale` no mobile é **1,15**, o mínimo de convergência entre as formas na
+varredura de `perception` (feita com os dez primeiros discos do acervo): em 0,70
+o mundo ocupava 24% do palco e os discos se pareciam sob o olhar de relance;
+acima de 1,50 o corte do palco começa a nivelar as morfologias.
 
 ## Diferenças deliberadas em relação ao desktop
 
 | | Desktop | Mobile |
 | --- | --- | --- |
 | Rótulo radial de faixa | todos, ao redor da coroa | **nenhum** — quem nomeia é a lista |
-| Volume | botão + régua | só `Som/Mudo`; o volume é do sistema |
-| `◂ Voltar` | botão dedicado | a escala `Coleção › Álbum › Faixa` faz o papel |
-| Régua de álbuns | sempre aberta, à direita | revelação `Álbuns`, ocupando palco + lista |
+| Volume | botão + régua | só `Sound`/`Mute`; o volume é do sistema |
+| `◂ Back` | botão dedicado | a escala `Collection › Album › Track` faz o papel |
+| Régua de álbuns | sempre aberta, à direita | revelação `Albums`, ocupando palco + lista |
 | Fade de ocioso | 32% após 2,6 s | desligado em ponteiro grosso |
 | Calha do texto no canvas | `W · 0,028` | `BAND.gutter` — a mesma calha do DOM |
 | Contraste base | `ink-mute` | `ink-text-2`, com `ink-mute` para o secundário |
 
 ## Guardrails
 
-`__tests__/mobile.test.ts` roda os dez álbuns em 320×568, 375×667, 390×844 e
+`__tests__/mobile.test.ts` roda todos os álbuns do acervo em 320×568, 375×667, 390×844 e
 430×932, em 1× e em `DPR_MAX`, na coleção e no álbum:
 
 - as bandas se sucedem sem se sobrepor e nenhuma fica pequena demais para o toque;
@@ -131,7 +118,7 @@ desktop.
 - **Lista curta em tela alta**: um álbum de quatro faixas em 430×932 deixa ~130 px
   de campo vazio entre a última linha e o transporte. O palco não recupera essa
   sobra porque as bandas não conhecem a contagem de faixas.
-- **Sem controle de volume no app** no mobile: só `Som/Mudo`. Quem ajusta nível é
+- **Sem controle de volume no app** no mobile: só `Sound`/`Mute`. Quem ajusta nível é
   o sistema.
 - As `env(safe-area-inset-*)` entram por `.instruments-safe`; foram exercitadas
   no navegador com inset zero. Em Safari com notch a abertura e o transporte
