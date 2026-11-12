@@ -29,6 +29,7 @@ import {
 } from "../anatomy";
 import { ALBUMS, CURATED_COUNT } from "../content";
 import { ANATOMY_EN } from "../i18n/anatomy.en";
+import { ANATOMY_PT } from "../i18n/anatomy.pt-BR";
 import { FieldEngine } from "../engine/FieldEngine";
 import type { FieldUniforms } from "../fieldMaterial";
 import { morphologyOf, pulseSpreadOf, type AlbumMorphology } from "../morphology";
@@ -83,10 +84,12 @@ describe("the questions a record asks", () => {
       expect(new Set(qs.map((q) => q.part)).size).toBe(6);
       for (let k = 1; k < qs.length; k++) expect(qs[k - 1].score).toBeGreaterThanOrEqual(qs[k].score);
       for (const q of qs) {
-        const p = say(q);
-        expect(p.ask.endsWith("?")).toBe(true);
-        expect(p.answer.length).toBeGreaterThan(20);
-        expect(p.what === null).toBe(!q.experiment);
+        for (const w of [ANATOMY_EN, ANATOMY_PT]) {
+          const p = w.phrase(q);
+          expect(p.ask.endsWith("?")).toBe(true);
+          expect(p.answer.length).toBeGreaterThan(20);
+          expect(p.what === null).toBe(!q.experiment);
+        }
         expect(q.reading.axis).toBe(AXIS_OF[q.part]);
         expect(q.finding.part).toBe(q.part);
       }
@@ -127,6 +130,10 @@ describe("the questions a record asks", () => {
         for (const text of [en.ask, en.answer, en.what ?? "", en.result]) {
           expect(text.replace(/\d+ minutes/g, "")).not.toMatch(/\d|dB|Hz|median/);
         }
+        const pt = ANATOMY_PT.phrase(q);
+        for (const text of [pt.ask, pt.answer, pt.what ?? "", pt.result]) {
+          expect(text.replace(/\d+ minutos?/g, "")).not.toMatch(/\d|dB|Hz|mediana/);
+        }
       }
     }
   });
@@ -136,6 +143,7 @@ describe("the questions a record asks", () => {
     expect(core.experiment).toBe(false);
     expect(say(core).what).toBeNull();
     expect(say(core).ask).toBe("What sets the size of its dark center?");
+    expect(ANATOMY_PT.phrase(core).ask).toBe("O que define o tamanho do centro escuro?");
     expect(core.score).toBeCloseTo(0, 4);
   });
 
@@ -144,6 +152,8 @@ describe("the questions a record asks", () => {
     expect(gaps.reading.axis).toBe("spread");
     expect(say(gaps).answer).toMatch(/pulse/);
     expect(say(gaps).answer).not.toMatch(/dynamic|volume|loud/i);
+    expect(ANATOMY_PT.phrase(gaps).answer).toMatch(/pulso/);
+    expect(ANATOMY_PT.phrase(gaps).answer).not.toMatch(/dinâmic|volume|forte|suave/i);
   });
 
   it("the invitation is the record's leading question", () => {
