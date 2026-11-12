@@ -1,5 +1,5 @@
 import type { AnatomyPart } from "../anatomy";
-import { pathTurn, shellsAt, type AlbumMorphology } from "../morphology";
+import { pathTurn, satRadiusOf, shellsAt, type AlbumMorphology } from "../morphology";
 import { ANATOMY } from "../tokens";
 import { ls, type Ctx } from "./ctx";
 import { gapOf } from "./ring";
@@ -80,15 +80,21 @@ function ellipse(x: CanvasRenderingContext2D, cx: number, cy: number, rx: number
 
 const TAU = 6.283185307179586;
 
-function crown(x: CanvasRenderingContext2D, f: BodyFrame): boolean {
-  const m = f.m;
-  if (!m || f.R <= 0) return false;
+export function traceCrown(
+  x: CanvasRenderingContext2D,
+  m: AlbumMorphology,
+  cx: number,
+  cy: number,
+  R: number,
+  flatten: number,
+  rot: number,
+): boolean {
   const n = m.bounds.length - 1;
+  if (n <= 0 || R <= 0) return false;
   const at = (t: number, r: number): [number, number] => {
-    const a = pathTurn(m, t) * TAU + f.rot;
-    return [f.bx + Math.cos(a) * r * f.R, f.by + Math.sin(a) * r * f.R * f.flatten];
+    const a = pathTurn(m, t) * TAU + rot;
+    return [cx + Math.cos(a) * r * R, cy + Math.sin(a) * r * R * flatten];
   };
-  x.fillStyle = KEEP;
   for (let k = 0; k < n; k++) {
     const b0 = m.bounds[k];
     const b1 = m.bounds[k + 1];
@@ -98,25 +104,67 @@ function crown(x: CanvasRenderingContext2D, f: BodyFrame): boolean {
     if (t1 <= t0) continue;
     const steps = Math.max(2, Math.ceil((t1 - t0) * 160));
     const inner: number[] = [];
-    x.beginPath();
     for (let i = 0; i <= steps; i++) {
       const t = t0 + ((t1 - t0) * i) / steps;
       const shells = shellsAt(m, t);
-      const lo = shells[0].inner;
-      const hi = shells[shells.length - 1].outer;
-      const [ox, oy] = at(t, hi);
+      const [ox, oy] = at(t, shells[shells.length - 1].outer);
       if (i === 0) x.moveTo(ox, oy);
       else x.lineTo(ox, oy);
-      inner.push(t, lo);
+      inner.push(t, shells[0].inner);
     }
     for (let i = inner.length - 2; i >= 0; i -= 2) {
       const [ix, iy] = at(inner[i], inner[i + 1]);
       x.lineTo(ix, iy);
     }
     x.closePath();
-    x.fill();
   }
-  return n > 0;
+  return true;
+}
+
+function crown(x: CanvasRenderingContext2D, f: BodyFrame): boolean {
+  if (!f.m) return false;
+  x.beginPath();
+  const any = traceCrown(x, f.m, f.bx, f.by, f.R, f.flatten, f.rot);
+  x.fillStyle = KEEP;
+  if (any) x.fill();
+  return any;
+}
+
+export function drawGhost(
+  x: CanvasRenderingContext2D,
+  m: AlbumMorphology,
+  cx: number,
+  cy: number,
+  R: number,
+  rot: number,
+  color: string,
+  width: number,
+) {
+  x.save();
+  x.globalAlpha = 1;
+  x.globalCompositeOperation = "source-over";
+  x.strokeStyle = color;
+  x.lineWidth = width;
+  x.lineJoin = "round";
+  x.beginPath();
+  traceCrown(x, m, cx, cy, R, m.flatten, rot);
+  x.stroke();
+  for (const sat of m.satellites) {
+    if (sat.weight <= 0.02) continue;
+    const r = satRadiusOf(m, sat) * R;
+    x.beginPath();
+    x.ellipse(
+      cx + Math.cos(sat.angle) * sat.dist * R,
+      cy + Math.sin(sat.angle) * sat.dist * R * m.flatten,
+      r,
+      r * m.flatten,
+      0,
+      0,
+      TAU,
+    );
+    x.stroke();
+  }
+  x.restore();
 }
 
 export function drawFocus(

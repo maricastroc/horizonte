@@ -88,6 +88,7 @@ export interface Snapshot {
   fault: Fault | null;
   focus: AnatomyPart | null;
   compare: boolean;
+  peek: boolean;
   invite: Invite | null;
 }
 

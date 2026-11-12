@@ -308,6 +308,8 @@ export class FieldEngine implements InputActions {
   private compareStep = -1;
   private compareShape: SegShape | null = null;
   private compareVersion = 1e6;
+  private peeking = false;
+  private peekBack = false;
   private anatomyMark: string | null = null;
   private dwell = 0;
   private invite: Invite | null = null;
@@ -477,11 +479,12 @@ export class FieldEngine implements InputActions {
 
   beginPan() {
     this.dragNav = this.st.navT;
+    if (this.compareOn && this.st.scale !== "collection") this.peeking = true;
   }
 
   panBy(stepPx: number, totalPx: number, viewportW: number) {
     const s = this.st;
-    if (s.scale !== "collection") return;
+    if (s.scale !== "collection" || this.peeking) return;
     if (this.L.variant === "mobile") {
       const total = totalPx / (viewportW * PAN.mobileWidth);
       s.navT = clamp(this.dragNav - total, this.dragNav - 1, this.dragNav + 1);
@@ -493,6 +496,11 @@ export class FieldEngine implements InputActions {
 
   endPan(tap: boolean) {
     const s = this.st;
+    if (this.peeking) {
+      this.peeking = false;
+      this.peekBack = true;
+      return;
+    }
     if (tap) {
       this.click();
       return;
@@ -646,8 +654,14 @@ export class FieldEngine implements InputActions {
       this.compareOn = false;
     }
     if (this.compareAxis && this.compareAlb !== s.alb) this.dropCompare();
-    const k = this.compareOn ? 1 : 0;
-    this.compareK = this.reduced ? k : approach(this.compareK, k, dt / ANATOMY.compare.duration);
+    if (!this.compareOn) {
+      this.peeking = false;
+      this.peekBack = false;
+    }
+    const k = this.compareOn && !this.peeking ? 1 : 0;
+    const span = this.peeking || this.peekBack ? ANATOMY.compare.peek : ANATOMY.compare.duration;
+    this.compareK = this.reduced ? k : approach(this.compareK, k, dt / span);
+    if (this.peekBack && this.compareK >= 1) this.peekBack = false;
     if (!this.compareOn && this.compareK <= 0 && this.compareAxis) {
       const pinned = this.focusPin ? AXIS_OF[this.focusPin] : null;
       if (pinned !== this.compareAxis) this.dropCompare();
@@ -734,7 +748,10 @@ export class FieldEngine implements InputActions {
       this.focusLive = false;
       this.focusKey = "";
     }
-    (u.uFocusMix.value as THREE.Vector3).x = this.focusAmt;
+    const mix = u.uFocusMix.value as THREE.Vector3;
+    const { ask, what } = ANATOMY.focus.dim;
+    mix.x = this.focusAmt;
+    mix.y = ask + (what - ask) * ease(this.compareK);
   }
 
   setRailTrk(i: number) {
@@ -942,6 +959,10 @@ export class FieldEngine implements InputActions {
   }
 
   back() {
+    if (this.compareOn) {
+      this.setCompare(false);
+      return;
+    }
     this.run(T.back(this.st));
   }
 
@@ -1052,6 +1073,10 @@ export class FieldEngine implements InputActions {
       layer: this.sectionLayer(),
       compare: this.compareBake(),
       frame: this.focusFrame(),
+      ghost:
+        this.compareAxis && this.compareK > 0.001 && this.compareAlb === this.st.alb
+          ? { m: this.morphAt(this.st.alb), alpha: ANATOMY.ghost.alpha * ease(this.compareK) }
+          : null,
     };
   }
 
@@ -1906,6 +1931,7 @@ export class FieldEngine implements InputActions {
       fault: this.faultKind,
       focus: this.focusPin,
       compare: this.compareOn,
+      peek: this.peeking,
       invite: this.invite,
       announce:
         s.playAlb >= 0
@@ -1933,6 +1959,7 @@ export class FieldEngine implements InputActions {
       prev.fault === next.fault &&
       prev.focus === next.focus &&
       prev.compare === next.compare &&
+      prev.peek === next.peek &&
       prev.invite === next.invite &&
       sameBands(prev.bands, next.bands) &&
       prev.announce === next.announce;

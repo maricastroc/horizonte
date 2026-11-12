@@ -2,10 +2,10 @@ import { ALBUMS, boundsOf } from "../content";
 import type { FieldConstants } from "../field";
 import { neighborScale, outerAt, pathTurn, satRadiusOf, type AlbumMorphology } from "../morphology";
 import { isEngaged, progressOf } from "../state";
-import { BINARY, COLOR, GEO, MORPH, PARTICLES, RING, TRACK_RING, rgba } from "../tokens";
+import { ANATOMY, BINARY, COLOR, GEO, MORPH, PARTICLES, RING, TRACK_RING, rgba } from "../tokens";
 import type { FieldState, FontFamilies, Particle } from "../types";
 import type { CoverAsset } from "./cover";
-import type { BodyFrame, FocusSatellite } from "./focus";
+import { drawGhost, type BodyFrame, type FocusSatellite } from "./focus";
 import type { RingBakery, SectionLayer, SegShape } from "./ring";
 import { drawTrackRingHalf, type TrackRingView } from "./trackRing";
 import { drawRibbon, satelliteDistance, toScreen, type RibbonView } from "./ribbon";
@@ -39,6 +39,7 @@ export interface BackDeps {
   layer?: SectionLayer | null;
   compare?: SegShape | null;
   frame?: BodyFrame | null;
+  ghost?: { m: AlbumMorphology; alpha: number } | null;
 }
 
 export interface LandscapeView {
@@ -432,6 +433,19 @@ export function drawBack(
       s.fadeSel * (1 - s.mix * 0.6) * (land ? land.alpha : 1) * (deps.ringDim ?? 1) * (1 - rib),
       morph.flatten,
     );
+    if (deps.ghost && deps.ghost.alpha > 0.005) {
+      const gg = bodyGeom(W, H, s, L, deps.ghost.m);
+      drawGhost(
+        x,
+        deps.ghost.m,
+        gg.cx,
+        gg.cy,
+        gg.R,
+        s.ringRot,
+        rgba(ANATOMY.ghost.color, deps.ghost.alpha),
+        ANATOMY.ghost.width * Math.max(1, W / 1440),
+      );
+    }
     if (ribbon) {
       drawRibbon(
         x,

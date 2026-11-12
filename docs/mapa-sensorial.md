@@ -1094,32 +1094,53 @@ de *Чайка* e *lebar* caía de 4,6 para 3,8 Hz e de 2,1 para 1,7 Hz.
   resposta neutra.
 * O jato continua fora de P4, como registrado na auditoria acima.
 
-## Leitura — a Anatomia e a Contraprova
+## Leitura — perguntas da forma
 
 **É o comportamento padrão.** Sem nada aberto, o quadro é o de antes: o shader
 só lê a máscara quando a intensidade do isolamento passa de zero, e o plano de
 trás só registra geometria quando há uma parte em foco.
 
 O mundo continua sem palavras e sem tooltip (ver "o cursor sabe o que está sob
-ele"). As palavras entram só na régua mono, e só quando o visitante abre a aba
-**Anatomy**, ao lado de **Tracks**. O mundo prova; a régua nomeia.
+ele"). As palavras entram só na régua, e só quando o visitante abre a aba
+**Why this shape?**, ao lado de **Tracks**. O mundo prova; a régua nomeia.
 
-### O que cada linha diz
+A primeira versão (`2a690e1`) listava sete propriedades com nomes do motor
+(*Strata*, *Contour*, *Posture*…) e números contra a mediana. Testada, pareceu
+uma ferramenta de inspeção. A versão atual parte do que se vê:
+**observar → perguntar → descobrir → experimentar**.
 
-Cada linha é uma parte do corpo, uma palavra, o valor medido e a posição entre
-os discos. As frases ficam em `anatomy.ts` e dizem só o que o código faz:
+### Perguntas escolhidas pelo disco
+
+`questionsOf` (`anatomy.ts`) faz seis perguntas por disco, uma por parte, e as
+ordena pelo quanto o disco foge do meio do acervo naquele eixo, ponderado por
+quão visível a parte é (satélites e falhas 1; postura 0,95; estratos 0,85;
+contorno 0,7; núcleo 0,6). A primeira abre a aba; mais duas ficam em *Also*; as
+outras, o peso do nome e a nota da cor ficam em *More about this shape*.
+
+| Disco | Pergunta que abre | E se… |
+| --- | --- | --- |
+| *e-world* | Why are there four small bodies around it? | What if it were shorter? |
+| *Dark Thoughts* | Why is the ring broken into pieces? | What if its tracks shared one beat? |
+| *MKUltra* | Why does it lie so flat? | What if it sounded brighter? |
+| *All Systems Go* | Why does it stand so open? | What if it sounded darker? |
+| *lebar* | Why is its edge so jagged? | What if it were more even? |
+
+As respostas ligam música e forma sem número técnico: o único número permitido
+é a duração em minutos (um teste afirma isso para os 14 discos). Discos só um
+pouco fora do meio recebem frases graduadas ("brighter than most here"), e um
+disco que já está a menos de 0,03 da mediana recebe uma pergunta neutra ("What
+sets the size of its dark center?") e nenhum experimento. Os valores medidos, a
+posição entre os 14, o valor usual e de que parte do motor aquilo vem ficam em
+*In numbers*, a um clique.
 
 | Parte | Descritor | Onde nasce | Contraprova muda | Assada na coroa |
 | --- | --- | --- | --- | --- |
-| Satellites | Duração (M9); tamanhos pela desigualdade de nível entre faixas (M11) | `morphologyOf` → `satellites` | `circuit`, `spread`, satélites | não |
-| Gaps | Espalhamento do pulso entre faixas (M10) | `fragment` → `gapOf` | `fragment` | sim |
-| Strata | Pulso (M8) | `strata` → `shellsAt` | `strata` | sim |
-| Contour | Dinâmica (M4); os lobos seguem o envelope (M6) | `relief` → `outerAt` | `relief` | sim |
-| Posture | Brilho (M2, P7) | `flatten` | `flatten` | não |
-| Core | Volume (M1, M3) | `coreRatio`, `circuit`, `bandRatio` | os três | sim |
-| Name | Volume (P1) | `artistWeight` | — | — |
-
-A cor não tem linha: a régua termina dizendo que ela vem da capa, não do som.
+| Satélites | Duração (M9); tamanhos pela desigualdade de nível entre faixas (M11) | `satellites` | `circuit`, `spread`, satélites | não |
+| Falhas | Espalhamento do pulso entre faixas (M10) | `fragment` → `gapOf` | `fragment` | sim |
+| Estratos | Pulso (M8) | `strata` → `shellsAt` | `strata` | sim |
+| Contorno | Dinâmica (M4); os lobos seguem o envelope (M6) | `relief` → `outerAt` | `relief` | sim |
+| Postura | Brilho (M2, P7) | `flatten` | `flatten` | não |
+| Núcleo | Volume (M1, M3); também o peso do nome (P1) | `coreRatio`, `circuit`, `bandRatio` | os três | sim |
 
 ### Isolamento: subtrair, e dar contraluz ao que é escuro
 
@@ -1127,56 +1148,62 @@ A parte é desenhada numa máscara pequena (¼ da composição) com a mesma
 geometria do plano de trás: satélites pelas elipses de `drawSatellites`, coroa
 por polígonos de `shellsAt` e `gapOf`, núcleo pelo horizonte do shader, nome
 pelo mesmo texto. O shader lê a máscara em `uv + offUv`, a coordenada já
-deslocada pela lente, então o destaque cai exatamente sobre o que se vê, mesmo
-perto da massa. Nenhum elemento DOM é posicionado sobre o canvas.
+deslocada pela lente, então o destaque cai exatamente sobre o que se vê. Nenhum
+elemento DOM é posicionado sobre o canvas.
 
-O canal vermelho mantém a parte; fora dela a exposição cai 80%. Satélites e
-núcleo são escuros e sumiam assim. Para eles o canal verde desenha uma
-contraluz suave na tinta do disco atrás do corpo (alcance 2,4 e 1,55 do raio,
-intensidade 0,3), que recorta a silhueta sem contorno e sem brilho. A máscara
-só é redesenhada quando a geometria muda.
+Fora da parte, a exposição cai **55%** enquanto se lê a pergunta e só **35%**
+durante o experimento, para a transformação não acontecer no escuro. Satélites
+e núcleo, que são escuros, ganham contraluz na tinta do disco atrás do corpo.
+Apontar uma pergunta na lista só acende a parte depois de 150 ms parado.
 
-### Contraprova: a mediana dos 14, só para a forma
+### Experimentar: e se fosse diferente?
 
-A Contraprova recalcula a morfologia com **um único descritor** trocado pela
-mediana dos 14 discos curados (`compareSignature`, `compareMorphology`). Nada
-no disco é alterado: assinatura e `MORPH` continuam os mesmos objetos, e a
-reação ao vivo segue a do disco. Para o espalhamento do pulso, os desvios de
-cada faixa em torno da mediana do disco são escalados até a mediana do acervo;
-num disco sem espalhamento (*Dust. Time.. Gravity*), uma rampa entre as faixas.
+O experimento recalcula a morfologia com **um único descritor** trocado pela
+mediana dos 14 (`compareSignature`, `compareMorphology`), só para a forma: a
+reação ao vivo segue a do disco, e assinatura e `MORPH` nunca mudam. A direção
+é dita na pergunta (*shorter/longer*, *darker/brighter*, *one beat/drifting*…),
+e o resultado diz o que mudou em palavras visuais, contado pela morfologia real
+("two of its four small bodies dissolve").
+
+* **Alternar:** `As it is ⇄ Shorter` são os dois lados do mesmo controle; ← →
+  no teclado.
+* **Espiar:** apertar o mundo durante o experimento mostra o original enquanto
+  dura o toque (transição de 0,35 s) e não navega.
+* **Fantasma:** enquanto a forma está mudada, o contorno do original fica no
+  plano de trás como linha de 1 px em papel a 42%, entortado pela mesma lente:
+  a referência parada que torna legíveis as mudanças locais (ver "a carga como
+  escala do mundo").
+* **Voltar:** Esc dentro do experimento devolve o disco em vez de sair do álbum;
+  trocar de pergunta, de aba, de disco ou ir à coleção também devolvem. A volta
+  é exata (0,00% dos pixels diferem).
 
 As partes desenhadas a cada quadro (postura, satélites, escala) mudam de forma
-contínua em 1,1 s. As assadas na coroa (falhas, estratos, contorno, núcleo)
-passam por três assados incrementais (4 ms por quadro) com a mesma dissolução
-de 0,45 s da paisagem. A régua mostra a característica, o valor do disco, a
-mediana e que a mudança é temporária; o botão é um alternador visível, e
-segurar faz uma espiada. Esc, a volta para Tracks, outro disco ou a coleção
-devolvem o disco.
+contínua em 1,1 s; as assadas na coroa passam por três assados incrementais com
+a dissolução de 0,45 s da paisagem.
 
-Medido com o motor real: a volta é exata (0,00% dos pixels diferem do quadro
-anterior à Contraprova). Segurando, mudam de 1,6% (*e-world*, satélites, numa
-cena escurecida) a 22% (*All Systems Go*, que ganha dois satélites). Um disco
-cujo valor já está a menos de 0,03 da mediana diz isso em vez de oferecer a
-comparação (*MKUltra*, volume).
+### A régua
+
+A pergunta usa o Bodoni itálico dos títulos (17 px), a resposta usa Archivo
+(13 px); ações, abas e números continuam mono. É a única exceção à regra de que
+a camada de instrumentos é toda mono, e vale só para o que se lê. Enquanto a aba
+está aberta, a lista de discos encolhe para uma linha (*14 albums ▾ · artista*),
+que reabre ao toque. No celular, a faixa da lista mostra uma pergunta por vez,
+com *Next question ›* e o alternador de 46 px.
 
 ### O convite
 
 Uma vez por navegador (`horizonte:anatomy` no `localStorage`): depois de 9 s
-num disco, sem cerimônia em curso, a aba de faixas mostra uma linha com o fato
-mais extremo daquele disco ("Those breaks in the crown were measured, not
-drawn.") e "See why ›", que abre a Anatomia nessa parte. Some em 16 s, ao sair
-do disco ou ao abrir a Anatomia, e não volta. Quem abre a Anatomia antes nunca
-é convidado.
+num disco, a régua de faixas mostra a pergunta que abre aquele disco, em itálico,
+com *Find out ›*. Some em 16 s, ao sair do disco ou ao abrir a aba, e não volta.
 
 ### O que não fica resolvido
 
-* Apontar uma parte no mundo ainda não acende a linha: o vínculo vai da régua
-  para o mundo, não do mundo para a régua. O `hitTest` só distingue corpo,
-  setor e vazio.
-* Discos trazidos pelo visitante ganham a Anatomia inteira, mas as posições
-  passam a ser "de 15" e a mediana continua a dos 14.
-* No celular, a Anatomia ocupa a faixa da lista; com o palco a 46% da altura, o
-  isolamento é visível, mas pequeno.
+* Apontar uma parte no mundo ainda não abre a pergunta dela: o vínculo vai da
+  régua para o mundo. O `hitTest` só distingue corpo, setor e vazio.
+* A ordem das perguntas é calculada, não curada; um disco pode abrir com algo
+  que um ouvinte acharia secundário.
+* Discos trazidos pelo visitante ganham as perguntas, com posições "de 15" e a
+  mediana dos 14.
 
 ## O que não muda
 

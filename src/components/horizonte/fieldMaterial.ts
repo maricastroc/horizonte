@@ -62,7 +62,7 @@ export function createFieldUniforms(): FieldUniforms {
     uWorld: { value: 1 },
     uGuard: { value: new THREE.Vector3(0, 1, 1) },
     uFocus: { value: null },
-    uFocusMix: { value: new THREE.Vector3(0, ANATOMY.focus.dim, ANATOMY.focus.light) },
+    uFocusMix: { value: new THREE.Vector3(0, ANATOMY.focus.dim.ask, ANATOMY.focus.light) },
   };
 }
 
