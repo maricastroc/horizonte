@@ -4,7 +4,7 @@ import vert from "@/shaders/field.vert.glsl";
 import { drawBack, makeParticles } from "../composition/back";
 import { loadCovers, type CoverAsset } from "../composition/cover";
 import { drawFront, frontTitle } from "../composition/front";
-import { layoutFor } from "../composition/layout";
+import { collectionBody, layoutFor } from "../composition/layout";
 import { RingBakery } from "../composition/ring";
 import { ALBUMS, boundsOf } from "../content";
 import { fieldConstantsOf } from "../field";
@@ -193,7 +193,8 @@ describe("back painting", () => {
     expect(size(long)).toBeGreaterThan(0);
   });
 
-  it("measures the text once per frame when fitting is on", () => {
+  it("measures the text once per frame when fitting is on; neighbour names only once ever", () => {
+    drawBack(paintContext(10).ctx, 1400, 900, state(), layoutFor("desktop"), backDeps());
     const reg = paintContext(10);
     drawBack(reg.ctx, 1400, 900, state(), layoutFor("desktop"), backDeps());
     expect(reg.calls.filter((c) => c === "measureText")).toHaveLength(1);
@@ -269,5 +270,53 @@ describe("RingBakery", () => {
   it("the sector always returns the same output buffer", () => {
     const s = rings.seg(0, 0, -1, -1, 0, "rgba(0,0,0,1)");
     expect(rings.seg(0, 1, -1, -1, 0, "rgba(0,0,0,1)")).toBe(s);
+  });
+});
+
+describe("neighbour names in the collection", () => {
+  const W = 1440;
+  const H = 900;
+  const L = layoutFor("desktop");
+  const s = state({ nav: 5, navT: 5, alb: 5 });
+
+  const texts = () => {
+    const reg = paintContext(10);
+    const seen: { text: string; x: number; y: number }[] = [];
+    const ctx = new Proxy(reg.ctx, {
+      get(base, key: string) {
+        if (key === "fillText") {
+          return (text: string, x: number, y: number) => seen.push({ text, x, y });
+        }
+        return Reflect.get(base, key);
+      },
+    });
+    drawBack(ctx, W, H, s, L, backDeps());
+    return seen;
+  };
+
+  const bodyOf = (i: number) => {
+    const m = morphOf(i);
+    const b = collectionBody(W, H, s, L, i, m);
+    return { ...b, half: b.R * m.rMax * m.flatten };
+  };
+
+  it("a neighbour rising to the left is named above its body, clear of the core's pull", () => {
+    const name = texts().find((t) => t.text === ALBUMS[4].artist)!;
+    const body = bodyOf(4);
+    expect(name.y).toBeLessThan(body.cy - body.half);
+  });
+
+  it("a neighbour sinking to the right is named below its body", () => {
+    const name = texts().find((t) => t.text === ALBUMS[6].artist)!;
+    const body = bodyOf(6);
+    expect(name.y).toBeGreaterThan(body.cy + body.half);
+  });
+
+  it("names stay inside the frame", () => {
+    for (const t of texts()) {
+      if (!ALBUMS.some((a) => a.artist === t.text)) continue;
+      expect(t.x).toBeGreaterThanOrEqual(0);
+      expect(t.x).toBeLessThanOrEqual(W);
+    }
   });
 });

@@ -114,7 +114,9 @@ vec3 relief(vec3 col, vec2 q, float smear){
     float facing = max(dot(gn, ld), 0.0);
     float side = 0.5 + 0.5 * max(dot(rad, ld), 0.0);
     float edge = smoothstep(0.08, 0.9, slope) * facing * facing * side;
-    vec3 backlit = col * 0.9 + mix(uInk, vec3(1.0), 0.4) * edge * 1.1 * (1.0 + uReliefBand.w);
+    vec3 lf = normalize(vec3(uLight, 1.6));
+    float fill = clamp(0.9 + 1.4 * (dot(n, lf) - lf.z), 0.45, 1.45);
+    vec3 backlit = col * fill + mix(uInk, vec3(1.0), 0.4) * edge * 1.1 * (1.0 + uReliefBand.w);
     vec3 shaded = mix(keyed, backlit, uReliefBand.z);
     return mix(col, shaded, w * cov);
   }

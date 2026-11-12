@@ -162,13 +162,24 @@ sem fendas de setor nem estratos, suavizados por uma média móvel circular dupl
 de 3,5% de volta (`wholeCrownAt`, 2048 amostras). Sem a suavização, a espessura
 da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
 
-* **Luz.** A face fica escura (80% de `COLOR.body` sobre a capa desfocada em
-  10 px, que sobra como veio) e só a borda voltada para `LIGHT.base` acende: na
-  borda externa do lado da luz e na borda do furo do lado oposto. A borda é
-  assada uma vez por disco (`RingBakery.silhouette`: face 1000², borda 500²,
-  versão desfocada 320²; 1–6 ms por disco). No foco, o relevo do shader entra
-  em modo contraluz (`uReliefBand.z = 1 − fadeSel`) e soma a borda analítica.
-  Ao abrir o álbum, o modo volta para luz frontal e a coroa dá lugar às placas.
+* **Luz.** A borda voltada para `LIGHT.base` acende: na borda externa do lado
+  da luz e na borda do furo do lado oposto. A face não é preta: é a capa
+  desfocada em 7 px sob `COLOR.body`, e o que sobra dela são veios, as costuras
+  entre faixas e os estratos (contagem de faixas e pulso legíveis sem abrir o
+  disco). Sobre a face, um gradiente de preenchimento ao longo da luz (sombra
+  0,30 do lado oposto) modela o volume. A borda é assada uma vez por disco
+  (`RingBakery.silhouette`: face 1000², borda 500², versão desfocada 320²;
+  1–3 ms por disco). No foco, o relevo do shader entra em modo contraluz
+  (`uReliefBand.z = 1 − luz`), soma a borda analítica e modela a face pela
+  normal do domo (preenchimento de 0,45× a 1,45×). Ao abrir o álbum, o modo
+  volta para luz frontal e a coroa dá lugar às placas.
+* **Material.** O brilho espectral do disco é a refletância da superfície:
+  quanto da face escurece (84% a 60%) e quanto o lado da luz devolve (0,04 a
+  0,20). Discos de timbre escuro ficam foscos e fundos; os brilhantes, acetinados.
+  Sem isso, uma luz e um material iguais para todos aproximavam as silhuetas.
+* **Satélites.** A coleção mostra os satélites (M9) como corpos escuros com
+  borda, no lugar definitivo, no foco e em cada vizinho: a duração do disco
+  aparece sem abrir. Ao abrir, só a luz e a massa deles mudam.
 * **Orientação.** Na coleção o anel repousa em `RING.anchor`, mesmo com o disco
   tocando: é a orientação em que as bordas foram assadas.
 * **Profundidade.** Desktop e tablet usam uma fileira que recua: cada passo
@@ -184,6 +195,21 @@ da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
   profundidade de campo sem filtro por quadro. O núcleo e o rótulo de cada
   vizinho só aparecem depois de |d| = 0,5, onde o núcleo do shader deixa de ser
   dele.
+* **Nomes dos vizinhos.** Ficam fora do furo, onde a segunda massa enrolava o
+  texto num anel ilegível: acima do corpo para os vizinhos que sobem à esquerda,
+  abaixo para os que descem à direita, ainda dentro da lente. São desenhados
+  numa segunda passada, depois de todos os corpos, sobre uma poça de sombra
+  (gradiente radial achatado; `shadowBlur` e `strokeText` custavam 0,6–0,8 ms
+  por quadro) e presos a 6% das bordas, margem que absorve o empurrão da lente.
+  A largura de cada nome é medida uma vez e escalada pelo tamanho.
+* **Distinção, medida.** Correlação par a par das silhuetas da coleção: no
+  relance do guardrail (24 px) a forma só vai de 0,614 / 0,961 (média / pior par)
+  a 0,608 / 0,955 com os satélites, porque os pares quase gêmeos (*Le Manoir* ×
+  *The Sheltering Sky*) diferem justamente no que é fino (11 × 3 faixas, 0 × 3
+  satélites). De perto, a cor separa mais (correlação de croma 0,39 → 0,31) e o
+  pior par em luminância fica em 0,70 (0,67 antes). A média de luminância sobe
+  (0,36 → 0,43): com a face visível, a massa de todos conta, e todos estão sob a
+  mesma luz.
 * **Mobile.** O palco por bandas não muda: um corpo por tela, mesma fórmula de
   antes, só que com a silhueta no lugar do arco.
 
@@ -197,7 +223,7 @@ cada etapa é uma janela suavizada desse progresso (`stagesOf`):
 | --- | --- | --- |
 | Luz | 0,05–0,60 | O relevo passa de contraluz a luz frontal e as placas ganham a capa. A direção da luz gira até 0,55 rad no meio do caminho e volta. |
 | Abertura | 0,30–0,85 | O perfil sai da coroa inteira: as cascas partem de posições contíguas dentro da coroa suavizada e deslizam até as reais, e as fendas de setor se abrem a partir do meio de cada fenda. A silhueta da coleção some junto. |
-| Satélites | 0,55–1 | Cada satélite nasce a 55% da própria órbita e gira 0,9 rad até o lugar. A segunda massa do shader acompanha, com massa e horizonte crescendo junto. |
+| Satélites | 0,55–1 | Os satélites já estão no lugar desde a coleção; a segunda massa do shader cresce com eles, em massa e horizonte. |
 | Rótulos | 0,72–1 | Nomes e marcas das faixas. |
 
 No meio da ida o raio cresce até 10% (`push`), um avanço de câmera que se

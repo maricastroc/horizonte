@@ -32,7 +32,7 @@ import {
 import { bandsOf, sameBands, stageBox, FULL_BANDS } from "../composition/bands";
 import { RingBakery, type SegShape } from "../composition/ring";
 import { profileOf, writeProfile, type ReliefBand } from "../composition/relief";
-import { emergeOf, stagesOf } from "../composition/approach";
+import { stagesOf } from "../composition/approach";
 import { breathAt, temperamentOf } from "../breath";
 import {
   crownAt,
@@ -1329,9 +1329,8 @@ export class FieldEngine implements InputActions {
       const sat = this.leadSatellite();
       if (sat) {
         const e = stagesOf(s).satellites;
-        const at = emergeOf(sat, e);
-        const sx = (geo.cx + Math.cos(at.angle) * at.dist * geo.R) / this.W;
-        const sy = (geo.cy + Math.sin(at.angle) * at.dist * geo.R * geo.flatten) / this.H;
+        const sx = (geo.cx + Math.cos(sat.angle) * sat.dist * geo.R) / this.W;
+        const sy = (geo.cy + Math.sin(sat.angle) * sat.dist * geo.R * geo.flatten) / this.H;
         m1x = (sx - 0.5) * aspect;
         m1y = 0.5 - sy;
         m1k = SECOND_MASS.k * this.C.massScale * sat.weight * s.form * e;

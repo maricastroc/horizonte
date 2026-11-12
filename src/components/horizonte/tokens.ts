@@ -53,8 +53,6 @@ export const APPROACH = {
   pass: 1.1,
   grow: 0.8,
   seam: 0.03,
-  satFrom: 0.55,
-  satSwing: 0.9,
 } as const;
 
 export const BREATH = {
@@ -75,11 +73,21 @@ export const BREATH = {
   phase: 0.6180339887498949,
 } as const;
 
-export const NAMES = { slide: 0.08, lag: 0.7 } as const;
+export const NAMES = {
+  slide: 0.08,
+  lag: 0.7,
+  clear: 1.2,
+  halo: "rgba(7,7,10,0.72)",
+  edge: 0.06,
+  probe: 100,
+  pool: 0.9,
+} as const;
 
 export const SILHOUETTE = {
-  face: 0.8,
-  veil: 10,
+  face: [0.84, 0.6],
+  veil: 7,
+  shade: 0.3,
+  lift: [0.04, 0.2],
   smooth: 0.035,
   rim: [4, 13],
   rimAlpha: [1, 0.42],

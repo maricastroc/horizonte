@@ -1,5 +1,5 @@
 import { ALBUMS, boundsOf } from "../content";
-import { clamp } from "../math";
+import { clamp, lerp } from "../math";
 import {
   crownAt,
   morphologyOf,
@@ -278,6 +278,7 @@ export function bakeSilhouette(
   m: AlbumMorphology,
   ink: Rgb,
   rot: number,
+  sheen: number,
 ): Silhouette {
   const plates = buffer();
   new SectorBake(cover, m.bounds, m, -1, -1, -1, plates).run(Number.POSITIVE_INFINITY);
@@ -295,11 +296,21 @@ export function bakeSilhouette(
   crownPath(x, m, C, C);
   x.fill();
   x.globalCompositeOperation = "source-atop";
-  x.globalAlpha = SILHOUETTE.face;
+  x.globalAlpha = lerp(SILHOUETTE.face[0], SILHOUETTE.face[1], sheen);
+  x.fillRect(0, 0, RING.buffer, RING.buffer);
+
+  const [lx, ly] = lightInBuffer(m.flatten, rot);
+  const reach = RING.unitR * m.rMax;
+  const fill = x.createLinearGradient(C - lx * reach, C - ly * reach, C + lx * reach, C + ly * reach);
+  fill.addColorStop(0, `rgba(0,0,0,${SILHOUETTE.shade})`);
+  fill.addColorStop(0.5, "rgba(0,0,0,0)");
+  const lift = lerp(SILHOUETTE.lift[0], SILHOUETTE.lift[1], sheen);
+  fill.addColorStop(1, rgba(brighten(ink, SILHOUETTE.rimWhite), lift));
+  x.globalAlpha = 1;
+  x.fillStyle = fill;
   x.fillRect(0, 0, RING.buffer, RING.buffer);
   x.restore();
 
-  const [lx, ly] = lightInBuffer(m.flatten, rot);
   const half = RING.buffer * SILHOUETTE.rimScale;
   const rim = document.createElement("canvas");
   rim.width = half;
@@ -392,7 +403,14 @@ export class RingBakery {
   silhouette(i: number): Silhouette {
     const cover = this.covers[i];
     if (!this.silhouettes[i] || this.silhouetteVersion[i] !== cover.version) {
-      this.silhouettes[i] = bakeSilhouette(cover.canvas, this.morph(i), ALBUMS[i].inkA, RING.anchor);
+      const album = ALBUMS[i];
+      this.silhouettes[i] = bakeSilhouette(
+        cover.canvas,
+        this.morph(i),
+        album.inkA,
+        RING.anchor,
+        album.signature.brightness,
+      );
       this.silhouetteVersion[i] = cover.version;
     }
     return this.silhouettes[i]!;
