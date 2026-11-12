@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import Instruments, { isInstrumentsTarget } from "../Instruments";
 import { ALBUMS, OPENING } from "../content";
@@ -755,6 +755,30 @@ describe("why this shape", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Tracks" }));
     expect(fake.last("closeAnatomy")).toBeDefined();
     expect(within(trackRail()).getByText(ALBUMS[EWORLD].tracks[0].title)).toBeDefined();
+  });
+
+  it("opening another question brings its title to the top of the panel", () => {
+    const fake = mount({ scale: "album", alb: EWORLD, variant: "mobile", focus: "satellites" });
+    openShape();
+    const scroller = trackRail();
+    const tabs = within(scroller).getByRole("tablist");
+    Object.defineProperty(tabs, "offsetHeight", { configurable: true, value: 44 });
+    scroller.scrollTop = 380;
+    const scrollTo = vi.fn();
+    scroller.scrollTo = scrollTo as unknown as typeof scroller.scrollTo;
+    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      const top = this === scroller ? 300 : this.tagName === "SECTION" ? 120 : 0;
+      return { top, left: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: top, toJSON() {} };
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Next question/ }));
+    act(() => fake.update({ focus: "strata" }));
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 380 + 120 - 300 - 44, behavior: "smooth" });
+    scrollTo.mockClear();
+    fireEvent.click(screen.getByRole("button", { name: /What if/ }));
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    rect.mockRestore();
   });
 
   it("the default view, before the engine starts, is the opening record", () => {

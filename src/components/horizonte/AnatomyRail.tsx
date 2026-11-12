@@ -134,6 +134,21 @@ export function AnatomyInvite({
   );
 }
 
+function reveal(section: HTMLElement | null) {
+  const scroller = section?.closest<HTMLElement>(".rail-scroll");
+  if (!section || !scroller) return;
+  const tabs = scroller.querySelector<HTMLElement>("[role=tablist]");
+  const above = section.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+  const target = Math.max(0, Math.round(scroller.scrollTop + above - (tabs?.offsetHeight ?? 0)));
+  if (Math.abs(scroller.scrollTop - target) < 1) return;
+  const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  if (typeof scroller.scrollTo === "function") {
+    scroller.scrollTo({ top: target, behavior: still ? "auto" : "smooth" });
+  } else {
+    scroller.scrollTop = target;
+  }
+}
+
 function Numbers({ q, extra }: { q: Question; extra: string[] }) {
   const t = useCopy().anatomy;
   const w = t.write;
@@ -198,6 +213,9 @@ export function ShapePanel({
     setTrying(false);
     setNums(false);
   }
+
+  const sectionRef = useRef<HTMLElement>(null);
+  useEffect(() => reveal(sectionRef.current), [key, trying]);
 
   const album = useRef(-1);
   useEffect(() => {
@@ -282,6 +300,7 @@ export function ShapePanel({
       }}
     >
       <section
+        ref={sectionRef}
         aria-label={o.ask}
         className={["flex flex-col border-b border-rule-2", compact ? "py-4" : "py-4.5"].join(" ")}
       >
