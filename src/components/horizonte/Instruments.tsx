@@ -11,7 +11,7 @@ import { timecode } from "./format";
 import { useCopy } from "./i18n";
 import LanguageSwitch from "./LanguageSwitch";
 import { brighten } from "./composition/ring";
-import { COLOR, IDLE_OPACITY, PLAYING_LIFT, rgba } from "./tokens";
+import { COLOR, IDLE_CALM, IDLE_OPACITY, PLAYING_LIFT, rgba } from "./tokens";
 import type { Scale, Snapshot } from "./types";
 import type { FieldEngine } from "./engine/FieldEngine";
 
@@ -564,7 +564,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       ].join(" ")}
       data-idle={snap.idle ? "" : undefined}
     >
-      <style>{`.idle-soft{transition:opacity 350ms ease-out}[data-instruments][data-idle] .idle-soft{opacity:${IDLE_OPACITY}}`}</style>
+      <style>{`.idle-soft,.idle-calm{transition:opacity 350ms ease-out}[data-instruments][data-idle] .idle-soft{opacity:${IDLE_OPACITY}}[data-instruments][data-idle] .idle-calm{opacity:${IDLE_CALM}}`}</style>
       {children}
       {status && <Ceremony status={status} onCancel={cancel} />}
       <p aria-live="polite" className="sr-only">
@@ -585,7 +585,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         >
           <div className="flex items-baseline justify-between gap-3">
             <h1 className="text-ink-text">{t.title}</h1>
-            <span className="whitespace-nowrap text-ink-mute">
+            <span className="whitespace-nowrap text-ink-soft">
               {context} · {licenseLink}
             </span>
           </div>
@@ -656,7 +656,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           {fault}
           {seek(true)}
           <div className="flex min-h-[32px] items-center justify-between gap-3 text-ink-mute">
-            <span className="whitespace-nowrap tabular-nums">
+            <span className="whitespace-nowrap tabular-nums text-ink-soft">
               <span ref={tcRef}>00:00</span>
               <span aria-hidden> / </span>
               <span ref={durRef}>00:00</span>
@@ -768,7 +768,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         {fault}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
           {transport(false)}
-          <div className="idle-soft flex flex-none items-center gap-2.5">
+          <div className="idle-calm flex flex-none items-center gap-2.5">
             <button
               type="button"
               aria-pressed={muted}
@@ -793,7 +793,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               className="rail-range h-2.25 w-18"
             />
           </div>
-          <span ref={tcRef} className="ml-auto flex-none whitespace-nowrap tabular-nums text-ink-mute">
+          <span ref={tcRef} className="ml-auto flex-none whitespace-nowrap tabular-nums text-ink-soft">
             00:00 / 00:00
           </span>
         </div>
@@ -813,7 +813,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         >
           {t.transport.back}
         </button>
-        <span className="idle-soft whitespace-nowrap text-ink-mute">{context}</span>
+        <span className="idle-calm whitespace-nowrap text-ink-soft">{context}</span>
         <span className="idle-soft">{licenseLink}</span>
       </div>
     </>,
