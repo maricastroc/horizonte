@@ -125,6 +125,17 @@ export function frontShare(ox: number, oy: number, W: number, H: number): number
   return LENS.frontGain / (1 + mag * LENS.front);
 }
 
+export function lensOverCaptions(captions: Caption[], px: number, py: number): number {
+  let calm = 0;
+  for (const c of captions) {
+    const dx = Math.max(0, Math.abs(px - c.x) - c.half);
+    const dy = Math.max(0, c.y - c.top - py, py - c.y - c.bottom);
+    const near = smooth01(1 - Math.hypot(dx, dy) / (c.tsz * NAMES.calm));
+    calm = Math.max(calm, near * Math.min(1, c.alpha / NAMES.fade));
+  }
+  return 1 - calm;
+}
+
 export function drawCaptions(x: Ctx, captions: Caption[], fonts: FontFamilies) {
   const k = 1 / LENS.frontAlpha;
   x.save();

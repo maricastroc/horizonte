@@ -1,7 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import frag from "@/shaders/field.frag.glsl";
 import vert from "@/shaders/field.vert.glsl";
-import { drawBack, drawCaptions, frontShare, makeParticles, seatUnder, type Caption } from "../composition/back";
+import {
+  drawBack,
+  drawCaptions,
+  frontShare,
+  lensOverCaptions,
+  makeParticles,
+  seatUnder,
+  type Caption,
+} from "../composition/back";
 import { loadCovers, type CoverAsset } from "../composition/cover";
 import { drawFront, frontTitle } from "../composition/front";
 import { collectionBody, layoutFor } from "../composition/layout";
@@ -400,6 +408,22 @@ describe("neighbour captions in the collection", () => {
     expect(Math.max(...alphas)).toBeLessThanOrEqual(1 / LENS.frontAlpha + 1e-9);
     expect(alphas).toContain((1 / LENS.frontAlpha) * NAMES.nameAlpha);
     expect(alphas).toContain((1 / LENS.frontAlpha) * NAMES.metaAlpha);
+  });
+
+  it("the pointer's lens yields over a caption, so a name under the cursor is read, not folded", () => {
+    const c: Caption = {
+      artist: "A", meta: "M", x: 600, y: 500, tsz: 30, msz: 10, step: 20, top: 24, bottom: 23,
+      half: 140, weight: 700, alpha: 0.8, hot: false,
+    };
+    expect(lensOverCaptions([], 600, 500)).toBe(1);
+    expect(lensOverCaptions([c], 600, 490)).toBe(0);
+    expect(lensOverCaptions([c], c.x + c.half - 2, 500)).toBe(0);
+    const reach = c.tsz * NAMES.calm;
+    expect(lensOverCaptions([c], 600, c.y - c.top - reach - 1)).toBe(1);
+    const mid = lensOverCaptions([c], 600, c.y - c.top - reach / 2);
+    expect(mid).toBeGreaterThan(0);
+    expect(mid).toBeLessThan(1);
+    expect(lensOverCaptions([{ ...c, alpha: 0 }], 600, 490)).toBe(1);
   });
 
   it("the front plane draws them", () => {
