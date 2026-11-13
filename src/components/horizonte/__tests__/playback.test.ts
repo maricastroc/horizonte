@@ -320,6 +320,29 @@ describe("playback fault", () => {
     expect(faults).toEqual(["blocked"]);
   });
 
+  it("a play request cut short by a newer track or a pause is not a broken file", async () => {
+    const bus = new AudioBus();
+    const faults: string[] = [];
+    bus.onFault = (f) => faults.push(f);
+    bus.load(track("a", "/music/a/01.m4a"));
+
+    const el = env.created[0];
+    const real = el.play.bind(el);
+    el.play = async () => {
+      const e = new Error("The play() request was interrupted by a new load request.");
+      e.name = "AbortError";
+      throw e;
+    };
+    await bus.play();
+    expect(faults).toEqual([]);
+
+    el.play = real;
+    bus.load(track("b", "/music/a/02.m4a"));
+    await bus.play();
+    expect(faults).toEqual([]);
+    expect(bus.playing).toBe(true);
+  });
+
   it("disposing the player does not invent a fault", async () => {
     const bus = new AudioBus();
     const faults: string[] = [];

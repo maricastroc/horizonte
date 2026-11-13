@@ -68,8 +68,9 @@ abstract class ElementPlayback implements Playback {
     try {
       await this.el.play();
     } catch (e) {
-      this.wantPlay = false;
       const name = (e as Error | undefined)?.name ?? "";
+      if (name === "AbortError") return;
+      this.wantPlay = false;
       this.onFault?.(name === "NotAllowedError" ? "blocked" : "source");
     }
   }
