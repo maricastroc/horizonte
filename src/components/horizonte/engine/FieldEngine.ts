@@ -10,7 +10,13 @@ import {
   type CompareAxis,
   type Invite,
 } from "../anatomy";
-import { drawBack, makeParticles, type BackDeps, type Caption } from "../composition/back";
+import {
+  drawBack,
+  lensOverCaptions,
+  makeParticles,
+  type BackDeps,
+  type Caption,
+} from "../composition/back";
 import { drawFocus, emptyFrame, resetFrame, type BodyFrame } from "../composition/focus";
 import { drawFront, type FrontDeps } from "../composition/front";
 import { CANVAS_LABELS, type CanvasLabels } from "../i18n/canvas";
@@ -969,7 +975,9 @@ export class FieldEngine implements InputActions {
     m.x += (m.tx - m.x) * Math.min(1, dt * LERP.mouse);
     m.y += (m.ty - m.y) * Math.min(1, dt * LERP.mouse);
     m.v *= Math.pow(0.05, dt);
-    s.curK = this.reduced || this.coarse ? 0 : (0.006 + m.v * 0.02) * K;
+    s.curK = this.reduced || this.coarse
+      ? 0
+      : (0.006 + m.v * 0.02) * K * lensOverCaptions(this.captions, m.x * this.W, m.y * this.H);
 
     s.navT = clamp(s.navT, 0, ALBUMS.length - 1);
     s.nav += (s.navT - s.nav) * Math.min(1, dt * this.C.navLerp);

@@ -98,7 +98,7 @@ acima de 1,50 o corte do palco começa a nivelar as morfologias.
 | Volume | botão + régua | só `Sound`/`Mute`; o volume é do sistema |
 | `◂ Back` | botão dedicado | a escala `Collection › Album › Track` faz o papel |
 | Régua de álbuns | sempre aberta, à direita | revelação `Albums`, ocupando palco + lista |
-| Fade de ocioso | após 2,6 s: secundárias a 32%, contador e som a 80%; transporte, tempo e disco em foco intactos | desligado em ponteiro grosso |
+| Fade de ocioso | após 2,6 s: secundárias a 32%, som a 80%; transporte, tempo, contador e disco em foco intactos | desligado em ponteiro grosso |
 | Calha do texto no canvas | `W · 0,028` | `BAND.gutter` — a mesma calha do DOM |
 | Contraste base | `ink-mute` | `ink-text-2`, com `ink-mute` para o secundário |
 

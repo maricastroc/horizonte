@@ -42,15 +42,16 @@ const getDefault = () => DEFAULT_SNAPSHOT;
 
 const LEVELS: Scale[] = ["collection", "album", "track"];
 
-const ROW = "h-[28px] items-center gap-[10px] cursor-pointer " +
+const LINE = "items-center cursor-pointer " +
   "border-b border-rule-2 w-full text-left transition-colors duration-150";
 
-const ROW_TOUCH = "min-h-[48px] items-center gap-[9px] cursor-pointer " +
-  "border-b border-rule-2 w-full text-left transition-colors duration-150";
+const ROW = `h-[28px] gap-[10px] ${LINE}`;
 
-const NAME_FIT =
-  "min-w-0 overflow-hidden whitespace-nowrap " +
-  "[mask-image:linear-gradient(to_right,black_calc(100%-0.9rem),transparent)]";
+const ROW_ALBUM = `h-[28px] gap-[8px] ${LINE}`;
+
+const ROW_TOUCH = `min-h-[48px] gap-[9px] ${LINE}`;
+
+const NAME_FIT = "name-fit min-w-0";
 const REVEAL = "group-hover:col-span-2 group-focus-visible:col-span-2";
 const CODE_HIDE = "group-hover:hidden group-focus-visible:hidden";
 
@@ -296,11 +297,11 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             engine?.enterAlbum(i);
           }}
           title={a.artist}
-          className={`group grid grid-cols-[1fr_46px_7px] hover:text-ink-text ${
-            compact ? ROW_TOUCH : ROW
+          className={`group grid grid-cols-[1fr_42px_7px] hover:text-ink-text ${
+            compact ? ROW_TOUCH : ROW_ALBUM
           }`}
         >
-          <span className={`${NAME_FIT} text-[11px] tracking-[.06em] ${REVEAL}`}>{a.artist}</span>
+          <span className={`${NAME_FIT} text-[11px] tracking-[.03em] ${REVEAL}`}>{a.artist}</span>
           <span className={`text-right text-ink-mute ${CODE_HIDE}`}>{a.cat}</span>
           <span
             aria-hidden
@@ -668,7 +669,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
                 aria-pressed={muted}
                 onClick={toggleMute}
                 className={`-mr-2 flex h-full cursor-pointer items-center whitespace-nowrap px-2 ${
-                  muted ? "text-ink-text" : ""
+                  muted ? "text-ink-text" : "text-ink-text-2"
                 }`}
               >
                 {muted ? t.sound.muted : t.sound.on}
@@ -698,16 +699,16 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           aria-label={t.albumsNav}
           aria-hidden={!albumRailOn}
           className={[
-            "isolate relative flex min-h-0 flex-col w-57 border-t border-rule",
+            "isolate relative flex min-h-0 flex-col w-60 border-t border-rule",
             albumsFolded ? "flex-none" : trackRailOn ? "flex-1 basis-0" : "shrink",
-            "pointer-events-auto tablet:w-52",
+            "pointer-events-auto tablet:w-55",
             "-mx-3 px-3 pt-2 pb-1",
           ].join(" ")}
         >
           <div
             aria-hidden
             className={[
-              "pointer-events-none absolute inset-0 -z-10 bg-void/78 backdrop-blur-md",
+              "pointer-events-none absolute inset-y-0 right-0 -left-8 -z-10 bg-void/78 backdrop-blur-md",
               "[mask-image:linear-gradient(to_right,transparent,black_2.5rem)]",
             ].join(" ")}
           />
@@ -719,7 +720,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               onClick={() => setAlbumsOpen((v) => !v)}
               className={[
                 "idle-soft grid cursor-pointer grid-cols-[auto_1fr] gap-3 pb-1.5 text-left",
-                "text-ink-faint hover:text-ink-text",
+                "text-ink-mute hover:text-ink-text",
               ].join(" ")}
             >
               <span>
@@ -730,7 +731,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               )}
             </button>
           ) : (
-            <p className="idle-soft pb-1.5 text-ink-faint">{t.albumCount(ALBUMS.length)}</p>
+            <p className="idle-soft pb-1.5 text-ink-mute">{t.albumCount(ALBUMS.length)}</p>
           )}
           {!albumsFolded && (
             <>
@@ -763,7 +764,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         </nav>
       </div>
 
-      <div className="pointer-events-auto absolute bottom-11 left-8.5 flex w-150 flex-col gap-2.75">
+      <div className="pointer-events-auto absolute bottom-11 left-8.5 flex w-150 flex-col gap-2.75 tablet:max-w-[calc(100%-26rem)]">
         {seek(false)}
         {fault}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
@@ -813,7 +814,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         >
           {t.transport.back}
         </button>
-        <span className="idle-calm whitespace-nowrap text-ink-soft">{context}</span>
+        <span className="whitespace-nowrap text-ink-soft">{context}</span>
         <span className="idle-soft">{licenseLink}</span>
       </div>
     </>,

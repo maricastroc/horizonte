@@ -262,6 +262,16 @@ da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
   desenhada no plano da frente (`drawCaptions`), como o lockup (altura ×0,85,
   largura ×1,12). A base é só a coroa; se uma lua ocupa o lugar, a legenda
   desliza para o lado, e só desce abaixo da lua quando deslizar não basta.
+* **O cursor cede sobre as legendas.** Em repouso e com o vizinho apontado, a
+  deformação de uma legenda fica entre 0,13 e 0,49 (maior gradiente do
+  deslocamento ao longo dela; *Tristan Lohengrin* em repouso: 0,32). Com o
+  ponteiro sobre o texto, a lente do cursor levava isso a 0,68–2,5: o fim do nome
+  arqueava parado e, em movimento, a palavra virava um anel. O nome em cirílico
+  sofria mais por ser o mais largo (314 px) e estar no caminho do ponteiro até a
+  lista e os controles. Agora a massa do cursor cai a zero sobre a caixa de uma
+  legenda visível e volta inteira a 2,5 alturas de nome dela
+  (`lensOverCaptions`, `NAMES.calm`); a deformação sob o ponteiro volta a
+  0,12–0,32. O brilho do cursor continua; só a lente sai de cima das letras.
 * **Distinção, medida.** Correlação par a par das silhuetas da coleção: no
   relance do guardrail (24 px) a forma só vai de 0,614 / 0,961 (média / pior par)
   a 0,608 / 0,955 com os satélites, porque os pares quase gêmeos (*Le Manoir* ×
