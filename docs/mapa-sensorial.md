@@ -224,6 +224,22 @@ da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
   `ringR × circuit × profundidade`, então nenhum corpo salta de tamanho quando
   passa o foco adiante. Os corpos são desenhados do mais distante para o mais
   próximo, e o mais próximo encobre o de trás.
+* **Vão entre os corpos, por escala.** O espaçamento é fração da largura e o
+  raio vem da menor dimensão da tela, do `circuit` e da lupa da lente; em 16:10
+  quase todo par se encostava ou se sobrepunha, e os dois maiores
+  (*zero-project* e *Tale Twist*) se sobrepunham em qualquer proporção. Afastar
+  os vizinhos os empurrava para baixo do índice. Agora a coleção encolhe por
+  inteiro, só o necessário: a cada quadro o motor mede, com a lente atual (foco
+  e segunda massa, sem o cursor), quanto a face de cada corpo voltada para o
+  vizinho avança na tela, e ajusta `fit` para deixar um vão de 3% da menor
+  dimensão (`FIT`). `fit` multiplica raio, horizonte e a unidade da lente
+  (`uWorld`), então a cena encolhe sem mudar de proporção; posições, índice e a
+  vista do álbum não mudam (`collectionFit` volta a 1 com o zoom). O fator
+  mistura os dois pares em volta da navegação, não muda enquanto um vizinho é
+  apontado e vale de 0,6 a 1. Medido na tela: a 1436×690 só *Darin Wilson*,
+  *zero-project* e *Tale Twist* encolhem (0,96 / 0,88 / 0,89) e o vão mínimo vai
+  de −31 para 19 px; a 1440×900, `fit` fica entre 0,66 e 0,92 e todo vão fica
+  entre 21 e 30 px. No mobile o palco já isola o foco e `fit` fica em 1.
 * **Atmosfera.** A opacidade cai até 0,30 entre |d| = 0,5 e 3 (`atmosphereOf`),
   e entre |d| = 0,6 e 1,9 a versão nítida dá lugar à desfocada (`defocusOf`):
   profundidade de campo sem filtro por quadro. O núcleo e o rótulo de cada

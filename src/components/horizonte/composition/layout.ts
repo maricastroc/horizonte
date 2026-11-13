@@ -4,6 +4,7 @@ import {
   BAND,
   BREAKPOINT,
   DEPTH,
+  FIT,
   GEO,
   GLYPH,
   LOCKUP,
@@ -11,10 +12,11 @@ import {
   RING,
   RING_UNIT,
   SHARD,
+  SILHOUETTE,
 } from "../tokens";
 import { albumProgressOf } from "../state";
 import { clamp, lerp } from "../math";
-import { neighborScale, type AlbumMorphology } from "../morphology";
+import { neighborScale, wholeCrownAt, type AlbumMorphology } from "../morphology";
 import type { FieldState, Variant } from "../types";
 import {
   bandsOf,
@@ -153,8 +155,44 @@ export function collectionBody(
 export const baseRadius = (W: number, H: number, zoom: number, play: number, L: WorldLayout) =>
   Math.min(W, H) * (0.385 - zoom * 0.105 + play * 0.055) * L.ringScale;
 
+export const collectionFit = (s: FieldState) => 1 - (1 - s.fit) * (1 - clamp(s.zoom, 0, 1));
+
 export const ringR = (W: number, H: number, s: FieldState, L: WorldLayout) =>
-  baseRadius(W, H, s.zoom, s.play, L) * (1 + APPROACH.push * stagesOf(s).push);
+  baseRadius(W, H, s.zoom, s.play, L) * (1 + APPROACH.push * stagesOf(s).push) * collectionFit(s);
+
+const crowns = new WeakMap<AlbumMorphology, Float32Array>();
+
+function crownOutline(m: AlbumMorphology): Float32Array {
+  let out = crowns.get(m);
+  if (!out) {
+    out = new Float32Array(FIT.probes * 2);
+    for (let i = 0; i < FIT.probes; i++) {
+      const turn = i / FIT.probes;
+      const r = wholeCrownAt(m, turn, SILHOUETTE.smooth).outer;
+      const a = turn * 6.2832 + RING.anchor;
+      out[i * 2] = Math.cos(a) * r;
+      out[i * 2 + 1] = Math.sin(a) * r * m.flatten;
+    }
+    crowns.set(m, out);
+  }
+  return out;
+}
+
+export function crownFacing(
+  m: AlbumMorphology,
+  R: number,
+  ux: number,
+  uy: number,
+): [number, number][] {
+  const unit = crownOutline(m);
+  const out: [number, number][] = [];
+  for (let i = 0; i < unit.length; i += 2) {
+    const x = unit[i] * R;
+    const y = unit[i + 1] * R;
+    if (x * ux + y * uy > FIT.facing * Math.hypot(x, y)) out.push([x, y]);
+  }
+  return out;
+}
 
 export interface BodyGeom {
   cx: number;

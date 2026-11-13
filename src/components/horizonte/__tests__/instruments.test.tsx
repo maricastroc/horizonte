@@ -51,6 +51,29 @@ describe("album rail", () => {
     }
   });
 
+  it("names and titles read larger and tighter than the labels around them", () => {
+    mount({ scale: "album" });
+    const rail = screen.getByRole("navigation", { name: "Albums" });
+    const name = within(rail).getByText(ALBUMS[0].artist);
+    expect(name.className).toContain("text-[12px]");
+    expect(within(rail).getByText(ALBUMS[0].cat).className).not.toContain("text-[12px]");
+    const titles = [...document.querySelectorAll("li button span.truncate")];
+    expect(titles.length).toBeGreaterThan(0);
+    for (const title of titles) {
+      expect(title.className).toContain("text-[12px]");
+      expect(title.className).toContain("tracking-[.06em]");
+    }
+  });
+
+  it("the hidden track list keeps no room in the collection, so the albums are not squeezed", () => {
+    mount({ scale: "collection" });
+    const column = screen.getByRole("navigation", { name: "Albums" }).parentElement!;
+    expect(column.className).not.toContain("gap-6.5");
+    cleanup();
+    mount({ scale: "album" });
+    expect(screen.getByRole("navigation", { name: "Albums" }).parentElement!.className).toContain("gap-6.5");
+  });
+
   it("closes the rail with the local-record intake, without becoming a file manager", () => {
     mount();
     const rail = screen.getByRole("navigation", { name: "Albums" });

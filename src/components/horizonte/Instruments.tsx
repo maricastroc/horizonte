@@ -52,6 +52,8 @@ const ROW_ALBUM = `h-[28px] gap-[8px] ${LINE}`;
 const ROW_TOUCH = `min-h-[48px] gap-[9px] ${LINE}`;
 
 const NAME_FIT = "name-fit min-w-0";
+const NAME_TYPE = "text-[12px] tracking-[.03em]";
+const TITLE_TYPE = "text-[12px] tracking-[.06em]";
 const REVEAL = "group-hover:col-span-2 group-focus-visible:col-span-2";
 const CODE_HIDE = "group-hover:hidden group-focus-visible:hidden";
 
@@ -301,7 +303,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             compact ? ROW_TOUCH : ROW_ALBUM
           }`}
         >
-          <span className={`${NAME_FIT} text-[11px] tracking-[.03em] ${REVEAL}`}>{a.artist}</span>
+          <span className={`${NAME_FIT} ${NAME_TYPE} ${REVEAL}`}>{a.artist}</span>
           <span className={`text-right text-ink-mute ${CODE_HIDE}`}>{a.cat}</span>
           <span
             aria-hidden
@@ -399,7 +401,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           <span className={compact ? "text-ink-mute" : undefined}>
             {String(i + 1).padStart(2, "0")}
           </span>
-          <span className={compact ? "truncate text-ink-text-2" : "truncate"}>{t.title}</span>
+          <span className={`truncate ${TITLE_TYPE} ${compact ? "text-ink-text-2" : ""}`}>{t.title}</span>
           <span className={compact ? "text-right text-ink-mute" : "text-right text-ink-faint"}>
             {timecode(t.dur)}
           </span>
@@ -693,15 +695,19 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         <LanguageSwitch compact={false} ink={ink} />
       </div>
 
-      <div className="absolute right-8.5 top-14 bottom-37.5 flex flex-col items-end gap-6.5">
+      <div
+        className={`absolute right-8.5 top-14 bottom-37.5 flex flex-col items-end ${
+          trackRailOn ? "gap-6.5" : ""
+        }`}
+      >
         <nav
           id="album-rail"
           aria-label={t.albumsNav}
           aria-hidden={!albumRailOn}
           className={[
-            "isolate relative flex min-h-0 flex-col w-60 border-t border-rule",
+            "isolate relative flex min-h-0 flex-col w-63 border-t border-rule",
             albumsFolded ? "flex-none" : trackRailOn ? "flex-1 basis-0" : "shrink",
-            "pointer-events-auto tablet:w-55",
+            "pointer-events-auto tablet:w-58",
             "-mx-3 px-3 pt-2 pb-1",
           ].join(" ")}
         >
