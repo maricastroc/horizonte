@@ -250,6 +250,18 @@ da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
   onde aparece; se a correção cairia na zona em que a lente do foco satura, o
   nome esmaece. Segunda passada, sobre uma poça de sombra; larguras medidas uma
   vez.
+* **Legendas no plano da frente, resolvidas na tela.** Medido com a lente exata
+  do shader: a distância entre corpo e legenda era uniforme no canvas, mas não
+  na tela. Perto do vizinho que carrega a segunda massa, a lente comprimia o
+  vão para 0,33–0,36 da altura do nome (0,46–0,48 nos outros) e achatava as
+  letras (altura ×0,76, largura ×1,17 em *Tristan Lohengrin*). Além disso, a
+  base contava satélites: uma lua sob o corpo jogava a legenda para baixo dela.
+  Agora o motor publica a lente inteira (foco, segunda massa e cursor);
+  `back.ts` acha onde a base da coroa aparece na tela e põe a legenda a 0,45
+  da altura do nome abaixo dela, no espaço da tela, a cada quadro. A legenda é
+  desenhada no plano da frente (`drawCaptions`), como o lockup (altura ×0,85,
+  largura ×1,12). A base é só a coroa; se uma lua ocupa o lugar, a legenda
+  desliza para o lado, e só desce abaixo da lua quando deslizar não basta.
 * **Distinção, medida.** Correlação par a par das silhuetas da coleção: no
   relance do guardrail (24 px) a forma só vai de 0,614 / 0,961 (média / pior par)
   a 0,608 / 0,955 com os satélites, porque os pares quase gêmeos (*Le Manoir* ×

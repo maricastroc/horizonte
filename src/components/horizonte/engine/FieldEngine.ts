@@ -10,7 +10,7 @@ import {
   type CompareAxis,
   type Invite,
 } from "../anatomy";
-import { drawBack, makeParticles, type BackDeps } from "../composition/back";
+import { drawBack, makeParticles, type BackDeps, type Caption } from "../composition/back";
 import { drawFocus, emptyFrame, resetFrame, type BodyFrame } from "../composition/focus";
 import { drawFront, type FrontDeps } from "../composition/front";
 import { CANVAS_LABELS, type CanvasLabels } from "../i18n/canvas";
@@ -180,6 +180,7 @@ export class FieldEngine implements InputActions {
   private hzK = 1;
   private bias: TrackBias = { ...NEUTRAL_BIAS };
   private lightSweep = 0;
+  private readonly captions: Caption[] = [];
   private breathGain = 0;
   private breathMass = 0;
   private breathLight = 0;
@@ -739,16 +740,31 @@ export class FieldEngine implements InputActions {
     const my = 0.5 - geo.cy / H;
     const world = this.worldUnit();
     const spin = s.spin;
-    const mass = s.m0k;
+    const bodies: [number, number, number, number][] = [[mx, my, s.m0k, spin]];
+    if (s.scale === "collection" && this.m1.ready) {
+      bodies.push([(this.m1.x - 0.5) * aspect, 0.5 - this.m1.y, this.m1.k, spin]);
+    }
+    bodies.push([(this.mouse.x - 0.5) * aspect, 0.5 - this.mouse.y, s.curK, spin * 0.4]);
     return (x, y) => {
-      const dx = ((x / W - 0.5) * aspect - mx) / world;
-      const dy = (0.5 - y / H - my) / world;
-      const r = Math.max(Math.hypot(dx, dy), 1e-4);
-      const pull = Math.min(mass / (r * r + LENS.soft), LENS.cap);
-      const k = pull * LENS.gain * world * H;
-      const ux = dx / r;
-      const uy = dy / r;
-      return [(-ux - uy * spin) * k, (uy - ux * spin) * k, pull / LENS.cap];
+      const px = (x / W - 0.5) * aspect;
+      const py = 0.5 - y / H;
+      let ox = 0;
+      let oy = 0;
+      let grip = 0;
+      for (let n = 0; n < bodies.length; n++) {
+        const [bx, by, mass, turn] = bodies[n];
+        const dx = (px - bx) / world;
+        const dy = (py - by) / world;
+        const r = Math.max(Math.hypot(dx, dy), 1e-4);
+        const pull = Math.min(mass / (r * r + LENS.soft), LENS.cap);
+        if (n === 0) grip = pull / LENS.cap;
+        const k = pull * LENS.gain * world * H;
+        const ux = dx / r;
+        const uy = dy / r;
+        ox += (-ux - uy * turn) * k;
+        oy += (uy - ux * turn) * k;
+      }
+      return [ox, oy, grip];
     };
   }
 
@@ -898,6 +914,7 @@ export class FieldEngine implements InputActions {
   private backDeps(): BackDeps {
     const compare = this.compareBake();
     this.reliefShape = compare;
+    this.captions.length = 0;
     return {
       labels: this.labels,
       fonts: this.fonts,
@@ -912,11 +929,8 @@ export class FieldEngine implements InputActions {
       fieldVersion: this.strain.version,
       compare,
       breath: (i) => this.breathOf(i),
-      second:
-        this.st.scale === "collection" && this.m1.ready
-          ? { alb: this.m1.alb, k: this.m1.k }
-          : null,
       lens: this.lensOf(),
+      captions: this.captions,
       frame: this.focusFrame(),
       facing: this.focusPart() === "posture" ? ease(this.focusAmt) : 0,
       ghost:
@@ -933,6 +947,7 @@ export class FieldEngine implements InputActions {
       labels: this.labels,
       weights: this.WEIGHTS,
       artistWeight: this.C.artistWeight,
+      captions: this.captions,
       frame: this.focusPart() ? this.bodyFrame : null,
     };
   }
