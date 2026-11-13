@@ -62,7 +62,7 @@ export interface BackDeps {
   facing?: number;
   labels?: CanvasLabels;
   breath?: (alb: number) => { mass: number; light: number };
-  second?: { alb: number; k: number } | null;
+  captions?: Caption[];
   lens?: (x: number, y: number) => [number, number, number];
 }
 
@@ -104,8 +104,61 @@ function drawRing(
 
 const widths = new Map<string, number>();
 
-export function bottomUnder(m: AlbumMorphology, R: number, half: number): number {
-  const orbit = wholeReachOf(m) / m.rMax;
+export interface Caption {
+  artist: string;
+  meta: string;
+  x: number;
+  y: number;
+  tsz: number;
+  msz: number;
+  step: number;
+  top: number;
+  bottom: number;
+  half: number;
+  weight: number;
+  alpha: number;
+  hot: boolean;
+}
+
+export function frontShare(ox: number, oy: number, W: number, H: number): number {
+  const mag = Math.hypot(ox / W, oy / H);
+  return LENS.frontGain / (1 + mag * LENS.front);
+}
+
+export function drawCaptions(x: Ctx, captions: Caption[], fonts: FontFamilies) {
+  const k = 1 / LENS.frontAlpha;
+  x.save();
+  x.textAlign = "center";
+  x.textBaseline = "alphabetic";
+  for (const c of captions) {
+    const cy = c.y + (c.bottom - c.top) / 2;
+    const reach = c.half + c.tsz * NAMES.pool;
+    x.save();
+    x.translate(c.x, cy);
+    x.scale(1, (c.top + c.bottom + c.tsz * NAMES.pool) / reach);
+    const pool = x.createRadialGradient(0, 0, 0, 0, 0, reach);
+    pool.addColorStop(0, NAMES.halo);
+    pool.addColorStop(1, "rgba(7,7,10,0)");
+    x.globalAlpha = c.alpha * k;
+    x.fillStyle = pool;
+    x.fillRect(-reach, -reach, reach * 2, reach * 2);
+    x.restore();
+
+    ls(x, "-0.035em");
+    x.fillStyle = COLOR.inkText;
+    x.globalAlpha = c.alpha * k * (c.hot ? 1 : NAMES.nameAlpha);
+    x.font = `${c.weight} ${c.tsz}px ${fonts.archivo}`;
+    x.fillText(c.artist, c.x, c.y);
+
+    ls(x, "0.16em");
+    x.globalAlpha = c.alpha * k * (c.hot ? 0.9 : NAMES.metaAlpha);
+    x.font = `500 ${c.msz}px ${fonts.mono}`;
+    x.fillText(c.meta, c.x, c.y + c.step);
+  }
+  x.restore();
+}
+
+export function bottomUnder(m: AlbumMorphology, R: number, half: number, dx = 0): number {
   let low = 0;
   for (let i = 0; i < NAMES.probes; i++) {
     const turn = i / NAMES.probes;
@@ -113,16 +166,54 @@ export function bottomUnder(m: AlbumMorphology, R: number, half: number): number
     const a = turn * 6.2832 + RING.anchor;
     const x = Math.cos(a) * r;
     const y = Math.sin(a) * r * m.flatten;
-    if (Math.abs(x) <= half) low = Math.max(low, y);
-  }
-  for (const sat of m.satellites) {
-    if (sat.weight <= 0.02) continue;
-    const r = satRadiusOf(m, sat) * R;
-    const x = Math.cos(sat.angle) * sat.dist * orbit * R;
-    const y = Math.sin(sat.angle) * sat.dist * orbit * R * m.flatten;
-    if (Math.abs(x) <= half + r) low = Math.max(low, y + r * m.flatten);
+    if (Math.abs(x - dx) <= half) low = Math.max(low, y);
   }
   return low;
+}
+
+export interface Seat {
+  dx: number;
+  base: number;
+}
+
+export function seatUnder(
+  m: AlbumMorphology,
+  R: number,
+  half: number,
+  gap: number,
+  height: number,
+): Seat {
+  const orbit = wholeReachOf(m) / m.rMax;
+  const moons = m.satellites
+    .filter((sat) => sat.weight > 0.02)
+    .map((sat) => ({
+      x: Math.cos(sat.angle) * sat.dist * orbit * R,
+      y: Math.sin(sat.angle) * sat.dist * orbit * R * m.flatten,
+      r: satRadiusOf(m, sat) * R,
+    }));
+  const hits = (dx: number, base: number) =>
+    moons.filter(
+      (q) =>
+        Math.abs(q.x - dx) < half + q.r &&
+        q.y + q.r * m.flatten > base + gap &&
+        q.y - q.r * m.flatten < base + gap + height,
+    );
+  let dx = 0;
+  let base = bottomUnder(m, R, half, dx);
+  const first = hits(dx, base);
+  if (!first.length) return { dx, base };
+  const q = first[0];
+  const pad = half * NAMES.slip;
+  const side = q.x <= 0 ? q.x + q.r + half + pad : q.x - q.r - half - pad;
+  if (Math.abs(side) <= half) {
+    dx = side;
+    base = bottomUnder(m, R, half, dx);
+    if (!hits(dx, base).length) return { dx, base };
+  }
+  dx = 0;
+  base = bottomUnder(m, R, half, dx);
+  for (const moon of hits(dx, base)) base = Math.max(base, moon.y + moon.r * m.flatten);
+  return { dx, base };
 }
 
 const smooth01 = (v: number) => {
@@ -305,7 +396,7 @@ export function drawBack(
   const seen = (qx: number, qy: number): [number, number] => {
     let px = qx;
     let py = qy;
-    for (let k = 0; k < 3; k++) {
+    for (let k = 0; k < NAMES.solve; k++) {
       const [ox, oy] = lens(px, py);
       px = qx - ox;
       py = qy - oy;
@@ -357,10 +448,6 @@ export function drawBack(
     alpha: number;
   }[] = [];
   const lead = lockup(W, H, s, L);
-  const pull = deps.second ?? null;
-  const horizon = pull
-    ? Math.sqrt(Math.max(0, pull.k / LENS.cap - LENS.soft)) * H
-    : 0;
   const shelter = {
     x1: 0,
     y0: lead.ay - lead.size * 0.8,
@@ -466,6 +553,7 @@ export function drawBack(
   const lockRoom = L.staged ? W - lead.margin * 2 : W * lockFit - lead.margin;
   const lockUnit = unitOf(`${weights[s.alb]} ${NAMES.probe}px ${fonts.archivo}`, A.artist);
   shelter.x1 = lead.margin + Math.min(lockUnit * lead.size, lockRoom) + lead.size * NAMES.shelterPad;
+  const captions = deps.captions ?? [];
   for (const t of tags) {
     const hot = t.i === s.hoverBody;
     const presence = Math.max(smooth01((NAMES.reach - Math.abs(t.d)) / NAMES.fade), hot ? 1 : 0);
@@ -482,56 +570,37 @@ export function drawBack(
     const top = t.tsz * 0.8;
     const bottom = step + msz * 0.3;
     const edge = W * NAMES.edge;
-    let nx = t.nx;
-    let ty = t.ty;
+    let sx = t.nx;
+    let sy = t.ty;
     if (t.placed) {
-      const gap = t.tsz * NAMES.gap;
-      const floor = bottomUnder(t.m, t.R, half);
-      const reach = pull && pull.alb === t.i ? Math.max(floor + gap, horizon) : floor + gap;
-      ty = t.ny + reach + top;
+      const seat = seatUnder(t.m, t.R, half, t.tsz * NAMES.gap, top + bottom);
+      const [bx, by] = seen(t.nx + seat.dx, t.ny + seat.base);
+      sx = bx;
+      sy = by + t.tsz * NAMES.gap + top;
       const covers =
-        nx - half < shelter.x1 && ty + bottom > shelter.y0 && ty - top < shelter.y1;
+        sx - half < shelter.x1 && sy + bottom > shelter.y0 && sy - top < shelter.y1;
       if (covers) continue;
     }
-    const [sx, sy] = seen(nx, ty);
     const fx = Math.min(Math.max(sx, edge + half), W - edge - half);
     const fy = Math.min(Math.max(sy, H * NAMES.ceiling + top), H * NAMES.floor - bottom);
-    let shown = presence;
-    if (fx !== sx || fy !== sy) {
-      const [ox, oy, grip] = lens(fx, fy);
-      if (grip < NAMES.strong) {
-        nx = fx + ox;
-        ty = fy + oy;
-      } else {
-        const out = Math.max(Math.abs(fx - sx) / half, Math.abs(fy - sy) / t.tsz);
-        shown *= Math.max(0, 1 - out);
-      }
-    }
-    if (shown <= 0.01) continue;
-
-    const cy = ty + (bottom - top) / 2;
-    const reach = half + t.tsz * NAMES.pool;
-    x.save();
-    x.translate(nx, cy);
-    x.scale(1, (top + bottom + t.tsz * NAMES.pool) / reach);
-    const pool = x.createRadialGradient(0, 0, 0, 0, 0, reach);
-    pool.addColorStop(0, NAMES.halo);
-    pool.addColorStop(1, "rgba(7,7,10,0)");
-    x.globalAlpha = t.alpha * shown;
-    x.fillStyle = pool;
-    x.fillRect(-reach, -reach, reach * 2, reach * 2);
-    x.restore();
-
-    ls(x, "-0.035em");
-    x.fillStyle = COLOR.inkText;
-    x.globalAlpha = t.alpha * shown * (hot ? 1 : NAMES.nameAlpha);
-    x.font = `${weights[t.i]} ${t.tsz}px ${fonts.archivo}`;
-    x.fillText(artist, nx, ty);
-
-    ls(x, "0.16em");
-    x.globalAlpha = t.alpha * shown * (hot ? 0.9 : NAMES.metaAlpha);
-    x.font = `500 ${msz}px ${fonts.mono}`;
-    x.fillText(meta, nx, ty + step);
+    const [ox, oy, grip] = lens(fx, fy);
+    if (grip >= NAMES.strong) continue;
+    const squeeze = frontShare(ox, oy, W, H);
+    captions.push({
+      artist,
+      meta,
+      x: fx + ox * squeeze,
+      y: fy + oy * squeeze,
+      tsz: t.tsz,
+      msz,
+      step,
+      top,
+      bottom,
+      half,
+      weight: weights[t.i],
+      alpha: t.alpha * presence,
+      hot,
+    });
   }
   x.restore();
 

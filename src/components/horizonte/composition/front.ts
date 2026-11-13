@@ -4,6 +4,7 @@ import { COLOR, GLYPH, NAMES } from "../tokens";
 import type { FieldState, FontFamilies } from "../types";
 import type { CoverAsset } from "./cover";
 import type { BodyFrame } from "./focus";
+import { drawCaptions, type Caption } from "./back";
 import { namePlates } from "./approach";
 import { ls, type Ctx } from "./ctx";
 import { lockup, type ShardSpec, type WorldLayout } from "./layout";
@@ -15,6 +16,7 @@ export interface FrontDeps {
   weights?: number[];
   artistWeight?: number;
   frame?: BodyFrame | null;
+  captions?: Caption[];
 }
 
 class FragmentCache {
@@ -112,6 +114,8 @@ export function drawFront(
     x.fillRect(0, scrimY - scrimR, scrimR, scrimR * 2);
     x.restore();
   }
+
+  if (deps.captions?.length) drawCaptions(x, deps.captions, deps.fonts);
 
   const fit = s.scale === "collection" ? L.fitCollection : L.fitAlbum;
   const plates = namePlates(s, ALBUMS.length);

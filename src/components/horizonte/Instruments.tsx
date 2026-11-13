@@ -11,7 +11,7 @@ import { timecode } from "./format";
 import { useCopy } from "./i18n";
 import LanguageSwitch from "./LanguageSwitch";
 import { brighten } from "./composition/ring";
-import { COLOR, IDLE_OPACITY, PLAYING_LIFT, rgba } from "./tokens";
+import { COLOR, IDLE_CALM, IDLE_OPACITY, PLAYING_LIFT, rgba } from "./tokens";
 import type { Scale, Snapshot } from "./types";
 import type { FieldEngine } from "./engine/FieldEngine";
 
@@ -42,7 +42,7 @@ const getDefault = () => DEFAULT_SNAPSHOT;
 
 const LEVELS: Scale[] = ["collection", "album", "track"];
 
-const ROW = "h-[26px] items-center gap-[10px] cursor-pointer " +
+const ROW = "h-[28px] items-center gap-[10px] cursor-pointer " +
   "border-b border-rule-2 w-full text-left transition-colors duration-150";
 
 const ROW_TOUCH = "min-h-[48px] items-center gap-[9px] cursor-pointer " +
@@ -50,7 +50,7 @@ const ROW_TOUCH = "min-h-[48px] items-center gap-[9px] cursor-pointer " +
 
 const NAME_FIT =
   "min-w-0 overflow-hidden whitespace-nowrap " +
-  "[mask-image:linear-gradient(to_right,black_calc(100%-1.75rem),transparent)]";
+  "[mask-image:linear-gradient(to_right,black_calc(100%-0.9rem),transparent)]";
 const REVEAL = "group-hover:col-span-2 group-focus-visible:col-span-2";
 const CODE_HIDE = "group-hover:hidden group-focus-visible:hidden";
 
@@ -300,7 +300,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             compact ? ROW_TOUCH : ROW
           }`}
         >
-          <span className={`${NAME_FIT} tracking-[.06em] ${REVEAL}`}>{a.artist}</span>
+          <span className={`${NAME_FIT} text-[11px] tracking-[.06em] ${REVEAL}`}>{a.artist}</span>
           <span className={`text-right text-ink-mute ${CODE_HIDE}`}>{a.cat}</span>
           <span
             aria-hidden
@@ -564,7 +564,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       ].join(" ")}
       data-idle={snap.idle ? "" : undefined}
     >
-      <style>{`.idle-soft{transition:opacity 350ms ease-out}[data-instruments][data-idle] .idle-soft{opacity:${IDLE_OPACITY}}`}</style>
+      <style>{`.idle-soft,.idle-calm{transition:opacity 350ms ease-out}[data-instruments][data-idle] .idle-soft{opacity:${IDLE_OPACITY}}[data-instruments][data-idle] .idle-calm{opacity:${IDLE_CALM}}`}</style>
       {children}
       {status && <Ceremony status={status} onCancel={cancel} />}
       <p aria-live="polite" className="sr-only">
@@ -585,7 +585,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         >
           <div className="flex items-baseline justify-between gap-3">
             <h1 className="text-ink-text">{t.title}</h1>
-            <span className="whitespace-nowrap text-ink-mute">
+            <span className="whitespace-nowrap text-ink-soft">
               {context} · {licenseLink}
             </span>
           </div>
@@ -656,7 +656,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           {fault}
           {seek(true)}
           <div className="flex min-h-[32px] items-center justify-between gap-3 text-ink-mute">
-            <span className="whitespace-nowrap tabular-nums">
+            <span className="whitespace-nowrap tabular-nums text-ink-soft">
               <span ref={tcRef}>00:00</span>
               <span aria-hidden> / </span>
               <span ref={durRef}>00:00</span>
@@ -698,9 +698,9 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           aria-label={t.albumsNav}
           aria-hidden={!albumRailOn}
           className={[
-            "isolate relative flex min-h-0 flex-col w-53.5 border-t border-rule",
+            "isolate relative flex min-h-0 flex-col w-57 border-t border-rule",
             albumsFolded ? "flex-none" : trackRailOn ? "flex-1 basis-0" : "shrink",
-            "pointer-events-auto tablet:w-47.5",
+            "pointer-events-auto tablet:w-52",
             "-mx-3 px-3 pt-2 pb-1",
           ].join(" ")}
         >
@@ -768,7 +768,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         {fault}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
           {transport(false)}
-          <div className="idle-soft flex flex-none items-center gap-2.5">
+          <div className="idle-calm flex flex-none items-center gap-2.5">
             <button
               type="button"
               aria-pressed={muted}
@@ -793,7 +793,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               className="rail-range h-2.25 w-18"
             />
           </div>
-          <span ref={tcRef} className="ml-auto flex-none whitespace-nowrap tabular-nums text-ink-mute">
+          <span ref={tcRef} className="ml-auto flex-none whitespace-nowrap tabular-nums text-ink-soft">
             00:00 / 00:00
           </span>
         </div>
@@ -813,7 +813,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         >
           {t.transport.back}
         </button>
-        <span className="idle-soft whitespace-nowrap text-ink-mute">{context}</span>
+        <span className="idle-calm whitespace-nowrap text-ink-soft">{context}</span>
         <span className="idle-soft">{licenseLink}</span>
       </div>
     </>,

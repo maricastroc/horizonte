@@ -4,7 +4,7 @@ import Instruments, { isInstrumentsTarget } from "../Instruments";
 import { ALBUMS, OPENING } from "../content";
 import { timecode } from "../format";
 import { brighten } from "../composition/ring";
-import { COLOR, PLAYING_LIFT, rgba } from "../tokens";
+import { COLOR, IDLE_CALM, IDLE_OPACITY, PLAYING_LIFT, rgba } from "../tokens";
 import type { Snapshot } from "../types";
 import { fakeEngine } from "./fakeInstruments";
 
@@ -839,6 +839,24 @@ describe("idle fade keeps the essentials readable", () => {
     const style = document.querySelector("[data-instruments] style")!.textContent ?? "";
     expect(style).toContain("[data-instruments][data-idle] .idle-soft");
     expect(style).not.toMatch(/\[data-instruments\]\[data-idle\]\{opacity/);
+  });
+});
+
+describe("idle keeps the essentials perceptible in two steps", () => {
+  it("the collection counter and sound only soften; credits and rows fade further", () => {
+    mount({ idle: true });
+    const counter = screen.getByText(/\d+\/\d+/);
+    expect(counter.className).toContain("idle-calm");
+    expect(counter.className).toContain("text-ink-soft");
+    expect(screen.getByRole("button", { name: /^Sound$/ }).closest(".idle-calm")).not.toBeNull();
+    const style = document.querySelector("[data-instruments] style")!.textContent ?? "";
+    expect(style).toContain(`.idle-calm{opacity:${IDLE_CALM}}`);
+    expect(IDLE_CALM).toBeGreaterThan(IDLE_OPACITY);
+  });
+
+  it("time reads between the actions and the secondary information", () => {
+    mount();
+    expect(screen.getByText("00:00 / 00:00").className).toContain("text-ink-soft");
   });
 });
 

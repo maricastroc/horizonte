@@ -1,17 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import frag from "@/shaders/field.frag.glsl";
 import vert from "@/shaders/field.vert.glsl";
-import { bottomUnder, drawBack, makeParticles } from "../composition/back";
+import { drawBack, drawCaptions, frontShare, makeParticles, seatUnder, type Caption } from "../composition/back";
 import { loadCovers, type CoverAsset } from "../composition/cover";
 import { drawFront, frontTitle } from "../composition/front";
-import { albPos, collectionBody, layoutFor } from "../composition/layout";
+import { collectionBody, layoutFor } from "../composition/layout";
 import { RingBakery } from "../composition/ring";
 import { ALBUMS, boundsOf } from "../content";
 import { fieldConstantsOf } from "../field";
-import { morphologyOf, wholeReachOf } from "../morphology";
+import { morphologyOf, satRadiusOf, wholeReachOf } from "../morphology";
 import { createFieldUniforms } from "../fieldMaterial";
 import { initialState } from "../state";
-import { GEO, NAMES, PARTICLES } from "../tokens";
+import { LENS, NAMES, PARTICLES } from "../tokens";
 import type { FieldState, Mode, Scale, Variant } from "../types";
 import { engineHarness, paintContext, type EngineHarness } from "./fakes";
 
@@ -279,126 +279,170 @@ describe("RingBakery", () => {
   });
 });
 
-describe("neighbour names in the collection", () => {
+describe("neighbour captions in the collection", () => {
   const W = 1440;
   const H = 900;
   const L = layoutFor("desktop");
   const s = state({ nav: 5, navT: 5, alb: 5 });
+  type Lens = (x: number, y: number) => [number, number, number];
 
-  const texts = (lens?: (x: number, y: number) => [number, number, number]) => {
+  const captionsOf = (st = s, lens?: Lens) => {
+    const captions: Caption[] = [];
+    drawBack(paintContext(400).ctx, W, H, st, L, { ...backDeps(), lens, captions });
+    return captions;
+  };
+
+  const named = (list: Caption[], st = s) =>
+    ALBUMS.map((a, i) => (list.some((c) => c.artist === a.artist) ? i : -1)).filter(
+      (i) => i >= 0 && i !== st.alb,
+    );
+
+  it("they are handed to the front plane, never painted behind the bodies", () => {
     const reg = paintContext(400);
-    const seen: { text: string; x: number; y: number }[] = [];
+    const seen: string[] = [];
     const ctx = new Proxy(reg.ctx, {
       get(base, key: string) {
-        if (key === "fillText") {
-          return (text: string, x: number, y: number) => seen.push({ text, x, y });
-        }
+        if (key === "fillText") return (text: string) => seen.push(text);
         return Reflect.get(base, key);
       },
     });
-    drawBack(ctx, W, H, s, L, { ...backDeps(), lens });
-    return seen;
-  };
-
-  const bodyOf = (i: number) => {
-    const m = morphOf(i);
-    const b = collectionBody(W, H, s, L, i, m);
-    return { ...b, half: b.R * wholeReachOf(m) * m.flatten };
-  };
-
-  it("names land inside the frame and below the navigation where the lens actually shows them", () => {
-    const push: [number, number, number] = [200, 120, 0];
-    const neighbours = ALBUMS.filter((_, i) => i !== s.alb).map((a) => a.artist);
-    let checked = 0;
-    for (const t of texts(() => push)) {
-      if (!neighbours.includes(t.text)) continue;
-      checked++;
-      const screenX = t.x - push[0];
-      const screenY = t.y - push[1];
-      expect(screenX).toBeGreaterThanOrEqual(W * NAMES.edge);
-      expect(screenX).toBeLessThanOrEqual(W * (1 - NAMES.edge));
-      expect(screenY).toBeGreaterThanOrEqual(H * NAMES.ceiling);
-      expect(screenY).toBeLessThanOrEqual(H * NAMES.floor);
-    }
-    expect(checked).toBeGreaterThan(0);
-  });
-
-  it("a neighbour whose caption would cover the lockup goes unnamed rather than climbing to the top", () => {
-    expect(texts().some((t) => t.text === ALBUMS[4].artist)).toBe(false);
+    const captions: Caption[] = [];
+    drawBack(ctx, W, H, s, L, { ...backDeps(), captions });
+    expect(captions.length).toBeGreaterThan(0);
+    for (const c of captions) expect(seen).not.toContain(c.artist);
   });
 
   it("only the nearest neighbours are named; further ones only when pointed at", () => {
-    const named = (list: { text: string }[]) =>
-      ALBUMS.map((a, i) => (list.some((t) => t.text === a.artist) ? i : -1)).filter(
-        (i) => i >= 0 && i !== s.alb,
-      );
-    expect(named(texts())).toEqual([6]);
+    expect(named(captionsOf())).toEqual([6]);
     const pointed = { ...s, hoverBody: 8 };
-    const reg = paintContext(400);
-    const seen: { text: string }[] = [];
-    const ctx = new Proxy(reg.ctx, {
-      get(base, key: string) {
-        if (key === "fillText") return (text: string) => seen.push({ text });
-        return Reflect.get(base, key);
-      },
-    });
-    drawBack(ctx, W, H, pointed, L, backDeps());
-    expect(named(seen)).toContain(8);
+    expect(named(captionsOf(pointed), pointed)).toContain(8);
+  });
+
+  it("a neighbour whose caption would cover the lockup goes unnamed rather than climbing", () => {
+    expect(captionsOf().some((c) => c.artist === ALBUMS[4].artist)).toBe(false);
   });
 
   it("the meta line sits under the name, never on it", () => {
-    const list = texts();
-    const name = list.find((t) => t.text === ALBUMS[6].artist)!;
-    const meta = list.find((t) => t.text.startsWith(ALBUMS[6].cat))!;
-    const size = Math.min(W, H) * GEO.neighborR * albPos(6, s, L).depth;
-    expect(meta.y - name.y).toBeGreaterThan(size * NAMES.descent);
+    for (const c of captionsOf()) {
+      expect(c.step).toBeGreaterThan(c.tsz * NAMES.descent);
+      expect(c.msz).toBeLessThan(c.tsz);
+    }
   });
 
-  it("otherwise a neighbour is captioned below its body", () => {
-    const name = texts().find((t) => t.text === ALBUMS[6].artist)!;
-    const body = bodyOf(6);
-    expect(name.y).toBeGreaterThan(body.cy + body.half);
+  it("without a lens, every caption sits the same gap under the shape drawn above it", () => {
+    let checked = 0;
+    for (const nav of [1, 2, 4, 5, 7, 9, 11]) {
+      const st = state({ nav, navT: nav, alb: nav });
+      const c = captionsOf(st).find((q) => q.artist === ALBUMS[nav + 1].artist);
+      if (!c) continue;
+      checked++;
+      const m = morphOf(nav + 1);
+      const body = collectionBody(W, H, st, L, nav + 1, m);
+      const seat = seatUnder(m, body.R, c.half, c.tsz * NAMES.gap, c.top + c.bottom);
+      expect((c.y - c.top - (body.cy + seat.base)) / c.tsz).toBeCloseTo(NAMES.gap, 3);
+    }
+    expect(checked).toBeGreaterThan(4);
   });
 
-  it("names stay inside the frame", () => {
-    for (const t of texts()) {
-      if (!ALBUMS.some((a) => a.artist === t.text)) continue;
-      expect(t.x).toBeGreaterThanOrEqual(0);
-      expect(t.x).toBeLessThanOrEqual(W);
+  it("under an uneven lens the gap is kept where the eye sees it, not on the canvas", () => {
+    const c0 = captionsOf().find((q) => q.artist === ALBUMS[6].artist)!;
+    const squeeze: Lens = (_x, y) => [0, -(y - c0.y) * 0.25, 0];
+    const back = (qy: number) => {
+      let py = qy;
+      for (let k = 0; k < 40; k++) py = qy - squeeze(0, py)[1];
+      return py;
+    };
+    const front = (qx: number, qy: number) => {
+      let py = qy;
+      for (let k = 0; k < 40; k++) {
+        const [ox, oy] = squeeze(qx, py);
+        py = qy - oy * frontShare(ox, oy, W, H);
+      }
+      return py;
+    };
+    const c = captionsOf(s, squeeze).find((q) => q.artist === ALBUMS[6].artist)!;
+    const m = morphOf(6);
+    const body = collectionBody(W, H, s, L, 6, m);
+    const seat = seatUnder(m, body.R, c.half, c.tsz * NAMES.gap, c.top + c.bottom);
+    const baseSeen = back(body.cy + seat.base);
+    const labelSeen = front(c.x, c.y);
+    expect((labelSeen - c.top - baseSeen) / c.tsz).toBeCloseTo(NAMES.gap, 2);
+  });
+
+  it("captions land inside the frame and below the navigation where the lens shows them", () => {
+    const push: Lens = () => [200, 120, 0];
+    const share = frontShare(200, 120, W, H);
+    const list = captionsOf(s, push);
+    expect(list.length).toBeGreaterThan(0);
+    for (const c of list) {
+      const x = c.x - 200 * share;
+      const y = c.y - 120 * share;
+      expect(x - c.half).toBeGreaterThanOrEqual(W * NAMES.edge - 1e-6);
+      expect(x + c.half).toBeLessThanOrEqual(W * (1 - NAMES.edge) + 1e-6);
+      expect(y - c.top).toBeGreaterThanOrEqual(H * NAMES.ceiling - 1e-6);
+    }
+  });
+
+  it("their alpha is set for the front plane's composite gain, so name and meta keep their hierarchy", () => {
+    const reg = paintContext(400);
+    const alphas: number[] = [];
+    const ctx = new Proxy(reg.ctx, {
+      set(base, key: string, value) {
+        if (key === "globalAlpha") alphas.push(value as number);
+        return Reflect.set(base, key, value);
+      },
+    });
+    const one: Caption = {
+      artist: "A", meta: "M", x: 100, y: 100, tsz: 30, msz: 10, step: 20, top: 24, bottom: 23,
+      half: 40, weight: 700, alpha: 1, hot: false,
+    };
+    drawCaptions(ctx as unknown as Parameters<typeof drawCaptions>[0], [one], FONTS);
+    expect(Math.max(...alphas)).toBeLessThanOrEqual(1 / LENS.frontAlpha + 1e-9);
+    expect(alphas).toContain((1 / LENS.frontAlpha) * NAMES.nameAlpha);
+    expect(alphas).toContain((1 / LENS.frontAlpha) * NAMES.metaAlpha);
+  });
+
+  it("the front plane draws them", () => {
+    const reg = paintContext(400);
+    const seen: string[] = [];
+    const ctx = new Proxy(reg.ctx, {
+      get(base, key: string) {
+        if (key === "fillText") return (text: string) => seen.push(text);
+        return Reflect.get(base, key);
+      },
+    });
+    const captions = captionsOf();
+    drawFront(ctx, W, H, s, L, { ...frontDeps(), captions });
+    for (const c of captions) {
+      expect(seen).toContain(c.artist);
+      expect(seen).toContain(c.meta);
     }
   });
 });
 
-describe("neighbour captions keep one distance to their body", () => {
-  it("whatever the record, the caption sits the same small gap under the shape drawn above it", () => {
-    const W = 1440;
-    const H = 900;
-    const L = layoutFor("desktop");
-    let checked = 0;
-    for (const nav of [1, 2, 4, 5, 7, 9, 11]) {
-      const st = state({ nav, navT: nav, alb: nav });
-      const reg = paintContext(400);
-      const seen: { text: string; y: number }[] = [];
-      const ctx = new Proxy(reg.ctx, {
-        get(base, key: string) {
-          if (key === "fillText") return (text: string, _x: number, y: number) => seen.push({ text, y });
-          return Reflect.get(base, key);
-        },
-      });
-      drawBack(ctx, W, H, st, L, backDeps());
-      const right = nav + 1;
-      const name = seen.find((t) => t.text === ALBUMS[right].artist);
-      if (!name) continue;
-      checked++;
-      const m = morphOf(right);
-      const body = collectionBody(W, H, st, L, right, m);
-      const size = Math.min(W, H) * GEO.neighborR * albPos(right, st, L).depth;
-      const top = name.y - size * 0.8;
-      const narrow = body.cy + bottomUnder(m, body.R, 0);
-      const wide = body.cy + bottomUnder(m, body.R, W);
-      expect((top - wide) / size).toBeLessThanOrEqual(NAMES.gap + 0.01);
-      expect((top - narrow) / size).toBeGreaterThanOrEqual(NAMES.gap - 0.01);
+describe("a caption takes its seat under the crown, not under a moon", () => {
+  it("it never sits on a satellite, and only drops below one when sliding aside is not enough", () => {
+    let slid = 0;
+    for (let i = 0; i < ALBUMS.length; i++) {
+      const m = morphOf(i);
+      const R = 150;
+      for (const half of [40, 70, 100]) {
+        const gap = 12;
+        const height = 34;
+        const seat = seatUnder(m, R, half, gap, height);
+        const orbit = wholeReachOf(m) / m.rMax;
+        for (const sat of m.satellites.filter((q) => q.weight > 0.02)) {
+          const x = Math.cos(sat.angle) * sat.dist * orbit * R;
+          const y = Math.sin(sat.angle) * sat.dist * orbit * R * m.flatten;
+          const r = satRadiusOf(m, sat) * R;
+          const across = Math.abs(x - seat.dx) < half + r;
+          const along = y + r * m.flatten > seat.base + gap && y - r * m.flatten < seat.base + gap + height;
+          expect(across && along).toBe(false);
+        }
+        expect(Math.abs(seat.dx)).toBeLessThanOrEqual(half);
+        if (seat.dx !== 0) slid++;
+      }
     }
-    expect(checked).toBeGreaterThan(4);
+    expect(slid).toBeGreaterThan(0);
   });
 });
