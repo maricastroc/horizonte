@@ -91,6 +91,7 @@ export const NAMES = {
   ceiling: 0.12,
   strong: 0.9,
   probes: 96,
+  shelterPad: 0.2,
   reach: 1.3,
   fade: 0.3,
   metaRatio: 0.4,
@@ -376,6 +377,7 @@ export const EXPLORED_KEY = "horizonte:explored";
 
 export const IDLE_MS = 2600;
 export const IDLE_OPACITY = 0.32;
+export const PLAYING_LIFT = 0.55;
 
 export const DPR_MAX = 1.3;
 export const COMPOSITION_MAX_W = 1760;

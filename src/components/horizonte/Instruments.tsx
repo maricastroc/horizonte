@@ -10,7 +10,8 @@ import { useIngest } from "./ingest/useIngest";
 import { timecode } from "./format";
 import { useCopy } from "./i18n";
 import LanguageSwitch from "./LanguageSwitch";
-import { COLOR, IDLE_OPACITY, rgba } from "./tokens";
+import { brighten } from "./composition/ring";
+import { COLOR, IDLE_OPACITY, PLAYING_LIFT, rgba } from "./tokens";
 import type { Scale, Snapshot } from "./types";
 import type { FieldEngine } from "./engine/FieldEngine";
 
@@ -100,6 +101,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
 
   const album = ALBUMS[snap.alb];
   const ink = rgba(album.inkA, 1);
+  const playingInk = rgba(brighten(album.inkA, PLAYING_LIFT), 1);
   const barInk = rgba(ALBUMS[snap.playAlb >= 0 ? snap.playAlb : snap.alb].inkA, 0.95);
   const focusAlb = snap.scale === "collection" ? snap.navAlb : snap.alb;
 
@@ -427,7 +429,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         type="button"
         aria-pressed={snap.mode === "playing"}
         onClick={() => engine?.transport()}
-        style={snap.mode === "playing" ? { color: ink } : undefined}
+        style={snap.mode === "playing" ? { color: playingInk } : undefined}
         className={[
           dense
             ? `${TAP} flex-none tracking-[.18em]`

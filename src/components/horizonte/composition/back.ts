@@ -362,7 +362,7 @@ export function drawBack(
     ? Math.sqrt(Math.max(0, pull.k / LENS.cap - LENS.soft)) * H
     : 0;
   const shelter = {
-    x1: lead.margin + W * (s.scale === "collection" ? L.fitCollection : L.fitAlbum),
+    x1: 0,
     y0: lead.ay - lead.size * 0.8,
     y1: lead.my + lead.msize,
   };
@@ -461,6 +461,11 @@ export function drawBack(
     }
     return unit;
   };
+  ls(x, "-0.035em");
+  const lockFit = s.scale === "collection" ? L.fitCollection : L.fitAlbum;
+  const lockRoom = L.staged ? W - lead.margin * 2 : W * lockFit - lead.margin;
+  const lockUnit = unitOf(`${weights[s.alb]} ${NAMES.probe}px ${fonts.archivo}`, A.artist);
+  shelter.x1 = lead.margin + Math.min(lockUnit * lead.size, lockRoom) + lead.size * NAMES.shelterPad;
   for (const t of tags) {
     const hot = t.i === s.hoverBody;
     const presence = Math.max(smooth01((NAMES.reach - Math.abs(t.d)) / NAMES.fade), hot ? 1 : 0);

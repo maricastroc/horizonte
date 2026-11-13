@@ -3,7 +3,8 @@ import { act, cleanup, fireEvent, render, screen, within } from "@testing-librar
 import Instruments, { isInstrumentsTarget } from "../Instruments";
 import { ALBUMS, OPENING } from "../content";
 import { timecode } from "../format";
-import { COLOR, rgba } from "../tokens";
+import { brighten } from "../composition/ring";
+import { COLOR, PLAYING_LIFT, rgba } from "../tokens";
 import type { Snapshot } from "../types";
 import { fakeEngine } from "./fakeInstruments";
 
@@ -857,5 +858,17 @@ describe("controls read as controls", () => {
     const play = screen.getByRole("button", { name: /Pause/ });
     expect(play.getAttribute("aria-pressed")).toBe("true");
     expect(play.textContent).toMatch(/❙❙/);
+  });
+});
+
+describe("the playing state's colour never costs legibility", () => {
+  it("the lifted record ink stays above 7:1 on the void for every record", () => {
+    const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+    const lum = (v: readonly number[]) => 0.2126 * lin(v[0]) + 0.7152 * lin(v[1]) + 0.0722 * lin(v[2]);
+    const bg = lum([7 / 255, 7 / 255, 10 / 255]);
+    for (const album of ALBUMS) {
+      const ratio = (lum(brighten(album.inkA, PLAYING_LIFT)) + 0.05) / (bg + 0.05);
+      expect(ratio).toBeGreaterThan(7);
+    }
   });
 });

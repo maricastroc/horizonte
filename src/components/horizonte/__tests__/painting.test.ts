@@ -286,7 +286,7 @@ describe("neighbour names in the collection", () => {
   const s = state({ nav: 5, navT: 5, alb: 5 });
 
   const texts = (lens?: (x: number, y: number) => [number, number, number]) => {
-    const reg = paintContext(10);
+    const reg = paintContext(400);
     const seen: { text: string; x: number; y: number }[] = [];
     const ctx = new Proxy(reg.ctx, {
       get(base, key: string) {
@@ -334,7 +334,7 @@ describe("neighbour names in the collection", () => {
       );
     expect(named(texts())).toEqual([6]);
     const pointed = { ...s, hoverBody: 8 };
-    const reg = paintContext(10);
+    const reg = paintContext(400);
     const seen: { text: string }[] = [];
     const ctx = new Proxy(reg.ctx, {
       get(base, key: string) {
@@ -374,10 +374,10 @@ describe("neighbour captions keep one distance to their body", () => {
     const W = 1440;
     const H = 900;
     const L = layoutFor("desktop");
-    const gaps: number[] = [];
+    let checked = 0;
     for (const nav of [1, 2, 4, 5, 7, 9, 11]) {
       const st = state({ nav, navT: nav, alb: nav });
-      const reg = paintContext(10);
+      const reg = paintContext(400);
       const seen: { text: string; y: number }[] = [];
       const ctx = new Proxy(reg.ctx, {
         get(base, key: string) {
@@ -389,16 +389,16 @@ describe("neighbour captions keep one distance to their body", () => {
       const right = nav + 1;
       const name = seen.find((t) => t.text === ALBUMS[right].artist);
       if (!name) continue;
+      checked++;
       const m = morphOf(right);
       const body = collectionBody(W, H, st, L, right, m);
       const size = Math.min(W, H) * GEO.neighborR * albPos(right, st, L).depth;
       const top = name.y - size * 0.8;
-      gaps.push((top - (body.cy + bottomUnder(m, body.R, size * 0.05))) / size);
+      const narrow = body.cy + bottomUnder(m, body.R, 0);
+      const wide = body.cy + bottomUnder(m, body.R, W);
+      expect((top - wide) / size).toBeLessThanOrEqual(NAMES.gap + 0.01);
+      expect((top - narrow) / size).toBeGreaterThanOrEqual(NAMES.gap - 0.01);
     }
-    expect(gaps.length).toBeGreaterThan(4);
-    for (const g of gaps) {
-      expect(g).toBeGreaterThan(NAMES.gap - 0.05);
-      expect(g).toBeLessThan(NAMES.gap + 0.05);
-    }
+    expect(checked).toBeGreaterThan(4);
   });
 });
