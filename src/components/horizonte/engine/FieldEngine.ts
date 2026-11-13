@@ -27,6 +27,8 @@ import {
   baseRadius,
   bodyGeom,
   collectionBody,
+  collectionFit,
+  crownFacing,
   hitTest,
   layoutFor,
   ringRotationTarget,
@@ -99,6 +101,7 @@ import {
   COMPOSITION_MAX_W,
   GUARD,
   EXPLORED_KEY,
+  FIT,
   HINT_MS,
   IDLE_MS,
   TIDE,
@@ -109,6 +112,7 @@ import {
   APPROACH,
   BREATH,
   LENS,
+  NAMES,
   RELIEF,
   RING,
   SECOND_MASS,
@@ -726,17 +730,20 @@ export class FieldEngine implements InputActions {
   private horizonUnit(): number {
     const R = this.L.staged
       ? bodyGeom(this.W, this.H, this.st, this.L, this.M).R
-      : baseRadius(this.W, this.H, 1, 0, this.L) * this.M.circuit;
+      : baseRadius(this.W, this.H, 1, 0, this.L) * this.M.circuit * collectionFit(this.st);
     return (this.M.coreRatio * R) / Math.max(1, this.H);
   }
 
   private worldUnit(): number {
-    if (!this.L.staged) return 1;
+    if (!this.L.staged) return collectionFit(this.st);
     const b = bandsFor(this.W, this.H, this.st, this.L);
     return Math.max(0.05, (2 * stageBox(this.W, this.H, b).halfH) / Math.max(1, this.H));
   }
 
-  private lensOf(): (x: number, y: number) => [number, number, number] {
+  private lensOf(
+    world = this.worldUnit(),
+    pointer = true,
+  ): (x: number, y: number) => [number, number, number] {
     const s = this.st;
     const W = this.W;
     const H = this.H;
@@ -744,13 +751,14 @@ export class FieldEngine implements InputActions {
     const aspect = W / H;
     const mx = (geo.cx / W - 0.5) * aspect;
     const my = 0.5 - geo.cy / H;
-    const world = this.worldUnit();
     const spin = s.spin;
     const bodies: [number, number, number, number][] = [[mx, my, s.m0k, spin]];
     if (s.scale === "collection" && this.m1.ready) {
       bodies.push([(this.m1.x - 0.5) * aspect, 0.5 - this.m1.y, this.m1.k, spin]);
     }
-    bodies.push([(this.mouse.x - 0.5) * aspect, 0.5 - this.mouse.y, s.curK, spin * 0.4]);
+    if (pointer) {
+      bodies.push([(this.mouse.x - 0.5) * aspect, 0.5 - this.mouse.y, s.curK, spin * 0.4]);
+    }
     return (x, y) => {
       const px = (x / W - 0.5) * aspect;
       const py = 0.5 - y / H;
@@ -772,6 +780,73 @@ export class FieldEngine implements InputActions {
       }
       return [ox, oy, grip];
     };
+  }
+
+  private fitStep(dt: number) {
+    const s = this.st;
+    if (this.L.staged || this.L.recede <= 0) {
+      s.fit = 1;
+      return;
+    }
+    if (s.scale !== "collection") return;
+    if (s.hoverBody >= 0 && s.hoverBody !== Math.round(s.nav)) return;
+    s.fit += (this.fitTarget() - s.fit) * Math.min(1, dt * FIT.lerp);
+  }
+
+  private fitTarget(): number {
+    const s = this.st;
+    const n = ALBUMS.length;
+    const lo = clamp(Math.floor(s.nav), 0, n - 1);
+    const hi = clamp(lo + 1, 0, n - 1);
+    const t = clamp(s.nav - lo, 0, 1);
+    const lens = this.lensOf(collectionFit(s), false);
+    const a = t < 1 ? this.fitAround(lo, lens) : 1;
+    const b = t > 0 ? this.fitAround(hi, lens) : 1;
+    return clamp(a + (b - a) * t, FIT.min, 1);
+  }
+
+  private fitAround(a: number, lens: (x: number, y: number) => [number, number, number]): number {
+    const s = this.st;
+    const W = this.W;
+    const H = this.H;
+    const gap = FIT.gap * Math.min(W, H);
+    const now = collectionFit(s);
+    const seen = (qx: number, qy: number): [number, number] => {
+      let px = qx;
+      let py = qy;
+      for (let k = 0; k < NAMES.solve; k++) {
+        const [ox, oy] = lens(px, py);
+        px = qx - ox;
+        py = qy - oy;
+      }
+      return [px, py];
+    };
+    const ma = this.morphAt(a);
+    const ga = collectionBody(W, H, s, this.L, a, ma);
+    let fit = 1;
+    for (const b of [a - 1, a + 1]) {
+      if (b < 0 || b >= ALBUMS.length) continue;
+      const mb = this.morphAt(b);
+      const gb = collectionBody(W, H, s, this.L, b, mb);
+      const dx = gb.cx - ga.cx;
+      const dy = gb.cy - ga.cy;
+      const D = Math.hypot(dx, dy);
+      if (D < 1) continue;
+      const ux = dx / D;
+      const uy = dy / D;
+      let near = 0;
+      for (const [x, y] of crownFacing(ma, ga.R, ux, uy)) {
+        const [px, py] = seen(ga.cx + x, ga.cy + y);
+        near = Math.max(near, (px - ga.cx) * ux + (py - ga.cy) * uy);
+      }
+      let far = 0;
+      for (const [x, y] of crownFacing(mb, gb.R, -ux, -uy)) {
+        const [px, py] = seen(gb.cx + x, gb.cy + y);
+        far = Math.max(far, (gb.cx - px) * ux + (gb.cy - py) * uy);
+      }
+      if (near + far > 0) fit = Math.min(fit, (now * (D - gap)) / (near + far));
+    }
+    return fit;
   }
 
   private guard(out: THREE.Vector3) {
@@ -1006,6 +1081,7 @@ export class FieldEngine implements InputActions {
     if (s.scale === "album" && s.hover >= 0) s.sel = s.hover;
     this.secondMass(dt);
     this.reachOf(h, dt);
+    this.fitStep(dt);
 
     const C = this.C;
     const hzK = this.horizonUnit() / HORIZON_REF;

@@ -52,6 +52,7 @@ export interface FieldState {
   waveA: number;
   energy: number;
   curK: number;
+  fit: number;
 
   t: number;
   seqT: number;

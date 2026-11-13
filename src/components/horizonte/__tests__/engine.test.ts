@@ -31,9 +31,16 @@ vi.mock("../fieldMaterial", async (importReal) => {
 });
 
 import { ALBUMS, OPENING } from "../content";
-import { EXPLORED_KEY, HINT_MS, TIDE } from "../tokens";
+import { EXPLORED_KEY, FIT, HINT_MS, TIDE } from "../tokens";
 import { FieldEngine } from "../engine/FieldEngine";
-import { albPos, bodyGeom, collectionBody, layoutFor, variantFor } from "../composition/layout";
+import {
+  albPos,
+  bodyGeom,
+  collectionBody,
+  collectionFit,
+  layoutFor,
+  variantFor,
+} from "../composition/layout";
 import { fieldConstantsOf } from "../field";
 import { morphologyOf, wholeReachOf } from "../morphology";
 import { peakOf, scarCount, STRAIN_BINS } from "../composition/strain";
@@ -1137,6 +1144,10 @@ describe("the approach has a duration, not a decay", () => {
     on({ innerWidth: 1366, innerHeight: 1024 });
     const m1 = () =>
       (engine as unknown as { m1: { h: number; k: number; alb: number } }).m1;
+    const step = engine as unknown as { fitStep: (dt: number) => void };
+    step.fitStep = () => {
+      engine.st.fit = 1;
+    };
     let hidden = 0;
     for (let alb = 1; alb < ALBUMS.length - 1; alb++) {
       engine.st.navT = alb;
@@ -1157,6 +1168,57 @@ describe("the approach has a duration, not a decay", () => {
       }
     }
     expect(hidden).toBeGreaterThan(0);
+  });
+});
+
+describe("the collection keeps its bodies apart", () => {
+  type Inner = {
+    W: number;
+    H: number;
+    fitAround: (a: number, lens: (x: number, y: number) => [number, number, number]) => number;
+    lensOf: (world: number, pointer: boolean) => (x: number, y: number) => [number, number, number];
+  };
+
+  it("when the focus and a neighbour would touch, the scale gives way and the positions stay", () => {
+    engine.stop();
+    env.restore();
+    on({ innerWidth: 1440, innerHeight: 900 });
+    const inner = engine as unknown as Inner;
+    const L = layoutFor(variantFor(1440, 900));
+    let shrunk = 0;
+    for (let alb = 0; alb < ALBUMS.length; alb++) {
+      engine.st.navT = alb;
+      run(4);
+      const s = engine.st;
+      expect(s.fit).toBeGreaterThanOrEqual(FIT.min);
+      expect(s.fit).toBeLessThanOrEqual(1);
+      if (s.fit < 0.99) shrunk++;
+      const settled = inner.fitAround(alb, inner.lensOf(collectionFit(s), false));
+      expect(Math.abs(Math.min(1, settled) - s.fit)).toBeLessThan(0.03);
+      const p = albPos(alb + 1, s, L);
+      const q = albPos(alb + 1, { ...s, fit: 1 }, L);
+      expect(p.x).toBe(q.x);
+    }
+    expect(shrunk).toBeGreaterThan(0);
+  });
+
+  it("pointing at a neighbour does not resize the collection", () => {
+    engine.st.navT = 5;
+    run(4);
+    const before = engine.st.fit;
+    engine.setRailAlb(6);
+    run(2);
+    expect(engine.st.fit).toBe(before);
+    engine.setRailAlb(-1);
+  });
+
+  it("inside an album the body has its full size, whatever the collection needed", () => {
+    engine.st.navT = 5;
+    run(4);
+    expect(engine.st.fit).toBeLessThan(1);
+    engine.enterAlbum(5);
+    run(4);
+    expect(collectionFit(engine.st)).toBeCloseTo(1, 6);
   });
 });
 

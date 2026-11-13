@@ -3,6 +3,8 @@ import { GEO, GLYPH, RING, RING_UNIT } from "../tokens";
 import {
   albPos,
   collectionBody,
+  collectionFit,
+  crownFacing,
   hitTest,
   layoutFor,
   lockup,
@@ -108,6 +110,31 @@ describe("ringR and lockup", () => {
     const playing = ringR(W, H, baseState({ zoom: 1, play: 1 }), DESKTOP);
     expect(album).toBeLessThan(field);
     expect(playing).toBeGreaterThan(album);
+  });
+
+  it("the collection's fit scales every body in place and is gone inside an album", () => {
+    const loose = baseState({ zoom: 0, fit: 1 });
+    const tight = baseState({ zoom: 0, fit: 0.7 });
+    expect(collectionFit(tight)).toBeCloseTo(0.7, 10);
+    expect(collectionFit(baseState({ zoom: 1, fit: 0.7 }))).toBe(1);
+    expect(ringR(W, H, tight, DESKTOP)).toBeCloseTo(ringR(W, H, loose, DESKTOP) * 0.7, 10);
+    for (const i of [0, 3, 5]) {
+      const a = collectionBody(W, H, loose, DESKTOP, i, NEUTRAL_MORPHOLOGY);
+      const b = collectionBody(W, H, tight, DESKTOP, i, NEUTRAL_MORPHOLOGY);
+      expect(b.cx).toBeCloseTo(a.cx, 10);
+      expect(b.cy).toBeCloseTo(a.cy, 10);
+      expect(b.R).toBeCloseTo(a.R * 0.7, 10);
+    }
+  });
+
+  it("the facing side of a crown is the half that looks towards the other body", () => {
+    const R = 200;
+    const side = crownFacing(NEUTRAL_MORPHOLOGY, R, 1, 0);
+    expect(side.length).toBeGreaterThan(0);
+    expect(side.every(([x, y]) => x > 0.49 * Math.hypot(x, y))).toBe(true);
+    const reach = Math.max(...side.map(([x]) => x));
+    expect(reach).toBeGreaterThan(R * 0.9);
+    expect(reach).toBeLessThan(R * 2);
   });
 
   it("the ring fits the screen's smaller dimension", () => {

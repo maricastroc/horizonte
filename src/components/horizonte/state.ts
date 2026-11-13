@@ -38,6 +38,7 @@ export function initialState(opening = 0): FieldState {
     waveA: 0,
     energy: 0.3,
     curK: 0,
+    fit: 1,
     t: 0,
     seqT: 0,
     segueT: SEQ.segue.total,
