@@ -693,7 +693,11 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         <LanguageSwitch compact={false} ink={ink} />
       </div>
 
-      <div className="absolute right-8.5 top-14 bottom-37.5 flex flex-col items-end gap-6.5">
+      <div
+        className={`absolute right-8.5 top-14 bottom-37.5 flex flex-col items-end ${
+          trackRailOn ? "gap-6.5" : ""
+        }`}
+      >
         <nav
           id="album-rail"
           aria-label={t.albumsNav}

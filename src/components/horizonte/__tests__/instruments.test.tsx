@@ -51,6 +51,15 @@ describe("album rail", () => {
     }
   });
 
+  it("the hidden track list keeps no room in the collection, so the albums are not squeezed", () => {
+    mount({ scale: "collection" });
+    const column = screen.getByRole("navigation", { name: "Albums" }).parentElement!;
+    expect(column.className).not.toContain("gap-6.5");
+    cleanup();
+    mount({ scale: "album" });
+    expect(screen.getByRole("navigation", { name: "Albums" }).parentElement!.className).toContain("gap-6.5");
+  });
+
   it("closes the rail with the local-record intake, without becoming a file manager", () => {
     mount();
     const rail = screen.getByRole("navigation", { name: "Albums" });
