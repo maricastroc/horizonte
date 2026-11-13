@@ -63,6 +63,7 @@ export interface BackDeps {
   labels?: CanvasLabels;
   breath?: (alb: number) => { mass: number; light: number };
   captions?: Caption[];
+  index?: { x: number; y0: number; y1: number } | null;
   lens?: (x: number, y: number) => [number, number, number];
 }
 
@@ -592,8 +593,22 @@ export function drawBack(
         sx - half < shelter.x1 && sy + bottom > shelter.y0 && sy - top < shelter.y1;
       if (covers) continue;
     }
-    const fx = Math.min(Math.max(sx, edge + half), W - edge - half);
-    const fy = Math.min(Math.max(sy, H * NAMES.ceiling + top), H * NAMES.floor - bottom);
+    let fx = Math.min(Math.max(sx, edge + half), W - edge - half);
+    let fy = Math.min(Math.max(sy, H * NAMES.ceiling + top), H * NAMES.floor - bottom);
+    let stray = 0;
+    const shelf = deps.index;
+    const pad = t.tsz * NAMES.shelterPad;
+    if (shelf && fx + half > shelf.x - pad && fy + bottom > shelf.y0 - pad && fy - top < shelf.y1 + pad) {
+      const left = fx + half - (shelf.x - pad);
+      const down = shelf.y1 + pad - (fy - top);
+      if (down < left && down <= t.tsz && fy + down <= H * NAMES.floor - bottom) fy += down;
+      else {
+        fx -= left;
+        stray = left / half;
+      }
+    }
+    const kept = 1 - smooth01((stray - NAMES.stray[0]) / (NAMES.stray[1] - NAMES.stray[0]));
+    if (kept <= 0.01) continue;
     const [ox, oy, grip] = lens(fx, fy);
     if (grip >= NAMES.strong) continue;
     const squeeze = frontShare(ox, oy, W, H);
@@ -609,7 +624,7 @@ export function drawBack(
       bottom,
       half,
       weight: weights[t.i],
-      alpha: t.alpha * presence,
+      alpha: t.alpha * presence * kept,
       hot,
     });
   }

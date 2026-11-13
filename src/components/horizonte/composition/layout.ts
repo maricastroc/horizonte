@@ -104,13 +104,15 @@ const MOBILE: WorldLayout = {
 export const layoutFor = (variant: Variant): WorldLayout =>
   variant === "mobile" ? MOBILE : variant === "tablet" ? TABLET : DESKTOP;
 
+export const collectionShift = (s: FieldState) => s.shift * (1 - clamp(s.zoom, 0, 1));
+
 export function albPos(i: number, s: FieldState, L: WorldLayout) {
   const d = i - s.nav;
   const zx = L.anchorCollection.x + (L.anchorAlbum.x - L.anchorCollection.x) * s.zoom;
   const zy = L.anchorCollection.y + (L.anchorAlbum.y - L.anchorCollection.y) * s.zoom;
   if (L.recede <= 0) {
     const depth = 1 / (1 + Math.abs(d) * 0.8);
-    const x = zx + d * L.spreadX * (1 - s.zoom * 0.6) - s.tide;
+    const x = zx + d * L.spreadX * (1 - s.zoom * 0.6) - s.tide - collectionShift(s);
     const y = zy + Math.sin(d * 1.15) * L.spreadY * (1 - s.zoom);
     return { x, y, depth, d };
   }
@@ -118,7 +120,7 @@ export function albPos(i: number, s: FieldState, L: WorldLayout) {
   const a = Math.abs(d);
   const depth = Math.pow(q, a);
   const reach = Math.sign(d) * L.spreadX * ((1 - depth) / (1 - q));
-  const x = zx + reach * (1 + s.zoom * APPROACH.pass) - s.tide;
+  const x = zx + reach * (1 + s.zoom * APPROACH.pass) - s.tide - collectionShift(s);
   const y = zy + reach * L.tilt * (1 - s.zoom);
   return { x, y, depth, d };
 }

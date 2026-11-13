@@ -53,6 +53,7 @@ export interface FieldState {
   energy: number;
   curK: number;
   fit: number;
+  shift: number;
 
   t: number;
   seqT: number;

@@ -240,6 +240,17 @@ da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
   *zero-project* e *Tale Twist* encolhem (0,96 / 0,88 / 0,89) e o vão mínimo vai
   de −31 para 19 px; a 1440×900, `fit` fica entre 0,66 e 0,92 e todo vão fica
   entre 21 e 30 px. No mobile o palco já isola o foco e `fit` fica em 1.
+* **A fileira recua para fora do índice.** Com o vão resolvido, o vizinho da
+  direita ainda entrava sob a lista lateral em quase todo álbum (49 a 144 px no
+  desktop). Afastar ou comprimir o espaçamento voltava a encostar os corpos.
+  Agora, só no desktop, a fileira inteira desliza para a esquerda o necessário
+  para o vizinho da direita, já com a lente, terminar 3% da menor dimensão antes
+  do véu do índice (`shift`, até 14% da largura). Mesma medição por quadro de
+  `fit`, mesma mistura entre os dois focos em volta da navegação, congelada
+  enquanto um vizinho é apontado; some com o zoom. A 1436×690 o recuo vai de 5%
+  a 10%; o último disco, sem vizinho à direita, volta ao lugar de sempre. No
+  tablet o índice ocupa um terço da tela e o recuo necessário desmontaria a
+  composição, então lá a fileira segue passando por trás dele.
 * **Atmosfera.** A opacidade cai até 0,30 entre |d| = 0,5 e 3 (`atmosphereOf`),
   e entre |d| = 0,6 e 1,9 a versão nítida dá lugar à desfocada (`defocusOf`):
   profundidade de campo sem filtro por quadro. O núcleo e o rótulo de cada
@@ -278,6 +289,14 @@ da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
   desenhada no plano da frente (`drawCaptions`), como o lockup (altura ×0,85,
   largura ×1,12). A base é só a coroa; se uma lua ocupa o lugar, a legenda
   desliza para o lado, e só desce abaixo da lua quando deslizar não basta.
+* **Legendas fora do índice.** A legenda só respeitava a borda da tela; a
+  1436×690, 11 de 13 passavam por baixo da lista lateral (9 a 65 px). A
+  interface mede o retângulo real do véu do índice no DOM e o publica no motor
+  (`setIndex`); `back.ts` tira a legenda de baixo dele pelo caminho mais curto:
+  desce, se encostar só na base do índice (no máximo uma altura de nome), ou
+  recua para a esquerda com uma folga de 0,2 da altura do nome. Se o recuo
+  passa de 0,6 da meia largura, a legenda esmaece, e some a 1,2
+  (`NAMES.stray`), porque já não está sob o próprio corpo.
 * **O cursor cede sobre as legendas.** Em repouso e com o vizinho apontado, a
   deformação de uma legenda fica entre 0,13 e 0,49 (maior gradiente do
   deslocamento ao longo dela; *Tristan Lohengrin* em repouso: 0,32). Com o

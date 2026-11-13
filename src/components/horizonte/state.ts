@@ -39,6 +39,7 @@ export function initialState(opening = 0): FieldState {
     energy: 0.3,
     curK: 0,
     fit: 1,
+    shift: 0,
     t: 0,
     seqT: 0,
     segueT: SEQ.segue.total,

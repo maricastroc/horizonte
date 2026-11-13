@@ -101,6 +101,7 @@ export const NAMES = {
   solve: 6,
   slip: 0.15,
   calm: 2.5,
+  stray: [0.6, 1.2],
   shelterPad: 0.2,
   reach: 1.3,
   fade: 0.3,
@@ -358,7 +359,7 @@ export const SECOND_MASS = {
   behind: 0.06,
 } as const;
 
-export const FIT = { gap: 0.03, min: 0.6, lerp: 3, probes: 64, facing: 0.5 } as const;
+export const FIT = { gap: 0.03, min: 0.6, lerp: 3, probes: 64, facing: 0.5, shift: 0.14 } as const;
 
 export const INTAKE = { mass: 0.45, horizon: 1.3 } as const;
 
