@@ -845,15 +845,28 @@ describe("idle fade keeps the essentials readable", () => {
 });
 
 describe("idle keeps the essentials perceptible in two steps", () => {
-  it("the collection counter and sound only soften; credits and rows fade further", () => {
+  it("the collection counter stays, sound only softens; credits and rows fade further", () => {
     mount({ idle: true });
     const counter = screen.getByText(/\d+\/\d+/);
-    expect(counter.className).toContain("idle-calm");
+    expect(counter.className).not.toMatch(/idle-(soft|calm)/);
+    expect(counter.closest(".idle-soft, .idle-calm")).toBeNull();
     expect(counter.className).toContain("text-ink-soft");
     expect(screen.getByRole("button", { name: /^Sound$/ }).closest(".idle-calm")).not.toBeNull();
     const style = document.querySelector("[data-instruments] style")!.textContent ?? "";
     expect(style).toContain(`.idle-calm{opacity:${IDLE_CALM}}`);
     expect(IDLE_CALM).toBeGreaterThan(IDLE_OPACITY);
+  });
+
+  it("the album count names the list in readable ink, never the faintest", () => {
+    mount();
+    const count = screen.getByText(/^\d+ albums$/i);
+    expect(count.className).toContain("text-ink-mute");
+    expect(count.className).not.toContain("text-ink-faint");
+  });
+
+  it("compact sound reads as a control, not as a caption", () => {
+    mount({ variant: "mobile", scale: "collection" });
+    expect(screen.getByRole("button", { name: /^Sound$/ }).className).toContain("text-ink-text-2");
   });
 
   it("time reads between the actions and the secondary information", () => {

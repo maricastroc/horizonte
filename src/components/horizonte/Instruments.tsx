@@ -669,7 +669,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
                 aria-pressed={muted}
                 onClick={toggleMute}
                 className={`-mr-2 flex h-full cursor-pointer items-center whitespace-nowrap px-2 ${
-                  muted ? "text-ink-text" : ""
+                  muted ? "text-ink-text" : "text-ink-text-2"
                 }`}
               >
                 {muted ? t.sound.muted : t.sound.on}
@@ -720,7 +720,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               onClick={() => setAlbumsOpen((v) => !v)}
               className={[
                 "idle-soft grid cursor-pointer grid-cols-[auto_1fr] gap-3 pb-1.5 text-left",
-                "text-ink-faint hover:text-ink-text",
+                "text-ink-mute hover:text-ink-text",
               ].join(" ")}
             >
               <span>
@@ -731,7 +731,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               )}
             </button>
           ) : (
-            <p className="idle-soft pb-1.5 text-ink-faint">{t.albumCount(ALBUMS.length)}</p>
+            <p className="idle-soft pb-1.5 text-ink-mute">{t.albumCount(ALBUMS.length)}</p>
           )}
           {!albumsFolded && (
             <>
@@ -764,7 +764,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         </nav>
       </div>
 
-      <div className="pointer-events-auto absolute bottom-11 left-8.5 flex w-150 flex-col gap-2.75">
+      <div className="pointer-events-auto absolute bottom-11 left-8.5 flex w-150 flex-col gap-2.75 tablet:max-w-[calc(100%-26rem)]">
         {seek(false)}
         {fault}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
@@ -814,7 +814,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         >
           {t.transport.back}
         </button>
-        <span className="idle-calm whitespace-nowrap text-ink-soft">{context}</span>
+        <span className="whitespace-nowrap text-ink-soft">{context}</span>
         <span className="idle-soft">{licenseLink}</span>
       </div>
     </>,
