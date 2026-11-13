@@ -1202,6 +1202,29 @@ describe("the collection keeps its bodies apart", () => {
     expect(shrunk).toBeGreaterThan(0);
   });
 
+  it("the shelf slides left just enough for the right neighbour to clear the album index", () => {
+    engine.stop();
+    env.restore();
+    on({ innerWidth: 1440, innerHeight: 900 });
+    const inner = engine as unknown as Inner & { shiftTarget: () => number };
+    engine.setIndex({ left: 1150, top: 56, bottom: 620 });
+    let slid = 0;
+    for (const alb of [0, 2, 5, 9]) {
+      engine.st.navT = alb;
+      run(4);
+      const s = engine.st;
+      expect(s.shift).toBeGreaterThanOrEqual(0);
+      expect(s.shift).toBeLessThanOrEqual(FIT.shift);
+      expect(Math.abs(inner.shiftTarget() - s.shift)).toBeLessThan(0.005);
+      if (s.shift > 0.01) slid++;
+    }
+    expect(slid).toBeGreaterThan(0);
+    engine.setIndex(null);
+    engine.st.navT = 5;
+    run(4);
+    expect(engine.st.shift).toBeLessThan(0.005);
+  });
+
   it("pointing at a neighbour does not resize the collection", () => {
     engine.st.navT = 5;
     run(4);

@@ -818,13 +818,8 @@ export class FieldEngine implements InputActions {
     return clamp(a + (b - a) * t, FIT.min, 1);
   }
 
-  private fitAround(a: number, lens: (x: number, y: number) => [number, number, number]): number {
-    const s = this.st;
-    const W = this.W;
-    const H = this.H;
-    const gap = FIT.gap * Math.min(W, H);
-    const now = collectionFit(s);
-    const seen = (qx: number, qy: number): [number, number] => {
+  private seenThrough(lens: (x: number, y: number) => [number, number, number]) {
+    return (qx: number, qy: number): [number, number] => {
       let px = qx;
       let py = qy;
       for (let k = 0; k < NAMES.solve; k++) {
@@ -834,6 +829,58 @@ export class FieldEngine implements InputActions {
       }
       return [px, py];
     };
+  }
+
+  private shiftStep(dt: number) {
+    const s = this.st;
+    if (this.L.variant !== "desktop" || this.L.recede <= 0) {
+      s.shift = 0;
+      return;
+    }
+    if (s.scale !== "collection") return;
+    if (s.hoverBody >= 0 && s.hoverBody !== Math.round(s.nav)) return;
+    s.shift += (this.shiftTarget() - s.shift) * Math.min(1, dt * FIT.lerp);
+  }
+
+  private shiftTarget(): number {
+    const s = this.st;
+    const shelf = this.indexShelf();
+    if (!shelf) return 0;
+    const n = ALBUMS.length;
+    const lo = clamp(Math.floor(s.nav), 0, n - 1);
+    const hi = clamp(lo + 1, 0, n - 1);
+    const t = clamp(s.nav - lo, 0, 1);
+    const seen = this.seenThrough(this.lensOf(collectionFit(s), false));
+    const need = (a: number) => {
+      const b = a + 1;
+      if (b >= n) return Number.NEGATIVE_INFINITY;
+      const mb = this.morphAt(b);
+      const gb = collectionBody(this.W, this.H, s, this.L, b, mb);
+      let right = Number.NEGATIVE_INFINITY;
+      let top = Number.POSITIVE_INFINITY;
+      let bottom = Number.NEGATIVE_INFINITY;
+      for (const [x, y] of crownFacing(mb, gb.R, 1, 0)) {
+        const [px, py] = seen(gb.cx + x, gb.cy + y);
+        right = Math.max(right, px);
+        top = Math.min(top, py);
+        bottom = Math.max(bottom, py);
+      }
+      if (bottom < shelf.y0 || top > shelf.y1) return Number.NEGATIVE_INFINITY;
+      return right + FIT.gap * Math.min(this.W, this.H) - shelf.x;
+    };
+    const a = t < 1 ? need(lo) : Number.NEGATIVE_INFINITY;
+    const b = t > 0 ? need(hi) : Number.NEGATIVE_INFINITY;
+    const want = (x: number) => (Number.isFinite(x) ? Math.max(0, s.shift + x / this.W) : 0);
+    return clamp(want(a) + (want(b) - want(a)) * t, 0, FIT.shift);
+  }
+
+  private fitAround(a: number, lens: (x: number, y: number) => [number, number, number]): number {
+    const s = this.st;
+    const W = this.W;
+    const H = this.H;
+    const gap = FIT.gap * Math.min(W, H);
+    const now = collectionFit(s);
+    const seen = this.seenThrough(lens);
     const ma = this.morphAt(a);
     const ga = collectionBody(W, H, s, this.L, a, ma);
     let fit = 1;
@@ -1096,6 +1143,7 @@ export class FieldEngine implements InputActions {
     this.secondMass(dt);
     this.reachOf(h, dt);
     this.fitStep(dt);
+    this.shiftStep(dt);
 
     const C = this.C;
     const hzK = this.horizonUnit() / HORIZON_REF;

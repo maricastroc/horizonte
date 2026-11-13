@@ -4,6 +4,7 @@ import {
   albPos,
   collectionBody,
   collectionFit,
+  collectionShift,
   crownFacing,
   hitTest,
   layoutFor,
@@ -125,6 +126,15 @@ describe("ringR and lockup", () => {
       expect(b.cy).toBeCloseTo(a.cy, 10);
       expect(b.R).toBeCloseTo(a.R * 0.7, 10);
     }
+  });
+
+  it("the collection's shift slides the whole shelf left and is gone inside an album", () => {
+    const still = baseState({ zoom: 0, shift: 0 });
+    const moved = baseState({ zoom: 0, shift: 0.08 });
+    for (const i of [0, 3, 5]) {
+      expect(albPos(i, moved, DESKTOP).x).toBeCloseTo(albPos(i, still, DESKTOP).x - 0.08, 10);
+    }
+    expect(collectionShift(baseState({ zoom: 1, shift: 0.08 }))).toBe(0);
   });
 
   it("the facing side of a crown is the half that looks towards the other body", () => {
