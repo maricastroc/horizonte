@@ -126,6 +126,7 @@ export function frontShare(ox: number, oy: number, W: number, H: number): number
 }
 
 export function drawCaptions(x: Ctx, captions: Caption[], fonts: FontFamilies) {
+  const k = 1 / LENS.frontAlpha;
   x.save();
   x.textAlign = "center";
   x.textBaseline = "alphabetic";
@@ -138,19 +139,19 @@ export function drawCaptions(x: Ctx, captions: Caption[], fonts: FontFamilies) {
     const pool = x.createRadialGradient(0, 0, 0, 0, 0, reach);
     pool.addColorStop(0, NAMES.halo);
     pool.addColorStop(1, "rgba(7,7,10,0)");
-    x.globalAlpha = c.alpha;
+    x.globalAlpha = c.alpha * k;
     x.fillStyle = pool;
     x.fillRect(-reach, -reach, reach * 2, reach * 2);
     x.restore();
 
     ls(x, "-0.035em");
     x.fillStyle = COLOR.inkText;
-    x.globalAlpha = c.alpha * (c.hot ? 1 : NAMES.nameAlpha);
+    x.globalAlpha = c.alpha * k * (c.hot ? 1 : NAMES.nameAlpha);
     x.font = `${c.weight} ${c.tsz}px ${fonts.archivo}`;
     x.fillText(c.artist, c.x, c.y);
 
     ls(x, "0.16em");
-    x.globalAlpha = c.alpha * (c.hot ? 0.9 : NAMES.metaAlpha);
+    x.globalAlpha = c.alpha * k * (c.hot ? 0.9 : NAMES.metaAlpha);
     x.font = `500 ${c.msz}px ${fonts.mono}`;
     x.fillText(c.meta, c.x, c.y + c.step);
   }

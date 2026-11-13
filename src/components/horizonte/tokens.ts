@@ -82,7 +82,14 @@ export const SATELLITE = {
   span: 1.05,
 } as const;
 
-export const LENS = { soft: 0.014, cap: 0.85, gain: 0.13, front: 4, frontGain: 0.85 } as const;
+export const LENS = {
+  soft: 0.014,
+  cap: 0.85,
+  gain: 0.13,
+  front: 4,
+  frontGain: 0.85,
+  frontAlpha: 1.6,
+} as const;
 
 export const NAMES = {
   slide: 0.08,

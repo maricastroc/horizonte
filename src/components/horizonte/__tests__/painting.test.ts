@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import frag from "@/shaders/field.frag.glsl";
 import vert from "@/shaders/field.vert.glsl";
-import { drawBack, frontShare, makeParticles, seatUnder, type Caption } from "../composition/back";
+import { drawBack, drawCaptions, frontShare, makeParticles, seatUnder, type Caption } from "../composition/back";
 import { loadCovers, type CoverAsset } from "../composition/cover";
 import { drawFront, frontTitle } from "../composition/front";
 import { collectionBody, layoutFor } from "../composition/layout";
@@ -11,7 +11,7 @@ import { fieldConstantsOf } from "../field";
 import { morphologyOf, satRadiusOf, wholeReachOf } from "../morphology";
 import { createFieldUniforms } from "../fieldMaterial";
 import { initialState } from "../state";
-import { NAMES, PARTICLES } from "../tokens";
+import { LENS, NAMES, PARTICLES } from "../tokens";
 import type { FieldState, Mode, Scale, Variant } from "../types";
 import { engineHarness, paintContext, type EngineHarness } from "./fakes";
 
@@ -381,6 +381,25 @@ describe("neighbour captions in the collection", () => {
       expect(x + c.half).toBeLessThanOrEqual(W * (1 - NAMES.edge) + 1e-6);
       expect(y - c.top).toBeGreaterThanOrEqual(H * NAMES.ceiling - 1e-6);
     }
+  });
+
+  it("their alpha is set for the front plane's composite gain, so name and meta keep their hierarchy", () => {
+    const reg = paintContext(400);
+    const alphas: number[] = [];
+    const ctx = new Proxy(reg.ctx, {
+      set(base, key: string, value) {
+        if (key === "globalAlpha") alphas.push(value as number);
+        return Reflect.set(base, key, value);
+      },
+    });
+    const one: Caption = {
+      artist: "A", meta: "M", x: 100, y: 100, tsz: 30, msz: 10, step: 20, top: 24, bottom: 23,
+      half: 40, weight: 700, alpha: 1, hot: false,
+    };
+    drawCaptions(ctx as unknown as Parameters<typeof drawCaptions>[0], [one], FONTS);
+    expect(Math.max(...alphas)).toBeLessThanOrEqual(1 / LENS.frontAlpha + 1e-9);
+    expect(alphas).toContain((1 / LENS.frontAlpha) * NAMES.nameAlpha);
+    expect(alphas).toContain((1 / LENS.frontAlpha) * NAMES.metaAlpha);
   });
 
   it("the front plane draws them", () => {
