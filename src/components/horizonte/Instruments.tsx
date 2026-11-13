@@ -47,6 +47,12 @@ const ROW = "h-[26px] items-center gap-[10px] cursor-pointer " +
 const ROW_TOUCH = "min-h-[48px] items-center gap-[9px] cursor-pointer " +
   "border-b border-rule-2 w-full text-left transition-colors duration-150";
 
+const NAME_FIT =
+  "min-w-0 overflow-hidden whitespace-nowrap " +
+  "[mask-image:linear-gradient(to_right,black_calc(100%-1.75rem),transparent)]";
+const REVEAL = "group-hover:col-span-2 group-focus-visible:col-span-2";
+const CODE_HIDE = "group-hover:hidden group-focus-visible:hidden";
+
 const MARK = "block justify-self-end w-[5px] h-[5px]";
 const MARK_ON = "block justify-self-end w-[7px] h-[7px]";
 
@@ -287,12 +293,13 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             setRailOpen(false);
             engine?.enterAlbum(i);
           }}
-          className={`grid grid-cols-[1fr_46px_7px] hover:text-ink-text ${
+          title={a.artist}
+          className={`group grid grid-cols-[1fr_46px_7px] hover:text-ink-text ${
             compact ? ROW_TOUCH : ROW
           }`}
         >
-          <span className="truncate">{a.artist}</span>
-          <span className="text-right text-ink-mute">{a.cat}</span>
+          <span className={`${NAME_FIT} tracking-[.06em] ${REVEAL}`}>{a.artist}</span>
+          <span className={`text-right text-ink-mute ${CODE_HIDE}`}>{a.cat}</span>
           <span
             aria-hidden
             className={MARK}

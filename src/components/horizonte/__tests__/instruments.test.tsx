@@ -34,6 +34,20 @@ describe("album rail", () => {
     expect(within(rail).getByText(ALBUMS[0].cat)).toBeDefined();
   });
 
+  it("a long name is never lost: full in the row's text and title, revealed on pointer and focus", () => {
+    mount();
+    const rail = screen.getByRole("navigation", { name: "Albums" });
+    for (const album of ALBUMS) {
+      const row = within(rail).getByText(album.artist).closest("button")!;
+      expect(row.getAttribute("title")).toBe(album.artist);
+      const name = within(row).getByText(album.artist);
+      expect(name.className).toContain("group-hover:col-span-2");
+      expect(name.className).toContain("group-focus-visible:col-span-2");
+      expect(name.className).not.toContain("truncate");
+      expect(within(row).getByText(album.cat).className).toContain("group-focus-visible:hidden");
+    }
+  });
+
   it("closes the rail with the local-record intake, without becoming a file manager", () => {
     mount();
     const rail = screen.getByRole("navigation", { name: "Albums" });
