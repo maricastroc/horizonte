@@ -815,3 +815,47 @@ describe("why this shape", () => {
     }
   });
 });
+
+describe("idle fade keeps the essentials readable", () => {
+  const soft = (el: Element) => el.closest(".idle-soft") !== null;
+
+  it("only secondary things fade: transport, time and the focused record stay whole", () => {
+    mount({ idle: true });
+    expect(screen.getByRole("button", { name: /Previous/ }).closest(".idle-soft")).toBeNull();
+    expect(screen.getByRole("button", { name: /Play/ }).closest(".idle-soft")).toBeNull();
+    expect(screen.getByRole("button", { name: /Next/ }).closest(".idle-soft")).toBeNull();
+    expect(screen.getByText("00:00 / 00:00").closest(".idle-soft")).toBeNull();
+    const rail = screen.getByRole("navigation", { name: "Albums" });
+    const rows = within(rail).getAllByRole("button").slice(0, ALBUMS.length);
+    const current = rows.filter((b) => b.getAttribute("aria-current"));
+    expect(current).toHaveLength(1);
+    expect(soft(current[0])).toBe(false);
+    expect(rows.filter((b) => !b.getAttribute("aria-current")).every(soft)).toBe(true);
+  });
+
+  it("the fade is scoped to marked elements, never the whole layer", () => {
+    mount({ idle: true });
+    const style = document.querySelector("[data-instruments] style")!.textContent ?? "";
+    expect(style).toContain("[data-instruments][data-idle] .idle-soft");
+    expect(style).not.toMatch(/\[data-instruments\]\[data-idle\]\{opacity/);
+  });
+});
+
+describe("controls read as controls", () => {
+  it("actions are brighter than passive information, and time does not jitter", () => {
+    mount();
+    for (const name of [/Previous/, /Next/]) {
+      expect(screen.getByRole("button", { name }).className).toContain("text-ink-text-2");
+    }
+    const time = screen.getByText("00:00 / 00:00");
+    expect(time.className).toContain("tabular-nums");
+    expect(time.className).not.toContain("text-ink-faint");
+  });
+
+  it("playing is told by words and glyph, not only by colour", () => {
+    mount({ mode: "playing", playAlb: OPENING, alb: OPENING });
+    const play = screen.getByRole("button", { name: /Pause/ });
+    expect(play.getAttribute("aria-pressed")).toBe("true");
+    expect(play.textContent).toMatch(/❙❙/);
+  });
+});
