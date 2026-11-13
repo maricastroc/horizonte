@@ -42,7 +42,7 @@ const getDefault = () => DEFAULT_SNAPSHOT;
 
 const LEVELS: Scale[] = ["collection", "album", "track"];
 
-const ROW = "h-[26px] items-center gap-[10px] cursor-pointer " +
+const ROW = "h-[28px] items-center gap-[10px] cursor-pointer " +
   "border-b border-rule-2 w-full text-left transition-colors duration-150";
 
 const ROW_TOUCH = "min-h-[48px] items-center gap-[9px] cursor-pointer " +
@@ -50,7 +50,7 @@ const ROW_TOUCH = "min-h-[48px] items-center gap-[9px] cursor-pointer " +
 
 const NAME_FIT =
   "min-w-0 overflow-hidden whitespace-nowrap " +
-  "[mask-image:linear-gradient(to_right,black_calc(100%-1.75rem),transparent)]";
+  "[mask-image:linear-gradient(to_right,black_calc(100%-0.9rem),transparent)]";
 const REVEAL = "group-hover:col-span-2 group-focus-visible:col-span-2";
 const CODE_HIDE = "group-hover:hidden group-focus-visible:hidden";
 
@@ -300,7 +300,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             compact ? ROW_TOUCH : ROW
           }`}
         >
-          <span className={`${NAME_FIT} tracking-[.06em] ${REVEAL}`}>{a.artist}</span>
+          <span className={`${NAME_FIT} text-[11px] tracking-[.06em] ${REVEAL}`}>{a.artist}</span>
           <span className={`text-right text-ink-mute ${CODE_HIDE}`}>{a.cat}</span>
           <span
             aria-hidden
@@ -698,9 +698,9 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           aria-label={t.albumsNav}
           aria-hidden={!albumRailOn}
           className={[
-            "isolate relative flex min-h-0 flex-col w-53.5 border-t border-rule",
+            "isolate relative flex min-h-0 flex-col w-57 border-t border-rule",
             albumsFolded ? "flex-none" : trackRailOn ? "flex-1 basis-0" : "shrink",
-            "pointer-events-auto tablet:w-47.5",
+            "pointer-events-auto tablet:w-52",
             "-mx-3 px-3 pt-2 pb-1",
           ].join(" ")}
         >
