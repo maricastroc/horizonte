@@ -154,6 +154,22 @@ em contraluz", abaixo).
 * **Custo.** ~0,06–0,10 ms por quadro a 1440×900 (de ~1,1 para ~1,2 ms medidos
   com upload dos planos), com saída antecipada fora da faixa radial da coroa.
 
+## O lockup no plano da frente
+
+Nome do artista, título e metadados vivem no plano da frente e dobram juntos.
+Antes, o nome ficava no plano de trás e recebia a lente inteira, enquanto o
+título recebia cerca de um terço: onde o nome atravessava o corpo, era puxado
+três vezes mais e caía sobre o título ("Wry Way" sobre "Twist"). Além disso, o
+relevo sombreia por geometria, não por camada, e o nome desenhado sobre a coroa
+ganhava a borda acesa, o chanfro e a sombra projetada.
+
+O plano da frente usa `d / (1 + 4·|d|) · 0,85` do deslocamento `d` (era 18 no
+denominador): cerca de 80% longe do corpo e 60% perto dele, contra 62% e 29%
+antes. O nome volta a curvar com a lente, sem colidir, porque as três linhas
+compartilham o mesmo perfil. O degradê radial atrás do lockup cobre agora a
+altura do nome. O destaque do nome na anatomia amostra a máscara com o mesmo
+deslocamento da frente (`uFocusFront`).
+
 ## A coleção em contraluz
 
 A coleção mostra a forma de cada disco, mas não a estrutura dela. Cada corpo é a

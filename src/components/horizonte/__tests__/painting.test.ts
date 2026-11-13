@@ -28,6 +28,8 @@ const weights = ALBUMS.map((a) => Math.round(fieldConstantsOf(a.signature).artis
 const morphOf = (alb: number) =>
   morphologyOf(ALBUMS[alb].signature, ALBUMS[alb].tracks.length);
 
+const frontDeps = () => ({ fonts: FONTS, covers, weights });
+
 const backDeps = () => ({
   fonts: FONTS,
   covers,
@@ -148,9 +150,9 @@ describe("back painting", () => {
     const s = state({ alb: 0 });
 
     const short = paintContext(10);
-    drawBack(short.ctx, 1400, 900, s, L, backDeps());
+    drawFront(short.ctx, 1400, 900, s, L, frontDeps());
     const long = paintContext(100_000);
-    drawBack(long.ctx, 1400, 900, s, L, backDeps());
+    drawFront(long.ctx, 1400, 900, s, L, frontDeps());
 
     const size = (reg: ReturnType<typeof paintContext>) => {
       const f = reg.sources.filter((x) => x.includes("Archivo")).pop() ?? "";
@@ -162,10 +164,11 @@ describe("back painting", () => {
 
   it("the weight is applied before the width fit", () => {
     const reg = paintContext(100_000);
-    const deps = { ...backDeps(), C: fieldConstantsOf(ALBUMS[7].signature) };
-    drawBack(reg.ctx, 1400, 900, state({ alb: 7 }), layoutFor("desktop"), deps);
+    const artistWeight = fieldConstantsOf(ALBUMS[7].signature).artistWeight;
+    const deps = { ...frontDeps(), artistWeight };
+    drawFront(reg.ctx, 1400, 900, state({ alb: 7, nav: 7, navT: 7 }), layoutFor("desktop"), deps);
     const fromSource = reg.sources.filter((f) => f.includes("Archivo"));
-    const targetWeight = Math.round(deps.C.artistWeight);
+    const targetWeight = Math.round(artistWeight);
     for (const f of fromSource.slice(-2)) expect(f.startsWith(`${targetWeight} `)).toBe(true);
   });
 
@@ -173,7 +176,7 @@ describe("back painting", () => {
     expect(layoutFor("mobile").fitCollection).toBeGreaterThan(0);
     expect(layoutFor("mobile").fitAlbum).toBeGreaterThan(0);
     const reg = paintContext(100_000);
-    expect(() => drawBack(reg.ctx, 400, 900, state(), layoutFor("mobile"), backDeps())).not.toThrow();
+    expect(() => drawFront(reg.ctx, 400, 900, state(), layoutFor("mobile"), frontDeps())).not.toThrow();
   });
 
   it("on mobile an over-wide name shrinks, as on desktop", () => {
@@ -181,9 +184,9 @@ describe("back painting", () => {
     const s = state({ alb: 0 });
 
     const short = paintContext(10);
-    drawBack(short.ctx, 750, 1300, s, L, backDeps());
+    drawFront(short.ctx, 750, 1300, s, L, frontDeps());
     const long = paintContext(100_000);
-    drawBack(long.ctx, 750, 1300, s, L, backDeps());
+    drawFront(long.ctx, 750, 1300, s, L, frontDeps());
 
     const size = (reg: ReturnType<typeof paintContext>) => {
       const f = reg.sources.filter((x) => x.includes("Archivo")).pop() ?? "";
@@ -193,11 +196,14 @@ describe("back painting", () => {
     expect(size(long)).toBeGreaterThan(0);
   });
 
-  it("measures the text once per frame when fitting is on; neighbour names only once ever", () => {
+  it("text is measured once per lockup line per frame, and neighbour names only once ever", () => {
     drawBack(paintContext(10).ctx, 1400, 900, state(), layoutFor("desktop"), backDeps());
-    const reg = paintContext(10);
-    drawBack(reg.ctx, 1400, 900, state(), layoutFor("desktop"), backDeps());
-    expect(reg.calls.filter((c) => c === "measureText")).toHaveLength(1);
+    const back = paintContext(10);
+    drawBack(back.ctx, 1400, 900, state(), layoutFor("desktop"), backDeps());
+    expect(back.calls.filter((c) => c === "measureText")).toHaveLength(0);
+    const front = paintContext(10);
+    drawFront(front.ctx, 1400, 900, state(), layoutFor("desktop"), frontDeps());
+    expect(front.calls.filter((c) => c === "measureText").length).toBeLessThanOrEqual(3);
   });
 });
 

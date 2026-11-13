@@ -32,7 +32,7 @@ import { drawFacing, drawGhost, type BodyFrame, type FocusSatellite } from "./fo
 import { brighten, type RingBakery, type SegShape } from "./ring";
 import { ls, type Ctx } from "./ctx";
 import { stageBox, type Bands } from "./bands";
-import { namePlates, stagesOf } from "./approach";
+import { stagesOf } from "./approach";
 import {
   albPos,
   atmosphereOf,
@@ -276,7 +276,7 @@ export function drawBack(
   deps: BackDeps,
 ) {
   const x = ctx as Ctx;
-  const { fonts, covers, rings, weights, parts, C, morph, morphOf } = deps;
+  const { fonts, covers, rings, weights, parts, morph, morphOf } = deps;
   const labels = deps.labels ?? CANVAS_LABELS;
   const breathOf = deps.breath ?? (() => ({ mass: 0, light: 0 }));
   const lens = deps.lens ?? (() => [0, 0, 0] as [number, number, number]);
@@ -612,41 +612,6 @@ export function drawBack(
     coverBand();
     bandScrim(x, W, H, b, lk.size * 0.6);
   }
-
-  x.save();
-  x.textBaseline = "alphabetic";
-  ls(x, "-0.035em");
-  const fit = s.scale === "collection" ? L.fitCollection : L.fitAlbum;
-  const plates = namePlates(s, ALBUMS.length);
-  for (const plate of plates) {
-    const name = ALBUMS[plate.alb].artist;
-    const settled = plates.length === 1 && plate.alb === s.alb;
-    const wgt = settled ? Math.round(C.artistWeight) : weights[plate.alb];
-    let asz = lk.size;
-    x.font = `${wgt} ${asz}px ${fonts.archivo}`;
-    if (fit > 0) {
-      const maxW = L.staged ? W - lk.margin * 2 : W * fit - lk.margin;
-      const mw = x.measureText(name).width;
-      if (mw > maxW) {
-        asz = Math.max(asz * lk.floor, asz * (maxW / mw));
-        x.font = `${wgt} ${asz}px ${fonts.archivo}`;
-      }
-    }
-    const nx = lk.margin + plate.shift * W * NAMES.slide;
-    x.globalAlpha = (1 - s.mix) * (0.92 - s.play * 0.25) * plate.alpha;
-    x.fillStyle = COLOR.paper;
-    x.fillText(name, nx, lk.ay);
-    if (frame && plate.alb === s.alb) frame.name = { text: name, font: x.font, x: nx, y: lk.ay };
-  }
-  if (s.mix > 0 && ALBUMS[s.fuseAlb]) {
-    x.globalAlpha = s.mix * (0.92 - s.play * 0.25);
-    x.fillText(
-      ALBUMS[s.fuseAlb].artist,
-      lk.margin + (1 - s.mix) * W * 0.12,
-      lk.ay + (1 - s.mix) * H * 0.05,
-    );
-  }
-  x.restore();
 
   if (!L.staged) coverBand();
 

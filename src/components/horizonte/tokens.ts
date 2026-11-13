@@ -209,6 +209,8 @@ export const BAND = {
 export const GUARD = { soft: 0.05, residual: 0.22 } as const;
 
 export const GLYPH = {
+  artistCap: 0.85,
+  artistAlpha: 0.86,
   artist: { descent: 0.18 },
   title: { ascent: 0.76, descent: 0.26 },
   meta: { ascent: 0.78 },

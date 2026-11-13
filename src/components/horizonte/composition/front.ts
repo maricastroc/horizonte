@@ -1,8 +1,9 @@
 import { ALBUMS } from "../content";
 import { CANVAS_LABELS, type CanvasLabels } from "../i18n/canvas";
-import { COLOR, NAMES } from "../tokens";
+import { COLOR, GLYPH, NAMES } from "../tokens";
 import type { FieldState, FontFamilies } from "../types";
 import type { CoverAsset } from "./cover";
+import type { BodyFrame } from "./focus";
 import { namePlates } from "./approach";
 import { ls, type Ctx } from "./ctx";
 import { lockup, type ShardSpec, type WorldLayout } from "./layout";
@@ -11,6 +12,9 @@ export interface FrontDeps {
   fonts: FontFamilies;
   covers: CoverAsset[];
   labels?: CanvasLabels;
+  weights?: number[];
+  artistWeight?: number;
+  frame?: BodyFrame | null;
 }
 
 class FragmentCache {
@@ -96,7 +100,7 @@ export function drawFront(
 
   if (!L.staged) {
     x.save();
-    const scrimTop = lk.ty - lk.tsize * 0.95;
+    const scrimTop = lk.ay - lk.size * GLYPH.artistCap;
     const scrimBottom = lk.my + lk.msize * 1.6;
     const scrimY = (scrimTop + scrimBottom) / 2;
     const scrimR = Math.max(W * 0.6, (scrimBottom - scrimTop) * 1.5);
@@ -109,10 +113,50 @@ export function drawFront(
     x.restore();
   }
 
+  const fit = s.scale === "collection" ? L.fitCollection : L.fitAlbum;
+  const plates = namePlates(s, ALBUMS.length);
+  x.save();
+  x.textBaseline = "alphabetic";
+  ls(x, "-0.035em");
+  x.fillStyle = COLOR.paper;
+  for (const plate of plates) {
+    const name = ALBUMS[plate.alb].artist;
+    const settled = plates.length === 1 && plate.alb === s.alb;
+    const wgt =
+      settled && deps.artistWeight !== undefined
+        ? Math.round(deps.artistWeight)
+        : (deps.weights?.[plate.alb] ?? 700);
+    let asz = lk.size;
+    x.font = `${wgt} ${asz}px ${deps.fonts.archivo}`;
+    if (fit > 0) {
+      const maxW = L.staged ? W - lk.margin * 2 : W * fit - lk.margin;
+      const mw = x.measureText(name).width;
+      if (mw > maxW) {
+        asz = Math.max(asz * lk.floor, asz * (maxW / mw));
+        x.font = `${wgt} ${asz}px ${deps.fonts.archivo}`;
+      }
+    }
+    const nx = lk.margin + plate.shift * W * NAMES.slide;
+    x.globalAlpha = (1 - s.mix) * (GLYPH.artistAlpha - s.play * 0.25) * plate.alpha;
+    x.fillText(name, nx, lk.ay);
+    if (deps.frame && plate.alb === s.alb) {
+      deps.frame.name = { text: name, font: x.font, x: nx, y: lk.ay };
+    }
+  }
+  if (s.mix > 0 && ALBUMS[s.fuseAlb]) {
+    x.globalAlpha = s.mix * (GLYPH.artistAlpha - s.play * 0.25);
+    x.fillText(
+      ALBUMS[s.fuseAlb].artist,
+      lk.margin + (1 - s.mix) * W * 0.12,
+      lk.ay + (1 - s.mix) * H * 0.05,
+    );
+  }
+  x.restore();
+
   const labels = deps.labels ?? CANVAS_LABELS;
   const titleFont = (size: number) => `italic 400 ${size}px ${deps.fonts.bodoni}`;
   const metaFont = (size: number) => `500 ${size}px ${deps.fonts.mono}`;
-  for (const plate of namePlates(s, ALBUMS.length)) {
+  for (const plate of plates) {
     const P = ALBUMS[plate.alb];
     const slide = plate.shift * W * NAMES.slide;
     const title = s.scale === "collection" ? P.title : frontTitle(s);

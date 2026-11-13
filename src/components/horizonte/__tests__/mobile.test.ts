@@ -329,7 +329,7 @@ describe("no canvas text leaves the viewport", () => {
       const s = album(0);
       const nominal = lockup(v.w, v.h, s, MOBILE);
       const wide = paint(nominal.size * 40, v.w, v.h, s);
-      const names = family(wide.back.sources, "A");
+      const names = family(wide.front.sources, "A");
       expect(names.length, `back ${v.label}`).toBeGreaterThan(1);
       expect(names[names.length - 1], `back ${v.label}`).toBeLessThan(nominal.size);
     }
@@ -350,7 +350,7 @@ describe("no canvas text leaves the viewport", () => {
     const s = album(0);
     const lk = lockup(390, 844, s, MOBILE);
     const wide = paint(lk.size * 400, 390, 844, s);
-    const names = family(wide.back.sources, "A");
+    const names = family(wide.front.sources, "A");
     expect(names[names.length - 1]).toBeGreaterThanOrEqual(lk.size * lk.floor - 1e-6);
   });
 });

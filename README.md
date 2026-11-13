@@ -109,7 +109,7 @@
 
 Horizonte is a spatial music experience built on one idea: **music has mass, and mass bends space.**
 
-The whole composition — monumental typography, album art, dust, void — is drawn into two offscreen 2D canvases and deformed by a gravitational-lens fragment shader. There is no 3D scene and no UI floating above a background: the same field bends the artist's name and the album art at once. The front plane is sampled with **34% of the displacement**, and that parallax is what makes the track title pass *in front of* the body while everything else passes behind it.
+The whole composition — monumental typography, album art, dust, void — is drawn into two offscreen 2D canvases and deformed by a gravitational-lens fragment shader. There is no 3D scene and no UI floating above a background: the same field bends the artist's name and the album art at once. The front plane, which carries the whole lockup (artist, title and metadata), is sampled with a compressed share of the displacement (about 80% far from the body, falling to about 60% near it), and that parallax is what makes the lockup pass *in front of* the body while everything else passes behind it.
 
 Navigation is a change of physical scale rather than a change of screen. Collection, album and track are the same world at different anchors, radii, type sizes and mass values, interpolated continuously — nothing mounts or unmounts. A separate **instruments layer** (mono, 10.5px, never deformed) guarantees every fundamental action stays clickable and legible, including at the peak of the collapse.
 
@@ -144,7 +144,7 @@ step(dt) → drawBack() → drawFront() → render() → updateInstruments()
 
 **Three masses bend the UVs.** The focused body, a secondary body (the neighbour in the collection, or the incoming album during a fusion) and the cursor each contribute a radial pull plus a tangential component. Sampling is chromatically dispersed (R/G/B at slightly different offsets) and radially blurred along the displacement.
 
-**The front plane at 34%.** Both planes are sampled with the same offset field, but the front one at roughly a third of it. That difference in parallax is the entire depth illusion — no z-buffer, no camera.
+**The front plane, compressed.** Both planes are sampled with the same offset field, but the front one through a saturating curve (about 80% of it far from the body, about 60% near it). Artist, title and metadata all live there, so the lockup bends as one piece and its lines never collide. That difference in parallax is the entire depth illusion — no z-buffer, no camera.
 
 **The collapse is a sequence, not a transition.** Pressing play runs 2.25s of scripted physics: mass ramps from 0.055 to 0.36 while exposure falls to a **180ms valley at 3%**, then the field relaxes as a jet fires along a fixed diagonal and the art band rises from the bottom edge.
 
