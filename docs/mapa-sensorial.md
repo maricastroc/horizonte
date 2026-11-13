@@ -154,6 +154,22 @@ em contraluz", abaixo).
 * **Custo.** ~0,06–0,10 ms por quadro a 1440×900 (de ~1,1 para ~1,2 ms medidos
   com upload dos planos), com saída antecipada fora da faixa radial da coroa.
 
+## O lockup no plano da frente
+
+Nome do artista, título e metadados vivem no plano da frente e dobram juntos.
+Antes, o nome ficava no plano de trás e recebia a lente inteira, enquanto o
+título recebia cerca de um terço: onde o nome atravessava o corpo, era puxado
+três vezes mais e caía sobre o título ("Wry Way" sobre "Twist"). Além disso, o
+relevo sombreia por geometria, não por camada, e o nome desenhado sobre a coroa
+ganhava a borda acesa, o chanfro e a sombra projetada.
+
+O plano da frente usa `d / (1 + 4·|d|) · 0,85` do deslocamento `d` (era 18 no
+denominador): cerca de 80% longe do corpo e 60% perto dele, contra 62% e 29%
+antes. O nome volta a curvar com a lente, sem colidir, porque as três linhas
+compartilham o mesmo perfil. O degradê radial atrás do lockup cobre agora a
+altura do nome. O destaque do nome na anatomia amostra a máscara com o mesmo
+deslocamento da frente (`uFocusFront`).
+
 ## A coleção em contraluz
 
 A coleção mostra a forma de cada disco, mas não a estrutura dela. Cada corpo é a
@@ -216,15 +232,20 @@ da placa, que muda de faixa para faixa (M12), vira degraus na silhueta.
 * **Nomes dos vizinhos.** Menos nomes, bem compostos. Só o vizinho mais próximo
   de cada lado tem nome (some entre |d| = 1 e 1,3); um mais distante só ganha
   nome enquanto o cursor aponta para ele. O nome é legenda abaixo do corpo, a
-  uma distância proporcional ao tamanho do nome e medida a partir da coroa de
-  identidade; se a legenda cobriria o lockup principal, o vizinho fica sem nome,
+  uma distância proporcional ao tamanho do nome (0,45 da altura do nome), medida
+  a partir do ponto mais baixo da coroa desenhada sob a largura da legenda,
+  satélites incluídos (`bottomUnder`); antes era o maior raio da coroa em
+  qualquer ângulo, e a folga variava por disco. Se a legenda cobriria o lockup
+  principal, o vizinho fica sem nome,
   em vez de subir para perto da navegação, onde a segunda massa dele ainda o
   empurrava para cima. A linha mono (catálogo · faixas) é proporcional ao nome
   (40%, piso de 9 px, teto de 0,92% da largura) e fica a 32% do nome mais 1,25
   da própria altura abaixo dele; antes ela tinha tamanho fixo e, nos vizinhos
   distantes, ficava maior que o nome e o atravessava. Os vizinhos ao lado do
-  foco (|d| ≤ 1,5) ficam fora do raio em que a lente da segunda massa satura
-  (0,154 H). A posição é verificada na tela pela lente do foco (`lens`, o mesmo
+  foco carregam a segunda massa; só o vizinho que de fato a carrega, e com a
+  massa real do momento, fica fora do raio em que essa lente satura. Antes a
+  folga supunha o ganho de apontar (×1,9) para os dois vizinhos: 0,23 H, cerca
+  de 70 px abaixo da base do corpo. A posição é verificada na tela pela lente do foco (`lens`, o mesmo
   `pullOf` do shader): fora da moldura ou na faixa de controles, é corrigida
   onde aparece; se a correção cairia na zona em que a lente do foco satura, o
   nome esmaece. Segunda passada, sobre uma poça de sombra; larguras medidas uma

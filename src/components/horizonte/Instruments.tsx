@@ -10,7 +10,8 @@ import { useIngest } from "./ingest/useIngest";
 import { timecode } from "./format";
 import { useCopy } from "./i18n";
 import LanguageSwitch from "./LanguageSwitch";
-import { COLOR, IDLE_OPACITY, rgba } from "./tokens";
+import { brighten } from "./composition/ring";
+import { COLOR, IDLE_OPACITY, PLAYING_LIFT, rgba } from "./tokens";
 import type { Scale, Snapshot } from "./types";
 import type { FieldEngine } from "./engine/FieldEngine";
 
@@ -46,6 +47,12 @@ const ROW = "h-[26px] items-center gap-[10px] cursor-pointer " +
 
 const ROW_TOUCH = "min-h-[48px] items-center gap-[9px] cursor-pointer " +
   "border-b border-rule-2 w-full text-left transition-colors duration-150";
+
+const NAME_FIT =
+  "min-w-0 overflow-hidden whitespace-nowrap " +
+  "[mask-image:linear-gradient(to_right,black_calc(100%-1.75rem),transparent)]";
+const REVEAL = "group-hover:col-span-2 group-focus-visible:col-span-2";
+const CODE_HIDE = "group-hover:hidden group-focus-visible:hidden";
 
 const MARK = "block justify-self-end w-[5px] h-[5px]";
 const MARK_ON = "block justify-self-end w-[7px] h-[7px]";
@@ -94,6 +101,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
 
   const album = ALBUMS[snap.alb];
   const ink = rgba(album.inkA, 1);
+  const playingInk = rgba(brighten(album.inkA, PLAYING_LIFT), 1);
   const barInk = rgba(ALBUMS[snap.playAlb >= 0 ? snap.playAlb : snap.alb].inkA, 0.95);
   const focusAlb = snap.scale === "collection" ? snap.navAlb : snap.alb;
 
@@ -230,7 +238,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       target="_blank"
       rel="noreferrer"
       title={credit}
-      className="cursor-pointer whitespace-nowrap text-ink-mute hover:text-ink-text"
+      className="cursor-pointer whitespace-nowrap text-ink-text-2 hover:text-ink-text"
     >
       {licenseName}
     </a>
@@ -273,7 +281,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     const isCur = i === focusAlb;
     const isHov = i === snap.hoverAlb;
     return (
-      <li key={a.cat}>
+      <li key={a.cat} className={isCur ? undefined : "idle-soft"}>
         <button
           type="button"
           tabIndex={albumRailOn ? 0 : -1}
@@ -287,12 +295,13 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
             setRailOpen(false);
             engine?.enterAlbum(i);
           }}
-          className={`grid grid-cols-[1fr_46px_7px] hover:text-ink-text ${
+          title={a.artist}
+          className={`group grid grid-cols-[1fr_46px_7px] hover:text-ink-text ${
             compact ? ROW_TOUCH : ROW
           }`}
         >
-          <span className="truncate">{a.artist}</span>
-          <span className="text-right text-ink-mute">{a.cat}</span>
+          <span className={`${NAME_FIT} tracking-[.06em] ${REVEAL}`}>{a.artist}</span>
+          <span className={`text-right text-ink-mute ${CODE_HIDE}`}>{a.cat}</span>
           <span
             aria-hidden
             className={MARK}
@@ -323,6 +332,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         onFocus={() => engine?.setIntake(true)}
         onBlur={() => engine?.setIntake(false)}
         className={[
+          "idle-soft",
           "group mt-2.5 grid w-full flex-none cursor-pointer grid-cols-[1fr_7px] items-center gap-[10px]",
           "border-t border-rule pt-2.5 text-left",
           compact ? "min-h-[52px]" : "h-[34px]",
@@ -359,7 +369,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     const isSel = i === snap.sel;
     const isHov = i === snap.hoverTrk;
     return (
-      <li key={t.id}>
+      <li key={t.id} className={isPlay || isSel ? undefined : "idle-soft"}>
         <button
           type="button"
           tabIndex={trackRailOn ? 0 : -1}
@@ -410,7 +420,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         className={
           dense
             ? `${TAP} flex-none`
-            : "flex-none cursor-pointer whitespace-nowrap hover:text-ink-text"
+            : "flex-none cursor-pointer whitespace-nowrap text-ink-text-2 hover:text-ink-text"
         }
       >
         {t.transport.previous}
@@ -419,6 +429,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         type="button"
         aria-pressed={snap.mode === "playing"}
         onClick={() => engine?.transport()}
+        style={snap.mode === "playing" ? { color: playingInk } : undefined}
         className={[
           dense
             ? `${TAP} flex-none tracking-[.18em]`
@@ -438,7 +449,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         className={
           dense
             ? `${TAP} flex-none`
-            : "flex-none cursor-pointer whitespace-nowrap hover:text-ink-text"
+            : "flex-none cursor-pointer whitespace-nowrap text-ink-text-2 hover:text-ink-text"
         }
       >
         {t.transport.next}
@@ -553,7 +564,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
       ].join(" ")}
       data-idle={snap.idle ? "" : undefined}
     >
-      <style>{`[data-instruments][data-idle]{opacity:${IDLE_OPACITY}}[data-instruments]{opacity:1}`}</style>
+      <style>{`.idle-soft{transition:opacity 350ms ease-out}[data-instruments][data-idle] .idle-soft{opacity:${IDLE_OPACITY}}`}</style>
       {children}
       {status && <Ceremony status={status} onCancel={cancel} />}
       <p aria-live="polite" className="sr-only">
@@ -672,12 +683,12 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
 
   return shell(
     <>
-      <div className="pointer-events-auto absolute left-8.5 top-7.5 flex flex-col gap-3">
+      <div className="idle-soft pointer-events-auto absolute left-8.5 top-7.5 flex flex-col gap-3">
         <h1 className="text-ink-text">{t.title}</h1>
         {breadcrumb}
       </div>
 
-      <div className="pointer-events-auto absolute right-8.5 top-7.5">
+      <div className="idle-soft pointer-events-auto absolute right-8.5 top-7.5">
         <LanguageSwitch compact={false} ink={ink} />
       </div>
 
@@ -707,7 +718,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               aria-controls="album-list"
               onClick={() => setAlbumsOpen((v) => !v)}
               className={[
-                "grid cursor-pointer grid-cols-[auto_1fr] gap-3 pb-1.5 text-left",
+                "idle-soft grid cursor-pointer grid-cols-[auto_1fr] gap-3 pb-1.5 text-left",
                 "text-ink-faint hover:text-ink-text",
               ].join(" ")}
             >
@@ -719,7 +730,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               )}
             </button>
           ) : (
-            <p className="pb-1.5 text-ink-faint">{t.albumCount(ALBUMS.length)}</p>
+            <p className="idle-soft pb-1.5 text-ink-faint">{t.albumCount(ALBUMS.length)}</p>
           )}
           {!albumsFolded && (
             <>
@@ -757,12 +768,12 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         {fault}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
           {transport(false)}
-          <div className="flex flex-none items-center gap-2.5">
+          <div className="idle-soft flex flex-none items-center gap-2.5">
             <button
               type="button"
               aria-pressed={muted}
               onClick={toggleMute}
-              className="cursor-pointer whitespace-nowrap hover:text-ink-text"
+              className="cursor-pointer whitespace-nowrap text-ink-text-2 hover:text-ink-text"
             >
               {muted ? t.sound.muted : t.sound.on}
             </button>
@@ -782,7 +793,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               className="rail-range h-2.25 w-18"
             />
           </div>
-          <span ref={tcRef} className="ml-auto flex-none whitespace-nowrap text-ink-faint">
+          <span ref={tcRef} className="ml-auto flex-none whitespace-nowrap tabular-nums text-ink-mute">
             00:00 / 00:00
           </span>
         </div>
@@ -795,14 +806,15 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           tabIndex={snap.scale === "collection" ? -1 : 0}
           aria-hidden={snap.scale === "collection"}
           className={[
-            "cursor-pointer whitespace-nowrap transition-opacity duration-250 hover:text-ink-text",
+            "cursor-pointer whitespace-nowrap text-ink-text-2 transition-opacity duration-250",
+            "hover:text-ink-text",
             snap.scale === "collection" ? "pointer-events-none opacity-0" : "opacity-100",
           ].join(" ")}
         >
           {t.transport.back}
         </button>
-        <span className="whitespace-nowrap text-ink-faint">{context}</span>
-        {licenseLink}
+        <span className="idle-soft whitespace-nowrap text-ink-mute">{context}</span>
+        <span className="idle-soft">{licenseLink}</span>
       </div>
     </>,
   );

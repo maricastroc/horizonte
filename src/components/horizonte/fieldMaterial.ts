@@ -30,6 +30,7 @@ export interface FieldUniforms {
   uGuard: { value: THREE.Vector3 };
   uFocus: { value: THREE.Texture | null };
   uFocusMix: { value: THREE.Vector3 };
+  uFocusFront: { value: number };
   uShape: { value: THREE.DataTexture };
   uRelief: { value: THREE.Vector4 };
   uReliefBand: { value: THREE.Vector4 };
@@ -64,6 +65,7 @@ export function createFieldUniforms(): FieldUniforms {
     uGuard: { value: new THREE.Vector3(0, 1, 1) },
     uFocus: { value: null },
     uFocusMix: { value: new THREE.Vector3(0, ANATOMY.focus.dim.ask, ANATOMY.focus.light) },
+    uFocusFront: { value: 0 },
     uShape: { value: createReliefTexture() },
     uRelief: { value: new THREE.Vector4(1, 1, 0, 0) },
     uReliefBand: { value: new THREE.Vector4(0, 0, 0, 0) },

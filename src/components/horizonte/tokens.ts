@@ -90,7 +90,8 @@ export const NAMES = {
   gap: 0.45,
   ceiling: 0.12,
   strong: 0.9,
-  near: 1.5,
+  probes: 96,
+  shelterPad: 0.2,
   reach: 1.3,
   fade: 0.3,
   metaRatio: 0.4,
@@ -209,6 +210,8 @@ export const BAND = {
 export const GUARD = { soft: 0.05, residual: 0.22 } as const;
 
 export const GLYPH = {
+  artistCap: 0.85,
+  artistAlpha: 0.86,
   artist: { descent: 0.18 },
   title: { ascent: 0.76, descent: 0.26 },
   meta: { ascent: 0.78 },
@@ -374,6 +377,7 @@ export const EXPLORED_KEY = "horizonte:explored";
 
 export const IDLE_MS = 2600;
 export const IDLE_OPACITY = 0.32;
+export const PLAYING_LIFT = 0.55;
 
 export const DPR_MAX = 1.3;
 export const COMPOSITION_MAX_W = 1760;

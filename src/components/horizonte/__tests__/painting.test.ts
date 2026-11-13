@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import frag from "@/shaders/field.frag.glsl";
 import vert from "@/shaders/field.vert.glsl";
-import { drawBack, makeParticles } from "../composition/back";
+import { bottomUnder, drawBack, makeParticles } from "../composition/back";
 import { loadCovers, type CoverAsset } from "../composition/cover";
 import { drawFront, frontTitle } from "../composition/front";
 import { albPos, collectionBody, layoutFor } from "../composition/layout";
@@ -27,6 +27,8 @@ const weights = ALBUMS.map((a) => Math.round(fieldConstantsOf(a.signature).artis
 
 const morphOf = (alb: number) =>
   morphologyOf(ALBUMS[alb].signature, ALBUMS[alb].tracks.length);
+
+const frontDeps = () => ({ fonts: FONTS, covers, weights });
 
 const backDeps = () => ({
   fonts: FONTS,
@@ -148,9 +150,9 @@ describe("back painting", () => {
     const s = state({ alb: 0 });
 
     const short = paintContext(10);
-    drawBack(short.ctx, 1400, 900, s, L, backDeps());
+    drawFront(short.ctx, 1400, 900, s, L, frontDeps());
     const long = paintContext(100_000);
-    drawBack(long.ctx, 1400, 900, s, L, backDeps());
+    drawFront(long.ctx, 1400, 900, s, L, frontDeps());
 
     const size = (reg: ReturnType<typeof paintContext>) => {
       const f = reg.sources.filter((x) => x.includes("Archivo")).pop() ?? "";
@@ -162,10 +164,11 @@ describe("back painting", () => {
 
   it("the weight is applied before the width fit", () => {
     const reg = paintContext(100_000);
-    const deps = { ...backDeps(), C: fieldConstantsOf(ALBUMS[7].signature) };
-    drawBack(reg.ctx, 1400, 900, state({ alb: 7 }), layoutFor("desktop"), deps);
+    const artistWeight = fieldConstantsOf(ALBUMS[7].signature).artistWeight;
+    const deps = { ...frontDeps(), artistWeight };
+    drawFront(reg.ctx, 1400, 900, state({ alb: 7, nav: 7, navT: 7 }), layoutFor("desktop"), deps);
     const fromSource = reg.sources.filter((f) => f.includes("Archivo"));
-    const targetWeight = Math.round(deps.C.artistWeight);
+    const targetWeight = Math.round(artistWeight);
     for (const f of fromSource.slice(-2)) expect(f.startsWith(`${targetWeight} `)).toBe(true);
   });
 
@@ -173,7 +176,7 @@ describe("back painting", () => {
     expect(layoutFor("mobile").fitCollection).toBeGreaterThan(0);
     expect(layoutFor("mobile").fitAlbum).toBeGreaterThan(0);
     const reg = paintContext(100_000);
-    expect(() => drawBack(reg.ctx, 400, 900, state(), layoutFor("mobile"), backDeps())).not.toThrow();
+    expect(() => drawFront(reg.ctx, 400, 900, state(), layoutFor("mobile"), frontDeps())).not.toThrow();
   });
 
   it("on mobile an over-wide name shrinks, as on desktop", () => {
@@ -181,9 +184,9 @@ describe("back painting", () => {
     const s = state({ alb: 0 });
 
     const short = paintContext(10);
-    drawBack(short.ctx, 750, 1300, s, L, backDeps());
+    drawFront(short.ctx, 750, 1300, s, L, frontDeps());
     const long = paintContext(100_000);
-    drawBack(long.ctx, 750, 1300, s, L, backDeps());
+    drawFront(long.ctx, 750, 1300, s, L, frontDeps());
 
     const size = (reg: ReturnType<typeof paintContext>) => {
       const f = reg.sources.filter((x) => x.includes("Archivo")).pop() ?? "";
@@ -193,11 +196,14 @@ describe("back painting", () => {
     expect(size(long)).toBeGreaterThan(0);
   });
 
-  it("measures the text once per frame when fitting is on; neighbour names only once ever", () => {
+  it("text is measured once per lockup line per frame, and neighbour names only once ever", () => {
     drawBack(paintContext(10).ctx, 1400, 900, state(), layoutFor("desktop"), backDeps());
-    const reg = paintContext(10);
-    drawBack(reg.ctx, 1400, 900, state(), layoutFor("desktop"), backDeps());
-    expect(reg.calls.filter((c) => c === "measureText")).toHaveLength(1);
+    const back = paintContext(10);
+    drawBack(back.ctx, 1400, 900, state(), layoutFor("desktop"), backDeps());
+    expect(back.calls.filter((c) => c === "measureText")).toHaveLength(0);
+    const front = paintContext(10);
+    drawFront(front.ctx, 1400, 900, state(), layoutFor("desktop"), frontDeps());
+    expect(front.calls.filter((c) => c === "measureText").length).toBeLessThanOrEqual(3);
   });
 });
 
@@ -280,7 +286,7 @@ describe("neighbour names in the collection", () => {
   const s = state({ nav: 5, navT: 5, alb: 5 });
 
   const texts = (lens?: (x: number, y: number) => [number, number, number]) => {
-    const reg = paintContext(10);
+    const reg = paintContext(400);
     const seen: { text: string; x: number; y: number }[] = [];
     const ctx = new Proxy(reg.ctx, {
       get(base, key: string) {
@@ -328,7 +334,7 @@ describe("neighbour names in the collection", () => {
       );
     expect(named(texts())).toEqual([6]);
     const pointed = { ...s, hoverBody: 8 };
-    const reg = paintContext(10);
+    const reg = paintContext(400);
     const seen: { text: string }[] = [];
     const ctx = new Proxy(reg.ctx, {
       get(base, key: string) {
@@ -360,5 +366,39 @@ describe("neighbour names in the collection", () => {
       expect(t.x).toBeGreaterThanOrEqual(0);
       expect(t.x).toBeLessThanOrEqual(W);
     }
+  });
+});
+
+describe("neighbour captions keep one distance to their body", () => {
+  it("whatever the record, the caption sits the same small gap under the shape drawn above it", () => {
+    const W = 1440;
+    const H = 900;
+    const L = layoutFor("desktop");
+    let checked = 0;
+    for (const nav of [1, 2, 4, 5, 7, 9, 11]) {
+      const st = state({ nav, navT: nav, alb: nav });
+      const reg = paintContext(400);
+      const seen: { text: string; y: number }[] = [];
+      const ctx = new Proxy(reg.ctx, {
+        get(base, key: string) {
+          if (key === "fillText") return (text: string, _x: number, y: number) => seen.push({ text, y });
+          return Reflect.get(base, key);
+        },
+      });
+      drawBack(ctx, W, H, st, L, backDeps());
+      const right = nav + 1;
+      const name = seen.find((t) => t.text === ALBUMS[right].artist);
+      if (!name) continue;
+      checked++;
+      const m = morphOf(right);
+      const body = collectionBody(W, H, st, L, right, m);
+      const size = Math.min(W, H) * GEO.neighborR * albPos(right, st, L).depth;
+      const top = name.y - size * 0.8;
+      const narrow = body.cy + bottomUnder(m, body.R, 0);
+      const wide = body.cy + bottomUnder(m, body.R, W);
+      expect((top - wide) / size).toBeLessThanOrEqual(NAMES.gap + 0.01);
+      expect((top - narrow) / size).toBeGreaterThanOrEqual(NAMES.gap - 0.01);
+    }
+    expect(checked).toBeGreaterThan(4);
   });
 });

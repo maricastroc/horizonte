@@ -3,7 +3,8 @@ import { act, cleanup, fireEvent, render, screen, within } from "@testing-librar
 import Instruments, { isInstrumentsTarget } from "../Instruments";
 import { ALBUMS, OPENING } from "../content";
 import { timecode } from "../format";
-import { COLOR, rgba } from "../tokens";
+import { brighten } from "../composition/ring";
+import { COLOR, PLAYING_LIFT, rgba } from "../tokens";
 import type { Snapshot } from "../types";
 import { fakeEngine } from "./fakeInstruments";
 
@@ -32,6 +33,20 @@ describe("album rail", () => {
     expect(items).toHaveLength(ALBUMS.length + 1);
     expect(within(rail).getByText(ALBUMS[0].artist)).toBeDefined();
     expect(within(rail).getByText(ALBUMS[0].cat)).toBeDefined();
+  });
+
+  it("a long name is never lost: full in the row's text and title, revealed on pointer and focus", () => {
+    mount();
+    const rail = screen.getByRole("navigation", { name: "Albums" });
+    for (const album of ALBUMS) {
+      const row = within(rail).getByText(album.artist).closest("button")!;
+      expect(row.getAttribute("title")).toBe(album.artist);
+      const name = within(row).getByText(album.artist);
+      expect(name.className).toContain("group-hover:col-span-2");
+      expect(name.className).toContain("group-focus-visible:col-span-2");
+      expect(name.className).not.toContain("truncate");
+      expect(within(row).getByText(album.cat).className).toContain("group-focus-visible:hidden");
+    }
   });
 
   it("closes the rail with the local-record intake, without becoming a file manager", () => {
@@ -798,6 +813,62 @@ describe("why this shape", () => {
     fireEvent.click(screen.getByRole("button", { name: "What if the record were shorter? ▸" }));
     for (const b of within(screen.getByRole("group", { name: "Compare" })).getAllByRole("button")) {
       expect(b.className).toContain("min-h-[46px]");
+    }
+  });
+});
+
+describe("idle fade keeps the essentials readable", () => {
+  const soft = (el: Element) => el.closest(".idle-soft") !== null;
+
+  it("only secondary things fade: transport, time and the focused record stay whole", () => {
+    mount({ idle: true });
+    expect(screen.getByRole("button", { name: /Previous/ }).closest(".idle-soft")).toBeNull();
+    expect(screen.getByRole("button", { name: /Play/ }).closest(".idle-soft")).toBeNull();
+    expect(screen.getByRole("button", { name: /Next/ }).closest(".idle-soft")).toBeNull();
+    expect(screen.getByText("00:00 / 00:00").closest(".idle-soft")).toBeNull();
+    const rail = screen.getByRole("navigation", { name: "Albums" });
+    const rows = within(rail).getAllByRole("button").slice(0, ALBUMS.length);
+    const current = rows.filter((b) => b.getAttribute("aria-current"));
+    expect(current).toHaveLength(1);
+    expect(soft(current[0])).toBe(false);
+    expect(rows.filter((b) => !b.getAttribute("aria-current")).every(soft)).toBe(true);
+  });
+
+  it("the fade is scoped to marked elements, never the whole layer", () => {
+    mount({ idle: true });
+    const style = document.querySelector("[data-instruments] style")!.textContent ?? "";
+    expect(style).toContain("[data-instruments][data-idle] .idle-soft");
+    expect(style).not.toMatch(/\[data-instruments\]\[data-idle\]\{opacity/);
+  });
+});
+
+describe("controls read as controls", () => {
+  it("actions are brighter than passive information, and time does not jitter", () => {
+    mount();
+    for (const name of [/Previous/, /Next/]) {
+      expect(screen.getByRole("button", { name }).className).toContain("text-ink-text-2");
+    }
+    const time = screen.getByText("00:00 / 00:00");
+    expect(time.className).toContain("tabular-nums");
+    expect(time.className).not.toContain("text-ink-faint");
+  });
+
+  it("playing is told by words and glyph, not only by colour", () => {
+    mount({ mode: "playing", playAlb: OPENING, alb: OPENING });
+    const play = screen.getByRole("button", { name: /Pause/ });
+    expect(play.getAttribute("aria-pressed")).toBe("true");
+    expect(play.textContent).toMatch(/❙❙/);
+  });
+});
+
+describe("the playing state's colour never costs legibility", () => {
+  it("the lifted record ink stays above 7:1 on the void for every record", () => {
+    const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+    const lum = (v: readonly number[]) => 0.2126 * lin(v[0]) + 0.7152 * lin(v[1]) + 0.0722 * lin(v[2]);
+    const bg = lum([7 / 255, 7 / 255, 10 / 255]);
+    for (const album of ALBUMS) {
+      const ratio = (lum(brighten(album.inkA, PLAYING_LIFT)) + 0.05) / (bg + 0.05);
+      expect(ratio).toBeGreaterThan(7);
     }
   });
 });

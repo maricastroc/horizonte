@@ -5,6 +5,7 @@ import {
   neighborScale,
   outerAt,
   satRadiusOf,
+  wholeCrownAt,
   wholeReachOf,
   type AlbumMorphology,
 } from "../morphology";
@@ -21,7 +22,6 @@ import {
   PARTICLES,
   RING,
   SATELLITE,
-  SECOND_MASS,
   SILHOUETTE,
   rgba,
   type Rgb,
@@ -32,7 +32,7 @@ import { drawFacing, drawGhost, type BodyFrame, type FocusSatellite } from "./fo
 import { brighten, type RingBakery, type SegShape } from "./ring";
 import { ls, type Ctx } from "./ctx";
 import { stageBox, type Bands } from "./bands";
-import { namePlates, stagesOf } from "./approach";
+import { stagesOf } from "./approach";
 import {
   albPos,
   atmosphereOf,
@@ -62,6 +62,7 @@ export interface BackDeps {
   facing?: number;
   labels?: CanvasLabels;
   breath?: (alb: number) => { mass: number; light: number };
+  second?: { alb: number; k: number } | null;
   lens?: (x: number, y: number) => [number, number, number];
 }
 
@@ -102,6 +103,27 @@ function drawRing(
 }
 
 const widths = new Map<string, number>();
+
+export function bottomUnder(m: AlbumMorphology, R: number, half: number): number {
+  const orbit = wholeReachOf(m) / m.rMax;
+  let low = 0;
+  for (let i = 0; i < NAMES.probes; i++) {
+    const turn = i / NAMES.probes;
+    const r = wholeCrownAt(m, turn, SILHOUETTE.smooth).outer * R;
+    const a = turn * 6.2832 + RING.anchor;
+    const x = Math.cos(a) * r;
+    const y = Math.sin(a) * r * m.flatten;
+    if (Math.abs(x) <= half) low = Math.max(low, y);
+  }
+  for (const sat of m.satellites) {
+    if (sat.weight <= 0.02) continue;
+    const r = satRadiusOf(m, sat) * R;
+    const x = Math.cos(sat.angle) * sat.dist * orbit * R;
+    const y = Math.sin(sat.angle) * sat.dist * orbit * R * m.flatten;
+    if (Math.abs(x) <= half + r) low = Math.max(low, y + r * m.flatten);
+  }
+  return low;
+}
 
 const smooth01 = (v: number) => {
   const t = Math.min(1, Math.max(0, v));
@@ -276,7 +298,7 @@ export function drawBack(
   deps: BackDeps,
 ) {
   const x = ctx as Ctx;
-  const { fonts, covers, rings, weights, parts, C, morph, morphOf } = deps;
+  const { fonts, covers, rings, weights, parts, morph, morphOf } = deps;
   const labels = deps.labels ?? CANVAS_LABELS;
   const breathOf = deps.breath ?? (() => ({ mass: 0, light: 0 }));
   const lens = deps.lens ?? (() => [0, 0, 0] as [number, number, number]);
@@ -327,16 +349,20 @@ export function drawBack(
     d: number;
     nx: number;
     ny: number;
-    hv: number;
+    placed: boolean;
+    m: AlbumMorphology;
+    R: number;
     ty: number;
     tsz: number;
     alpha: number;
   }[] = [];
   const lead = lockup(W, H, s, L);
-  const saturation = (SECOND_MASS.k * SECOND_MASS.pointGain) / LENS.cap - LENS.soft;
-  const horizon = Math.sqrt(Math.max(0, saturation)) * H;
+  const pull = deps.second ?? null;
+  const horizon = pull
+    ? Math.sqrt(Math.max(0, pull.k / LENS.cap - LENS.soft)) * H
+    : 0;
   const shelter = {
-    x1: lead.margin + W * (s.scale === "collection" ? L.fitCollection : L.fitAlbum),
+    x1: 0,
     y0: lead.ay - lead.size * 0.8,
     y1: lead.my + lead.msize,
   };
@@ -420,8 +446,7 @@ export function drawBack(
 
     const tsz = M * GEO.neighborR * p.depth;
     const ty = ny + br * (recede ? mi.flatten : 1) + M * 0.075 * p.depth;
-    const hv = recede ? nb.R * wholeReachOf(mi) * mi.flatten : -1;
-    tags.push({ i, d: p.d, nx, ny, hv, ty, tsz, alpha: a * away * legible });
+    tags.push({ i, d: p.d, nx, ny, placed: recede, m: mi, R: nb.R, ty, tsz, alpha: a * away * legible });
   }
 
   x.save();
@@ -436,6 +461,11 @@ export function drawBack(
     }
     return unit;
   };
+  ls(x, "-0.035em");
+  const lockFit = s.scale === "collection" ? L.fitCollection : L.fitAlbum;
+  const lockRoom = L.staged ? W - lead.margin * 2 : W * lockFit - lead.margin;
+  const lockUnit = unitOf(`${weights[s.alb]} ${NAMES.probe}px ${fonts.archivo}`, A.artist);
+  shelter.x1 = lead.margin + Math.min(lockUnit * lead.size, lockRoom) + lead.size * NAMES.shelterPad;
   for (const t of tags) {
     const hot = t.i === s.hoverBody;
     const presence = Math.max(smooth01((NAMES.reach - Math.abs(t.d)) / NAMES.fade), hot ? 1 : 0);
@@ -454,9 +484,10 @@ export function drawBack(
     const edge = W * NAMES.edge;
     let nx = t.nx;
     let ty = t.ty;
-    if (t.hv >= 0) {
+    if (t.placed) {
       const gap = t.tsz * NAMES.gap;
-      const reach = Math.abs(t.d) <= NAMES.near ? Math.max(t.hv + gap, horizon) : t.hv + gap;
+      const floor = bottomUnder(t.m, t.R, half);
+      const reach = pull && pull.alb === t.i ? Math.max(floor + gap, horizon) : floor + gap;
       ty = t.ny + reach + top;
       const covers =
         nx - half < shelter.x1 && ty + bottom > shelter.y0 && ty - top < shelter.y1;
@@ -612,41 +643,6 @@ export function drawBack(
     coverBand();
     bandScrim(x, W, H, b, lk.size * 0.6);
   }
-
-  x.save();
-  x.textBaseline = "alphabetic";
-  ls(x, "-0.035em");
-  const fit = s.scale === "collection" ? L.fitCollection : L.fitAlbum;
-  const plates = namePlates(s, ALBUMS.length);
-  for (const plate of plates) {
-    const name = ALBUMS[plate.alb].artist;
-    const settled = plates.length === 1 && plate.alb === s.alb;
-    const wgt = settled ? Math.round(C.artistWeight) : weights[plate.alb];
-    let asz = lk.size;
-    x.font = `${wgt} ${asz}px ${fonts.archivo}`;
-    if (fit > 0) {
-      const maxW = L.staged ? W - lk.margin * 2 : W * fit - lk.margin;
-      const mw = x.measureText(name).width;
-      if (mw > maxW) {
-        asz = Math.max(asz * lk.floor, asz * (maxW / mw));
-        x.font = `${wgt} ${asz}px ${fonts.archivo}`;
-      }
-    }
-    const nx = lk.margin + plate.shift * W * NAMES.slide;
-    x.globalAlpha = (1 - s.mix) * (0.92 - s.play * 0.25) * plate.alpha;
-    x.fillStyle = COLOR.paper;
-    x.fillText(name, nx, lk.ay);
-    if (frame && plate.alb === s.alb) frame.name = { text: name, font: x.font, x: nx, y: lk.ay };
-  }
-  if (s.mix > 0 && ALBUMS[s.fuseAlb]) {
-    x.globalAlpha = s.mix * (0.92 - s.play * 0.25);
-    x.fillText(
-      ALBUMS[s.fuseAlb].artist,
-      lk.margin + (1 - s.mix) * W * 0.12,
-      lk.ay + (1 - s.mix) * H * 0.05,
-    );
-  }
-  x.restore();
 
   if (!L.staged) coverBand();
 

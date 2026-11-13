@@ -655,6 +655,7 @@ export class FieldEngine implements InputActions {
       this.focusLive = false;
       this.focusKey = "";
     }
+    u.uFocusFront.value = part === "name" ? 1 : 0;
     const mix = u.uFocusMix.value as THREE.Vector3;
     const { ask, what } = ANATOMY.focus.dim;
     mix.x = this.focusAmt;
@@ -911,6 +912,10 @@ export class FieldEngine implements InputActions {
       fieldVersion: this.strain.version,
       compare,
       breath: (i) => this.breathOf(i),
+      second:
+        this.st.scale === "collection" && this.m1.ready
+          ? { alb: this.m1.alb, k: this.m1.k }
+          : null,
       lens: this.lensOf(),
       frame: this.focusFrame(),
       facing: this.focusPart() === "posture" ? ease(this.focusAmt) : 0,
@@ -922,7 +927,14 @@ export class FieldEngine implements InputActions {
   }
 
   private frontDeps(): FrontDeps {
-    return { fonts: this.fonts, covers: this.covers, labels: this.labels };
+    return {
+      fonts: this.fonts,
+      covers: this.covers,
+      labels: this.labels,
+      weights: this.WEIGHTS,
+      artistWeight: this.C.artistWeight,
+      frame: this.focusPart() ? this.bodyFrame : null,
+    };
   }
 
 
