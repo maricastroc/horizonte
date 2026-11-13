@@ -912,6 +912,10 @@ export class FieldEngine implements InputActions {
       fieldVersion: this.strain.version,
       compare,
       breath: (i) => this.breathOf(i),
+      second:
+        this.st.scale === "collection" && this.m1.ready
+          ? { alb: this.m1.alb, k: this.m1.k }
+          : null,
       lens: this.lensOf(),
       frame: this.focusFrame(),
       facing: this.focusPart() === "posture" ? ease(this.focusAmt) : 0,

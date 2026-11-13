@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import frag from "@/shaders/field.frag.glsl";
 import vert from "@/shaders/field.vert.glsl";
-import { drawBack, makeParticles } from "../composition/back";
+import { bottomUnder, drawBack, makeParticles } from "../composition/back";
 import { loadCovers, type CoverAsset } from "../composition/cover";
 import { drawFront, frontTitle } from "../composition/front";
 import { albPos, collectionBody, layoutFor } from "../composition/layout";
@@ -365,6 +365,40 @@ describe("neighbour names in the collection", () => {
       if (!ALBUMS.some((a) => a.artist === t.text)) continue;
       expect(t.x).toBeGreaterThanOrEqual(0);
       expect(t.x).toBeLessThanOrEqual(W);
+    }
+  });
+});
+
+describe("neighbour captions keep one distance to their body", () => {
+  it("whatever the record, the caption sits the same small gap under the shape drawn above it", () => {
+    const W = 1440;
+    const H = 900;
+    const L = layoutFor("desktop");
+    const gaps: number[] = [];
+    for (const nav of [1, 2, 4, 5, 7, 9, 11]) {
+      const st = state({ nav, navT: nav, alb: nav });
+      const reg = paintContext(10);
+      const seen: { text: string; y: number }[] = [];
+      const ctx = new Proxy(reg.ctx, {
+        get(base, key: string) {
+          if (key === "fillText") return (text: string, _x: number, y: number) => seen.push({ text, y });
+          return Reflect.get(base, key);
+        },
+      });
+      drawBack(ctx, W, H, st, L, backDeps());
+      const right = nav + 1;
+      const name = seen.find((t) => t.text === ALBUMS[right].artist);
+      if (!name) continue;
+      const m = morphOf(right);
+      const body = collectionBody(W, H, st, L, right, m);
+      const size = Math.min(W, H) * GEO.neighborR * albPos(right, st, L).depth;
+      const top = name.y - size * 0.8;
+      gaps.push((top - (body.cy + bottomUnder(m, body.R, size * 0.05))) / size);
+    }
+    expect(gaps.length).toBeGreaterThan(4);
+    for (const g of gaps) {
+      expect(g).toBeGreaterThan(NAMES.gap - 0.05);
+      expect(g).toBeLessThan(NAMES.gap + 0.05);
     }
   });
 });

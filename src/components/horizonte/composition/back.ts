@@ -5,6 +5,7 @@ import {
   neighborScale,
   outerAt,
   satRadiusOf,
+  wholeCrownAt,
   wholeReachOf,
   type AlbumMorphology,
 } from "../morphology";
@@ -21,7 +22,6 @@ import {
   PARTICLES,
   RING,
   SATELLITE,
-  SECOND_MASS,
   SILHOUETTE,
   rgba,
   type Rgb,
@@ -62,6 +62,7 @@ export interface BackDeps {
   facing?: number;
   labels?: CanvasLabels;
   breath?: (alb: number) => { mass: number; light: number };
+  second?: { alb: number; k: number } | null;
   lens?: (x: number, y: number) => [number, number, number];
 }
 
@@ -102,6 +103,27 @@ function drawRing(
 }
 
 const widths = new Map<string, number>();
+
+export function bottomUnder(m: AlbumMorphology, R: number, half: number): number {
+  const orbit = wholeReachOf(m) / m.rMax;
+  let low = 0;
+  for (let i = 0; i < NAMES.probes; i++) {
+    const turn = i / NAMES.probes;
+    const r = wholeCrownAt(m, turn, SILHOUETTE.smooth).outer * R;
+    const a = turn * 6.2832 + RING.anchor;
+    const x = Math.cos(a) * r;
+    const y = Math.sin(a) * r * m.flatten;
+    if (Math.abs(x) <= half) low = Math.max(low, y);
+  }
+  for (const sat of m.satellites) {
+    if (sat.weight <= 0.02) continue;
+    const r = satRadiusOf(m, sat) * R;
+    const x = Math.cos(sat.angle) * sat.dist * orbit * R;
+    const y = Math.sin(sat.angle) * sat.dist * orbit * R * m.flatten;
+    if (Math.abs(x) <= half + r) low = Math.max(low, y + r * m.flatten);
+  }
+  return low;
+}
 
 const smooth01 = (v: number) => {
   const t = Math.min(1, Math.max(0, v));
@@ -327,14 +349,18 @@ export function drawBack(
     d: number;
     nx: number;
     ny: number;
-    hv: number;
+    placed: boolean;
+    m: AlbumMorphology;
+    R: number;
     ty: number;
     tsz: number;
     alpha: number;
   }[] = [];
   const lead = lockup(W, H, s, L);
-  const saturation = (SECOND_MASS.k * SECOND_MASS.pointGain) / LENS.cap - LENS.soft;
-  const horizon = Math.sqrt(Math.max(0, saturation)) * H;
+  const pull = deps.second ?? null;
+  const horizon = pull
+    ? Math.sqrt(Math.max(0, pull.k / LENS.cap - LENS.soft)) * H
+    : 0;
   const shelter = {
     x1: lead.margin + W * (s.scale === "collection" ? L.fitCollection : L.fitAlbum),
     y0: lead.ay - lead.size * 0.8,
@@ -420,8 +446,7 @@ export function drawBack(
 
     const tsz = M * GEO.neighborR * p.depth;
     const ty = ny + br * (recede ? mi.flatten : 1) + M * 0.075 * p.depth;
-    const hv = recede ? nb.R * wholeReachOf(mi) * mi.flatten : -1;
-    tags.push({ i, d: p.d, nx, ny, hv, ty, tsz, alpha: a * away * legible });
+    tags.push({ i, d: p.d, nx, ny, placed: recede, m: mi, R: nb.R, ty, tsz, alpha: a * away * legible });
   }
 
   x.save();
@@ -454,9 +479,10 @@ export function drawBack(
     const edge = W * NAMES.edge;
     let nx = t.nx;
     let ty = t.ty;
-    if (t.hv >= 0) {
+    if (t.placed) {
       const gap = t.tsz * NAMES.gap;
-      const reach = Math.abs(t.d) <= NAMES.near ? Math.max(t.hv + gap, horizon) : t.hv + gap;
+      const floor = bottomUnder(t.m, t.R, half);
+      const reach = pull && pull.alb === t.i ? Math.max(floor + gap, horizon) : floor + gap;
       ty = t.ny + reach + top;
       const covers =
         nx - half < shelter.x1 && ty + bottom > shelter.y0 && ty - top < shelter.y1;

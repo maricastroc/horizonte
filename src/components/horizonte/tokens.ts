@@ -90,7 +90,7 @@ export const NAMES = {
   gap: 0.45,
   ceiling: 0.12,
   strong: 0.9,
-  near: 1.5,
+  probes: 96,
   reach: 1.3,
   fade: 0.3,
   metaRatio: 0.4,
