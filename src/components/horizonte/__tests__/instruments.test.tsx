@@ -909,6 +909,17 @@ describe("controls read as controls", () => {
     expect(time.className).not.toContain("text-ink-faint");
   });
 
+  it("controls carry their own type, larger and heavier than the information beside them", () => {
+    mount();
+    for (const name of [/Previous/, /Play/, /Next/, /^Sound$/]) {
+      const b = screen.getByRole("button", { name });
+      expect(b.className).toContain("text-[12px]");
+      expect(b.className).toContain("font-medium");
+    }
+    expect(screen.getByText("00:00 / 00:00").className).not.toContain("text-[12px]");
+    expect(screen.getByText(/\d+\/\d+/).className).not.toContain("font-medium");
+  });
+
   it("playing is told by words and glyph, not only by colour", () => {
     mount({ mode: "playing", playAlb: OPENING, alb: OPENING });
     const play = screen.getByRole("button", { name: /Pause/ });

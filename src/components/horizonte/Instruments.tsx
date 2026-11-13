@@ -62,6 +62,7 @@ const ROW_TOUCH = `min-h-[48px] gap-[9px] ${LINE}`;
 const NAME_FIT = "name-fit min-w-0";
 const NAME_TYPE = "text-[12px] tracking-[.03em]";
 const TITLE_TYPE = "text-[12px] tracking-[.06em]";
+const CONTROL_TYPE = "text-[12px] font-medium tracking-[.1em]";
 const REVEAL = "group-hover:col-span-2 group-focus-visible:col-span-2";
 const CODE_HIDE = "group-hover:hidden group-focus-visible:hidden";
 
@@ -453,8 +454,8 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         onClick={() => engine?.skip(-1)}
         className={
           dense
-            ? `${TAP} flex-none`
-            : "flex-none cursor-pointer whitespace-nowrap text-ink-text-2 hover:text-ink-text"
+            ? `${TAP} flex-none ${CONTROL_TYPE}`
+            : `flex-none cursor-pointer whitespace-nowrap text-ink-text-2 hover:text-ink-text ${CONTROL_TYPE}`
         }
       >
         {t.transport.previous}
@@ -466,8 +467,9 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         style={snap.mode === "playing" ? { color: playingInk } : undefined}
         className={[
           dense
-            ? `${TAP} flex-none tracking-[.18em]`
-            : "flex-none cursor-pointer whitespace-nowrap tracking-[.22em] hover:text-white",
+            ? `${TAP} flex-none`
+            : "flex-none cursor-pointer whitespace-nowrap hover:text-white",
+          CONTROL_TYPE,
           "text-ink-text",
         ].join(" ")}
       >
@@ -482,8 +484,8 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
         onClick={() => engine?.skip(1)}
         className={
           dense
-            ? `${TAP} flex-none`
-            : "flex-none cursor-pointer whitespace-nowrap text-ink-text-2 hover:text-ink-text"
+            ? `${TAP} flex-none ${CONTROL_TYPE}`
+            : `flex-none cursor-pointer whitespace-nowrap text-ink-text-2 hover:text-ink-text ${CONTROL_TYPE}`
         }
       >
         {t.transport.next}
@@ -701,7 +703,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
                 type="button"
                 aria-pressed={muted}
                 onClick={toggleMute}
-                className={`-mr-2 flex h-full cursor-pointer items-center whitespace-nowrap px-2 ${
+                className={`-mr-2 flex h-full cursor-pointer items-center whitespace-nowrap px-2 ${CONTROL_TYPE} ${
                   muted ? "text-ink-text" : "text-ink-text-2"
                 }`}
               >
@@ -812,7 +814,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
               type="button"
               aria-pressed={muted}
               onClick={toggleMute}
-              className="cursor-pointer whitespace-nowrap text-ink-text-2 hover:text-ink-text"
+              className={`cursor-pointer whitespace-nowrap text-ink-text-2 hover:text-ink-text ${CONTROL_TYPE}`}
             >
               {muted ? t.sound.muted : t.sound.on}
             </button>
