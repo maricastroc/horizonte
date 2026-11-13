@@ -45,6 +45,8 @@ describe("album rail", () => {
       expect(name.className).toContain("group-hover:col-span-2");
       expect(name.className).toContain("group-focus-visible:col-span-2");
       expect(name.className).not.toContain("truncate");
+      expect(name.className).toContain("name-fit");
+      expect(name.className).not.toContain("mask-image");
       expect(within(row).getByText(album.cat).className).toContain("group-focus-visible:hidden");
     }
   });
@@ -81,7 +83,7 @@ describe("intake for bringing a record", () => {
     expect(intake().textContent).toBe("Bring a record");
     expect(intake().textContent).not.toMatch(/[HL]—\d/);
     expect(intake().className).toContain("grid-cols-[1fr_7px]");
-    expect(albumLine().className).toContain("grid-cols-[1fr_46px_7px]");
+    expect(albumLine().className).toContain("grid-cols-[1fr_42px_7px]");
   });
 
   it("it reads lighter than the records in the list, and no lighter than the focused record", () => {
