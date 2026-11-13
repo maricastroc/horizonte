@@ -101,6 +101,7 @@ export const NAMES = {
   solve: 6,
   slip: 0.15,
   calm: 2.5,
+  stray: [0.6, 1.2],
   shelterPad: 0.2,
   reach: 1.3,
   fade: 0.3,

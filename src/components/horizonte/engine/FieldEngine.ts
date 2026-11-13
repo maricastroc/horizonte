@@ -205,6 +205,7 @@ export class FieldEngine implements InputActions {
   private motionTrk = -2;
   readonly strain: Strain = emptyStrain();
   private railAlb = -1;
+  private index: { left: number; top: number; bottom: number } | null = null;
   private railTrk = -1;
   private intake = false;
   private intent = 0;
@@ -504,6 +505,10 @@ export class FieldEngine implements InputActions {
     this.railAlb = i;
   }
 
+  setIndex(rect: { left: number; top: number; bottom: number } | null) {
+    this.index = rect;
+  }
+
   setAnatomyFocus(part: AnatomyPart | null) {
     if (this.compareOn && (!part || AXIS_OF[part] !== this.compareAxis)) this.compareOn = false;
     this.focusPin = part;
@@ -782,6 +787,14 @@ export class FieldEngine implements InputActions {
     };
   }
 
+  private indexShelf(): { x: number; y0: number; y1: number } | null {
+    const r = this.index;
+    if (!r || typeof window === "undefined") return null;
+    const kx = this.W / Math.max(1, window.innerWidth);
+    const ky = this.H / Math.max(1, window.innerHeight);
+    return { x: r.left * kx, y0: r.top * ky, y1: r.bottom * ky };
+  }
+
   private fitStep(dt: number) {
     const s = this.st;
     if (this.L.staged || this.L.recede <= 0) {
@@ -1012,6 +1025,7 @@ export class FieldEngine implements InputActions {
       breath: (i) => this.breathOf(i),
       lens: this.lensOf(),
       captions: this.captions,
+      index: this.indexShelf(),
       frame: this.focusFrame(),
       facing: this.focusPart() === "posture" ? ease(this.focusAmt) : 0,
       ghost:

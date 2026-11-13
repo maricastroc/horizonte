@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { AnatomyInvite, AnatomyTabs, ShapePanel, type AlbumView } from "./AnatomyRail";
 import Ceremony from "./Ceremony";
 import { ALBUMS, OPENING } from "./content";
@@ -95,6 +103,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   const [railOpen, setRailOpen] = useState(false);
   const [view, setView] = useState<AlbumView>("tracks");
   const [albumsOpen, setAlbumsOpen] = useState(false);
+  const veilRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!engine) return;
@@ -204,6 +213,28 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
 
   const trackRailOn = snap.scale !== "collection";
   const compact = snap.variant === "mobile";
+
+  useLayoutEffect(() => {
+    const veil = veilRef.current;
+    if (!engine) return;
+    if (!veil) {
+      engine.setIndex(null);
+      return;
+    }
+    const publish = () => {
+      const r = veil.getBoundingClientRect();
+      engine.setIndex(r.width > 0 ? { left: r.left, top: r.top, bottom: r.bottom } : null);
+    };
+    publish();
+    const watch = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(publish);
+    watch?.observe(veil);
+    window.addEventListener("resize", publish);
+    return () => {
+      watch?.disconnect();
+      window.removeEventListener("resize", publish);
+      engine.setIndex(null);
+    };
+  }, [engine, compact]);
   const albumRailOn = compact ? snap.scale === "collection" && railOpen : true;
   const albumsFolded = !compact && view === "shape" && trackRailOn && !albumsOpen;
   const b = snap.bands;
@@ -712,6 +743,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           ].join(" ")}
         >
           <div
+            ref={veilRef}
             aria-hidden
             className={[
               "pointer-events-none absolute inset-y-0 right-0 -left-8 -z-10 bg-void/78 backdrop-blur-md",

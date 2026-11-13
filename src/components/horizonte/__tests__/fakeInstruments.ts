@@ -57,6 +57,7 @@ export function fakeEngine(initial: Partial<Snapshot> = {}) {
     setRailAlb: register("setRailAlb"),
     setIntake: register("setIntake"),
     setRailTrk: register("setRailTrk"),
+    setIndex: register("setIndex"),
     skip: register("skip"),
     transport: register("transport"),
     back: register("back"),

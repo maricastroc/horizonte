@@ -410,6 +410,34 @@ describe("neighbour captions in the collection", () => {
     expect(alphas).toContain((1 / LENS.frontAlpha) * NAMES.metaAlpha);
   });
 
+  it("a caption never runs under the album index: it steps left of it, or just below when that is shorter", () => {
+    const free = captionsOf().find((c) => c.artist === ALBUMS[6].artist)!;
+    const index = { x: free.x + free.half - 15, y0: 0, y1: free.y - free.top + 4 };
+    const run = (shelf: typeof index) => {
+      const captions: Caption[] = [];
+      drawBack(paintContext(400).ctx, W, H, s, L, { ...backDeps(), captions, index: shelf });
+      return captions.find((c) => c.artist === ALBUMS[6].artist)!;
+    };
+    const below = run(index);
+    expect(below.x).toBeCloseTo(free.x, 6);
+    expect(below.y - below.top).toBeGreaterThanOrEqual(index.y1);
+    const beside = run({ ...index, y1: H });
+    expect(beside.x + beside.half).toBeLessThanOrEqual(index.x);
+    expect(beside.alpha).toBeCloseTo(free.alpha, 6);
+    const far = captionsOf().length;
+    const crowded = (() => {
+      const captions: Caption[] = [];
+      drawBack(paintContext(400).ctx, W, H, s, L, {
+        ...backDeps(),
+        captions,
+        index: { x: free.x - free.half * 1.5, y0: 0, y1: H },
+      });
+      return captions;
+    })();
+    expect(crowded.find((c) => c.artist === ALBUMS[6].artist)).toBeUndefined();
+    expect(crowded.length).toBeLessThan(far);
+  });
+
   it("the pointer's lens yields over a caption, so a name under the cursor is read, not folded", () => {
     const c: Caption = {
       artist: "A", meta: "M", x: 600, y: 500, tsz: 30, msz: 10, step: 20, top: 24, bottom: 23,
