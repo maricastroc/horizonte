@@ -32,6 +32,7 @@ uniform vec4 uSeed;
 uniform float uRef;
 uniform float uDebug;
 uniform float uBLip[NB];
+uniform float uBHaze[NB];
 uniform float uPix;
 uniform vec4 uPlay;
 uniform vec4 uHover;
@@ -80,6 +81,7 @@ float gRow;
 int gBody;
 float gSpent;
 float gLip;
+float gHaze;
 float gSoft;
 float gFar;
 
@@ -96,6 +98,7 @@ void useBody(int b){
   gInkB = uBInkB[b];
   gRow = float(b);
   gLip = uBLip[b];
+  gHaze = uBHaze[b];
 }
 
 float hash21(vec2 p){
@@ -763,7 +766,7 @@ vec3 reflected(vec3 p, vec3 r){
   Hit h = traceAll(p, r, uSteps * 0.4, 1.0, dl);
   float tt;
   float ta = textHit(p, r, tt) * uTextAt.z;
-  vec3 c = h.kind > 0.5 ? shadeLite(h, dl, r) * uReflK : skyBase(r);
+  vec3 c = h.kind > 0.5 ? shadeLite(h, dl, r) * uReflK * (1.0 - gHaze) : skyBase(r);
   if (ta > 0.0 && tt < h.t) c = mix(c, textColor(p, r, tt), ta);
   return c;
 }
@@ -801,7 +804,7 @@ vec3 orbits(vec3 ro, vec3 rd, float limit){
     }
     float mine = float(b) == uFocus ? 1.0 : 0.0;
     float sat = mine * uPart.y * (abs(uPart.x - 1.0) < 0.5 ? 1.0 : 0.0);
-    c += (gInkA * 1.2 + vec3(1.0, 0.82, 0.55) * 0.35) * line * (0.2 + 0.3 * sat) * alive * min(abs(dl.y) * 6.0, 1.0);
+    c += (gInkA * 1.2 + vec3(1.0, 0.82, 0.55) * 0.35) * line * (0.2 + 0.3 * sat) * (1.0 - 1.6 * gHaze) * alive * min(abs(dl.y) * 6.0, 1.0);
     if (mine > 0.5 && uPart.y > 0.01){
       vec3 ghost = vec3(0.95, 0.9, 0.8) * 0.6 * uPart.y;
       if (abs(uPart.x - 5.0) < 0.5 && abs(rd.z) > 0.01){
@@ -837,7 +840,7 @@ vec3 traceWorld(vec3 ro, vec3 rd, float core, float limit, out float mask, out f
   if (near > limit) return vec3(0.0);
   vec3 c;
   if (tb < tw){
-    c = shadeGlass(h, dl, rd, uSteps);
+    c = mix(shadeGlass(h, dl, rd, uSteps), hazeOf(rd), gHaze);
     if (h.cover < 0.999){
       vec3 behind;
       if (tw < 1e8) behind = waterShade(ro + rd * tw, rd, tw);
