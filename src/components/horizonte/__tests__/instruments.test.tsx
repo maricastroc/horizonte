@@ -759,7 +759,7 @@ describe("why this shape", () => {
     mount({ scale: "album", alb: MKULTRA, focus: "core" });
     openShape();
     expect(screen.getByRole("heading", { level: 3 }).textContent).toBe(
-      "What sets the size of its dark center?",
+      "What sets the size of its core?",
     );
     expect(screen.getByText(/nothing to compare/)).toBeDefined();
     expect(screen.queryByRole("button", { name: /What if/ })).toBeNull();
