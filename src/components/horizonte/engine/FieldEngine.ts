@@ -75,7 +75,8 @@ import {
   reduceMotion,
   type FieldConstants,
 } from "../field";
-import { createFieldGL, type FieldGL } from "../fieldMaterial";
+import { createFieldGL, idleFieldGL, type FieldGL } from "../fieldMaterial";
+import type { WorldPresenter, WorldView } from "../world/World";
 import { clamp } from "../math";
 import {
   NEUTRAL_MOTION,
@@ -162,6 +163,7 @@ export class FieldEngine implements InputActions {
   private frameSink: FrameSink | null = null;
 
   private gl: FieldGL;
+  private world: WorldPresenter | null = null;
   private cvB: HTMLCanvasElement;
   private ctxB: CanvasRenderingContext2D;
   private cvF: HTMLCanvasElement;
@@ -260,6 +262,7 @@ export class FieldEngine implements InputActions {
     canvas: HTMLCanvasElement,
     private fonts: FontFamilies,
     private input: InputOptions,
+    present?: (canvas: HTMLCanvasElement) => WorldPresenter,
   ) {
     this.cvB = document.createElement("canvas");
     this.ctxB = this.cvB.getContext("2d", { alpha: false })!;
@@ -269,7 +272,8 @@ export class FieldEngine implements InputActions {
     this.ctxFocus = this.cvFocus.getContext("2d")!;
     this.covers = loadCovers();
     this.rings = new RingBakery(this.covers);
-    this.gl = createFieldGL(canvas, this.cvB, this.cvF, this.cvFocus);
+    this.world = present ? present(canvas) : null;
+    this.gl = this.world ? idleFieldGL() : createFieldGL(canvas, this.cvB, this.cvF, this.cvFocus);
     this.syncCatalog(-1);
     this.C = this.FIELD[this.st.alb];
     this.unsubscribeCatalog = onCatalogChange((i) => this.syncCatalog(i));
@@ -350,6 +354,7 @@ export class FieldEngine implements InputActions {
     this.unbind = null;
     this.bus.dispose();
     this.gl.dispose();
+    this.world?.dispose();
   }
 
   subscribe = (fn: () => void) => {
@@ -479,6 +484,7 @@ export class FieldEngine implements InputActions {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const { dw, dh } = this.gl.resize(w, h);
+    this.world?.resize(w, h);
     const sw = dw > 0 ? dw : 2;
     const sh = dh > 0 ? dh : 2;
     const cw = Math.max(2, Math.min(sw, this.compMaxW));
@@ -691,6 +697,7 @@ export class FieldEngine implements InputActions {
   }
 
   private hit() {
+    if (this.world) return this.world.hit(this.mouse.tx, this.mouse.ty);
     return hitTest(
       this.mouse.tx,
       this.mouse.ty,
@@ -1030,6 +1037,11 @@ export class FieldEngine implements InputActions {
 
     const t0 = performance.now();
     this.step(dt);
+    if (this.world) {
+      this.world.frame(dt, this.worldView());
+      this.publish();
+      return;
+    }
     drawBack(this.ctxB, this.W, this.H, this.st, this.L, this.backDeps());
     drawFront(this.ctxF, this.W, this.H, this.st, this.L, this.frontDeps());
     this.render();
@@ -1051,6 +1063,33 @@ export class FieldEngine implements InputActions {
       this.resize();
     }
   };
+
+  private worldView(): WorldView {
+    const s = this.st;
+    const inside = s.scale !== "collection";
+    const field = inside ? this.deformation() : null;
+    return {
+      st: s,
+      audio: this.audioState,
+      cap: this.C.reactionCap,
+      routing: this.motion,
+      breath: { mass: this.breathMass, light: this.breathLight },
+      reduced: this.reduced,
+      coarse: this.coarse,
+      mouse: { x: this.mouse.x, y: this.mouse.y, onUi: this.onUi },
+      reach: this.reachAmp,
+      morph: (i) => this.morphAt(i),
+      focus: {
+        morph: inside ? this.M : this.morphAt(s.alb),
+        version: Math.round(this.compareK * 40) + Math.round(s.mix * 40) * 100 + (this.compareAxis ? 10000 : 0),
+        field,
+        strain: field ? this.strain.version : -1,
+        sel: inside ? s.sel : -1,
+        active:
+          inside && s.playAlb === s.alb && (isEngaged(s.mode) || s.mode === "fusion") ? s.trk : -1,
+      },
+    };
+  }
 
   private backDeps(): BackDeps {
     const compare = this.compareBake();

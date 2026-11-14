@@ -91,6 +91,20 @@ export interface FieldGL {
   dispose: () => void;
 }
 
+export function idleFieldGL(): FieldGL {
+  const uniforms = createFieldUniforms();
+  return {
+    uniforms,
+    render: () => undefined,
+    resize: (w, h) => {
+      const dpr = Math.min(window.devicePixelRatio || 1, DPR_MAX);
+      return { dw: Math.round(w * dpr), dh: Math.round(h * dpr) };
+    },
+    invalidate: () => undefined,
+    dispose: () => uniforms.uShape.value.dispose(),
+  };
+}
+
 function planeTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
   const t = new THREE.CanvasTexture(canvas);
   t.minFilter = THREE.LinearFilter;
