@@ -38,7 +38,7 @@ const NEAR: Record<Exclude<Finding["part"], "satellites">, { ask: string; answer
       "brightness is typical of the collection, and so is its tilt.",
   },
   core: {
-    ask: "What sets the size of its dark center?",
+    ask: "What sets the size of its core?",
     answer:
       "How loud the record plays. In Horizonte, loudness is mass: louder records get a bigger " +
       "body and a center that narrows the ring; quieter ones, the reverse. This one sits in the " +
@@ -70,6 +70,13 @@ function satellites(f: Of<"satellites">): Phrasing {
           "it doesn't get a bigger shape: each added stretch of time becomes a small body around it."
         : `${come} At ${min} minutes, shorter than most here, this record earns just ` +
           `${n === 1 ? "one" : count(n)}: ${each}.`;
+  const first = Math.round(f.onsets[0]);
+  const rule =
+    n === 0
+      ? ` The first would only appear at ${first} minutes.`
+      : n === 1
+        ? ` It appears once a record passes ${first} minutes.`
+        : ` The first appears at ${first} minutes; the latest, at ${Math.round(f.onsets[n - 1])} minutes.`;
   const extra = mins(Math.abs(f.extra));
   const change =
     after < n
@@ -99,7 +106,7 @@ function satellites(f: Of<"satellites">): Phrasing {
             : `its ${bodies(n)} stay, a little ${high ? "smaller" : "larger"}.`;
   return {
     ask,
-    answer,
+    answer: answer + rule,
     what: f.near ? null : high ? "What if the record were shorter?" : "What if the record were longer?",
     label: high ? "Shorter" : "Longer",
     result: `At ${f.usual} minutes, the collection's typical length, ${change}`,
@@ -254,21 +261,21 @@ function core(f: Of<"core">): Phrasing {
   const { high, strong, top, bottom } = f;
   const ask = high
     ? strong
-      ? "Why is its dark center so large?"
-      : "Why is its dark center large?"
+      ? "Why is its core so large?"
+      : "Why is its core large?"
     : strong
-      ? "Why is its dark center so small?"
-      : "Why is its dark center small?";
+      ? "Why is its core so small?"
+      : "Why is its core small?";
   const answer = high
     ? strong
       ? "This record plays loud from start to end. In Horizonte, loudness is mass: the louder " +
-        "the record, the bigger the body and its dark center, which takes over the ring around " +
+        "the record, the bigger the body and its core, which takes over the ring around " +
         `it${when(top, ". No record here is louder")}.`
       : "This record plays louder than most here. In Horizonte, loudness is mass, so the body " +
-        "grows and the dark center presses into the ring."
+        "grows and the core presses into the ring."
     : strong
       ? "This record plays quietly from start to end. In Horizonte, loudness is mass: with " +
-        "little of it, the body shrinks and the dark center leaves a wide ring around it" +
+        "little of it, the body shrinks and the core leaves a wide ring around it" +
         `${when(bottom, ". No record here is quieter")}.`
       : "This record plays a little quieter than most here. In Horizonte, loudness is mass, so " +
         "the body stays smaller and the ring keeps more room.";
@@ -278,9 +285,9 @@ function core(f: Of<"core">): Phrasing {
     what: high ? "What if it were quieter overall?" : "What if it were louder overall?",
     label: high ? "Quieter" : "Louder",
     result: high
-      ? "At a typical record's loudness, the whole body shrinks and the dark center gives room " +
+      ? "At a typical record's loudness, the whole body shrinks and the core gives room " +
         "back to the ring."
-      : "At a typical record's loudness, the whole body grows and the dark center presses into " +
+      : "At a typical record's loudness, the whole body grows and the core presses into " +
         "the ring.",
   };
 }
@@ -341,7 +348,7 @@ export const ANATOMY_EN: AnatomyWriter = {
     strata: "layers in the ring",
     contour: "relief of the edge",
     posture: "tilt of the shape",
-    core: "size of the body and its dark center",
+    core: "size of the body and its core",
   },
   details(q) {
     const f = q.finding;

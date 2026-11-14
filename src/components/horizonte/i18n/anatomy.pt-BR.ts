@@ -45,7 +45,7 @@ const NEAR: Record<Exclude<Finding["part"], "satellites">, { ask: string; answer
       "deste disco é o típico da coleção, e a inclinação também.",
   },
   core: {
-    ask: "O que define o tamanho do centro escuro?",
+    ask: "O que define o tamanho do núcleo?",
     answer:
       "O quanto o disco soa alto. No Horizonte, volume é massa: discos mais altos ganham um " +
       "corpo maior e um centro que estreita o anel; os mais baixos, o contrário. Este fica no " +
@@ -80,6 +80,13 @@ function satellites(f: Of<"satellites">): Phrasing {
           "pequeno corpo em volta dela."
         : `${come} Com ${minutes(min)}, mais curto que a maioria da coleção, este disco ganha só ` +
           `${n === 1 ? "um" : count(n)}: ${each}.`;
+  const first = Math.round(f.onsets[0]);
+  const rule =
+    n === 0
+      ? ` O primeiro só apareceria aos ${first} minutos.`
+      : n === 1
+        ? ` Ele aparece quando um disco passa de ${first} minutos.`
+        : ` O primeiro aparece aos ${first} minutos; o mais recente, aos ${Math.round(f.onsets[n - 1])} minutos.`;
   const extra = Math.abs(f.extra) === 1 ? "o 1 minuto" : `os ${minutes(Math.abs(f.extra))}`;
   const change =
     after < n
@@ -109,7 +116,7 @@ function satellites(f: Of<"satellites">): Phrasing {
             : `os ${count(n)} pequenos corpos continuam lá, um pouco ${high ? "menores" : "maiores"}.`;
   return {
     ask,
-    answer,
+    answer: answer + rule,
     what: f.near ? null : high ? "E se o disco fosse mais curto?" : "E se o disco fosse mais longo?",
     label: high ? "Mais curto" : "Mais longo",
     result: `Com ${minutes(f.usual)}, a duração típica da coleção, ${change}`,
@@ -271,21 +278,21 @@ function core(f: Of<"core">): Phrasing {
   const { high, strong, top, bottom } = f;
   const ask = high
     ? strong
-      ? "Por que o centro escuro é tão grande?"
-      : "Por que o centro escuro é grande?"
+      ? "Por que o núcleo é tão grande?"
+      : "Por que o núcleo é grande?"
     : strong
-      ? "Por que o centro escuro é tão pequeno?"
-      : "Por que o centro escuro é pequeno?";
+      ? "Por que o núcleo é tão pequeno?"
+      : "Por que o núcleo é pequeno?";
   const answer = high
     ? strong
       ? "Este disco soa alto do começo ao fim. No Horizonte, volume é massa: quanto mais alto o " +
-        "disco, maior o corpo e maior o centro escuro, que vai tomando o lugar do anel em volta" +
+        "disco, maior o corpo e maior o núcleo, que vai tomando o lugar do anel em volta" +
         `${when(top, ". Nenhum disco da coleção soa tão alto")}.`
       : "Este disco soa mais alto que a maioria da coleção. No Horizonte, volume é massa, então " +
-        "o corpo cresce e o centro escuro avança sobre o anel."
+        "o corpo cresce e o núcleo avança sobre o anel."
     : strong
       ? "Este disco soa baixo do começo ao fim. No Horizonte, volume é massa: com pouca, o corpo " +
-        "encolhe e o centro escuro deixa um anel largo à sua volta" +
+        "encolhe e o núcleo deixa um anel largo à sua volta" +
         `${when(bottom, ". Nenhum disco da coleção soa tão baixo")}.`
       : "Este disco soa um pouco mais baixo que a maioria da coleção. No Horizonte, volume é " +
         "massa, então o corpo fica menor e o anel ganha espaço.";
@@ -295,9 +302,9 @@ function core(f: Of<"core">): Phrasing {
     what: high ? "E se o volume médio fosse mais baixo?" : "E se o volume médio fosse mais alto?",
     label: high ? "Mais baixo" : "Mais alto",
     result: high
-      ? "No volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve espaço " +
+      ? "No volume de um disco típico, o corpo inteiro encolhe e o núcleo devolve espaço " +
         "ao anel."
-      : "No volume de um disco típico, o corpo inteiro cresce e o centro escuro avança sobre o " +
+      : "No volume de um disco típico, o corpo inteiro cresce e o núcleo avança sobre o " +
         "anel.",
   };
 }
@@ -351,7 +358,7 @@ export const ANATOMY_PT: AnatomyWriter = {
     strata: "camadas no anel",
     contour: "relevo da borda",
     posture: "inclinação da forma",
-    core: "tamanho do corpo e do centro escuro",
+    core: "tamanho do corpo e do núcleo",
   },
   details(q) {
     const f = q.finding;

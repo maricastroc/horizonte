@@ -11,6 +11,8 @@ export interface InputActions {
   primary(): void;
   back(): void;
   stepFocus(dir: number): void;
+  orbitBy?(stepX: number, stepY: number): void;
+  zoomBy?(amount: number): void;
 }
 
 export interface InputOptions {
@@ -29,7 +31,10 @@ export function bindInput(actions: InputActions, { isUiTarget }: InputOptions): 
   let down = false;
   let moved = 0;
   let lastX = 0;
+  let lastY = 0;
   let startX = 0;
+  let pinch = 0;
+  const touches = new Map<number, { x: number; y: number }>();
 
   const onResize = () => actions.resize();
 
@@ -39,12 +44,22 @@ export function bindInput(actions: InputActions, { isUiTarget }: InputOptions): 
     actions.markIntent();
     const w = window.innerWidth;
     actions.pointTo(e.clientX / w, e.clientY / window.innerHeight, isUiTarget(e));
-    if (down) {
+    if (touches.has(e.pointerId)) touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (touches.size === 2) {
+      const [a, b] = [...touches.values()];
+      const gap = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinch > 0) actions.zoomBy?.((gap - pinch) / window.innerHeight);
+      pinch = gap;
+      moved += TAP_PX;
+    } else if (down) {
       const step = e.clientX - lastX;
-      moved += Math.abs(step);
+      const stepY = e.clientY - lastY;
+      moved += Math.abs(step) + Math.abs(stepY);
       actions.panBy(step, e.clientX - startX, w);
+      actions.orbitBy?.(step, stepY);
     }
     lastX = e.clientX;
+    lastY = e.clientY;
   };
 
   const onDown = (e: PointerEvent) => {
@@ -53,7 +68,10 @@ export function bindInput(actions: InputActions, { isUiTarget }: InputOptions): 
     down = true;
     moved = 0;
     lastX = e.clientX;
+    lastY = e.clientY;
     startX = e.clientX;
+    pinch = 0;
+    if (e.pointerType !== "mouse") touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
     actions.beginPan();
     if (e.pointerType !== "mouse") {
       actions.teleportTo(e.clientX / window.innerWidth, e.clientY / window.innerHeight);
@@ -62,7 +80,10 @@ export function bindInput(actions: InputActions, { isUiTarget }: InputOptions): 
 
   const onUp = (e: PointerEvent) => {
     const estavaPressionado = down;
-    down = false;
+    touches.delete(e.pointerId);
+    pinch = 0;
+    down = touches.size > 0;
+    if (down) return;
     if (!estavaPressionado || isUiTarget(e)) return;
     actions.endPan(moved < TAP_PX);
   };

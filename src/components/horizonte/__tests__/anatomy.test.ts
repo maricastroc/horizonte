@@ -151,8 +151,8 @@ describe("the questions a record asks", () => {
     const core = part(MKULTRA, "core");
     expect(core.experiment).toBe(false);
     expect(say(core).what).toBeNull();
-    expect(say(core).ask).toBe("What sets the size of its dark center?");
-    expect(ANATOMY_PT.phrase(core).ask).toBe("O que define o tamanho do centro escuro?");
+    expect(say(core).ask).toBe("What sets the size of its core?");
+    expect(ANATOMY_PT.phrase(core).ask).toBe("O que define o tamanho do núcleo?");
     expect(core.score).toBeCloseTo(0, 4);
   });
 

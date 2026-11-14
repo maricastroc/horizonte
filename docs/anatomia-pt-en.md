@@ -57,7 +57,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - De onde vêm os três pequenos corpos?
-- Eles vêm da duração. Este disco tem 45 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela.
+- Eles vêm da duração. Este disco tem 45 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela. O primeiro aparece aos 23 minutos; o mais recente, aos 44 minutos.
 - E se o disco fosse mais curto? · *Mais curto*
 - Com 34 minutos, a duração típica da coleção, restam dois pequenos corpos. O que some representava os 11 minutos a mais deste disco.
 - *Corpos surgem em: 23 · 33 · 44 · 54 min*
@@ -66,7 +66,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **EN**
 
 - Where do the three small bodies come from?
-- They come from its length. At 45 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it.
+- They come from its length. At 45 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it. The first appears at 23 minutes; the latest, at 44 minutes.
 - What if the record were shorter? · *Shorter*
 - At 34 minutes, the collection's typical length, two small bodies remain. The one that goes stood for this record's extra 11 minutes.
 - *Bodies appear at: 23 · 33 · 44 · 54 min*
@@ -96,18 +96,18 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 
 **PT**
 
-- Por que o centro escuro é tão grande?
-- Este disco soa alto do começo ao fim. No Horizonte, volume é massa: quanto mais alto o disco, maior o corpo e maior o centro escuro, que vai tomando o lugar do anel em volta.
+- Por que o núcleo é tão grande?
+- Este disco soa alto do começo ao fim. No Horizonte, volume é massa: quanto mais alto o disco, maior o corpo e maior o núcleo, que vai tomando o lugar do anel em volta.
 - E se o volume médio fosse mais baixo? · *Mais baixo*
-- No volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve espaço ao anel.
+- No volume de um disco típico, o corpo inteiro encolhe e o núcleo devolve espaço ao anel.
 - *Peso do nome: 725*
 
 **EN**
 
-- Why is its dark center so large?
-- This record plays loud from start to end. In Horizonte, loudness is mass: the louder the record, the bigger the body and its dark center, which takes over the ring around it.
+- Why is its core so large?
+- This record plays loud from start to end. In Horizonte, loudness is mass: the louder the record, the bigger the body and its core, which takes over the ring around it.
 - What if it were quieter overall? · *Quieter*
-- At a typical record's loudness, the whole body shrinks and the dark center gives room back to the ring.
+- At a typical record's loudness, the whole body shrinks and the core gives room back to the ring.
 - *Name weight: 725*
 
 ### 6. Fendas · gaps
@@ -140,7 +140,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - Por que esta forma está sozinha?
-- Porque o disco é curto: 22 minutos. O Horizonte mostra o tempo com pequenos corpos que vão surgindo em volta da forma à medida que o disco se alonga, e este termina antes do primeiro.
+- Porque o disco é curto: 22 minutos. O Horizonte mostra o tempo com pequenos corpos que vão surgindo em volta da forma à medida que o disco se alonga, e este termina antes do primeiro. O primeiro só apareceria aos 23 minutos.
 - E se o disco fosse mais longo? · *Mais longo*
 - Com 34 minutos, a duração típica da coleção, surgem dois pequenos corpos em volta. Eles representam os 12 minutos que faltam a este disco.
 - *Corpos surgem em: 23 · 33 · 44 · 54 min*
@@ -149,7 +149,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **EN**
 
 - Why is this shape alone?
-- Because the record is short: 22 minutes. Horizonte shows time as small bodies that gather around the shape as a record grows longer, and this one ends before the first appears.
+- Because the record is short: 22 minutes. Horizonte shows time as small bodies that gather around the shape as a record grows longer, and this one ends before the first appears. The first would only appear at 23 minutes.
 - What if the record were longer? · *Longer*
 - At 34 minutes, the collection's typical length, two small bodies appear around it. They stand for the 12 minutes this record doesn't have.
 - *Bodies appear at: 23 · 33 · 44 · 54 min*
@@ -161,18 +161,18 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 
 **PT**
 
-- Por que o centro escuro é tão pequeno?
-- Este disco soa baixo do começo ao fim. No Horizonte, volume é massa: com pouca, o corpo encolhe e o centro escuro deixa um anel largo à sua volta. Nenhum disco da coleção soa tão baixo.
+- Por que o núcleo é tão pequeno?
+- Este disco soa baixo do começo ao fim. No Horizonte, volume é massa: com pouca, o corpo encolhe e o núcleo deixa um anel largo à sua volta. Nenhum disco da coleção soa tão baixo.
 - E se o volume médio fosse mais alto? · *Mais alto*
-- No volume de um disco típico, o corpo inteiro cresce e o centro escuro avança sobre o anel.
+- No volume de um disco típico, o corpo inteiro cresce e o núcleo avança sobre o anel.
 - *Peso do nome: 551*
 
 **EN**
 
-- Why is its dark center so small?
-- This record plays quietly from start to end. In Horizonte, loudness is mass: with little of it, the body shrinks and the dark center leaves a wide ring around it. No record here is quieter.
+- Why is its core so small?
+- This record plays quietly from start to end. In Horizonte, loudness is mass: with little of it, the body shrinks and the core leaves a wide ring around it. No record here is quieter.
 - What if it were louder overall? · *Louder*
-- At a typical record's loudness, the whole body grows and the dark center presses into the ring.
+- At a typical record's loudness, the whole body grows and the core presses into the ring.
 - *Name weight: 551*
 
 ### 3. Fendas · gaps
@@ -291,7 +291,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - De onde vem o pequeno corpo ao lado?
-- Ele vem da duração. Com 27 minutos, mais curto que a maioria da coleção, este disco ganha só um: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração.
+- Ele vem da duração. Com 27 minutos, mais curto que a maioria da coleção, este disco ganha só um: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração. Ele aparece quando um disco passa de 23 minutos.
 - E se o disco fosse mais longo? · *Mais longo*
 - Com 34 minutos, a duração típica da coleção, surge mais um pequeno corpo. Ele representa os 7 minutos que faltam a este disco.
 - *Corpos surgem em: 23 · 33 · 44 · 54 min*
@@ -300,7 +300,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **EN**
 
 - Where does the small body beside it come from?
-- It comes from its length. At 27 minutes, shorter than most here, this record earns just one: Horizonte shows time as small bodies around the shape, one more for each added stretch.
+- It comes from its length. At 27 minutes, shorter than most here, this record earns just one: Horizonte shows time as small bodies around the shape, one more for each added stretch. It appears once a record passes 23 minutes.
 - What if the record were longer? · *Longer*
 - At 34 minutes, the collection's typical length, one more small body appears. It stands for the 7 minutes this record doesn't have.
 - *Bodies appear at: 23 · 33 · 44 · 54 min*
@@ -312,18 +312,18 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 
 **PT**
 
-- Por que o centro escuro é tão pequeno?
-- Este disco soa baixo do começo ao fim. No Horizonte, volume é massa: com pouca, o corpo encolhe e o centro escuro deixa um anel largo à sua volta.
+- Por que o núcleo é tão pequeno?
+- Este disco soa baixo do começo ao fim. No Horizonte, volume é massa: com pouca, o corpo encolhe e o núcleo deixa um anel largo à sua volta.
 - E se o volume médio fosse mais alto? · *Mais alto*
-- No volume de um disco típico, o corpo inteiro cresce e o centro escuro avança sobre o anel.
+- No volume de um disco típico, o corpo inteiro cresce e o núcleo avança sobre o anel.
 - *Peso do nome: 617*
 
 **EN**
 
-- Why is its dark center so small?
-- This record plays quietly from start to end. In Horizonte, loudness is mass: with little of it, the body shrinks and the dark center leaves a wide ring around it.
+- Why is its core so small?
+- This record plays quietly from start to end. In Horizonte, loudness is mass: with little of it, the body shrinks and the core leaves a wide ring around it.
 - What if it were louder overall? · *Louder*
-- At a typical record's loudness, the whole body grows and the dark center presses into the ring.
+- At a typical record's loudness, the whole body grows and the core presses into the ring.
 - *Name weight: 617*
 
 ### 5. Fendas · gaps
@@ -410,7 +410,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - De onde vem o pequeno corpo ao lado?
-- Ele vem da duração. Com 30 minutos, mais curto que a maioria da coleção, este disco ganha só um: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração.
+- Ele vem da duração. Com 30 minutos, mais curto que a maioria da coleção, este disco ganha só um: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração. Ele aparece quando um disco passa de 23 minutos.
 - E se o disco fosse mais longo? · *Mais longo*
 - Com 34 minutos, a duração típica da coleção, surge mais um pequeno corpo. Ele representa os 4 minutos que faltam a este disco.
 - *Corpos surgem em: 23 · 33 · 44 · 54 min*
@@ -419,7 +419,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **EN**
 
 - Where does the small body beside it come from?
-- It comes from its length. At 30 minutes, shorter than most here, this record earns just one: Horizonte shows time as small bodies around the shape, one more for each added stretch.
+- It comes from its length. At 30 minutes, shorter than most here, this record earns just one: Horizonte shows time as small bodies around the shape, one more for each added stretch. It appears once a record passes 23 minutes.
 - What if the record were longer? · *Longer*
 - At 34 minutes, the collection's typical length, one more small body appears. It stands for the 4 minutes this record doesn't have.
 - *Bodies appear at: 23 · 33 · 44 · 54 min*
@@ -467,13 +467,13 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 
 **PT**
 
-- O que define o tamanho do centro escuro?
+- O que define o tamanho do núcleo?
 - O quanto o disco soa alto. No Horizonte, volume é massa: discos mais altos ganham um corpo maior e um centro que estreita o anel; os mais baixos, o contrário. Este fica no meio da coleção.
 - *Peso do nome: 679*
 
 **EN**
 
-- What sets the size of its dark center?
+- What sets the size of its core?
 - How loud the record plays. In Horizonte, loudness is mass: louder records get a bigger body and a center that narrows the ring; quieter ones, the reverse. This one sits in the middle of the collection.
 - *Name weight: 679*
 
@@ -489,7 +489,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - De onde vem o pequeno corpo ao lado?
-- Ele vem da duração. Com 27 minutos, mais curto que a maioria da coleção, este disco ganha só um: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração.
+- Ele vem da duração. Com 27 minutos, mais curto que a maioria da coleção, este disco ganha só um: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração. Ele aparece quando um disco passa de 23 minutos.
 - E se o disco fosse mais longo? · *Mais longo*
 - Com 34 minutos, a duração típica da coleção, surge mais um pequeno corpo. Ele representa os 7 minutos que faltam a este disco.
 - *Corpos surgem em: 23 · 33 · 44 · 54 min*
@@ -498,7 +498,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **EN**
 
 - Where does the small body beside it come from?
-- It comes from its length. At 27 minutes, shorter than most here, this record earns just one: Horizonte shows time as small bodies around the shape, one more for each added stretch.
+- It comes from its length. At 27 minutes, shorter than most here, this record earns just one: Horizonte shows time as small bodies around the shape, one more for each added stretch. It appears once a record passes 23 minutes.
 - What if the record were longer? · *Longer*
 - At 34 minutes, the collection's typical length, one more small body appears. It stands for the 7 minutes this record doesn't have.
 - *Bodies appear at: 23 · 33 · 44 · 54 min*
@@ -574,13 +574,13 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 
 **PT**
 
-- O que define o tamanho do centro escuro?
+- O que define o tamanho do núcleo?
 - O quanto o disco soa alto. No Horizonte, volume é massa: discos mais altos ganham um corpo maior e um centro que estreita o anel; os mais baixos, o contrário. Este fica no meio da coleção.
 - *Peso do nome: 678*
 
 **EN**
 
-- What sets the size of its dark center?
+- What sets the size of its core?
 - How loud the record plays. In Horizonte, loudness is mass: louder records get a bigger body and a center that narrows the ring; quieter ones, the reverse. This one sits in the middle of the collection.
 - *Name weight: 678*
 
@@ -596,7 +596,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - De onde vêm os quatro pequenos corpos?
-- Eles vêm da duração. Este disco tem 75 minutos, mais que qualquer outro da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela.
+- Eles vêm da duração. Este disco tem 75 minutos, mais que qualquer outro da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela. O primeiro aparece aos 23 minutos; o mais recente, aos 54 minutos.
 - E se o disco fosse mais curto? · *Mais curto*
 - Com 34 minutos, a duração típica da coleção, restam dois pequenos corpos. Os que somem representavam os 41 minutos a mais deste disco.
 - *Corpos surgem em: 23 · 33 · 44 · 54 min*
@@ -605,7 +605,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **EN**
 
 - Where do the four small bodies come from?
-- They come from its length. At 75 minutes, the longest record here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it.
+- They come from its length. At 75 minutes, the longest record here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it. The first appears at 23 minutes; the latest, at 54 minutes.
 - What if the record were shorter? · *Shorter*
 - At 34 minutes, the collection's typical length, two small bodies remain. The ones that go stood for this record's extra 41 minutes.
 - *Bodies appear at: 23 · 33 · 44 · 54 min*
@@ -689,18 +689,18 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 
 **PT**
 
-- Por que o centro escuro é grande?
-- Este disco soa mais alto que a maioria da coleção. No Horizonte, volume é massa, então o corpo cresce e o centro escuro avança sobre o anel.
+- Por que o núcleo é grande?
+- Este disco soa mais alto que a maioria da coleção. No Horizonte, volume é massa, então o corpo cresce e o núcleo avança sobre o anel.
 - E se o volume médio fosse mais baixo? · *Mais baixo*
-- No volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve espaço ao anel.
+- No volume de um disco típico, o corpo inteiro encolhe e o núcleo devolve espaço ao anel.
 - *Peso do nome: 704*
 
 **EN**
 
-- Why is its dark center large?
-- This record plays louder than most here. In Horizonte, loudness is mass, so the body grows and the dark center presses into the ring.
+- Why is its core large?
+- This record plays louder than most here. In Horizonte, loudness is mass, so the body grows and the core presses into the ring.
 - What if it were quieter overall? · *Quieter*
-- At a typical record's loudness, the whole body shrinks and the dark center gives room back to the ring.
+- At a typical record's loudness, the whole body shrinks and the core gives room back to the ring.
 - *Name weight: 704*
 
 ## H—R01 · Tale Twist — Wry Way
@@ -787,7 +787,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - De onde vem o pequeno corpo ao lado?
-- Ele vem da duração. Com 31 minutos, mais curto que a maioria da coleção, este disco ganha só um: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração.
+- Ele vem da duração. Com 31 minutos, mais curto que a maioria da coleção, este disco ganha só um: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração. Ele aparece quando um disco passa de 23 minutos.
 - E se o disco fosse mais longo? · *Mais longo*
 - Com 34 minutos, a duração típica da coleção, surge mais um pequeno corpo. Ele representa os 3 minutos que faltam a este disco.
 - *Corpos surgem em: 23 · 33 · 44 · 54 min*
@@ -796,7 +796,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **EN**
 
 - Where does the small body beside it come from?
-- It comes from its length. At 31 minutes, shorter than most here, this record earns just one: Horizonte shows time as small bodies around the shape, one more for each added stretch.
+- It comes from its length. At 31 minutes, shorter than most here, this record earns just one: Horizonte shows time as small bodies around the shape, one more for each added stretch. It appears once a record passes 23 minutes.
 - What if the record were longer? · *Longer*
 - At 34 minutes, the collection's typical length, one more small body appears. It stands for the 3 minutes this record doesn't have.
 - *Bodies appear at: 23 · 33 · 44 · 54 min*
@@ -808,18 +808,18 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 
 **PT**
 
-- Por que o centro escuro é grande?
-- Este disco soa mais alto que a maioria da coleção. No Horizonte, volume é massa, então o corpo cresce e o centro escuro avança sobre o anel.
+- Por que o núcleo é grande?
+- Este disco soa mais alto que a maioria da coleção. No Horizonte, volume é massa, então o corpo cresce e o núcleo avança sobre o anel.
 - E se o volume médio fosse mais baixo? · *Mais baixo*
-- No volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve espaço ao anel.
+- No volume de um disco típico, o corpo inteiro encolhe e o núcleo devolve espaço ao anel.
 - *Peso do nome: 712*
 
 **EN**
 
-- Why is its dark center large?
-- This record plays louder than most here. In Horizonte, loudness is mass, so the body grows and the dark center presses into the ring.
+- Why is its core large?
+- This record plays louder than most here. In Horizonte, loudness is mass, so the body grows and the core presses into the ring.
 - What if it were quieter overall? · *Quieter*
-- At a typical record's loudness, the whole body shrinks and the dark center gives room back to the ring.
+- At a typical record's loudness, the whole body shrinks and the core gives room back to the ring.
 - *Name weight: 712*
 
 ## H—016 · Madison Kenny — All Systems Go
@@ -852,7 +852,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - Por que esta forma está sozinha?
-- Porque o disco é curto: 16 minutos, o mais curto da coleção. O Horizonte mostra o tempo com pequenos corpos que vão surgindo em volta da forma à medida que o disco se alonga, e este termina antes do primeiro.
+- Porque o disco é curto: 16 minutos, o mais curto da coleção. O Horizonte mostra o tempo com pequenos corpos que vão surgindo em volta da forma à medida que o disco se alonga, e este termina antes do primeiro. O primeiro só apareceria aos 23 minutos.
 - E se o disco fosse mais longo? · *Mais longo*
 - Com 34 minutos, a duração típica da coleção, surgem dois pequenos corpos em volta. Eles representam os 18 minutos que faltam a este disco.
 - *Corpos surgem em: 23 · 33 · 44 · 54 min*
@@ -861,7 +861,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **EN**
 
 - Why is this shape alone?
-- Because the record is short: 16 minutes, the shortest here. Horizonte shows time as small bodies that gather around the shape as a record grows longer, and this one ends before the first appears.
+- Because the record is short: 16 minutes, the shortest here. Horizonte shows time as small bodies that gather around the shape as a record grows longer, and this one ends before the first appears. The first would only appear at 23 minutes.
 - What if the record were longer? · *Longer*
 - At 34 minutes, the collection's typical length, two small bodies appear around it. They stand for the 18 minutes this record doesn't have.
 - *Bodies appear at: 23 · 33 · 44 · 54 min*
@@ -891,18 +891,18 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 
 **PT**
 
-- Por que o centro escuro é tão grande?
-- Este disco soa alto do começo ao fim. No Horizonte, volume é massa: quanto mais alto o disco, maior o corpo e maior o centro escuro, que vai tomando o lugar do anel em volta.
+- Por que o núcleo é tão grande?
+- Este disco soa alto do começo ao fim. No Horizonte, volume é massa: quanto mais alto o disco, maior o corpo e maior o núcleo, que vai tomando o lugar do anel em volta.
 - E se o volume médio fosse mais baixo? · *Mais baixo*
-- No volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve espaço ao anel.
+- No volume de um disco típico, o corpo inteiro encolhe e o núcleo devolve espaço ao anel.
 - *Peso do nome: 748*
 
 **EN**
 
-- Why is its dark center so large?
-- This record plays loud from start to end. In Horizonte, loudness is mass: the louder the record, the bigger the body and its dark center, which takes over the ring around it.
+- Why is its core so large?
+- This record plays loud from start to end. In Horizonte, loudness is mass: the louder the record, the bigger the body and its core, which takes over the ring around it.
 - What if it were quieter overall? · *Quieter*
-- At a typical record's loudness, the whole body shrinks and the dark center gives room back to the ring.
+- At a typical record's loudness, the whole body shrinks and the core gives room back to the ring.
 - *Name weight: 748*
 
 ### 5. Fendas · gaps
@@ -967,7 +967,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - De onde vêm os quatro pequenos corpos?
-- Eles vêm da duração. Este disco tem 66 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela.
+- Eles vêm da duração. Este disco tem 66 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela. O primeiro aparece aos 23 minutos; o mais recente, aos 54 minutos.
 - E se o disco fosse mais curto? · *Mais curto*
 - Com 34 minutos, a duração típica da coleção, restam dois pequenos corpos. Os que somem representavam os 32 minutos a mais deste disco.
 - *Corpos surgem em: 23 · 33 · 44 · 54 min*
@@ -976,7 +976,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **EN**
 
 - Where do the four small bodies come from?
-- They come from its length. At 66 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it.
+- They come from its length. At 66 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it. The first appears at 23 minutes; the latest, at 54 minutes.
 - What if the record were shorter? · *Shorter*
 - At 34 minutes, the collection's typical length, two small bodies remain. The ones that go stood for this record's extra 32 minutes.
 - *Bodies appear at: 23 · 33 · 44 · 54 min*
@@ -1042,13 +1042,13 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 
 **PT**
 
-- O que define o tamanho do centro escuro?
+- O que define o tamanho do núcleo?
 - O quanto o disco soa alto. No Horizonte, volume é massa: discos mais altos ganham um corpo maior e um centro que estreita o anel; os mais baixos, o contrário. Este fica no meio da coleção.
 - *Peso do nome: 678*
 
 **EN**
 
-- What sets the size of its dark center?
+- What sets the size of its core?
 - How loud the record plays. In Horizonte, loudness is mass: louder records get a bigger body and a center that narrows the ring; quieter ones, the reverse. This one sits in the middle of the collection.
 - *Name weight: 678*
 
@@ -1099,18 +1099,18 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 
 **PT**
 
-- Por que o centro escuro é pequeno?
+- Por que o núcleo é pequeno?
 - Este disco soa um pouco mais baixo que a maioria da coleção. No Horizonte, volume é massa, então o corpo fica menor e o anel ganha espaço.
 - E se o volume médio fosse mais alto? · *Mais alto*
-- No volume de um disco típico, o corpo inteiro cresce e o centro escuro avança sobre o anel.
+- No volume de um disco típico, o corpo inteiro cresce e o núcleo avança sobre o anel.
 - *Peso do nome: 663*
 
 **EN**
 
-- Why is its dark center small?
+- Why is its core small?
 - This record plays a little quieter than most here. In Horizonte, loudness is mass, so the body stays smaller and the ring keeps more room.
 - What if it were louder overall? · *Louder*
-- At a typical record's loudness, the whole body grows and the dark center presses into the ring.
+- At a typical record's loudness, the whole body grows and the core presses into the ring.
 - *Name weight: 663*
 
 ### 4. Camadas · strata
@@ -1156,14 +1156,14 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - De onde vêm os dois pequenos corpos?
-- Eles vêm da duração. Com 33 minutos, perto da duração típica da coleção, este disco tem dois: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração.
+- Eles vêm da duração. Com 33 minutos, perto da duração típica da coleção, este disco tem dois: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração. O primeiro aparece aos 23 minutos; o mais recente, aos 33 minutos.
 - *Corpos surgem em: 23 · 33 · 44 · 54 min*
 - *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
 - Where do the two small bodies come from?
-- They come from its length. At 33 minutes, close to the collection's typical length, this record has two: Horizonte shows time as small bodies around the shape, one more for each added stretch.
+- They come from its length. At 33 minutes, close to the collection's typical length, this record has two: Horizonte shows time as small bodies around the shape, one more for each added stretch. The first appears at 23 minutes; the latest, at 33 minutes.
 - *Bodies appear at: 23 · 33 · 44 · 54 min*
 - *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
@@ -1179,7 +1179,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - De onde vêm os quatro pequenos corpos?
-- Eles vêm da duração. Este disco tem 61 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela.
+- Eles vêm da duração. Este disco tem 61 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela. O primeiro aparece aos 23 minutos; o mais recente, aos 54 minutos.
 - E se o disco fosse mais curto? · *Mais curto*
 - Com 34 minutos, a duração típica da coleção, restam dois pequenos corpos. Os que somem representavam os 27 minutos a mais deste disco.
 - *Corpos surgem em: 23 · 33 · 44 · 54 min*
@@ -1188,7 +1188,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **EN**
 
 - Where do the four small bodies come from?
-- They come from its length. At 61 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it.
+- They come from its length. At 61 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it. The first appears at 23 minutes; the latest, at 54 minutes.
 - What if the record were shorter? · *Shorter*
 - At 34 minutes, the collection's typical length, two small bodies remain. The ones that go stood for this record's extra 27 minutes.
 - *Bodies appear at: 23 · 33 · 44 · 54 min*
@@ -1272,18 +1272,18 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 
 **PT**
 
-- Por que o centro escuro é tão pequeno?
-- Este disco soa baixo do começo ao fim. No Horizonte, volume é massa: com pouca, o corpo encolhe e o centro escuro deixa um anel largo à sua volta.
+- Por que o núcleo é tão pequeno?
+- Este disco soa baixo do começo ao fim. No Horizonte, volume é massa: com pouca, o corpo encolhe e o núcleo deixa um anel largo à sua volta.
 - E se o volume médio fosse mais alto? · *Mais alto*
-- No volume de um disco típico, o corpo inteiro cresce e o centro escuro avança sobre o anel.
+- No volume de um disco típico, o corpo inteiro cresce e o núcleo avança sobre o anel.
 - *Peso do nome: 624*
 
 **EN**
 
-- Why is its dark center so small?
-- This record plays quietly from start to end. In Horizonte, loudness is mass: with little of it, the body shrinks and the dark center leaves a wide ring around it.
+- Why is its core so small?
+- This record plays quietly from start to end. In Horizonte, loudness is mass: with little of it, the body shrinks and the core leaves a wide ring around it.
 - What if it were louder overall? · *Louder*
-- At a typical record's loudness, the whole body grows and the dark center presses into the ring.
+- At a typical record's loudness, the whole body grows and the core presses into the ring.
 - *Name weight: 624*
 
 ## H—018 · смерть в летнюю полночь — где же твои крылья, Чайка
@@ -1333,18 +1333,18 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 
 **PT**
 
-- Por que o centro escuro é tão grande?
-- Este disco soa alto do começo ao fim. No Horizonte, volume é massa: quanto mais alto o disco, maior o corpo e maior o centro escuro, que vai tomando o lugar do anel em volta.
+- Por que o núcleo é tão grande?
+- Este disco soa alto do começo ao fim. No Horizonte, volume é massa: quanto mais alto o disco, maior o corpo e maior o núcleo, que vai tomando o lugar do anel em volta.
 - E se o volume médio fosse mais baixo? · *Mais baixo*
-- No volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve espaço ao anel.
+- No volume de um disco típico, o corpo inteiro encolhe e o núcleo devolve espaço ao anel.
 - *Peso do nome: 744*
 
 **EN**
 
-- Why is its dark center so large?
-- This record plays loud from start to end. In Horizonte, loudness is mass: the louder the record, the bigger the body and its dark center, which takes over the ring around it.
+- Why is its core so large?
+- This record plays loud from start to end. In Horizonte, loudness is mass: the louder the record, the bigger the body and its core, which takes over the ring around it.
 - What if it were quieter overall? · *Quieter*
-- At a typical record's loudness, the whole body shrinks and the dark center gives room back to the ring.
+- At a typical record's loudness, the whole body shrinks and the core gives room back to the ring.
 - *Name weight: 744*
 
 ### 4. Fendas · gaps
@@ -1390,14 +1390,14 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - De onde vêm os dois pequenos corpos?
-- Eles vêm da duração. Com 35 minutos, perto da duração típica da coleção, este disco tem dois: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração.
+- Eles vêm da duração. Com 35 minutos, perto da duração típica da coleção, este disco tem dois: o Horizonte mostra o tempo com pequenos corpos em volta da forma, um a mais a cada trecho de duração. O primeiro aparece aos 23 minutos; o mais recente, aos 33 minutos.
 - *Corpos surgem em: 23 · 33 · 44 · 54 min*
 - *O anel sempre dá uma volta completa, e cada faixa ocupa uma fatia proporcional ao seu tempo; por isso a duração total precisa aparecer fora dele.*
 
 **EN**
 
 - Where do the two small bodies come from?
-- They come from its length. At 35 minutes, close to the collection's typical length, this record has two: Horizonte shows time as small bodies around the shape, one more for each added stretch.
+- They come from its length. At 35 minutes, close to the collection's typical length, this record has two: Horizonte shows time as small bodies around the shape, one more for each added stretch. The first appears at 23 minutes; the latest, at 33 minutes.
 - *Bodies appear at: 23 · 33 · 44 · 54 min*
 - *The ring always makes one full turn, each track taking a slice in proportion to its time, so the total length has to show outside it.*
 
@@ -1413,7 +1413,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - De onde vêm os três pequenos corpos?
-- Eles vêm da duração. Este disco tem 52 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela.
+- Eles vêm da duração. Este disco tem 52 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela. O primeiro aparece aos 23 minutos; o mais recente, aos 44 minutos.
 - E se o disco fosse mais curto? · *Mais curto*
 - Com 34 minutos, a duração típica da coleção, restam dois pequenos corpos. O que some representava os 18 minutos a mais deste disco.
 - *Corpos surgem em: 23 · 33 · 44 · 54 min*
@@ -1422,7 +1422,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **EN**
 
 - Where do the three small bodies come from?
-- They come from its length. At 52 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it.
+- They come from its length. At 52 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it. The first appears at 23 minutes; the latest, at 44 minutes.
 - What if the record were shorter? · *Shorter*
 - At 34 minutes, the collection's typical length, two small bodies remain. The one that goes stood for this record's extra 18 minutes.
 - *Bodies appear at: 23 · 33 · 44 · 54 min*
@@ -1434,18 +1434,18 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 
 **PT**
 
-- Por que o centro escuro é tão pequeno?
-- Este disco soa baixo do começo ao fim. No Horizonte, volume é massa: com pouca, o corpo encolhe e o centro escuro deixa um anel largo à sua volta.
+- Por que o núcleo é tão pequeno?
+- Este disco soa baixo do começo ao fim. No Horizonte, volume é massa: com pouca, o corpo encolhe e o núcleo deixa um anel largo à sua volta.
 - E se o volume médio fosse mais alto? · *Mais alto*
-- No volume de um disco típico, o corpo inteiro cresce e o centro escuro avança sobre o anel.
+- No volume de um disco típico, o corpo inteiro cresce e o núcleo avança sobre o anel.
 - *Peso do nome: 570*
 
 **EN**
 
-- Why is its dark center so small?
-- This record plays quietly from start to end. In Horizonte, loudness is mass: with little of it, the body shrinks and the dark center leaves a wide ring around it.
+- Why is its core so small?
+- This record plays quietly from start to end. In Horizonte, loudness is mass: with little of it, the body shrinks and the core leaves a wide ring around it.
 - What if it were louder overall? · *Louder*
-- At a typical record's loudness, the whole body grows and the dark center presses into the ring.
+- At a typical record's loudness, the whole body grows and the core presses into the ring.
 - *Name weight: 570*
 
 ### 3. Fendas · gaps
@@ -1527,18 +1527,18 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 
 **PT**
 
-- Por que o centro escuro é tão grande?
-- Este disco soa alto do começo ao fim. No Horizonte, volume é massa: quanto mais alto o disco, maior o corpo e maior o centro escuro, que vai tomando o lugar do anel em volta. Nenhum disco da coleção soa tão alto.
+- Por que o núcleo é tão grande?
+- Este disco soa alto do começo ao fim. No Horizonte, volume é massa: quanto mais alto o disco, maior o corpo e maior o núcleo, que vai tomando o lugar do anel em volta. Nenhum disco da coleção soa tão alto.
 - E se o volume médio fosse mais baixo? · *Mais baixo*
-- No volume de um disco típico, o corpo inteiro encolhe e o centro escuro devolve espaço ao anel.
+- No volume de um disco típico, o corpo inteiro encolhe e o núcleo devolve espaço ao anel.
 - *Peso do nome: 777*
 
 **EN**
 
-- Why is its dark center so large?
-- This record plays loud from start to end. In Horizonte, loudness is mass: the louder the record, the bigger the body and its dark center, which takes over the ring around it. No record here is louder.
+- Why is its core so large?
+- This record plays loud from start to end. In Horizonte, loudness is mass: the louder the record, the bigger the body and its core, which takes over the ring around it. No record here is louder.
 - What if it were quieter overall? · *Quieter*
-- At a typical record's loudness, the whole body shrinks and the dark center gives room back to the ring.
+- At a typical record's loudness, the whole body shrinks and the core gives room back to the ring.
 - *Name weight: 777*
 
 ### 2. Borda · contour
@@ -1566,7 +1566,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **PT**
 
 - De onde vêm os dois pequenos corpos?
-- Eles vêm da duração. Este disco tem 37 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela.
+- Eles vêm da duração. Este disco tem 37 minutos, mais que a maioria da coleção, e o Horizonte não mostra esse tempo aumentando a forma: cada trecho a mais vira um pequeno corpo em volta dela. O primeiro aparece aos 23 minutos; o mais recente, aos 33 minutos.
 - E se o disco fosse mais curto? · *Mais curto*
 - Com 34 minutos, a duração típica da coleção, os dois pequenos corpos continuam lá, um pouco menores.
 - *Corpos surgem em: 23 · 33 · 44 · 54 min*
@@ -1575,7 +1575,7 @@ em "Em números". Perguntas neutras, de discos perto da mediana, não têm exper
 **EN**
 
 - Where do the two small bodies come from?
-- They come from its length. At 37 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it.
+- They come from its length. At 37 minutes, longer than most here, it doesn't get a bigger shape: each added stretch of time becomes a small body around it. The first appears at 23 minutes; the latest, at 33 minutes.
 - What if the record were shorter? · *Shorter*
 - At 34 minutes, the collection's typical length, its two small bodies stay, a little smaller.
 - *Bodies appear at: 23 · 33 · 44 · 54 min*
