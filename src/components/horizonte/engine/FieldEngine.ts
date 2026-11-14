@@ -398,6 +398,16 @@ export class FieldEngine implements InputActions {
   beginPan() {
     this.dragNav = this.st.navT;
     if (this.compareOn && this.st.scale !== "collection") this.peeking = true;
+    else if (this.st.scale !== "collection") this.world?.grab?.();
+  }
+
+  orbitBy(stepX: number, stepY: number) {
+    if (this.st.scale === "collection" || this.peeking) return;
+    this.world?.orbitBy?.(stepX / window.innerHeight, stepY / window.innerHeight);
+  }
+
+  zoomBy(amount: number) {
+    if (this.st.scale !== "collection") this.world?.zoomBy?.(amount * 2.2);
   }
 
   panBy(stepPx: number, totalPx: number, viewportW: number) {
@@ -414,6 +424,7 @@ export class FieldEngine implements InputActions {
 
   endPan(tap: boolean) {
     const s = this.st;
+    this.world?.release?.();
     if (this.peeking) {
       this.peeking = false;
       this.peekBack = true;
@@ -436,7 +447,8 @@ export class FieldEngine implements InputActions {
     if (s.scale === "collection") {
       s.navT += deltaY * PAN.wheel + deltaX * PAN.wheel;
       this.markExplored();
-    } else this.stepSel(deltaY > 0 ? 1 : -1);
+    } else if (this.world?.zoomBy) this.world.zoomBy(-deltaY * 0.0014);
+    else this.stepSel(deltaY > 0 ? 1 : -1);
   }
 
   stepFocus(dir: number) {
@@ -593,7 +605,7 @@ export class FieldEngine implements InputActions {
       const pinned = this.focusPin ? AXIS_OF[this.focusPin] : null;
       if (pinned !== this.compareAxis) this.dropCompare();
     }
-    const f = this.focusPart() && this.focusLive ? 1 : 0;
+    const f = this.focusPart() && (this.focusLive || this.world) ? 1 : 0;
     this.focusAmt = this.reduced ? f : approach(this.focusAmt, f, dt / ANATOMY.focus.fade);
     this.inviteStep(dt);
   }
@@ -1079,6 +1091,8 @@ export class FieldEngine implements InputActions {
       mouse: { x: this.mouse.x, y: this.mouse.y, onUi: this.onUi },
       reach: this.reachAmp,
       morph: (i) => this.morphAt(i),
+      part: this.focusPart(),
+      partK: this.focusAmt,
       focus: {
         morph: inside ? this.M : this.morphAt(s.alb),
         version: Math.round(this.compareK * 40) + Math.round(s.mix * 40) * 100 + (this.compareAxis ? 10000 : 0),

@@ -51,6 +51,20 @@ export const EN: Copy = {
     track: (number, title, artist) => `${number} · ${title} — ${artist}`,
   },
   canvas: { tracks: (n) => plural(n, "TRACK", "TRACKS") },
+  world: {
+    orbit: "Drag to orbit · scroll to move closer",
+    orbitTouch: "Drag to orbit · pinch to move closer",
+    recenter: "Return to the frame",
+    inquiry: "Parts of this shape",
+    parts: {
+      satellites: "Satellites",
+      gaps: "Gaps",
+      strata: "Layers",
+      contour: "Outline",
+      posture: "Posture",
+      core: "Core",
+    },
+  },
   ceremony: {
     phase: {
       reading: "opening the record",

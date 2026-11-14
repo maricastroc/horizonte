@@ -60,6 +60,20 @@ export const PT_BR: Copy = {
     track: (number, title, artist) => `${number} · ${title} — ${artist}`,
   },
   canvas: { tracks: (n) => plural(n, "FAIXA", "FAIXAS") },
+  world: {
+    orbit: "Arraste para orbitar · role para se aproximar",
+    orbitTouch: "Arraste para orbitar · pince para se aproximar",
+    recenter: "Voltar ao enquadramento",
+    inquiry: "Partes desta forma",
+    parts: {
+      satellites: "Satélites",
+      gaps: "Falhas",
+      strata: "Estratos",
+      contour: "Contorno",
+      posture: "Postura",
+      core: "Núcleo",
+    },
+  },
   ceremony: {
     phase: {
       reading: "abrindo o disco",

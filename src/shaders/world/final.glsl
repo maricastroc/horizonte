@@ -10,6 +10,7 @@ uniform float uExposure;
 uniform float uBloomAmt;
 uniform float uTime;
 uniform float uFade;
+uniform float uGrain;
 out vec4 fragColor;
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(41.71, 289.13))) * 43758.5453); }
@@ -41,6 +42,6 @@ void main(){
     col += tip * exp(-rq * rq) * (uCur.z > 0.0 ? uCur.z * 0.62 : -uCur.z * 0.3) * uCur.w;
   }
 
-  col += (hash(gl_FragCoord.xy + fract(uTime) * 91.3) - 0.5) * 0.026;
+  col += (hash(gl_FragCoord.xy + fract(uTime) * 91.3) - 0.5) * uGrain;
   fragColor = vec4(col, 1.0);
 }

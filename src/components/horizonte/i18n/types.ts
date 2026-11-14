@@ -64,6 +64,13 @@ export interface Copy {
     track: (number: string, title: string, artist: string) => string;
   };
   canvas: { tracks: (n: number) => string };
+  world: {
+    orbit: string;
+    orbitTouch: string;
+    recenter: string;
+    inquiry: string;
+    parts: Record<"satellites" | "gaps" | "strata" | "contour" | "posture" | "core", string>;
+  };
   ceremony: {
     phase: Record<IngestPhase, string>;
     readings: Record<keyof IngestProbe, CeremonyReading>;

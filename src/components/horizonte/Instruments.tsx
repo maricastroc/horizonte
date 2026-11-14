@@ -19,6 +19,7 @@ import { timecode } from "./format";
 import { useCopy } from "./i18n";
 import LanguageSwitch from "./LanguageSwitch";
 import { brighten } from "./composition/ring";
+import { morphologyOf } from "./morphology";
 import { COLOR, IDLE_CALM, IDLE_OPACITY, PLAYING_LIFT, rgba } from "./tokens";
 import type { Scale, Snapshot } from "./types";
 import type { FieldEngine } from "./engine/FieldEngine";
@@ -83,7 +84,16 @@ export const isInstrumentsTarget = (e: Event) => {
   return !!target?.closest?.("[data-instruments]");
 };
 
-export default function Instruments({ engine }: { engine: FieldEngine | null }) {
+export default function Instruments({
+  engine,
+  world = false,
+  onAlbumView,
+}: {
+  engine: FieldEngine | null;
+  world?: boolean;
+  onAlbumView?: (view: AlbumView) => void;
+}) {
+  const trackFill = useRef<HTMLSpanElement>(null);
   const snap = useSyncExternalStore(
     engine?.subscribe ?? noop,
     engine?.getSnapshot ?? getDefault,
@@ -126,6 +136,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     let ariaAt = 0;
 
     return engine.onFrame(({ progress, position, duration }) => {
+      trackFill.current?.style.setProperty("--p", progress.toFixed(4));
       if (dur) {
         if (tc) tc.textContent = timecode(position);
         dur.textContent = timecode(duration);
@@ -150,11 +161,12 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
   const onView = useCallback(
     (v: AlbumView) => {
       setView(v);
+      onAlbumView?.(v);
       setAlbumsOpen(false);
       if (v === "shape") engine?.openAnatomy();
       else engine?.closeAnatomy();
     },
-    [engine],
+    [engine, onAlbumView],
   );
 
   const openInvite = useCallback(() => {
@@ -399,10 +411,48 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
     </>
   );
 
+  const longest = album.tracks.reduce((m, t) => Math.max(m, t.dur), 1);
+  const plates = world ? morphologyOf(album.signature, album.tracks.length).plate : [];
+
   const trackRows = album.tracks.map((t, i) => {
     const isPlay = snap.playAlb === snap.alb && i === snap.trk;
     const isSel = i === snap.sel;
     const isHov = i === snap.hoverTrk;
+    if (world && !compact) {
+      return (
+        <li key={t.id} className={isPlay || isSel ? undefined : "idle-soft"}>
+          <button
+            type="button"
+            tabIndex={trackRailOn ? 0 : -1}
+            aria-current={isPlay ? "true" : undefined}
+            data-state={isPlay ? "playing" : isSel ? "selected" : isHov ? "hover" : "idle"}
+            data-trk={i}
+            style={
+              {
+                "--ink": ink,
+                "--span": `${Math.max(8, (t.dur / longest) * 100)}%`,
+                "--level": String(plates[i] ?? 1),
+              } as React.CSSProperties
+            }
+            onPointerEnter={() => engine?.setRailTrk(i)}
+            onPointerLeave={() => engine?.setRailTrk(-1)}
+            onFocus={() => engine?.setRailTrk(i)}
+            onBlur={() => engine?.setRailTrk(-1)}
+            onClick={() => engine?.playTrack(snap.alb, i)}
+            className="trk"
+          >
+            <span className="trk-n">{String(i + 1).padStart(2, "0")}</span>
+            <span className="trk-body">
+              <span className="truncate trk-title">{t.title}</span>
+              <span aria-hidden className="trk-gauge">
+                <span className="trk-fill" ref={isPlay ? trackFill : undefined} />
+              </span>
+            </span>
+            <span className="trk-dur">{timecode(t.dur)}</span>
+          </button>
+        </li>
+      );
+    }
     return (
       <li key={t.id} className={isPlay || isSel ? undefined : "idle-soft"}>
         <button
@@ -541,7 +591,7 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           />
           <ul>{trackRows}</ul>
         </div>
-      ) : (
+      ) : world && !dense ? null : (
         <ShapePanel engine={engine} snap={snap} compact={dense} ink={ink} enabled={trackRailOn} />
       )}
     </>
@@ -790,11 +840,11 @@ export default function Instruments({ engine }: { engine: FieldEngine | null }) 
           aria-label={t.tracksOf(album.title)}
           aria-hidden={!trackRailOn}
           className={[
-            "w-65.5 border-t border-rule",
+            world ? "w-65.5" : "w-65.5 border-t border-rule",
             "transition-opacity duration-300 ease-out",
             "rail-scroll min-h-0 overflow-y-auto overscroll-contain",
             "tablet:w-60",
-            "backdrop-blur-sm bg-void/55 -mx-2 px-2",
+            world ? "-mx-2 px-2" : "backdrop-blur-sm bg-void/55 -mx-2 px-2",
             trackRailOn
               ? "pointer-events-auto flex-1 opacity-100"
               : "pointer-events-none max-h-0 flex-none overflow-hidden opacity-0",
