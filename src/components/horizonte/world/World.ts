@@ -138,6 +138,7 @@ interface Slot {
   tilt: number;
   y: number;
   hov: number;
+  lip: number;
 }
 
 interface Rig {
@@ -190,6 +191,7 @@ export class World implements WorldPresenter {
     tilt: 0.6,
     y: 1,
     hov: 0,
+    lip: 1,
   }));
   private time = 0;
   private scaleNow: FieldState["scale"] = "collection";
@@ -248,6 +250,9 @@ export class World implements WorldPresenter {
   private loadN = 0;
   private trace: number[] | null = null;
   private probe: { at: number; prev: Uint8Array | null; sum: number; n: number } | null = null;
+  private inspector: THREE.RawShaderMaterial | null = null;
+  frozen = false;
+  forced: { impact: number; wave: number; spread: number } | null = null;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -303,6 +308,9 @@ export class World implements WorldPresenter {
       uPart: { value: new THREE.Vector2() },
       uSeed: { value: new THREE.Vector4() },
       uRef: { value: 0 },
+      uDebug: { value: 0 },
+      uBLip: { value: [1, 1, 1] },
+      uPix: { value: 0.001 },
       uPlay: { value: new THREE.Vector4() },
       uHover: { value: new THREE.Vector4() },
       uFocus: { value: 0 },
@@ -413,13 +421,27 @@ export class World implements WorldPresenter {
       const wa = slot * ROW;
       for (let i = 0; i < N; i++) {
         const turn = (i + 0.5) / N;
+        const h = 0.5 / N;
         warp[wa + i * 4] = half(lobeAt(m, turn));
-        warp[wa + i * 4 + 1] = 0;
-        warp[wa + i * 4 + 2] = 0;
+        warp[wa + i * 4 + 1] = half((lobeAt(m, turn + h) - lobeAt(m, turn - h)) / (2 * h));
+        warp[wa + i * 4 + 2] = half((lobeAt(m, turn + 0.25 + h) - lobeAt(m, turn + 0.25 - h)) / (2 * h));
         warp[wa + i * 4 + 3] = half(lobeAt(m, turn + 0.25));
       }
       this.warpTex.needsUpdate = true;
     }
+    let steep = 0;
+    for (let i = 0; i < N; i++) {
+      const j = ((i + 1) % N) * 4;
+      const k = i * 4;
+      if (this.profile[ROW + k + 2] <= 0 || this.profile[ROW + j + 2] <= 0) continue;
+      const inner = this.profile[k];
+      if (inner <= 0) continue;
+      const outer = Math.max(this.profile[k + 1], this.profile[k + 3], this.profile[ROW + k + 1]);
+      const outerNext = Math.max(this.profile[j + 1], this.profile[j + 3], this.profile[ROW + j + 1]);
+      const rise = Math.max(Math.abs(outerNext - outer), Math.abs(this.profile[j] - inner));
+      steep = Math.max(steep, (rise * N) / (TAU * inner));
+    }
+    s.lip = Math.sqrt(1 + Math.min(steep, 2.5) ** 2);
     s.album = album;
     s.morph = m;
     s.lo = band.lo;
@@ -527,7 +549,13 @@ export class World implements WorldPresenter {
   frame(dt: number, view: WorldView) {
     const now = performance.now();
     if (dt > 0) this.fps += (1 / dt - this.fps) * 0.05;
-    this.step(dt, view);
+    this.step(this.frozen ? 0 : dt, view);
+    if (this.forced) {
+      (this.u.uScore.value as THREE.Vector4).y = this.forced.impact;
+      (this.u.uWave.value as THREE.Vector4).x = this.forced.wave;
+      (this.u.uWave.value as THREE.Vector4).w = this.forced.spread;
+      (this.u.uPlay.value as THREE.Vector4).w = 1;
+    }
 
     const gl = this.gl;
     if (this.pending && gl.getQueryParameter(this.pending, gl.QUERY_RESULT_AVAILABLE)) {
@@ -779,6 +807,7 @@ export class World implements WorldPresenter {
       slot.hov += (want - slot.hov) * ke(0.16);
       pos[i].copy(this.place(i, inside ? s.alb : s.nav, k1));
       rot[i].set(Math.sin(slot.tilt), Math.cos(slot.tilt), slot.radius, ease(slot.k));
+      (u.uBLip.value as number[])[i] = slot.lip;
       const flex = isFocus ? 1 + gain * (0.35 * this.impact * massK + 0.2 * this.swell) + 0.06 * view.breath.mass : 1;
       const amp = (0.1 + 0.42 * m.relief) * flex;
       const bank = (0.3 + 0.6 * m.strata) * (isFocus ? 1 + 0.5 * this.shimmer * lightK * calm : 1);
@@ -932,7 +961,7 @@ export class World implements WorldPresenter {
     (u.uTextAt.value as THREE.Vector3).set(-6.5, portrait ? 0 : 0.22 * this.textK * (1 - k1) * (1 - k1), 0.2);
     this.post.uFade.value = clamp(s.fade, 0, 1.2);
     const tier = this.scale < 0.55 ? 0 : 1;
-    u.uSteps.value = tier ? 72 : 48;
+    u.uSteps.value = tier ? 96 : 64;
     u.uDetail.value = tier ? 1 : 0.6;
   }
 
@@ -1103,7 +1132,8 @@ export class World implements WorldPresenter {
     const w = this.rtScene.width;
     const h = this.rtScene.height;
     (this.u.uRes.value as THREE.Vector2).set(w, h);
-    this.mesh.material = this.scene;
+    this.u.uPix.value = 2 / (h * this.focal);
+    this.mesh.material = (this.u.uDebug.value as number) > 0 && this.inspector ? this.inspector : this.scene;
     this.renderer.setRenderTarget(this.rtScene);
     this.renderer.render(this.stage, this.ortho);
 
@@ -1162,6 +1192,31 @@ export class World implements WorldPresenter {
       }
       probe.prev = px;
     }
+  }
+
+  inspect(mode: number) {
+    this.inspector ??= pass(`#define DEBUG 1\n${sceneSrc}`, this.u);
+    this.u.uDebug.value = mode;
+  }
+
+  defects() {
+    this.inspect(2);
+    this.render();
+    const w = this.rtScene.width;
+    const h = this.rtScene.height;
+    const px = new Uint16Array(w * h * 4);
+    this.renderer.readRenderTargetPixels(this.rtScene, 0, 0, w, h, px);
+    this.u.uDebug.value = 0;
+    const on = THREE.DataUtils.toHalfFloat(0.5);
+    let missed = 0;
+    let spent = 0;
+    let solid = 0;
+    for (let i = 0; i < px.length; i += 4) {
+      if (px[i] >= on && px[i] < 0x7c00) missed++;
+      if (px[i + 1] >= on && px[i + 1] < 0x7c00) spent++;
+      if (px[i + 2] >= on && px[i + 2] < 0x7c00) solid++;
+    }
+    return { missed, spent, solid, width: w, height: h };
   }
 
   async motion(seconds: number): Promise<number> {

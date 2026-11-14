@@ -30,6 +30,9 @@ uniform float uReflK;
 uniform vec2 uPart;
 uniform vec4 uSeed;
 uniform float uRef;
+uniform float uDebug;
+uniform float uBLip[NB];
+uniform float uPix;
 uniform vec4 uPlay;
 uniform vec4 uHover;
 uniform float uFocus;
@@ -59,6 +62,7 @@ struct Hit {
   float t;
   float kind;
   float id;
+  float cover;
   vec3 p;
   vec3 n;
 };
@@ -74,6 +78,10 @@ vec3 gInkA;
 vec3 gInkB;
 float gRow;
 int gBody;
+float gSpent;
+float gLip;
+float gSoft;
+float gFar;
 
 void useBody(int b){
   gBody = b;
@@ -87,6 +95,7 @@ void useBody(int b){
   gInkA = uBInkA[b];
   gInkB = uBInkB[b];
   gRow = float(b);
+  gLip = uBLip[b];
 }
 
 float hash21(vec2 p){
@@ -130,20 +139,33 @@ float mapBody(vec3 pl){
   float hw = (hi - lo) * 0.5;
   float x = r - (lo + hi) * 0.5;
   float lift = wv.x * gGlass.x;
+  float slope = wv.y * gGlass.x;
+  float bank = wv.w * gGlass.y;
+  float shift = 0.0;
   if (float(gBody) == uFocus){
-    float dp = abs(fract(turn - uPlay.x + 0.5) - 0.5);
+    float dp = fract(turn - uPlay.x + 0.5) - 0.5;
     float hit = exp(-dp * dp * 260.0) * uScore.y * uPlay.w;
-    lift += uWave.x * sin(turn * TAU * uWave.y - uWave.z) + hit * 0.075;
+    float dhit = -520.0 * dp * hit;
+    float ph = turn * TAU * uWave.y - uWave.z;
+    lift += uWave.x * sin(ph) + hit * 0.075;
+    slope += uWave.x * cos(ph) * TAU * uWave.y + dhit * 0.075;
     x -= uWave.w + hit * 0.05;
+    shift = dhit * 0.05;
   }
   float e = clamp(x / hw, -1.0, 1.0);
   float gap = min(min(bandD(r, a.x, a.y), bandD(r, a.z, a.w)), bandD(r, b.x, b.y));
-  float thick = gBand.z * mix(0.2, 1.0, sqrt(1.0 - e * e)) * (1.0 - 0.42 * smoothstep(0.0, 0.012, gap));
-  vec2 q = vec2(x, pl.y - lift - x * wv.w * gGlass.y);
+  float u = clamp(gap / 0.012, 0.0, 1.0);
+  float groove = 1.0 - 0.42 * u * u * (3.0 - 2.0 * u);
+  float lens = mix(0.2, 1.0, 1.0 - e * e);
+  float thick = gBand.z * lens * groove;
+  float dthick = gBand.z * (1.6 * abs(e) / hw * groove + lens * 210.0 * u * (1.0 - u));
+  vec2 q = vec2(x, pl.y - lift - x * bank);
   float rr = min(hw, thick) * 0.9;
   vec2 w = abs(q) - vec2(hw, thick) + rr;
   float d = min(max(w.x, w.y), 0.0) + length(max(w, 0.0)) - rr;
-  return smax(d, -b.z * TAU * r - 0.005, 0.02);
+  float along = (abs(slope) + abs(x * wv.z * gGlass.y) + abs(shift)) / (TAU * max(r, 0.15));
+  float steep = abs(bank) + dthick;
+  return smax(d / (sqrt(1.0 + steep * steep + along * along) * gLip), -b.z * TAU * r - 0.005, 0.02);
 }
 
 float planD(vec3 pl){
@@ -329,7 +351,7 @@ float sphereAt(vec3 ro, vec3 rd, vec3 c, float r){
 }
 
 vec3 normalAt(vec3 p){
-  const vec2 e = vec2(0.003, -0.003);
+  const vec2 e = vec2(0.0025, -0.0025);
   return normalize(
       e.xyy * mapBody(p + e.xyy)
     + e.yyx * mapBody(p + e.yyx)
@@ -342,6 +364,7 @@ Hit traceLocal(vec3 ro, vec3 rd, float steps, float core){
   h.t = 1e9;
   h.kind = 0.0;
   h.id = 0.0;
+  h.cover = 1.0;
   h.p = vec3(0.0);
   h.n = vec3(0.0, 1.0, 0.0);
   float ob = dot(ro, rd);
@@ -350,15 +373,54 @@ Hit traceLocal(vec3 ro, vec3 rd, float steps, float core){
   float t1;
   if (boundsOf(ro, rd, t0, t1)){
     float t = t0;
-    for (int i = 0; i < 96; i++){
-      if (float(i) >= steps || t > t1) break;
-      float d = mapBody(ro + rd * t);
-      if (d < 0.0014){
-        h.t = t;
-        h.kind = 1.0;
+    float near = 1e9;
+    float tn = t0;
+    gSpent = 1.0;
+    for (int i = 0; i < 160; i++){
+      if (float(i) >= steps || t > t1){
+        gSpent = t > t1 ? 0.0 : 1.0;
         break;
       }
-      t += d * 0.8;
+      float d = mapBody(ro + rd * t);
+      float foot = max((gFar + t) * uPix, 0.0004);
+      if (d < foot * 0.4){
+        t += mapBody(ro + rd * t);
+        t += mapBody(ro + rd * t);
+        h.t = t;
+        h.kind = 1.0;
+        gSpent = 0.0;
+        break;
+      }
+      if (d < near * foot){
+        near = d / foot;
+        tn = t;
+      }
+      t += max(d * 0.9, foot * 0.25);
+    }
+    if (h.kind < 0.5 && gSpent > 0.5){
+      float stride = (t1 - t) / 24.0;
+      float back = t;
+      for (int i = 0; i < 24; i++){
+        t += stride;
+        if (mapBody(ro + rd * t) < 0.0){
+          for (int k = 0; k < 5; k++){
+            float m = 0.5 * (back + t);
+            if (mapBody(ro + rd * m) < 0.0) t = m;
+            else back = m;
+          }
+          h.t = t;
+          h.kind = 1.0;
+          break;
+        }
+        back = t;
+      }
+      gSpent = 0.0;
+    }
+    if (h.kind < 0.5 && gSoft > 0.5 && near < 1.0){
+      h.t = tn;
+      h.kind = 1.0;
+      h.cover = 1.0 - near;
+      gSpent = 0.0;
     }
   }
   vec3 cc = vec3(gCore.x, 0.0, gCore.y);
@@ -401,6 +463,7 @@ Hit traceAll(vec3 ro, vec3 rd, float steps, float core, out vec3 dl){
   best.t = 1e9;
   best.kind = 0.0;
   best.id = 0.0;
+  best.cover = 1.0;
   best.p = vec3(0.0);
   best.n = vec3(0.0, 1.0, 0.0);
   int pick = -1;
@@ -408,7 +471,7 @@ Hit traceAll(vec3 ro, vec3 rd, float steps, float core, out vec3 dl){
   for (int b = 0; b < NB; b++){
     if (uBRot[b].w < 0.01) continue;
     useBody(b);
-    Hit h = traceLocal(toLocal(ro), toLocalDir(rd), steps, core);
+    Hit h = traceLocal(toLocal(ro), toLocalDir(rd), float(b) == uFocus ? steps : steps * 0.6, core);
     if (h.kind > 0.5 && h.t * gRad < best.t){
       best = h;
       best.t = h.t * gRad;
@@ -519,7 +582,7 @@ vec3 shadeSphere(Hit h, vec3 dl, vec3 rd, float steps){
   vec3 soft = hazeOf(rw) * 2.5 + uKeyCol * pow(max(dot(rw, uKey), 0.0), 3.0) * 0.2;
   vec3 mirror = mix(soft, envAt(rw), m.x);
   if (isCore && uDetail > 0.75){
-    Hit hr = traceLocal(h.p + n * 0.02, rl, steps * 0.4, 0.0);
+    Hit hr = traceLocal(h.p + n * 0.02, rl, steps * 0.3, 0.0);
     if (hr.kind > 0.5 && hr.kind < 1.5) mirror = mix(mirror, shadeLite(hr, rl, rw), 0.5 + 0.5 * m.x);
   }
   vec3 refl = mirror * f * mix(vec3(1.0), gInkA * 2.2 + 0.25, m.w);
@@ -577,7 +640,8 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
   float r = length(pl.xz);
   float turn = fract(atan(pl.z, pl.x) / TAU - gGlass.z);
   vec3 radial = normalize(vec3(pl.x, 0.0, pl.z));
-  nl = normalize(nl + radial * sin(r * 190.0) * 0.04 * (1.0 + 1.5 * uAudio.w * focus) / (1.0 + h.t * h.t * 0.05));
+  float fine = 1.0 - smoothstep(0.12, 0.4, (gFar + h.t) * uPix * 30.0 / max(dot(nl, -dl), 0.2));
+  nl = normalize(nl + radial * sin(r * 190.0) * 0.04 * fine * (1.0 + 1.5 * uAudio.w * focus));
   vec3 n = toWorldDir(nl);
   float ndv = max(dot(nl, -dl), 0.0);
   float f0 = pow((uIor - 1.0) / (uIor + 1.0), 2.0);
@@ -590,10 +654,22 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
   vec3 di = refract(dl, nl, 1.0 / uIor);
   vec3 pin = pl - nl * 0.006;
   float ti = 0.0;
-  for (int i = 0; i < 20; i++){
+  float inside = 0.0;
+  for (int i = 0; i < 28; i++){
     float d = -mapBody(pin + di * ti);
-    if (d < 0.002 || ti > 1.2) break;
-    ti += max(d, 0.006);
+    if (d < 0.0){
+      float beyond = ti;
+      for (int k = 0; k < 4; k++){
+        float m = 0.5 * (inside + beyond);
+        if (mapBody(pin + di * m) > 0.0) beyond = m;
+        else inside = m;
+      }
+      ti = 0.5 * (inside + beyond);
+      break;
+    }
+    inside = ti;
+    ti += max(d, 0.004);
+    if (ti > 1.2) break;
   }
   vec3 pe = pin + di * ti;
   vec3 ne = -normalAt(pe);
@@ -604,7 +680,7 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
   vec3 wo = toWorld(po);
 
   vec3 back;
-  Hit h2 = traceLocal(po, dg, steps * 0.6, 1.0);
+  Hit h2 = traceLocal(po, dg, steps * 0.4, 1.0);
   if (h2.kind > 1.5){
     back = shadeOrb(toWorldDir(h2.n), toWorldDir(dg), h2.kind);
   } else if (h2.kind > 0.5){
@@ -682,7 +758,9 @@ vec3 shadeLite(Hit h, vec3 dl, vec3 rd){
 
 vec3 reflected(vec3 p, vec3 r){
   vec3 dl;
-  Hit h = traceAll(p, r, uSteps * 0.6, 1.0, dl);
+  gSoft = 0.0;
+  gFar = 5.0;
+  Hit h = traceAll(p, r, uSteps * 0.4, 1.0, dl);
   float tt;
   float ta = textHit(p, r, tt) * uTextAt.z;
   vec3 c = h.kind > 0.5 ? shadeLite(h, dl, r) * uReflK : skyBase(r);
@@ -746,7 +824,10 @@ vec3 orbits(vec3 ro, vec3 rd, float limit){
 vec3 traceWorld(vec3 ro, vec3 rd, float core, float limit, out float mask, out float near){
   mask = 0.0;
   vec3 dl;
+  gSoft = 1.0;
+  gFar = 0.0;
   Hit h = traceAll(ro, rd, uSteps, core, dl);
+  gSoft = 0.0;
   float tb = h.kind > 0.5 ? h.t : 1e9;
   float tw = rd.y < -1e-4 ? -ro.y / rd.y : 1e9;
   float tt;
@@ -757,6 +838,12 @@ vec3 traceWorld(vec3 ro, vec3 rd, float core, float limit, out float mask, out f
   vec3 c;
   if (tb < tw){
     c = shadeGlass(h, dl, rd, uSteps);
+    if (h.cover < 0.999){
+      vec3 behind;
+      if (tw < 1e8) behind = waterShade(ro + rd * tw, rd, tw);
+      else behind = sky(rd);
+      c = mix(behind, c, h.cover);
+    }
   } else if (tw < 1e8){
     c = waterShade(ro + rd * tw, rd, tw);
   } else {
@@ -804,8 +891,8 @@ vec3 scene(vec3 ro, vec3 rd, out float mask){
     float bb = length(tow);
     float rc = gCore.z * gRad;
     float q = rc / bb;
-    float al = gCore.w * 6.0 * q * q * q * smoothstep(2.6, 1.15, bb / rc);
-    if (al > 0.004 && bb > rc){
+    float al = gCore.w * 6.0 * q * q * q * smoothstep(2.6, 1.15, bb / rc) - 0.004;
+    if (al > 0.0 && bb > rc){
       vec3 first = traceWorld(ro, rd, 1.0, tca, mask, near);
       if (near <= tca) return first;
       vec3 second = traceWorld(pc, normalize(rd + (tow / bb) * al), 0.0, 1e9, mask, near);
@@ -817,9 +904,49 @@ vec3 scene(vec3 ro, vec3 rd, out float mask){
   return traceWorld(ro, rd, 1.0, 1e9, mask, near);
 }
 
+#ifdef DEBUG
+vec4 inspect(vec3 ro, vec3 rd){
+  useBody(int(uFocus));
+  vec3 rl = toLocal(ro);
+  vec3 dl = toLocalDir(rd);
+  gSpent = 0.0;
+  gSoft = 0.0;
+  gFar = 0.0;
+  Hit h = traceLocal(rl, dl, uSteps, 0.0);
+  float spent = gSpent;
+  bool solid = h.kind > 0.5 && h.kind < 1.5;
+  if (uDebug < 1.5) return vec4(solid ? normalAt(h.p) * 0.5 + 0.5 : vec3(0.02), 1.0);
+  if (uDebug > 2.5){
+    float lit = solid ? 0.15 + 0.85 * max(dot(toWorldDir(normalAt(h.p)), uKey), 0.0) : 0.0;
+    return vec4(vec3(lit), 1.0);
+  }
+  float t0;
+  float t1;
+  float first = -1.0;
+  if (boundsOf(rl, dl, t0, t1)){
+    for (int i = 0; i < 480; i++){
+      float t = t0 + (t1 - t0) * (float(i) + 0.5) / 480.0;
+      if (mapBody(rl + dl * t) < 0.0){
+        first = t;
+        break;
+      }
+    }
+  }
+  if (h.kind > 1.5) return vec4(0.0, 0.0, 0.0, 1.0);
+  float missed = first > 0.0 && (!solid || h.t > first + 0.03) ? 1.0 : 0.0;
+  return vec4(missed, spent * (solid ? 0.0 : 1.0), solid ? 1.0 : 0.0, 1.0);
+}
+#endif
+
 void main(){
   vec2 uv = (gl_FragCoord.xy * 2.0 - uRes) / uRes.y;
   vec3 rd = normalize(uCamRot * vec3(uv, uFocal));
+#ifdef DEBUG
+  if (uDebug > 0.5){
+    fragColor = inspect(uCamPos, rd);
+    return;
+  }
+#endif
   float mask;
   vec3 col = scene(uCamPos, rd, mask) + jetOf(uCamPos, rd);
   fragColor = vec4(min(col, vec3(48.0)), mask);
