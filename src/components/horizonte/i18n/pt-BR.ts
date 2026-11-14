@@ -65,6 +65,10 @@ export const PT_BR: Copy = {
     orbitTouch: "Arraste para orbitar · pince para se aproximar",
     recenter: "Voltar ao enquadramento",
     inquiry: "Partes desta forma",
+    simulation: "Simulação",
+    usual: "típico",
+    thisRecord: "este disco",
+    evidence: "O que foi medido",
     parts: {
       satellites: "Satélites",
       gaps: "Falhas",

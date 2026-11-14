@@ -56,6 +56,10 @@ export const EN: Copy = {
     orbitTouch: "Drag to orbit · pinch to move closer",
     recenter: "Return to the frame",
     inquiry: "Parts of this shape",
+    simulation: "Simulation",
+    usual: "usual",
+    thisRecord: "this record",
+    evidence: "What was measured",
     parts: {
       satellites: "Satellites",
       gaps: "Gaps",

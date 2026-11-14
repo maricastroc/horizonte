@@ -69,6 +69,10 @@ export interface Copy {
     orbitTouch: string;
     recenter: string;
     inquiry: string;
+    simulation: string;
+    usual: string;
+    thisRecord: string;
+    evidence: string;
     parts: Record<"satellites" | "gaps" | "strata" | "contour" | "posture" | "core", string>;
   };
   ceremony: {

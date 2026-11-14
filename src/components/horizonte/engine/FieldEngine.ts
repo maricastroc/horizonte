@@ -1093,6 +1093,7 @@ export class FieldEngine implements InputActions {
       morph: (i) => this.morphAt(i),
       part: this.focusPart(),
       partK: this.focusAmt,
+      pinned: inside ? this.focusPin : null,
       focus: {
         morph: inside ? this.M : this.morphAt(s.alb),
         version: Math.round(this.compareK * 40) + Math.round(s.mix * 40) * 100 + (this.compareAxis ? 10000 : 0),

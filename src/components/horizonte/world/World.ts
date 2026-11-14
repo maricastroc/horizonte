@@ -5,7 +5,7 @@ import quadSrc from "@/shaders/world/quad.vert.glsl";
 import raysSrc from "@/shaders/world/rays.glsl";
 import sceneSrc from "@/shaders/world/scene.glsl";
 import upSrc from "@/shaders/world/up.glsl";
-import type { AnatomyPart } from "../anatomy";
+import { medianOf, type AnatomyPart } from "../anatomy";
 import type { VisualAudioState } from "../audio/bus";
 import { profileOf } from "../composition/relief";
 import type { Hit } from "../composition/layout";
@@ -14,7 +14,7 @@ import { fieldConstantsOf } from "../field";
 import { clamp, lerp } from "../math";
 import { lobeAt, satRadiusOf, type AlbumMorphology } from "../morphology";
 import { motionQualitiesOf, type Routing } from "../motion";
-import { RELIEF, RING } from "../tokens";
+import { MORPH, RELIEF, RING } from "../tokens";
 import type { FieldState } from "../types";
 
 export interface WorldFocus {
@@ -39,6 +39,7 @@ export interface WorldView {
   morph: (i: number) => AlbumMorphology;
   part: AnatomyPart | null;
   partK: number;
+  pinned: AnatomyPart | null;
   focus: WorldFocus;
 }
 
@@ -301,6 +302,7 @@ export class World implements WorldPresenter {
       uReflK: { value: 0.6 },
       uPart: { value: new THREE.Vector2() },
       uSeed: { value: new THREE.Vector4() },
+      uRef: { value: 0 },
       uPlay: { value: new THREE.Vector4() },
       uHover: { value: new THREE.Vector4() },
       uFocus: { value: 0 },
@@ -708,7 +710,10 @@ export class World implements WorldPresenter {
     u.uGlow.value =
       1 + (a.flux * 0.5 + this.shimmer * 0.4) * lightK * live + 0.2 * view.breath.light + 0.25 * this.swell;
     u.uFocus.value = focusSlot;
-    (u.uPart.value as THREE.Vector2).set(view.part ? (PART[view.part] ?? 0) : 0, inside ? clamp(view.partK, 0, 1) : 0);
+    const partK = inside ? clamp(view.partK, 0, 1) : 0;
+    (u.uPart.value as THREE.Vector2).set(view.part ? (PART[view.part] ?? 0) : 0, partK);
+    u.uRef.value = view.part === "contour" ? 1 : view.part === "core" ? lerp(MORPH.core[0], MORPH.core[1], medianOf("loudness")) * 0.9 : 0;
+    this.post.uExposure.value = (this.post.uExposure.value as number) * (1 + 0.14 * partK);
 
     const fusing = s.mode === "fusion";
     const seed = u.uSeed.value as THREE.Vector4;
@@ -856,8 +861,8 @@ export class World implements WorldPresenter {
         o.zoom -= o.zoom * back;
       }
     }
-    const want = view.part && inside ? POSE[view.part] : undefined;
-    const pk = want ? clamp(view.partK, 0, 1) : 0;
+    const want = view.pinned && inside ? POSE[view.pinned] : undefined;
+    const pk = want ? 1 : 0;
     const pt = ke(quick ? 0.05 : 0.5);
     this.pose.az += ((want ? want[0] : 0) * pk - this.pose.az) * pt;
     this.pose.el += ((want ? want[1] : 0) * pk - this.pose.el) * pt;
@@ -1019,39 +1024,61 @@ export class World implements WorldPresenter {
     return at.z > 0.01 ? { x: at.x, y: at.y } : null;
   }
 
-  partAnchor(part: AnatomyPart): { x: number; y: number } | null {
+  partAnchor(part: AnatomyPart): { x: number; y: number; ox: number; oy: number; hidden: boolean } | null {
     const slot = this.alb % NB;
     const s = this.slots[slot];
     const m = s.morph;
     if (!m || s.album !== this.alb) return null;
     const spin = (this.u.uBGlass.value as THREE.Vector4[])[slot].z;
     const mid = (s.lo + s.hi) * 0.5;
-    let a = 0;
-    let r = 0;
+    let x = 0;
+    let z = 0;
     if (part === "core") {
-      const at = this.project(this.local(slot, m.eccX, m.eccY));
-      return at.z > 0.01 ? { x: at.x, y: at.y } : null;
-    }
-    if (part === "satellites") {
+      x = m.eccX;
+      z = m.eccY;
+    } else if (part === "satellites") {
       const v = (this.u.uBSat.value as THREE.Vector4[])[slot * 4];
-      const at = this.project(v.z > 0.001 ? this.local(slot, v.x, v.y) : this.local(slot, 1.1, -0.75));
-      return at.z > 0.01 ? { x: at.x, y: at.y } : null;
+      x = v.z > 0.001 ? v.x : 1.1;
+      z = v.z > 0.001 ? v.y : -0.75;
+    } else {
+      let a = -Math.PI / 2;
+      let r = s.hi;
+      if (part === "contour") a = RING.anchor + 2.2;
+      else if (part === "strata") {
+        a = RING.anchor - 1.3;
+        r = mid;
+      } else if (part === "gaps") {
+        a = ((m.bounds[1] ?? 0) + spin) * TAU;
+        r = mid;
+      } else if (part !== "posture") return null;
+      x = Math.cos(a) * r;
+      z = Math.sin(a) * r;
     }
-    if (part === "contour") {
-      a = RING.anchor + 2.2;
-      r = s.hi;
-    } else if (part === "strata") {
-      a = RING.anchor - 1.3;
-      r = mid;
-    } else if (part === "gaps") {
-      a = ((m.bounds[1] ?? 0) + spin) * TAU;
-      r = mid;
-    } else if (part === "posture") {
-      a = -Math.PI / 2;
-      r = s.hi + 0.1;
-    } else return null;
-    const at = this.project(this.local(slot, Math.cos(a) * r, Math.sin(a) * r));
-    return at.z > 0.01 ? { x: at.x, y: at.y } : null;
+    const world = this.local(slot, x, z);
+    const at = this.project(world);
+    if (at.z <= 0.01) return null;
+    const heart = this.project(this.local(slot, m.eccX, m.eccY));
+    let ox = at.x - heart.x;
+    let oy = at.y - heart.y;
+    const len = Math.hypot(ox, oy);
+    if (len < 8) {
+      ox = 0.7;
+      oy = -0.7;
+    } else {
+      ox /= len;
+      oy /= len;
+    }
+    let hidden = false;
+    if (part !== "core") {
+      const c = this.local(slot, m.eccX, m.eccY).sub(this.camPos);
+      const d = world.clone().sub(this.camPos);
+      const far = d.length();
+      d.divideScalar(far);
+      const along = c.dot(d);
+      const miss = c.addScaledVector(d, -along).length();
+      hidden = along > 0 && along < far && miss < m.coreRatio * 0.9 * s.radius;
+    }
+    return { x: at.x, y: at.y, ox, oy, hidden };
   }
 
   caption(album: number): { x: number; y: number; k: number } | null {

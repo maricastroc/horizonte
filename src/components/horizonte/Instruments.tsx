@@ -443,7 +443,9 @@ export default function Instruments({
           >
             <span className="trk-n">{String(i + 1).padStart(2, "0")}</span>
             <span className="trk-body">
-              <span className="truncate trk-title">{t.title}</span>
+              <span className="truncate trk-title" title={t.title}>
+                {t.title}
+              </span>
               <span aria-hidden className="trk-gauge">
                 <span className="trk-fill" ref={isPlay ? trackFill : undefined} />
               </span>

@@ -29,6 +29,7 @@ uniform vec4 uAir;
 uniform float uReflK;
 uniform vec2 uPart;
 uniform vec4 uSeed;
+uniform float uRef;
 uniform vec4 uPlay;
 uniform vec4 uHover;
 uniform float uFocus;
@@ -562,7 +563,8 @@ vec3 shadeSphere(Hit h, vec3 dl, vec3 rd, float steps){
   }
   if (float(gBody) == uFocus && uPart.y > 0.01){
     bool mine = isCore ? abs(uPart.x - 6.0) < 0.5 : abs(uPart.x - 1.0) < 0.5;
-    col = col * mix(1.0, mine ? 1.2 : 0.3, uPart.y) + (mine ? gInkA * 0.1 * uPart.y : vec3(0.0));
+    float beat = isCore ? 1.0 : 0.7 + 0.5 * sin(uTime * 2.4 - h.id * 1.5);
+    col = col * mix(1.0, mine ? 1.2 * beat : 0.34, uPart.y) + (mine ? gInkA * 0.1 * beat * uPart.y : vec3(0.0));
   }
   return col;
 }
@@ -652,7 +654,8 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
     else if (abs(uPart.x - 4.0) < 0.5) w = exp(-pow((hi - pr) / 0.04, 2.0));
     else if (abs(uPart.x - 5.0) < 0.5) w = 0.5;
     float lit = step(1.5, uPart.x) * step(uPart.x, 4.5);
-    col = col * mix(1.0, 0.2 + 0.9 * w, uPart.y) + (gInkA * 1.4 + 0.3) * w * lit * uPart.y * 0.8;
+    col = col * mix(1.0, 0.32 + 0.9 * w, uPart.y) + (gInkA * 1.4 + 0.3) * w * lit * uPart.y * 0.8
+        + body * 0.1 * uPart.y;
   }
   col += innerLight(r, turn) * (0.4 + 0.6 * tr);
   return col;
@@ -720,14 +723,20 @@ vec3 orbits(vec3 ro, vec3 rd, float limit){
     }
     float mine = float(b) == uFocus ? 1.0 : 0.0;
     float sat = mine * uPart.y * (abs(uPart.x - 1.0) < 0.5 ? 1.0 : 0.0);
-    c += (gInkA * 1.2 + vec3(1.0, 0.82, 0.55) * 0.35) * line * (0.2 + 0.7 * sat) * alive * min(abs(dl.y) * 6.0, 1.0);
-    if (mine > 0.5 && uPart.y > 0.01 && abs(uPart.x - 5.0) < 0.5 && abs(rd.y) > 0.01){
-      float th = (gPos.y - ro.y) / rd.y;
-      if (th > 0.0 && th < limit){
-        vec3 ph = ro + rd * th - gPos;
-        float xh = (length(ph.xz) / gRad - gBand.y) / (0.006 + th * 0.0016);
-        float dash = step(0.5, fract(atan(ph.z, ph.x) / TAU * 36.0));
-        c += vec3(0.95, 0.9, 0.8) * exp(-xh * xh) * dash * 0.6 * uPart.y;
+    c += (gInkA * 1.2 + vec3(1.0, 0.82, 0.55) * 0.35) * line * (0.2 + 0.3 * sat) * alive * min(abs(dl.y) * 6.0, 1.0);
+    if (mine > 0.5 && uPart.y > 0.01){
+      vec3 ghost = vec3(0.95, 0.9, 0.8) * 0.6 * uPart.y;
+      if (abs(uPart.x - 5.0) < 0.5 && abs(rd.z) > 0.01){
+        float th = (gPos.z - ro.z) / rd.z;
+        if (th > 0.0 && th < limit){
+          vec3 ph = ro + rd * th - gPos;
+          float xh = (length(ph.xy) / gRad - gBand.y + 0.05) / (0.006 + th * 0.0016);
+          c += ghost * exp(-xh * xh) * step(0.5, fract(atan(ph.y, ph.x) / TAU * 36.0)) * step(-gPos.y, ph.y);
+        }
+      }
+      if (uRef > gCore.z * 1.04){
+        float xr = (r - uRef) / (w * 1.6);
+        c += ghost * exp(-xr * xr) * step(0.5, fract(atan(q.z, q.x) / TAU * 40.0));
       }
     }
   }
