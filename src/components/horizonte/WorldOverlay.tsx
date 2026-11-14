@@ -384,7 +384,7 @@ export default function WorldOverlay({
           aria-hidden="true"
           hidden={compact && inside}
           className={`absolute flex flex-col gap-2 [text-shadow:0_0_22px_rgba(7,7,10,0.9)] ${
-            compact ? "inset-x-5 bottom-[24vh] items-center text-center" : "bottom-[17vh] left-[2.4vw] max-w-[46vw]"
+            compact ? "inset-x-5 bottom-[24vh] items-center text-center" : "bottom-[14.5vh] left-[2.4vw] max-w-[46vw]"
           }`}
         >
           {compact && (
@@ -392,7 +392,7 @@ export default function WorldOverlay({
           )}
           <span
             key={`${album.id}:${track ? track.id : "album"}`}
-            className="world-rise font-bodoni text-[clamp(26px,3.6vw,54px)] italic leading-[1.02] text-ink-text"
+            className="world-rise font-bodoni text-[clamp(26px,3.2vw,48px)] italic leading-[1.02] text-ink-text"
           >
             {track ? track.title : album.title}
           </span>

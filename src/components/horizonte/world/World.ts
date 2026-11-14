@@ -70,7 +70,9 @@ const LEVELS = 5;
 const DPR_CAP = 2;
 const TIME_ELAPSED = 0x88bf;
 const GPU_DISJOINT = 0x8fbb;
-const SPACING = 3.0;
+const SPACING = 4.9;
+const NEAR = 7.5;
+const SMALL = 0.5;
 const PART: Partial<Record<AnatomyPart, number>> = { satellites: 1, gaps: 2, strata: 3, contour: 4, posture: 5, core: 6 };
 const POSE: Partial<Record<AnatomyPart, [number, number, number]>> = {
   satellites: [0.5, 0.22, -0.28],
@@ -80,7 +82,6 @@ const POSE: Partial<Record<AnatomyPart, [number, number, number]>> = {
   posture: [1.2, -0.3, -0.05],
   core: [-0.35, -0.08, 0.45],
 };
-const RECEDE = 2.5;
 const UP = new THREE.Vector3(0, 1, 0);
 
 const srgb = (v: number) => Math.pow(v, 2.2);
@@ -310,6 +311,7 @@ export class World implements WorldPresenter {
       uRef: { value: 0 },
       uDebug: { value: 0 },
       uBLip: { value: [1, 1, 1] },
+      uBHaze: { value: [0, 0, 0] },
       uPix: { value: 0.001 },
       uPlay: { value: new THREE.Vector4() },
       uHover: { value: new THREE.Vector4() },
@@ -477,12 +479,41 @@ export class World implements WorldPresenter {
     this.textAlb = album;
   }
 
+  private slotOf(album: number): Slot | null {
+    const s = this.slots[((album % NB) + NB) % NB];
+    return s.album === album && s.morph ? s : null;
+  }
+
+  private mixAt(nav: number, pick: (s: Slot) => number, fallback: number): number {
+    const a = Math.floor(nav);
+    const lo = this.slotOf(a);
+    const hi = this.slotOf(a + 1);
+    const va = lo ? pick(lo) : hi ? pick(hi) : fallback;
+    const vb = hi ? pick(hi) : va;
+    return lerp(va, vb, ease(nav - a));
+  }
+
+  private sizeAt(nav: number): number {
+    return this.mixAt(nav, (s) => s.radius * s.hi, 1.15);
+  }
+
+  private reachOf(nav: number): number {
+    return NEAR * clamp(this.sizeAt(nav) / 1.15, 0.72, 1.12);
+  }
+
+  private farOf(slot: number, nav: number): number {
+    return ease(clamp(Math.abs(this.slots[slot].album - nav), 0, 1));
+  }
+
   private place(slot: number, nav: number, k1: number): THREE.Vector3 {
     const s = this.slots[slot];
     const d = Math.abs(s.album - nav);
     const sink = (1 - ease(s.k)) * (s.y + s.radius * 1.4);
     const bob = Math.sin(this.time * 0.6 + s.album * 1.7) * 0.012;
-    return new THREE.Vector3(s.album * SPACING, s.y - sink + bob + s.hov * 0.06, -d * RECEDE - (d > 0.5 ? 2.4 * k1 : 0));
+    const ratio = lerp(1, SMALL, this.farOf(slot, nav)) / (1 + 0.5 * Math.max(0, d - 1));
+    const reach = this.reachOf(nav);
+    const back = Math.max(0, reach * ((s.radius * s.hi) / (ratio * this.sizeAt(nav)) - 1));
+    return new THREE.Vector3(s.album * SPACING, s.y - sink + bob + s.hov * 0.06, -back - (d > 0.5 ? 2.4 * k1 : 0));
   }
 
   grab() {
@@ -529,9 +560,14 @@ export class World implements WorldPresenter {
     return { held: o.held, away: Math.abs(o.az) + Math.abs(o.el) + Math.abs(o.zoom) > 0.05 };
   }
 
-  private rigs(focus: Slot, portrait: boolean): [Rig, Rig, Rig] {
+  private rigs(focus: Slot, portrait: boolean, nav: number): [Rig, Rig, Rig] {
     const y = focus.y;
     const f = clamp((focus.radius * focus.hi) / 1.15, 0.72, 1.12);
+    const reach = this.reachOf(nav);
+    const rest = this.mixAt(nav, (s) => s.y, y);
+    const aspect = this.cssW / this.cssH;
+    const rail = portrait || this.cssW < 768 ? 0 : clamp(300 / this.cssW, 0, 0.26);
+    const lead = ((rail * 0.5 - 0.045) * 2 * reach * aspect) / 4.165;
     const side = portrait ? 0 : 1;
     const drop = portrait ? 0.7 : 0;
     const a = RING.anchor;
@@ -540,7 +576,7 @@ export class World implements WorldPresenter {
     const ca = Math.cos(focus.tilt);
     const at = new THREE.Vector3(Math.cos(a) * rm, y - Math.sin(a) * rm * ca, Math.sin(a) * rm * sa);
     return [
-      { target: new THREE.Vector3(-0.36 * side, y * 0.8 - drop, 0), az: 0.05, el: -0.05, dist: 7.9 * f, fov: 27 },
+      { target: new THREE.Vector3(lead * side, rest * 0.8 - drop, 0), az: 0.05, el: -0.05, dist: reach, fov: 27 },
       { target: new THREE.Vector3(-0.42 * side, y - 0.08 - drop * 0.6, 0), az: 0.16, el: focus.tilt * 0.62, dist: 6.2 * f, fov: 32 },
       { target: at.lerp(new THREE.Vector3(-0.15 * side, y - drop * 0.5, 0), 0.62), az: 0.3, el: focus.tilt * 0.78, dist: 5.0 * f, fov: 34 },
     ];
@@ -808,6 +844,8 @@ export class World implements WorldPresenter {
       pos[i].copy(this.place(i, inside ? s.alb : s.nav, k1));
       rot[i].set(Math.sin(slot.tilt), Math.cos(slot.tilt), slot.radius, ease(slot.k));
       (u.uBLip.value as number[])[i] = slot.lip;
+      const far = isFocus && inside ? 0 : this.farOf(i, inside ? s.alb : s.nav);
+      (u.uBHaze.value as number[])[i] = 0.4 * far * (1 - 0.5 * slot.hov);
       const flex = isFocus ? 1 + gain * (0.35 * this.impact * massK + 0.2 * this.swell) + 0.06 * view.breath.mass : 1;
       const amp = (0.1 + 0.42 * m.relief) * flex;
       const bank = (0.3 + 0.6 * m.strata) * (isFocus ? 1 + 0.5 * this.shimmer * lightK * calm : 1);
@@ -824,7 +862,7 @@ export class World implements WorldPresenter {
       const k = fieldConstantsOf(alb.signature);
       core[i].set(m.eccX, m.eccY, m.coreRatio * 0.9, 0.07 * k.massScale * (isFocus ? mass : 1));
       const spin = isFocus && inside ? s.ringRot / TAU : RING.anchor / TAU;
-      glass[i].set(amp, bank, spin, ease(slot.k) * (isFocus ? (u.uGlow.value as number) : (1 + 0.6 * slot.hov) * (1 - 0.55 * k1)));
+      glass[i].set(amp, bank, spin, ease(slot.k) * (isFocus ? (u.uGlow.value as number) : (1 + 0.6 * slot.hov) * (1 - 0.55 * k1) * (1 - 0.35 * far)));
       inkA[i].set(srgb(alb.inkA[0]), srgb(alb.inkA[1]), srgb(alb.inkA[2]));
       inkB[i].set(srgb(alb.inkB[0]), srgb(alb.inkB[1]), srgb(alb.inkB[2]));
       const drift = view.reduced ? 0 : this.time * 0.045 * k.swirl;
@@ -856,7 +894,7 @@ export class World implements WorldPresenter {
     }
 
     const portrait = this.cssW / this.cssH < 1;
-    const [r0, r1, r2] = this.rigs(focus, portrait);
+    const [r0, r1, r2] = this.rigs(focus, portrait, inside ? s.alb : s.nav);
     const rig = mixRig(mixRig(r0, r1, k1), r2, k2);
     const push = inside ? Math.sin(Math.PI * clamp(s.fadeSel, 0, 1)) : 0;
     const navNow = inside ? s.alb : s.nav;
@@ -951,14 +989,16 @@ export class World implements WorldPresenter {
     } else cur.z = 0;
     (this.post.uCur.value as THREE.Vector4).set(view.mouse.x, 1 - view.mouse.y, view.reach, view.coarse || view.mouse.onUi ? 0 : 1);
 
-    const depth = this.camPos.z + 6.5;
+    const size = this.sizeAt(navNow);
+    const behind = size + 3.6;
+    const depth = this.camPos.z + behind;
     const wide = (depth / this.focal) * (this.cssW / this.cssH);
     const mid = this.camPos.x + (this.camF.x / -this.camF.z) * depth;
     const left = mid - wide * 0.955;
-    const span = Math.max(1, Math.min(mid + wide * 0.4, navNow * SPACING + 0.3) - left);
-    const tall = Math.min(span / this.textFrac / 4, 1.9);
+    const span = Math.max(1, Math.min(mid + wide * 0.4, navNow * SPACING - 0.45 * size) - left);
+    const tall = Math.min(span / this.textFrac / 4, 1.25);
     (u.uTextRect.value as THREE.Vector4).set(left, left + tall * 4, -0.2 * tall, 0.8 * tall);
-    (u.uTextAt.value as THREE.Vector3).set(-6.5, portrait ? 0 : 0.22 * this.textK * (1 - k1) * (1 - k1), 0.2);
+    (u.uTextAt.value as THREE.Vector3).set(-behind, portrait ? 0 : 0.3 * this.textK * (1 - k1) * (1 - k1), 0.2);
     this.post.uFade.value = clamp(s.fade, 0, 1.2);
     const tier = this.scale < 0.55 ? 0 : 1;
     u.uSteps.value = tier ? 96 : 64;
@@ -1115,7 +1155,7 @@ export class World implements WorldPresenter {
     const s = this.slots[slot];
     if (album < 0 || s.album !== album || s.k < 0.05) return null;
     const p = (this.u.uBPos.value as THREE.Vector3[])[slot].clone();
-    p.y -= s.radius * s.hi * Math.cos(s.tilt) + 0.2;
+    p.y += s.radius * s.hi * Math.cos(s.tilt) + 0.42;
     const at = this.project(p);
     return at.z > 0.01 ? { x: at.x, y: at.y, k: ease(s.k) } : null;
   }

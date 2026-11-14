@@ -188,6 +188,10 @@
     }
   }
 
+  .world-main [data-instruments][data-idle] .idle-soft {
+    opacity: 0.58;
+  }
+
   .world-main > [data-instruments] {
     transition: opacity 0.5s ease;
   }
