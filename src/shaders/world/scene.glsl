@@ -86,6 +86,7 @@ float gLip;
 float gHaze;
 float gSoft;
 float gFar;
+float gKeep = 1.0;
 
 void useBody(int b){
   gBody = b;
@@ -209,7 +210,7 @@ vec3 stars(vec3 d){
 
 float moonLobe(float mu){
   float l = pow(mu, 30.0) * 0.035 + pow(mu, 5.0) * 0.012;
-  if (mu > 0.97) l += pow(mu, uAir.w) * 6.0 + pow(mu, uAir.w * 0.08) * 0.06;
+  if (mu > (gKeep < 1.0 ? 0.9 : 0.97)) l += (pow(mu, uAir.w * gKeep) * 6.0 + pow(mu, uAir.w * 0.08 * gKeep) * 0.06) * gKeep;
   return l;
 }
 
@@ -560,7 +561,20 @@ vec3 waterBase(vec3 p){
   return deep;
 }
 
+vec3 calmEnv(vec3 d){
+  vec3 up = vec3(d.x, abs(d.y), d.z);
+  gKeep = 0.04;
+  vec3 c = skyBase(up);
+  gKeep = 1.0;
+  float k1 = max(dot(up, uKey), 0.0);
+  float k2 = max(dot(up, uRim), 0.0);
+  c += uKeyCol * pow(k1, 5.0) * 0.4 + (uInk * 1.6 + 0.18) * pow(k2, 6.0) * 0.4;
+  if (d.y < 0.0) c = c * (0.02 + 0.98 * pow(1.0 + d.y, 5.0)) + vec3(0.002, 0.004, 0.008) + uInk * 0.012;
+  return min(c, vec3(8.0));
+}
+
 vec3 farField(vec3 ro, vec3 rd){
+  gKeep = 0.12;
   float tt;
   float ta = textHit(ro, rd, tt);
   float tw = rd.y < -1e-4 ? -ro.y / rd.y : 1e9;
@@ -576,6 +590,7 @@ vec3 farField(vec3 ro, vec3 rd){
     c = sky(rd);
   }
   if (ta > 0.0 && tt < tw) c = mix(c, textColor(ro, rd, tt), ta);
+  gKeep = 1.0;
   return c;
 }
 
@@ -659,6 +674,7 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
   float turn = fract(atan(pl.z, pl.x) / TAU - gGlass.z);
   vec3 radial = normalize(vec3(pl.x, 0.0, pl.z));
   float fine = 1.0 - smoothstep(0.12, 0.4, (gFar + h.t) * uPix * 30.0 / max(dot(nl, -dl), 0.2));
+  vec3 ng = nl;
   nl = normalize(nl + radial * sin(r * 190.0) * 0.04 * fine * (1.0 + 1.5 * uAudio.w * focus));
   vec3 n = toWorldDir(nl);
   float ndv = max(dot(nl, -dl), 0.0);
@@ -669,9 +685,10 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
   vec3 tint = mix(vec3(1.0), film(ndv + r * 0.6) * 1.7, min(uIrid + uPulse.w * focus, 0.9));
   vec3 refl = envAt(toWorldDir(reflect(dl, nl))) * f * tint;
 
-  vec3 di = refract(dl, nl, 1.0 / uIor);
-  vec3 pin = pl - nl * 0.006;
+  vec3 di = refract(dl, ng, 1.0 / uIor);
+  vec3 pin = pl - ng * 0.006;
   float ti = 0.0;
+  float found = 0.0;
   float inside = 0.0;
   for (int i = 0; i < 28; i++){
     float d = -mapBody(pin + di * ti);
@@ -683,6 +700,7 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
         else inside = m;
       }
       ti = 0.5 * (inside + beyond);
+      found = 1.0;
       break;
     }
     inside = ti;
@@ -690,15 +708,25 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
     if (ti > 1.2) break;
   }
   vec3 pe = pin + di * ti;
-  vec3 ne = -normalAt(pe);
+  vec3 ne = ti < 1e-5 ? -ng : -normalAt(pe);
   vec3 tr = exp(-sigma * ti);
-  vec3 dg = refract(di, ne, uIor);
-  if (dot(dg, dg) < 1e-4) dg = reflect(di, ne);
+  float ce = max(-dot(di, ne), 0.0);
+  float kx = 1.0 - uIor * uIor * (1.0 - ce * ce);
+  float leave = 1.0 - pow(1.0 - sqrt(max(kx, 0.0)), 5.0);
+  vec3 dg = kx > 0.0 ? refract(di, ne, uIor) : reflect(di, ne);
+  float prism = found > 0.5 ? smoothstep(0.015, 0.09, 1.0 + dot(ng, ne)) : 1.0;
   vec3 po = pe - ne * 0.02;
   vec3 wo = toWorld(po);
 
   vec3 back;
-  Hit h2 = traceLocal(po, dg, steps * 0.4, 1.0);
+  Hit h2;
+  h2.t = 1e9;
+  h2.kind = 0.0;
+  h2.id = 0.0;
+  h2.cover = 1.0;
+  h2.p = po;
+  h2.n = ne;
+  if (prism < 0.98) h2 = traceLocal(po, dg, steps * 0.4, 1.0);
   if (h2.kind > 1.5){
     back = shadeOrb(toWorldDir(h2.n), toWorldDir(dg), h2.kind);
   } else if (h2.kind > 0.5){
@@ -712,7 +740,7 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
          + envAt(toWorldDir(reflect(dg, n2))) * f2
          + body2 * (1.0 - exp(-t2 * 8.0)) * 0.2 * gGlass.w;
   } else if (uDetail > 0.75){
-    float sp = 0.014 + 0.02 * uAudio.z;
+    float sp = (0.014 + 0.02 * uAudio.z) * (1.0 - prism);
     vec3 dr = refract(di, ne, uIor * (1.0 - sp));
     vec3 db = refract(di, ne, uIor * (1.0 + sp));
     if (dot(dr, dr) < 1e-4) dr = dg;
@@ -725,6 +753,7 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
     back = farField(wo, toWorldDir(dg));
   }
 
+  back = mix(back, mix(calmEnv(toWorldDir(reflect(di, ne))), calmEnv(toWorldDir(dg)), leave) * (body * 1.3 + 0.25), prism);
   float side = max(dot(n, uRim), 0.0);
   float keyLum = dot(uKeyCol, vec3(0.333));
   vec3 lc = vec3(gCore.x, 0.0, gCore.y) - pl;
@@ -740,7 +769,7 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
   vec3 glow = body * mix(vec3(1.0), uKeyCol / max(keyLum, 0.05), 0.3) * (1.0 - exp(-ti * 8.0))
             * (0.1 + 0.42 * lightOn(n) * keyLum + 0.3 * side + fromCore + 0.4 * wake) * gGlass.w;
   float aim = max(dot(toWorldDir(dg), uMoon), 0.0);
-  vec3 pass = body * uKeyCol * pow(aim, 6.0) * 0.45 * (1.0 - exp(-ti * 10.0)) * gGlass.w * (1.0 - f);
+  vec3 pass = body * uKeyCol * pow(aim, 6.0) * 0.45 * (1.0 - exp(-ti * 10.0)) * gGlass.w * (1.0 - f) * (1.0 - 0.6 * prism);
   vec3 col = back * tr * (1.0 - f) + refl + glow + pass;
   if (focus > 0.5 && uPart.y > 0.01){
     vec4 pa;
