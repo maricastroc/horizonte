@@ -16,6 +16,7 @@ import { lobeAt, satRadiusOf, type AlbumMorphology } from "../morphology";
 import { motionQualitiesOf, type Routing } from "../motion";
 import { MORPH, RELIEF, RING, SEQ } from "../tokens";
 import type { FieldState } from "../types";
+import { CROWN_CEILING, CROWN_NODES, Crown } from "./crown";
 
 export interface WorldFocus {
   morph: AlbumMorphology;
@@ -32,6 +33,7 @@ export interface WorldView {
   cap: number;
   routing: Routing;
   breath: { mass: number; light: number };
+  rest: { mass: number; light: number };
   reduced: boolean;
   coarse: boolean;
   mouse: { x: number; y: number; onUi: boolean };
@@ -191,6 +193,10 @@ export class World implements WorldPresenter {
   private shapeTex = atlas(NB * 2);
   private warpTex = atlas(NB);
   private profile = new Float32Array(ROW * 2);
+  private crown = new Crown();
+  private crownOut = new Float32Array(CROWN_NODES * 8);
+  private crownTex = new THREE.DataTexture(new Uint16Array(CROWN_NODES * 8), CROWN_NODES, 2, THREE.RGBAFormat, THREE.HalfFloatType);
+  private crownAlb = -1;
   private textCanvas = document.createElement("canvas");
   private textTex: THREE.CanvasTexture;
 
@@ -228,7 +234,6 @@ export class World implements WorldPresenter {
   private shimmer = 0;
   private tension = 0;
   private warm = 0.35;
-  private wavePhase = 0;
   private spinPhase = 0;
   private drift = 0;
   private dropAt = 0;
@@ -295,6 +300,13 @@ export class World implements WorldPresenter {
     this.gl = this.renderer.getContext() as WebGL2RenderingContext;
     this.ext = this.gl.getExtension("EXT_disjoint_timer_query_webgl2");
 
+    this.crownTex.wrapS = THREE.RepeatWrapping;
+    this.crownTex.wrapT = THREE.ClampToEdgeWrapping;
+    this.crownTex.minFilter = THREE.LinearFilter;
+    this.crownTex.magFilter = THREE.LinearFilter;
+    this.crownTex.generateMipmaps = false;
+    this.crownTex.needsUpdate = true;
+
     this.textCanvas.width = 2048;
     this.textCanvas.height = 512;
     this.textTex = new THREE.CanvasTexture(this.textCanvas);
@@ -314,6 +326,8 @@ export class World implements WorldPresenter {
       uShape: { value: this.shapeTex },
       uWarp: { value: this.warpTex },
       uText: { value: this.textTex },
+      uRing: { value: this.crownTex },
+      uSpan: { value: new THREE.Vector2(0.5, 0.5) },
       uBPos: { value: v3() },
       uBRot: { value: v4() },
       uBBand: { value: v4() },
@@ -638,8 +652,18 @@ export class World implements WorldPresenter {
     if (dt > 0) this.fps += (1 / dt - this.fps) * 0.05;
     this.step(this.frozen ? 0 : dt, view);
     if (this.forced) {
-      (this.u.uScore.value as THREE.Vector4).y = this.forced.impact;
-      (this.u.uWave.value as THREE.Vector4).x = this.forced.wave;
+      const n = CROWN_NODES;
+      const head = (this.u.uPlay.value as THREE.Vector4).x * n;
+      for (let b = 0; b < 3; b++) {
+        for (let i = 0; i < n; i++) {
+          let d = Math.abs(i - head);
+          if (d > n / 2) d = n - d;
+          this.crown.lift[b * n + i] =
+            this.forced.wave * Math.sin((TAU * 4 * i) / n + b) + this.forced.impact * CROWN_CEILING[b] * Math.exp(-(d * d) / 18);
+        }
+      }
+      this.crown.pace.fill(0);
+      this.ripple();
       (this.u.uWave.value as THREE.Vector4).w = this.forced.spread;
       (this.u.uPlay.value as THREE.Vector4).w = 1;
     }
@@ -829,29 +853,52 @@ export class World implements WorldPresenter {
     this.waveWas = s.waveR;
 
     const sig = album ? album.signature : null;
-    this.wavePhase += dt * TAU * (beat > 0 ? 1 / (beat * 4) : 0.1 + 0.25 * e) * calm;
+    if (this.crownAlb !== centre || view.reduced) {
+      this.crown.settle();
+      this.crownAlb = centre;
+    }
+    const quiet = live ? clamp(1 - this.swell / 0.35, 0, 1) : 0;
+    const breathMass = view.breath.mass + view.rest.mass * quiet;
+    const breathLight = view.breath.light + view.rest.light * quiet;
+    const lead = inside && s.playAlb === s.alb ? 1 : 0.5;
+    const reach = gain * calm * live * lead * lerp(0.6, 1, Math.sqrt(clamp(this.swell, 0, 1)));
+    const tide = clamp((this.swell - this.swellSlow) / (this.swellSlow + 0.12), -1, 1);
+    if (calm && quiet > 0.5 && view.rest.mass > 0.5 && this.time - this.ringAt > 2.4) this.emit(origin.x, origin.z, 0.006 * quiet);
+    const lean = (x: number) => (x > 0 ? x : 0.5 * x);
+    this.crown.step(dt, {
+      head,
+      push: [
+        0.085 * lean(a.accent.bass) * (0.5 + 0.5 * massK) * reach +
+          gain * calm * live * lead * (0.045 * tide + 0.02 * view.rest.mass * quiet),
+        0.06 * lean(a.accent.mid) * reach,
+        0.036 * lean(a.accent.treb) * lightK * reach,
+      ],
+      speed: beat > 0 ? clamp(1 / (beat * 4), 0.14, 0.6) : lerp(0.16, 0.42, q ? q.sharpness : 0.5),
+      carry: lerp(0.16, 0.55, sustain),
+      hold: live * calm,
+    });
+    this.ripple();
     this.spinPhase += dt * (0.25 + 1.6 * e);
     this.drift += dt * 0.11 * (1 + 1.2 * e);
-    const waveAmp = gain * calm * live * (0.012 + 0.07 * a.mid) * (0.5 + 0.8 * this.swell);
     const spread = gain * calm * (0.09 * this.swell + 0.03 * Math.max(0, this.tension)) - 0.035 * hush;
     (u.uAudio.value as THREE.Vector4).set(a.bass, a.mid, a.treb, live ? a.flux : 0);
-    (u.uAccent.value as THREE.Vector4).set(bass, live ? a.accent.mid : 0, treb, live ? a.energy : view.breath.light * 0.25);
+    (u.uAccent.value as THREE.Vector4).set(bass, live ? a.accent.mid : 0, treb, live ? a.energy + breathLight * 0.25 : breathLight * 0.25);
     (u.uScore.value as THREE.Vector4).set(this.swell, this.impact * gain * calm, this.shimmer * lightK, this.tension);
-    (u.uWave.value as THREE.Vector4).set(waveAmp, sig ? 2 + Math.round(sig.pulse * 3) : 3, this.wavePhase, spread);
+    (u.uWave.value as THREE.Vector4).set(0, 0, 0, spread);
     (u.uPulse.value as THREE.Vector4).set(
-      0.15 + live * (1.1 * a.bass * massK + 0.7 * this.impact) + 0.3 * view.breath.light + 0.9 * hush,
+      0.15 + live * (1.1 * a.bass * massK + 0.7 * this.impact) + 0.3 * breathLight + 0.9 * hush,
       this.spinPhase,
       1 - 0.45 * this.swell * lightK,
       0.45 * this.shimmer * lightK,
     );
     const cool = clamp((this.warm - 0.25) / 0.5, 0, 1);
-    const key = (0.9 + live * (0.55 * this.swell * lightK + 0.45 * this.impact * gain)) * (1 - 0.35 * hush) + 0.5 * this.flash;
+    const key = (0.9 + live * (0.55 * this.swell * lightK + 0.2 * this.impact * gain)) * (1 - 0.35 * hush) + 0.5 * this.flash;
     (u.uKeyCol.value as THREE.Vector3).set(lerp(1, 0.7, cool) * key, lerp(0.78, 0.84, cool) * key, lerp(0.58, 1, cool) * key);
-    this.post.uExposure.value = 1.12 * (live ? 0.9 + 0.3 * this.swell : 1) * (1 + 0.15 * this.flash);
+    this.post.uExposure.value = 1.12 * (live ? 0.9 + 0.1 * this.swell + 0.2 * this.swellSlow : 1) * (1 + 0.15 * this.flash);
     u.uTime.value = this.time;
     u.uJet.value = s.jet;
     u.uGlow.value =
-      1 + (a.flux * 0.5 + this.shimmer * 0.4) * lightK * live + 0.2 * view.breath.light + 0.25 * this.swell;
+      1 + (a.flux * 0.5 + this.shimmer * 0.4) * lightK * live + 0.2 * breathLight + 0.25 * this.swell;
     u.uFocus.value = focusSlot;
     const partK = inside ? clamp(view.partK, 0, 1) : 0;
     (u.uPart.value as THREE.Vector2).set(view.part ? (PART[view.part] ?? 0) : 0, partK);
@@ -894,7 +941,8 @@ export class World implements WorldPresenter {
       air.moon += (lerp(3200, 13000, sig.brightness) - air.moon) * t;
       air.az += (lerp(-0.52, -0.2, sig.duration) - air.az) * t;
       air.el += (lerp(0.11, 0.26, sig.brightness) - air.el) * t;
-      (u.uAir.value as THREE.Vector4).set(air.fog, air.haze, air.stars, air.moon);
+      const mood = live * this.tension;
+      (u.uAir.value as THREE.Vector4).set(air.fog * (1 + 0.3 * mood), air.haze * (1 + 0.4 * mood), air.stars * (1 - 0.35 * mood), air.moon);
       (u.uMoon.value as THREE.Vector3).set(
         Math.sin(air.az) * Math.cos(air.el),
         Math.sin(air.el),
@@ -931,11 +979,11 @@ export class World implements WorldPresenter {
       (u.uBLip.value as number[])[i] = slot.lip;
       const far = this.farOf(i);
       (u.uBHaze.value as number[])[i] = 0.4 * far * (1 - 0.5 * slot.hov);
-      const flex = isFocus ? 1 + gain * (0.35 * this.impact * massK + 0.2 * this.swell) + 0.06 * view.breath.mass : 1;
+      const flex = isFocus ? 1 + gain * 0.2 * this.swell + 0.06 * breathMass : 1;
       const amp = (0.1 + 0.42 * m.relief) * flex;
       const bank = (0.3 + 0.6 * m.strata) * (isFocus ? 1 + 0.5 * this.shimmer * lightK * calm : 1);
       const thick = 0.044;
-      const loose = isFocus ? waveAmp + 0.09 : 0;
+      const loose = isFocus ? CROWN_CEILING[0] + 0.03 : 0;
       band[i].set(slot.lo, slot.hi + (isFocus ? spread + 0.06 : 0), thick, thick + amp * 1.05 + bank * (slot.hi - slot.lo) * 0.5 + 0.02 + loose);
       const sg = alb.signature;
       mats[i].set(
@@ -968,6 +1016,7 @@ export class World implements WorldPresenter {
       });
     }
 
+    (u.uSpan.value as THREE.Vector2).set(focus.lo, Math.max(0.12, focus.hi - focus.lo));
     const fm = focus.morph;
     if (fm && inside) {
       const b = fm.bounds;
@@ -1099,6 +1148,13 @@ export class World implements WorldPresenter {
     const tier = this.scale < 0.55 ? 0 : 1;
     u.uSteps.value = tier ? 96 : 64;
     u.uDetail.value = tier ? 1 : 0.6;
+  }
+
+  private ripple() {
+    this.crown.write(this.crownOut);
+    const data = this.crownTex.image.data as Uint16Array;
+    for (let i = 0; i < data.length; i++) data[i] = half(this.crownOut[i]);
+    this.crownTex.needsUpdate = true;
   }
 
   private emit(x: number, z: number, amp: number) {
@@ -1388,6 +1444,7 @@ export class World implements WorldPresenter {
     [this.scene, this.down, this.up, this.rays, this.final].forEach((m) => m.dispose());
     this.mesh.geometry.dispose();
     this.shapeTex.dispose();
+    this.crownTex.dispose();
     this.warpTex.dispose();
     this.textTex.dispose();
     this.renderer.dispose();

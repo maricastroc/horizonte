@@ -11,6 +11,8 @@ uniform float uFocal;
 uniform sampler2D uShape;
 uniform sampler2D uWarp;
 uniform sampler2D uText;
+uniform sampler2D uRing;
+uniform vec2 uSpan;
 uniform vec3 uBPos[NB];
 uniform vec4 uBRot[NB];
 uniform vec4 uBBand[NB];
@@ -144,16 +146,16 @@ float mapBody(vec3 pl){
   float lift = wv.x * gGlass.x;
   float slope = wv.y * gGlass.x;
   float bank = wv.w * gGlass.y;
-  float shift = 0.0;
+  float tip = 0.0;
+  float ripple = 0.0;
   if (float(gBody) == uFocus){
-    float dp = fract(turn - uPlay.x + 0.5) - 0.5;
-    float hit = exp(-dp * dp * 260.0) * uScore.y * uPlay.w;
-    float dhit = -520.0 * dp * hit;
-    float ph = turn * TAU * uWave.y - uWave.z;
-    lift += uWave.x * sin(ph) + hit * 0.075;
-    slope += uWave.x * cos(ph) * TAU * uWave.y + dhit * 0.075;
-    x -= uWave.w + hit * 0.05;
-    shift = dhit * 0.05;
+    vec4 rg = texture(uRing, vec2(turn, 0.25));
+    float rho = clamp((r - uSpan.x) / uSpan.y, 0.0, 1.0);
+    float inv = 1.0 - rho;
+    lift += rg.x * inv * inv + rg.y * 2.0 * rho * inv + rg.z * rho * rho;
+    tip = 2.0 * max(abs(rg.y - rg.x), abs(rg.z - rg.y)) / uSpan.y;
+    ripple = rg.w;
+    x -= uWave.w;
   }
   float e = clamp(x / hw, -1.0, 1.0);
   float gap = min(min(bandD(r, a.x, a.y), bandD(r, a.z, a.w)), bandD(r, b.x, b.y));
@@ -166,8 +168,8 @@ float mapBody(vec3 pl){
   float rr = min(hw, thick) * 0.9;
   vec2 w = abs(q) - vec2(hw, thick) + rr;
   float d = min(max(w.x, w.y), 0.0) + length(max(w, 0.0)) - rr;
-  float along = (abs(slope) + abs(x * wv.z * gGlass.y) + abs(shift)) / (TAU * max(r, 0.15));
-  float steep = abs(bank) + dthick;
+  float along = (abs(slope) + ripple + abs(x * wv.z * gGlass.y)) / (TAU * max(r, 0.15));
+  float steep = abs(bank) + tip + dthick;
   return smax(d / (sqrt(1.0 + steep * steep + along * along) * gLip), -b.z * TAU * r - 0.005, 0.02);
 }
 
@@ -716,8 +718,15 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
   vec3 lc = vec3(gCore.x, 0.0, gCore.y) - pl;
   float nucleus = mix(0.15, uPulse.x, focus);
   float fromCore = max(dot(nl, normalize(lc)) * 0.5 + 0.5, 0.0) * nucleus * 0.22 / (0.35 + dot(lc, lc) * 2.0);
+  float wake = 0.0;
+  if (focus > 0.5){
+    vec3 rg = texture(uRing, vec2(turn, 0.75)).rgb;
+    float rho = clamp((r - uSpan.x) / uSpan.y, 0.0, 1.0);
+    float inv = 1.0 - rho;
+    wake = rg.x * inv * inv + rg.y * 2.0 * rho * inv + rg.z * rho * rho;
+  }
   vec3 glow = body * mix(vec3(1.0), uKeyCol / max(keyLum, 0.05), 0.3) * (1.0 - exp(-ti * 8.0))
-            * (0.1 + 0.42 * wrap * wrap * keyLum + 0.3 * side + fromCore) * gGlass.w;
+            * (0.1 + 0.42 * wrap * wrap * keyLum + 0.3 * side + fromCore + 0.4 * wake) * gGlass.w;
   vec3 col = back * tr * (1.0 - f) + refl + glow;
   if (focus > 0.5 && uPart.y > 0.01){
     vec4 pa;
