@@ -257,6 +257,8 @@ export class World implements WorldPresenter {
   private dawn = 0;
   private seqWas = 0;
   private whirl = 0;
+  private moonDrift = 0;
+  private keySweep = 0;
   private camPos = new THREE.Vector3(0, 0.5, 7);
   private camR = new THREE.Vector3(1, 0, 0);
   private camU = new THREE.Vector3(0, 1, 0);
@@ -943,11 +945,10 @@ export class World implements WorldPresenter {
       air.el += (lerp(0.11, 0.26, sig.brightness) - air.el) * t;
       const mood = live * this.tension;
       (u.uAir.value as THREE.Vector4).set(air.fog * (1 + 0.3 * mood), air.haze * (1 + 0.4 * mood), air.stars * (1 - 0.35 * mood), air.moon);
-      (u.uMoon.value as THREE.Vector3).set(
-        Math.sin(air.az) * Math.cos(air.el),
-        Math.sin(air.el),
-        -Math.cos(air.az) * Math.cos(air.el),
-      );
+      const drift = live && s.dur ? (clamp(s.pos / s.dur, 0, 1) - 0.5) * 0.24 : 0;
+      this.moonDrift += (drift - this.moonDrift) * ke(2.5);
+      const az = air.az + this.moonDrift;
+      (u.uMoon.value as THREE.Vector3).set(Math.sin(az) * Math.cos(air.el), Math.sin(air.el), -Math.cos(az) * Math.cos(air.el));
     }
 
     const pos = u.uBPos.value as THREE.Vector3[];
@@ -1116,14 +1117,8 @@ export class World implements WorldPresenter {
     u.uFocal.value = this.focal;
 
     const sweep = live && s.dur ? (clamp(s.pos / s.dur, 0, 1) - 0.5) * 0.9 : 0;
-    (u.uKey.value as THREE.Vector3)
-      .set(-0.55, 0.6, 0.58)
-      .applyAxisAngle(UP, sweep)
-      .multiplyScalar(0.55)
-      .addScaledVector(this.camR, -0.3)
-      .addScaledVector(this.camU, 0.3)
-      .addScaledVector(this.camF, -0.3)
-      .normalize();
+    this.keySweep += (sweep - this.keySweep) * ke(2.5);
+    (u.uKey.value as THREE.Vector3).set(-0.5, 0.64, 0.59).applyAxisAngle(UP, this.keySweep).normalize();
 
     const ray = this.rayAt(view.mouse.x, view.mouse.y);
     const cur = u.uCursor.value as THREE.Vector4;
