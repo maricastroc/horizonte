@@ -1086,6 +1086,7 @@ export class FieldEngine implements InputActions {
       cap: this.C.reactionCap,
       routing: this.motion,
       breath: { mass: this.breathMass, light: this.breathLight },
+      rest: this.breathOf(s.alb),
       reduced: this.reduced,
       coarse: this.coarse,
       mouse: { x: this.mouse.x, y: this.mouse.y, onUi: this.onUi },

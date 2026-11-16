@@ -11,6 +11,8 @@ uniform float uFocal;
 uniform sampler2D uShape;
 uniform sampler2D uWarp;
 uniform sampler2D uText;
+uniform sampler2D uRing;
+uniform vec2 uSpan;
 uniform vec3 uBPos[NB];
 uniform vec4 uBRot[NB];
 uniform vec4 uBBand[NB];
@@ -84,6 +86,7 @@ float gLip;
 float gHaze;
 float gSoft;
 float gFar;
+float gKeep = 1.0;
 
 void useBody(int b){
   gBody = b;
@@ -144,16 +147,16 @@ float mapBody(vec3 pl){
   float lift = wv.x * gGlass.x;
   float slope = wv.y * gGlass.x;
   float bank = wv.w * gGlass.y;
-  float shift = 0.0;
+  float tip = 0.0;
+  float ripple = 0.0;
   if (float(gBody) == uFocus){
-    float dp = fract(turn - uPlay.x + 0.5) - 0.5;
-    float hit = exp(-dp * dp * 260.0) * uScore.y * uPlay.w;
-    float dhit = -520.0 * dp * hit;
-    float ph = turn * TAU * uWave.y - uWave.z;
-    lift += uWave.x * sin(ph) + hit * 0.075;
-    slope += uWave.x * cos(ph) * TAU * uWave.y + dhit * 0.075;
-    x -= uWave.w + hit * 0.05;
-    shift = dhit * 0.05;
+    vec4 rg = texture(uRing, vec2(turn, 0.25));
+    float rho = clamp((r - uSpan.x) / uSpan.y, 0.0, 1.0);
+    float inv = 1.0 - rho;
+    lift += rg.x * inv * inv + rg.y * 2.0 * rho * inv + rg.z * rho * rho;
+    tip = 2.0 * max(abs(rg.y - rg.x), abs(rg.z - rg.y)) / uSpan.y;
+    ripple = rg.w;
+    x -= uWave.w;
   }
   float e = clamp(x / hw, -1.0, 1.0);
   float gap = min(min(bandD(r, a.x, a.y), bandD(r, a.z, a.w)), bandD(r, b.x, b.y));
@@ -166,8 +169,8 @@ float mapBody(vec3 pl){
   float rr = min(hw, thick) * 0.9;
   vec2 w = abs(q) - vec2(hw, thick) + rr;
   float d = min(max(w.x, w.y), 0.0) + length(max(w, 0.0)) - rr;
-  float along = (abs(slope) + abs(x * wv.z * gGlass.y) + abs(shift)) / (TAU * max(r, 0.15));
-  float steep = abs(bank) + dthick;
+  float along = (abs(slope) + ripple + abs(x * wv.z * gGlass.y)) / (TAU * max(r, 0.15));
+  float steep = abs(bank) + tip + dthick;
   return smax(d / (sqrt(1.0 + steep * steep + along * along) * gLip), -b.z * TAU * r - 0.005, 0.02);
 }
 
@@ -207,7 +210,7 @@ vec3 stars(vec3 d){
 
 float moonLobe(float mu){
   float l = pow(mu, 30.0) * 0.035 + pow(mu, 5.0) * 0.012;
-  if (mu > 0.97) l += pow(mu, uAir.w) * 6.0 + pow(mu, uAir.w * 0.08) * 0.06;
+  if (mu > (gKeep < 1.0 ? 0.9 : 0.97)) l += (pow(mu, uAir.w * gKeep) * 6.0 + pow(mu, uAir.w * 0.08 * gKeep) * 0.06) * gKeep;
   return l;
 }
 
@@ -223,12 +226,26 @@ vec3 skyBase(vec3 d){
   c += (uInk * 0.085 * (0.25 + 0.75 * az * az) + uInk2 * 0.03 * (1.0 - az)) * exp(-y * 9.0) * uAir.y;
   c += (uInk * 0.6 + 0.05) * 0.11 * exp(-y * 70.0) * (0.35 + 0.65 * az);
   c += mix(uInk * 1.5, vec3(1.0, 0.94, 0.84), 0.5) * moonLobe(max(dot(d, uMoon), 0.0)) * uGlow;
+  return c;
+}
+
+vec3 studio(vec3 d){
   float k1 = max(dot(d, uKey), 0.0);
-  c += uKeyCol * (smoothstep(0.9, 0.975, k1) * 1.2 + pow(k1, 5.0) * 0.08);
+  vec3 c = uKeyCol * (smoothstep(0.9, 0.975, k1) * 1.2 + pow(k1, 5.0) * 0.08);
   float k2 = max(dot(d, uRim), 0.0);
   c += (uInk * 1.6 + 0.18) * (smoothstep(0.93, 0.988, k2) * 1.4 + pow(k2, 8.0) * 0.06) * (1.0 + 1.5 * uScore.z);
-  c += arcs(d);
-  return c;
+  return c + arcs(d);
+}
+
+float lightOn(vec3 n){
+  float a = max(dot(n, uMoon) * 0.5 + 0.5, 0.0);
+  float b = max(dot(n, uKey) * 0.5 + 0.5, 0.0);
+  return 0.5 * a * a + b * b;
+}
+
+float moonThrough(vec3 rd){
+  float m = max(dot(rd, uMoon), 0.0);
+  return m * m * m;
 }
 
 vec3 sky(vec3 d){
@@ -236,9 +253,10 @@ vec3 sky(vec3 d){
 }
 
 vec3 envAt(vec3 d){
-  if (d.y >= 0.0) return min(skyBase(d), vec3(8.0));
+  if (d.y >= 0.0) return min(skyBase(d) + studio(d), vec3(8.0));
   float f = 0.02 + 0.98 * pow(1.0 + d.y, 5.0);
-  return min(skyBase(vec3(d.x, -d.y, d.z)), vec3(8.0)) * f + vec3(0.002, 0.004, 0.008) + uInk * 0.012;
+  vec3 up = vec3(d.x, -d.y, d.z);
+  return min(skyBase(up) + studio(up), vec3(8.0)) * f + vec3(0.002, 0.004, 0.008) + uInk * 0.012;
 }
 
 vec3 noised(vec2 p){
@@ -506,9 +524,8 @@ vec3 shadeOrb(vec3 n, vec3 rd, float kind){
   float f0 = mix(0.045, 0.5, m.w);
   float f = f0 + (1.0 - f0) * pow(1.0 - ndv, 5.0);
   vec3 c = envAt(reflect(rd, n)) * f * mix(vec3(1.0), gInkA * 2.2 + 0.25, m.w) * mix(0.45, 1.0, m.x);
-  float wrap = max(dot(n, uKey) * 0.5 + 0.5, 0.0);
   float glow = (float(gBody) == uFocus ? uPulse.x : 0.15) * (kind > 2.5 ? 0.45 : 1.0);
-  c += gInkA * (0.02 + 0.06 * wrap * wrap) * (1.0 - 0.6 * m.y) + gInkA * ndv * ndv * 0.12 * glow;
+  c += gInkA * (0.02 + 0.06 * lightOn(n)) * (1.0 - 0.6 * m.y) + gInkA * ndv * ndv * 0.12 * glow;
   return c;
 }
 
@@ -544,7 +561,20 @@ vec3 waterBase(vec3 p){
   return deep;
 }
 
+vec3 calmEnv(vec3 d){
+  vec3 up = vec3(d.x, abs(d.y), d.z);
+  gKeep = 0.04;
+  vec3 c = skyBase(up);
+  gKeep = 1.0;
+  float k1 = max(dot(up, uKey), 0.0);
+  float k2 = max(dot(up, uRim), 0.0);
+  c += uKeyCol * pow(k1, 5.0) * 0.4 + (uInk * 1.6 + 0.18) * pow(k2, 6.0) * 0.4;
+  if (d.y < 0.0) c = c * (0.02 + 0.98 * pow(1.0 + d.y, 5.0)) + vec3(0.002, 0.004, 0.008) + uInk * 0.012;
+  return min(c, vec3(8.0));
+}
+
 vec3 farField(vec3 ro, vec3 rd){
+  gKeep = 0.025;
   float tt;
   float ta = textHit(ro, rd, tt);
   float tw = rd.y < -1e-4 ? -ro.y / rd.y : 1e9;
@@ -560,6 +590,7 @@ vec3 farField(vec3 ro, vec3 rd){
     c = sky(rd);
   }
   if (ta > 0.0 && tt < tw) c = mix(c, textColor(ro, rd, tt), ta);
+  gKeep = 1.0;
   return c;
 }
 
@@ -582,7 +613,7 @@ vec3 shadeSphere(Hit h, vec3 dl, vec3 rd, float steps){
   float f = f0 + (1.0 - f0) * pow(1.0 - ndv, 5.0);
   vec3 rl = reflect(dl, n);
   vec3 rw = toWorldDir(rl);
-  vec3 soft = hazeOf(rw) * 2.5 + uKeyCol * pow(max(dot(rw, uKey), 0.0), 3.0) * 0.2;
+  vec3 soft = hazeOf(rw) * 2.5 + uKeyCol * (0.5 * moonThrough(rw) + pow(max(dot(rw, uKey), 0.0), 3.0)) * 0.2;
   vec3 mirror = mix(soft, envAt(rw), m.x);
   if (isCore && uDetail > 0.75){
     Hit hr = traceLocal(h.p + n * 0.02, rl, steps * 0.3, 0.0);
@@ -621,8 +652,7 @@ vec3 shadeSphere(Hit h, vec3 dl, vec3 rd, float steps){
     if (dot(dg, dg) < 1e-4) dg = reflect(di, ne);
     col += farField(toWorld(centre + pe * rad), toWorldDir(dg)) * trans * (1.0 - f) * (gInkA * 1.2 + 0.25);
   }
-  float wrap = max(dot(wn, uKey) * 0.5 + 0.5, 0.0);
-  col += gInkA * 0.02 * wrap * wrap * (1.0 - m.x * 0.5);
+  col += gInkA * 0.02 * lightOn(wn) * (1.0 - m.x * 0.5);
   if (!isCore){
     vec3 toCore = normalize(vec3(gCore.x, 0.0, gCore.y) - centre);
     col += gInkA * max(dot(n, toCore), 0.0) * 0.24 * glow;
@@ -644,6 +674,7 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
   float turn = fract(atan(pl.z, pl.x) / TAU - gGlass.z);
   vec3 radial = normalize(vec3(pl.x, 0.0, pl.z));
   float fine = 1.0 - smoothstep(0.12, 0.4, (gFar + h.t) * uPix * 30.0 / max(dot(nl, -dl), 0.2));
+  vec3 ng = nl;
   nl = normalize(nl + radial * sin(r * 190.0) * 0.04 * fine * (1.0 + 1.5 * uAudio.w * focus));
   vec3 n = toWorldDir(nl);
   float ndv = max(dot(nl, -dl), 0.0);
@@ -652,11 +683,15 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
   vec3 body = bodyOf(ndv, r);
   vec3 sigma = sigmaOf(body) * mix(1.0, uPulse.z, focus);
   vec3 tint = mix(vec3(1.0), film(ndv + r * 0.6) * 1.7, min(uIrid + uPulse.w * focus, 0.9));
-  vec3 refl = envAt(toWorldDir(reflect(dl, nl))) * f * tint;
+  float bend = smoothstep(0.2, 0.7, length(fwidth(ng)));
+  vec3 rdir = toWorldDir(reflect(dl, nl));
+  vec3 refl = mix(envAt(rdir), calmEnv(rdir), bend) * f * tint;
 
-  vec3 di = refract(dl, nl, 1.0 / uIor);
-  vec3 pin = pl - nl * 0.006;
+  vec3 di = refract(dl, ng, 1.0 / uIor);
+  vec3 pin = pl - ng * 0.006;
+  if (mapBody(pin) > 0.0) pin = pl + di * 0.003;
   float ti = 0.0;
+  float found = 0.0;
   float inside = 0.0;
   for (int i = 0; i < 28; i++){
     float d = -mapBody(pin + di * ti);
@@ -668,6 +703,7 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
         else inside = m;
       }
       ti = 0.5 * (inside + beyond);
+      found = 1.0;
       break;
     }
     inside = ti;
@@ -675,15 +711,26 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
     if (ti > 1.2) break;
   }
   vec3 pe = pin + di * ti;
-  vec3 ne = -normalAt(pe);
+  vec3 ne = ti < 1e-5 ? ng : -normalAt(pe);
+  if (found < 0.5) ti = 2.0 * gBand.z;
   vec3 tr = exp(-sigma * ti);
-  vec3 dg = refract(di, ne, uIor);
-  if (dot(dg, dg) < 1e-4) dg = reflect(di, ne);
+  float ce = max(-dot(di, ne), 0.0);
+  float kx = 1.0 - uIor * uIor * (1.0 - ce * ce);
+  float leave = 1.0 - pow(1.0 - sqrt(max(kx, 0.0)), 5.0);
+  vec3 dg = kx > 0.0 ? refract(di, ne, uIor) : reflect(di, ne);
+  float prism = found > 0.5 ? smoothstep(0.04, 0.16, 1.0 - dot(ng, ne)) : 1.0;
   vec3 po = pe - ne * 0.02;
   vec3 wo = toWorld(po);
 
   vec3 back;
-  Hit h2 = traceLocal(po, dg, steps * 0.4, 1.0);
+  Hit h2;
+  h2.t = 1e9;
+  h2.kind = 0.0;
+  h2.id = 0.0;
+  h2.cover = 1.0;
+  h2.p = po;
+  h2.n = ne;
+  if (prism < 0.98) h2 = traceLocal(po, dg, steps * 0.4, 1.0);
   if (h2.kind > 1.5){
     back = shadeOrb(toWorldDir(h2.n), toWorldDir(dg), h2.kind);
   } else if (h2.kind > 0.5){
@@ -697,7 +744,7 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
          + envAt(toWorldDir(reflect(dg, n2))) * f2
          + body2 * (1.0 - exp(-t2 * 8.0)) * 0.2 * gGlass.w;
   } else if (uDetail > 0.75){
-    float sp = 0.014 + 0.02 * uAudio.z;
+    float sp = (0.014 + 0.02 * uAudio.z) * (1.0 - prism);
     vec3 dr = refract(di, ne, uIor * (1.0 - sp));
     vec3 db = refract(di, ne, uIor * (1.0 + sp));
     if (dot(dr, dr) < 1e-4) dr = dg;
@@ -710,15 +757,24 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
     back = farField(wo, toWorldDir(dg));
   }
 
-  float wrap = max(dot(n, uKey) * 0.5 + 0.5, 0.0);
+  back = mix(back, mix(calmEnv(toWorldDir(reflect(di, ne))), calmEnv(toWorldDir(dg)), leave) * (body * 1.3 + 0.25), prism);
   float side = max(dot(n, uRim), 0.0);
   float keyLum = dot(uKeyCol, vec3(0.333));
   vec3 lc = vec3(gCore.x, 0.0, gCore.y) - pl;
   float nucleus = mix(0.15, uPulse.x, focus);
   float fromCore = max(dot(nl, normalize(lc)) * 0.5 + 0.5, 0.0) * nucleus * 0.22 / (0.35 + dot(lc, lc) * 2.0);
-  vec3 glow = body * mix(vec3(1.0), uKeyCol / max(keyLum, 0.05), 0.3) * (1.0 - exp(-ti * 8.0))
-            * (0.1 + 0.42 * wrap * wrap * keyLum + 0.3 * side + fromCore) * gGlass.w;
-  vec3 col = back * tr * (1.0 - f) + refl + glow;
+  float wake = 0.0;
+  if (focus > 0.5){
+    vec3 rg = texture(uRing, vec2(turn, 0.75)).rgb;
+    float rho = clamp((r - uSpan.x) / uSpan.y, 0.0, 1.0);
+    float inv = 1.0 - rho;
+    wake = rg.x * inv * inv + rg.y * 2.0 * rho * inv + rg.z * rho * rho;
+  }
+  vec3 glow = body * mix(vec3(1.0), uKeyCol / max(keyLum, 0.05), 0.3) * (1.0 - exp(-clamp(ti, 0.015, 0.25) * 8.0))
+            * (0.1 + 0.42 * lightOn(n) * keyLum + 0.3 * side + fromCore + 0.4 * wake) * gGlass.w;
+  float aim = max(dot(toWorldDir(dg), uMoon), 0.0);
+  vec3 pass = body * uKeyCol * pow(aim, 6.0) * 0.45 * (1.0 - exp(-ti * 10.0)) * gGlass.w * (1.0 - f) * (1.0 - 0.6 * prism);
+  vec3 col = back * tr * (1.0 - f) + refl + glow + pass;
   if (focus > 0.5 && uPart.y > 0.01){
     vec4 pa;
     vec4 pb;
@@ -750,10 +806,9 @@ vec3 shadeLite(Hit h, vec3 dl, vec3 rd){
   vec3 body = bodyOf(ndv, r);
   vec3 through = normalize(rd - n * 0.18);
   through.y = abs(through.y);
-  float wrap = max(dot(n, uKey) * 0.5 + 0.5, 0.0);
   vec3 col = envAt(toWorldDir(reflect(dl, nl))) * f;
   col += skyBase(through) * exp(-sigmaOf(body) * 0.1) * (1.0 - f);
-  col += body * (0.12 + 0.3 * wrap * wrap) * gGlass.w;
+  col += body * (0.12 + 0.3 * lightOn(n) + 0.2 * moonThrough(rd)) * gGlass.w;
   float turn = fract(atan(h.p.z, h.p.x) / TAU - gGlass.z);
   col += innerLight(r, turn) * 0.6;
   return col;
