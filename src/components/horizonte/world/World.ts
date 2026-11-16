@@ -14,7 +14,7 @@ import { fieldConstantsOf } from "../field";
 import { clamp, lerp } from "../math";
 import { lobeAt, satRadiusOf, type AlbumMorphology } from "../morphology";
 import { motionQualitiesOf, type Routing } from "../motion";
-import { MORPH, RELIEF, RING } from "../tokens";
+import { MORPH, RELIEF, RING, SEQ } from "../tokens";
 import type { FieldState } from "../types";
 
 export interface WorldFocus {
@@ -140,6 +140,8 @@ interface Slot {
   y: number;
   hov: number;
   lip: number;
+  spin: number;
+  d: number;
 }
 
 interface Rig {
@@ -193,6 +195,8 @@ export class World implements WorldPresenter {
     y: 1,
     hov: 0,
     lip: 1,
+    spin: RING.anchor / TAU,
+    d: 0,
   }));
   private time = 0;
   private scaleNow: FieldState["scale"] = "collection";
@@ -228,6 +232,14 @@ export class World implements WorldPresenter {
   private dtWas = 1 / 60;
   private flash = 0;
   private fusing = false;
+  private row = -1;
+  private focusWas = 0;
+  private seat = { y: 1, tilt: 0.6, radius: 1, lo: 0.5, hi: 1 };
+  private rowVel = 0;
+  private hush = 0;
+  private dawn = 0;
+  private seqWas = 0;
+  private whirl = 0;
   private camPos = new THREE.Vector3(0, 0.5, 7);
   private camR = new THREE.Vector3(1, 0, 0);
   private camU = new THREE.Vector3(0, 1, 0);
@@ -444,6 +456,7 @@ export class World implements WorldPresenter {
       steep = Math.max(steep, (rise * N) / (TAU * inner));
     }
     s.lip = Math.sqrt(1 + Math.min(steep, 2.5) ** 2);
+    if (s.album !== album) s.spin = RING.anchor / TAU;
     s.album = album;
     s.morph = m;
     s.lo = band.lo;
@@ -479,8 +492,13 @@ export class World implements WorldPresenter {
     this.textAlb = album;
   }
 
+  private indexOf(album: number): number {
+    const i = this.slots.findIndex((s) => s.album === album);
+    return i < 0 ? ((album % NB) + NB) % NB : i;
+  }
+
   private slotOf(album: number): Slot | null {
-    const s = this.slots[((album % NB) + NB) % NB];
+    const s = this.slots[this.indexOf(album)];
     return s.album === album && s.morph ? s : null;
   }
 
@@ -501,19 +519,20 @@ export class World implements WorldPresenter {
     return NEAR * clamp(this.sizeAt(nav) / 1.15, 0.72, 1.12);
   }
 
-  private farOf(slot: number, nav: number): number {
-    return ease(clamp(Math.abs(this.slots[slot].album - nav), 0, 1));
+  private farOf(slot: number): number {
+    return ease(clamp(this.slots[slot].d, 0, 1));
   }
 
   private place(slot: number, nav: number, k1: number): THREE.Vector3 {
     const s = this.slots[slot];
-    const d = Math.abs(s.album - nav);
+    const d = s.d;
     const sink = (1 - ease(s.k)) * (s.y + s.radius * 1.4);
     const bob = Math.sin(this.time * 0.6 + s.album * 1.7) * 0.012;
-    const ratio = lerp(1, SMALL, this.farOf(slot, nav)) / (1 + 0.5 * Math.max(0, d - 1));
+    const ratio = lerp(1, SMALL, this.farOf(slot)) / (1 + 0.5 * Math.max(0, d - 1));
     const reach = this.reachOf(nav);
     const back = Math.max(0, reach * ((s.radius * s.hi) / (ratio * this.sizeAt(nav)) - 1));
-    return new THREE.Vector3(s.album * SPACING, s.y - sink + bob + s.hov * 0.06, -back - (d > 0.5 ? 2.4 * k1 : 0));
+    const aside = ease(clamp((d - 0.2) / 0.6, 0, 1));
+    return new THREE.Vector3(s.album * SPACING, s.y - sink + bob + s.hov * 0.06, -back - 2.4 * k1 * aside);
   }
 
   grab() {
@@ -560,7 +579,7 @@ export class World implements WorldPresenter {
     return { held: o.held, away: Math.abs(o.az) + Math.abs(o.el) + Math.abs(o.zoom) > 0.05 };
   }
 
-  private rigs(focus: Slot, portrait: boolean, nav: number): [Rig, Rig, Rig] {
+  private rigs(focus: World["seat"], portrait: boolean, nav: number): [Rig, Rig, Rig] {
     const y = focus.y;
     const f = clamp((focus.radius * focus.hi) / 1.15, 0.72, 1.12);
     const reach = this.reachOf(nav);
@@ -648,42 +667,69 @@ export class World implements WorldPresenter {
     const k2 = ease(clamp(s.play, 0, 1)) * k1;
     const count = ALBUMS.length;
     const centre = clamp(Math.round(inside ? s.alb : s.nav), 0, count - 1);
-    const focusSlot = centre % NB;
 
-    for (let i = 0; i < NB; i++) {
-      const slot = this.slots[i];
-      let want = -1;
-      for (let a = centre - 1; a <= centre + 1; a++) {
-        if (a >= 0 && a < count && a % NB === i) want = a;
-      }
-      if (inside && want !== centre) want = -1;
-      const isFocus = want === centre && inside;
-      const m = want < 0 ? null : isFocus ? view.focus.morph : view.morph(want);
-      const key = !m
-        ? ""
-        : isFocus
-          ? `${want}:${view.focus.version}:${view.focus.sel}:${view.focus.active}:${view.focus.strain}`
-          : `${want}`;
-      if (want !== slot.album) {
-        slot.k = slot.album < 0 ? 0 : Math.max(0, slot.k - dt / 0.5);
-        if (slot.k === 0) {
-          slot.album = -1;
-          slot.key = "";
-          if (m && want >= 0) {
-            this.bake(i, want, m, isFocus ? view.focus : null);
-            slot.key = key;
-          }
-        }
-      } else if (want >= 0 && m) {
-        slot.k = Math.min(1, slot.k + dt / (view.reduced ? 0.2 : 1.1));
-        if (key !== slot.key) {
-          this.bake(i, want, m, isFocus ? view.focus : null);
-          slot.key = key;
-        }
+    const goal = inside ? s.alb : s.nav;
+    if (this.row < 0 || view.reduced || (!inside && Math.abs(goal - this.row) < 0.05)) {
+      this.rowVel = dt > 0 && this.row >= 0 ? clamp((goal - this.row) / dt, -40, 40) : 0;
+      this.row = goal;
+    } else {
+      const pull = inside ? 5.2 : 9;
+      this.rowVel += (pull * pull * (goal - this.row) - 2 * pull * this.rowVel) * dt;
+      this.row += this.rowVel * dt;
+    }
+    const row = this.row;
+    const rite = s.mode === "collapse" || s.mode === "fusion" ? clamp(1 - s.fade, 0, 1) : 0;
+    this.hush += (rite - this.hush) * (1 - Math.exp(-dt / 0.1));
+    const hush = view.reduced ? 0 : this.hush;
+
+    const wants: number[] = [];
+    for (let a = centre - 1; a <= centre + 1; a++) {
+      if (a >= 0 && a < count && (!inside || a === centre)) wants.push(a);
+    }
+    for (const slot of this.slots) {
+      if (slot.album < 0 || wants.includes(slot.album)) continue;
+      slot.k = Math.max(0, slot.k - dt / 0.6);
+      if (slot.k === 0) {
+        slot.album = -1;
+        slot.key = "";
       }
     }
+    for (const want of wants) {
+      const isFocus = want === centre && inside;
+      const m = isFocus ? view.focus.morph : view.morph(want);
+      if (!m) continue;
+      const key = isFocus
+        ? `${want}:${view.focus.version}:${view.focus.sel}:${view.focus.active}:${view.focus.strain}`
+        : `${want}`;
+      let i = this.slots.findIndex((x) => x.album === want);
+      const fresh = i < 0;
+      if (fresh) {
+        const own = want % NB;
+        i = this.slots[own].album < 0 ? own : this.slots.findIndex((x) => x.album < 0);
+        if (i < 0) continue;
+      }
+      const slot = this.slots[i];
+      slot.k = fresh ? 0 : Math.min(1, slot.k + dt / (view.reduced ? 0.2 : 1.1));
+      slot.d = Math.abs(want - row);
+      if (fresh || key !== slot.key) {
+        this.bake(i, want, m, isFocus ? view.focus : null);
+        slot.key = key;
+      }
+    }
+    const held = this.slots.findIndex((x) => x.album === centre);
+    const focusSlot = held < 0 ? this.focusWas : held;
+    this.focusWas = focusSlot;
 
     const focus = this.slots[focusSlot];
+    const seat = this.seat;
+    if (focus.morph && focus.album === centre) {
+      const sk = k1 > 0 && !view.reduced ? 1 - Math.exp(-dt / 0.3) : 1;
+      seat.y += (focus.y - seat.y) * sk;
+      seat.tilt += (focus.tilt - seat.tilt) * sk;
+      seat.radius += (focus.radius - seat.radius) * sk;
+      seat.lo += (focus.lo - seat.lo) * sk;
+      seat.hi += (focus.hi - seat.hi) * sk;
+    }
     const album = ALBUMS[centre];
     if (album) {
       const t = 1 - Math.exp(-dt * 3);
@@ -693,9 +739,10 @@ export class World implements WorldPresenter {
       const sig = album.signature;
       const sea = u.uSea.value as THREE.Vector4;
       const st = 1 - Math.exp(-dt * 1.5);
-      sea.x += (lerp(0.004, 0.013, sig.dynamics) * (1 + 0.9 * this.swell) - sea.x) * st;
+      const lull = 1 - 0.85 * hush;
+      sea.x += (lerp(0.004, 0.013, sig.dynamics) * (1 + 0.9 * this.swell) * lull - sea.x) * st;
       sea.y += (lerp(4.4, 2, sig.pulse) - sea.y) * st;
-      sea.z += (lerp(0.001, 0.0045, sig.brightness) * (1 + 2.5 * this.shimmer) - sea.z) * st;
+      sea.z += (lerp(0.001, 0.0045, sig.brightness) * (1 + 2.5 * this.shimmer) * lull - sea.z) * st;
       sea.w += (lerp(0.45, 1.1, sig.pulse) - sea.w) * st;
     }
     if (view.reduced) (u.uSea.value as THREE.Vector4).w = 0;
@@ -728,7 +775,7 @@ export class World implements WorldPresenter {
     const charge = album && live ? clamp(chargeAt(album.signature, head), -1, 1) : 0;
     this.tension += (charge - this.tension) * ke(2.2);
     this.warm += ((live ? a.centroid : 0.35) - this.warm) * ke(1.6);
-    const origin = this.place(focusSlot, inside ? s.alb : s.nav, k1);
+    const origin = this.place(focusSlot, row, k1);
 
     if (calm) {
       if (live) {
@@ -754,21 +801,21 @@ export class World implements WorldPresenter {
     this.spinPhase += dt * (0.25 + 1.6 * e);
     this.drift += dt * 0.11 * (1 + 1.2 * e);
     const waveAmp = gain * calm * live * (0.012 + 0.07 * a.mid) * (0.5 + 0.8 * this.swell);
-    const spread = gain * calm * (0.09 * this.swell + 0.03 * Math.max(0, this.tension));
+    const spread = gain * calm * (0.09 * this.swell + 0.03 * Math.max(0, this.tension)) - 0.035 * hush;
     (u.uAudio.value as THREE.Vector4).set(a.bass, a.mid, a.treb, live ? a.flux : 0);
     (u.uAccent.value as THREE.Vector4).set(bass, live ? a.accent.mid : 0, treb, live ? a.energy : view.breath.light * 0.25);
     (u.uScore.value as THREE.Vector4).set(this.swell, this.impact * gain * calm, this.shimmer * lightK, this.tension);
     (u.uWave.value as THREE.Vector4).set(waveAmp, sig ? 2 + Math.round(sig.pulse * 3) : 3, this.wavePhase, spread);
     (u.uPulse.value as THREE.Vector4).set(
-      0.15 + live * (1.1 * a.bass * massK + 0.7 * this.impact) + 0.3 * view.breath.light,
+      0.15 + live * (1.1 * a.bass * massK + 0.7 * this.impact) + 0.3 * view.breath.light + 0.9 * hush,
       this.spinPhase,
       1 - 0.45 * this.swell * lightK,
       0.45 * this.shimmer * lightK,
     );
     const cool = clamp((this.warm - 0.25) / 0.5, 0, 1);
-    const key = 0.9 + live * (0.55 * this.swell * lightK + 0.45 * this.impact * gain);
+    const key = (0.9 + live * (0.55 * this.swell * lightK + 0.45 * this.impact * gain)) * (1 - 0.35 * hush) + 0.5 * this.flash;
     (u.uKeyCol.value as THREE.Vector3).set(lerp(1, 0.7, cool) * key, lerp(0.78, 0.84, cool) * key, lerp(0.58, 1, cool) * key);
-    this.post.uExposure.value = 1.12 * (live ? 0.9 + 0.3 * this.swell : 1);
+    this.post.uExposure.value = 1.12 * (live ? 0.9 + 0.3 * this.swell : 1) * (1 + 0.15 * this.flash);
     u.uTime.value = this.time;
     u.uJet.value = s.jet;
     u.uGlow.value =
@@ -795,6 +842,11 @@ export class World implements WorldPresenter {
       seed.set(0, 0, 0, 0);
       this.fusing = false;
     }
+    if (s.mode === "collapse" && calm && this.seqWas < SEQ.collapse.valleyEnd && s.seqT >= SEQ.collapse.valleyEnd) {
+      this.flash = 1;
+      this.emit(origin.x, origin.z, 0.03);
+    }
+    this.seqWas = s.mode === "collapse" ? s.seqT : 0;
     this.flash *= Math.exp(-dt / 0.5);
     (u.uPulse.value as THREE.Vector4).x += 1.6 * this.flash;
 
@@ -828,6 +880,7 @@ export class World implements WorldPresenter {
     const sats = u.uBSat.value as THREE.Vector4[];
     const mats = u.uBMat.value as THREE.Vector4[];
     const mass = clamp(Math.pow(s.m0k / 0.088, 0.7), 0.5, 2.6);
+    this.whirl += dt * 0.045 * (1 + 9 * hush);
 
     for (let i = 0; i < NB; i++) {
       const slot = this.slots[i];
@@ -841,10 +894,10 @@ export class World implements WorldPresenter {
       const isFocus = i === focusSlot;
       const want = s.hoverBody === slot.album && !isFocus && !inside ? 1 : 0;
       slot.hov += (want - slot.hov) * ke(0.16);
-      pos[i].copy(this.place(i, inside ? s.alb : s.nav, k1));
+      pos[i].copy(this.place(i, row, k1));
       rot[i].set(Math.sin(slot.tilt), Math.cos(slot.tilt), slot.radius, ease(slot.k));
       (u.uBLip.value as number[])[i] = slot.lip;
-      const far = isFocus && inside ? 0 : this.farOf(i, inside ? s.alb : s.nav);
+      const far = this.farOf(i);
       (u.uBHaze.value as number[])[i] = 0.4 * far * (1 - 0.5 * slot.hov);
       const flex = isFocus ? 1 + gain * (0.35 * this.impact * massK + 0.2 * this.swell) + 0.06 * view.breath.mass : 1;
       const amp = (0.1 + 0.42 * m.relief) * flex;
@@ -861,11 +914,17 @@ export class World implements WorldPresenter {
       );
       const k = fieldConstantsOf(alb.signature);
       core[i].set(m.eccX, m.eccY, m.coreRatio * 0.9, 0.07 * k.massScale * (isFocus ? mass : 1));
-      const spin = isFocus && inside ? s.ringRot / TAU : RING.anchor / TAU;
-      glass[i].set(amp, bank, spin, ease(slot.k) * (isFocus ? (u.uGlow.value as number) : (1 + 0.6 * slot.hov) * (1 - 0.55 * k1) * (1 - 0.35 * far)));
+      if (slot.album === s.alb) slot.spin = s.ringRot / TAU;
+      else {
+        const turn = RING.anchor / TAU - slot.spin;
+        slot.spin += (turn - Math.round(turn)) * (view.reduced ? 1 : ke(0.25));
+      }
+      const side = (1 + 0.6 * slot.hov) * (1 - 0.55 * k1) * (1 - 0.35 * far);
+      const own = lerp(side, u.uGlow.value as number, 1 - far) * (isFocus ? 1 - 0.8 * hush : 1);
+      glass[i].set(amp, bank, slot.spin, ease(slot.k) * own);
       inkA[i].set(srgb(alb.inkA[0]), srgb(alb.inkA[1]), srgb(alb.inkA[2]));
       inkB[i].set(srgb(alb.inkB[0]), srgb(alb.inkB[1]), srgb(alb.inkB[2]));
-      const drift = view.reduced ? 0 : this.time * 0.045 * k.swirl;
+      const drift = view.reduced ? 0 : this.whirl * k.swirl;
       m.satellites.forEach((sat, j) => {
         if (j > 3) return;
         if (sat.weight <= 0.02) {
@@ -894,10 +953,10 @@ export class World implements WorldPresenter {
     }
 
     const portrait = this.cssW / this.cssH < 1;
-    const [r0, r1, r2] = this.rigs(focus, portrait, inside ? s.alb : s.nav);
+    const [r0, r1, r2] = this.rigs(seat, portrait, row);
     const rig = mixRig(mixRig(r0, r1, k1), r2, k2);
     const push = inside ? Math.sin(Math.PI * clamp(s.fadeSel, 0, 1)) : 0;
-    const navNow = inside ? s.alb : s.nav;
+    const navNow = row;
     this.dtWas = Math.max(dt, 1 / 240);
     this.navVel += (clamp((navNow - this.navWas) / this.dtWas, -3, 3) - this.navVel) * ke(0.25);
     this.navWas = navNow;
@@ -941,7 +1000,7 @@ export class World implements WorldPresenter {
     this.pointer.lerp(new THREE.Vector2(view.mouse.x * 2 - 1, 1 - view.mouse.y * 2), 1 - Math.exp(-dt * 3));
     const still = (view.reduced ? 0 : 1) * (1 - o.active) * (1 - 0.8 * pk);
     const az =
-      rig.az + o.az + this.pose.az + still * (Math.sin(this.drift) * 0.06 + this.pointer.x * 0.06) - 0.07 * this.navVel * (1 - k1);
+      rig.az + o.az + this.pose.az + still * (Math.sin(this.drift) * 0.06 + this.pointer.x * 0.06) - 0.07 * this.navVel * (1 - 0.5 * k1);
     const el = clamp(
       rig.el + o.el + this.pose.el + still * (Math.sin(this.time * 0.17) * 0.006 + this.pointer.y * 0.02 + 0.025 * this.tension * k2),
       -0.2,
@@ -951,9 +1010,10 @@ export class World implements WorldPresenter {
       rig.dist *
       (1 - 0.07 * push) *
       (1 - 0.05 * this.swellSlow * still) *
-      (1 + 0.06 * Math.min(Math.abs(this.navVel), 1.5) * (1 - k1)) *
+      (1 + 0.06 * Math.min(Math.abs(this.navVel), 1.5) * (1 - 0.4 * k1)) *
+      (1 - 0.035 * hush) *
       Math.exp(-o.zoom - this.pose.zoom);
-    const heart = (u.uBPos.value as THREE.Vector3[])[focusSlot];
+    const heart = new THREE.Vector3(navNow * SPACING, seat.y, 0);
     if (inside) rig.target.lerp(heart, clamp(o.active * 0.85 + pk * 0.7, 0, 1) * k1);
     this.camPos.set(
       rig.target.x + dist * Math.sin(az) * Math.cos(el),
@@ -999,7 +1059,8 @@ export class World implements WorldPresenter {
     const tall = Math.min(span / this.textFrac / 4, 1.25);
     (u.uTextRect.value as THREE.Vector4).set(left, left + tall * 4, -0.2 * tall, 0.8 * tall);
     (u.uTextAt.value as THREE.Vector3).set(-behind, portrait ? 0 : 0.3 * this.textK * (1 - k1) * (1 - k1), 0.2);
-    this.post.uFade.value = clamp(s.fade, 0, 1.2);
+    this.dawn = Math.max(this.dawn, clamp(s.fade, 0, 1));
+    this.post.uFade.value = this.dawn * (1 - (view.reduced ? 0.5 : 0.16) * this.hush);
     const tier = this.scale < 0.55 ? 0 : 1;
     u.uSteps.value = tier ? 96 : 64;
     u.uDetail.value = tier ? 1 : 0.6;
@@ -1057,7 +1118,7 @@ export class World implements WorldPresenter {
       }
       return best;
     }
-    const slot = this.alb % NB;
+    const slot = this.indexOf(this.alb);
     const s = this.slots[slot];
     if (!s.morph || s.album !== this.alb) return { kind: "empty", i: -1 };
     const origin = (this.u.uBPos.value as THREE.Vector3[])[slot];
@@ -1082,7 +1143,7 @@ export class World implements WorldPresenter {
   }
 
   sectorLabel(k: number): { x: number; y: number } | null {
-    const slot = this.alb % NB;
+    const slot = this.indexOf(this.alb);
     const s = this.slots[slot];
     if (!s.morph || s.album !== this.alb || k < 0 || k >= s.morph.bounds.length - 1) return null;
     const b = s.morph.bounds;
@@ -1094,7 +1155,7 @@ export class World implements WorldPresenter {
   }
 
   partAnchor(part: AnatomyPart): { x: number; y: number; ox: number; oy: number; hidden: boolean } | null {
-    const slot = this.alb % NB;
+    const slot = this.indexOf(this.alb);
     const s = this.slots[slot];
     const m = s.morph;
     if (!m || s.album !== this.alb) return null;
@@ -1151,7 +1212,7 @@ export class World implements WorldPresenter {
   }
 
   caption(album: number): { x: number; y: number; k: number } | null {
-    const slot = album % NB;
+    const slot = this.indexOf(album);
     const s = this.slots[slot];
     if (album < 0 || s.album !== album || s.k < 0.05) return null;
     const p = (this.u.uBPos.value as THREE.Vector3[])[slot].clone();
