@@ -574,7 +574,7 @@ vec3 calmEnv(vec3 d){
 }
 
 vec3 farField(vec3 ro, vec3 rd){
-  gKeep = 0.12;
+  gKeep = 0.025;
   float tt;
   float ta = textHit(ro, rd, tt);
   float tw = rd.y < -1e-4 ? -ro.y / rd.y : 1e9;
@@ -687,6 +687,7 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
 
   vec3 di = refract(dl, ng, 1.0 / uIor);
   vec3 pin = pl - ng * 0.006;
+  if (mapBody(pin) > 0.0) pin = pl + di * 0.003;
   float ti = 0.0;
   float found = 0.0;
   float inside = 0.0;
@@ -714,7 +715,7 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
   float kx = 1.0 - uIor * uIor * (1.0 - ce * ce);
   float leave = 1.0 - pow(1.0 - sqrt(max(kx, 0.0)), 5.0);
   vec3 dg = kx > 0.0 ? refract(di, ne, uIor) : reflect(di, ne);
-  float prism = found > 0.5 ? smoothstep(0.015, 0.09, 1.0 + dot(ng, ne)) : 1.0;
+  float prism = found > 0.5 ? smoothstep(0.04, 0.16, 1.0 - dot(ng, ne)) : 1.0;
   vec3 po = pe - ne * 0.02;
   vec3 wo = toWorld(po);
 
@@ -766,7 +767,7 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
     float inv = 1.0 - rho;
     wake = rg.x * inv * inv + rg.y * 2.0 * rho * inv + rg.z * rho * rho;
   }
-  vec3 glow = body * mix(vec3(1.0), uKeyCol / max(keyLum, 0.05), 0.3) * (1.0 - exp(-ti * 8.0))
+  vec3 glow = body * mix(vec3(1.0), uKeyCol / max(keyLum, 0.05), 0.3) * (1.0 - exp(-max(ti, 0.015) * 8.0))
             * (0.1 + 0.42 * lightOn(n) * keyLum + 0.3 * side + fromCore + 0.4 * wake) * gGlass.w;
   float aim = max(dot(toWorldDir(dg), uMoon), 0.0);
   vec3 pass = body * uKeyCol * pow(aim, 6.0) * 0.45 * (1.0 - exp(-ti * 10.0)) * gGlass.w * (1.0 - f) * (1.0 - 0.6 * prism);
