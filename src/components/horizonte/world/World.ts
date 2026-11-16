@@ -150,6 +150,8 @@ interface Rig {
   el: number;
   dist: number;
   fov: number;
+  rise: number;
+  high: number;
 }
 
 const mixRig = (a: Rig, b: Rig, t: number): Rig => ({
@@ -158,7 +160,16 @@ const mixRig = (a: Rig, b: Rig, t: number): Rig => ({
   el: lerp(a.el, b.el, t),
   dist: lerp(a.dist, b.dist, t),
   fov: lerp(a.fov, b.fov, t),
+  rise: lerp(a.rise, b.rise, t),
+  high: lerp(a.high, b.high, t),
 });
+
+const spread = (fov: number) => Math.tan((fov * Math.PI) / 360);
+
+function riseFor(el: number, dist: number, fov: number, level: number, slack: number): number {
+  const pitch = Math.max(Math.atan(level * spread(fov)), el - slack);
+  return Math.max(0, dist * (Math.sin(el) - Math.cos(el) * Math.tan(pitch)));
+}
 
 export class World implements WorldPresenter {
   private renderer: THREE.WebGLRenderer;
@@ -227,6 +238,7 @@ export class World implements WorldPresenter {
 
   readonly orbit = { az: 0, el: 0, zoom: 0, vaz: 0, vel: 0, held: false, idle: 99, active: 0, used: false };
   private pose = { az: 0, el: 0, zoom: 0 };
+  private poseK = 0;
   private navWas = 0;
   private navVel = 0;
   private dtWas = 1 / 60;
@@ -594,10 +606,30 @@ export class World implements WorldPresenter {
     const sa = Math.sin(focus.tilt);
     const ca = Math.cos(focus.tilt);
     const at = new THREE.Vector3(Math.cos(a) * rm, y - Math.sin(a) * rm * ca, Math.sin(a) * rm * sa);
+    const el1 = Math.max(0.12 + 0.2 * focus.tilt, focus.tilt - 0.62);
+    const el2 = Math.max(0.1 + 0.16 * focus.tilt, focus.tilt - 0.66);
+    const d1 = 5.64 * f;
+    const d2 = 4.62 * f;
     return [
-      { target: new THREE.Vector3(lead * side, rest * 0.8 - drop, 0), az: 0.05, el: -0.05, dist: reach, fov: 27 },
-      { target: new THREE.Vector3(-0.42 * side, y - 0.08 - drop * 0.6, 0), az: 0.16, el: focus.tilt * 0.62, dist: 6.2 * f, fov: 32 },
-      { target: at.lerp(new THREE.Vector3(-0.15 * side, y - drop * 0.5, 0), 0.62), az: 0.3, el: focus.tilt * 0.78, dist: 5.0 * f, fov: 34 },
+      { target: new THREE.Vector3(lead * side, rest * 0.8 - drop, 0), az: 0.05, el: -0.05, dist: reach, fov: 27, rise: 0, high: -0.05 },
+      {
+        target: new THREE.Vector3(-0.42 * side, y - 0.08 - drop * 0.6, 0),
+        az: 0.16,
+        el: el1,
+        dist: d1,
+        fov: 36,
+        rise: riseFor(el1, d1, 36, 0.82, 0.055),
+        high: focus.tilt * 0.62,
+      },
+      {
+        target: at.lerp(new THREE.Vector3(-0.15 * side, y - drop * 0.5, 0), 0.74),
+        az: 0.3,
+        el: el2,
+        dist: d2,
+        fov: 38,
+        rise: riseFor(el2, d2, 38, 0.75, 0.03),
+        high: focus.tilt * 0.78,
+      },
     ];
   }
 
@@ -993,16 +1025,18 @@ export class World implements WorldPresenter {
     this.pose.az += ((want ? want[0] : 0) * pk - this.pose.az) * pt;
     this.pose.el += ((want ? want[1] : 0) * pk - this.pose.el) * pt;
     this.pose.zoom += ((want ? want[2] : 0) * pk - this.pose.zoom) * pt;
-    o.el = clamp(o.el, -rig.el - this.pose.el - 0.1, 1.42 - rig.el - this.pose.el);
+    this.poseK += (pk - this.poseK) * pt;
+    const level = lerp(rig.el, rig.high, this.poseK);
+    o.el = clamp(o.el, -level - this.pose.el - 0.1, 1.42 - level - this.pose.el);
     const away = o.held || Math.abs(o.az) + Math.abs(o.el) + Math.abs(o.zoom) > 0.05 ? 1 : 0;
     o.active += (away - o.active) * ke(0.35);
 
     this.pointer.lerp(new THREE.Vector2(view.mouse.x * 2 - 1, 1 - view.mouse.y * 2), 1 - Math.exp(-dt * 3));
-    const still = (view.reduced ? 0 : 1) * (1 - o.active) * (1 - 0.8 * pk);
+    const still = (view.reduced ? 0 : 1) * (1 - o.active) * (1 - 0.8 * this.poseK);
     const az =
       rig.az + o.az + this.pose.az + still * (Math.sin(this.drift) * 0.06 + this.pointer.x * 0.06) - 0.07 * this.navVel * (1 - 0.5 * k1);
     const el = clamp(
-      rig.el + o.el + this.pose.el + still * (Math.sin(this.time * 0.17) * 0.006 + this.pointer.y * 0.02 + 0.025 * this.tension * k2),
+      level + o.el + this.pose.el + still * (Math.sin(this.time * 0.17) * 0.006 + this.pointer.y * 0.02 + 0.025 * this.tension * k2),
       -0.2,
       1.45,
     );
@@ -1014,13 +1048,14 @@ export class World implements WorldPresenter {
       (1 - 0.035 * hush) *
       Math.exp(-o.zoom - this.pose.zoom);
     const heart = new THREE.Vector3(navNow * SPACING, seat.y, 0);
-    if (inside) rig.target.lerp(heart, clamp(o.active * 0.85 + pk * 0.7, 0, 1) * k1);
+    if (inside) rig.target.lerp(heart, clamp(o.active * 0.85 + this.poseK * 0.7, 0, 1) * k1);
     this.camPos.set(
       rig.target.x + dist * Math.sin(az) * Math.cos(el),
       Math.max(0.12, rig.target.y + dist * Math.sin(el)),
       rig.target.z + dist * Math.cos(az) * Math.cos(el),
     );
-    this.camF.copy(rig.target).sub(this.camPos).normalize();
+    const lookUp = rig.rise * (1 - o.active) * (1 - this.poseK);
+    this.camF.copy(rig.target).addScaledVector(UP, lookUp).sub(this.camPos).normalize();
     this.camR.crossVectors(this.camF, UP).normalize();
     this.camU.crossVectors(this.camR, this.camF);
     (u.uCamRot.value as THREE.Matrix3).set(

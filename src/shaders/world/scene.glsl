@@ -227,7 +227,6 @@ vec3 skyBase(vec3 d){
   c += uKeyCol * (smoothstep(0.9, 0.975, k1) * 1.2 + pow(k1, 5.0) * 0.08);
   float k2 = max(dot(d, uRim), 0.0);
   c += (uInk * 1.6 + 0.18) * (smoothstep(0.93, 0.988, k2) * 1.4 + pow(k2, 8.0) * 0.06) * (1.0 + 1.5 * uScore.z);
-  c += arcs(d);
   return c;
 }
 
@@ -236,9 +235,10 @@ vec3 sky(vec3 d){
 }
 
 vec3 envAt(vec3 d){
-  if (d.y >= 0.0) return min(skyBase(d), vec3(8.0));
+  if (d.y >= 0.0) return min(skyBase(d) + arcs(d), vec3(8.0));
   float f = 0.02 + 0.98 * pow(1.0 + d.y, 5.0);
-  return min(skyBase(vec3(d.x, -d.y, d.z)), vec3(8.0)) * f + vec3(0.002, 0.004, 0.008) + uInk * 0.012;
+  vec3 up = vec3(d.x, -d.y, d.z);
+  return min(skyBase(up) + arcs(up), vec3(8.0)) * f + vec3(0.002, 0.004, 0.008) + uInk * 0.012;
 }
 
 vec3 noised(vec2 p){
