@@ -683,7 +683,9 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
   vec3 body = bodyOf(ndv, r);
   vec3 sigma = sigmaOf(body) * mix(1.0, uPulse.z, focus);
   vec3 tint = mix(vec3(1.0), film(ndv + r * 0.6) * 1.7, min(uIrid + uPulse.w * focus, 0.9));
-  vec3 refl = envAt(toWorldDir(reflect(dl, nl))) * f * tint;
+  float bend = smoothstep(0.2, 0.7, length(fwidth(ng)));
+  vec3 rdir = toWorldDir(reflect(dl, nl));
+  vec3 refl = mix(envAt(rdir), calmEnv(rdir), bend) * f * tint;
 
   vec3 di = refract(dl, ng, 1.0 / uIor);
   vec3 pin = pl - ng * 0.006;
@@ -709,7 +711,8 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
     if (ti > 1.2) break;
   }
   vec3 pe = pin + di * ti;
-  vec3 ne = ti < 1e-5 ? -ng : -normalAt(pe);
+  vec3 ne = ti < 1e-5 ? ng : -normalAt(pe);
+  if (found < 0.5) ti = 2.0 * gBand.z;
   vec3 tr = exp(-sigma * ti);
   float ce = max(-dot(di, ne), 0.0);
   float kx = 1.0 - uIor * uIor * (1.0 - ce * ce);
@@ -767,7 +770,7 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
     float inv = 1.0 - rho;
     wake = rg.x * inv * inv + rg.y * 2.0 * rho * inv + rg.z * rho * rho;
   }
-  vec3 glow = body * mix(vec3(1.0), uKeyCol / max(keyLum, 0.05), 0.3) * (1.0 - exp(-max(ti, 0.015) * 8.0))
+  vec3 glow = body * mix(vec3(1.0), uKeyCol / max(keyLum, 0.05), 0.3) * (1.0 - exp(-clamp(ti, 0.015, 0.25) * 8.0))
             * (0.1 + 0.42 * lightOn(n) * keyLum + 0.3 * side + fromCore + 0.4 * wake) * gGlass.w;
   float aim = max(dot(toWorldDir(dg), uMoon), 0.0);
   vec3 pass = body * uKeyCol * pow(aim, 6.0) * 0.45 * (1.0 - exp(-ti * 10.0)) * gGlass.w * (1.0 - f) * (1.0 - 0.6 * prism);
