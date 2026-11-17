@@ -28,7 +28,7 @@
 </p>
 
 <p align="center">
-  Not a 3D scene with a UI on top — a single full-screen fragment shader that bends the typography and the album art with the same gravitational field. Every album carries its own physics, measured from its own audio.
+  Every record is a glass sculpture standing over a night sea — no meshes, no models, a shape ray-marched in a fragment shader. Every album carries its own physics, measured from its own audio.
 </p>
 
 <p align="center">
@@ -45,12 +45,13 @@
 
 |                              |                                                                                                                                                                       |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **🌀 Gravitational Lens**     | One full-screen fragment shader bends two 2D canvas planes. The monumental typography, the album art and the dust are all deformed by the same field — nothing is drawn "on top". |
-| **🖱️ Cursor With Mass**       | The pointer is a body in the field, with accumulated velocity and inertia leaving a wake. No CSS hover is involved anywhere in the world layer.                        |
-| **🔭 Scales, Not Screens**    | Collection → album → track is one continuous interpolation of anchor, radius, type size and mass — never a route change or a mounted/unmounted view.                   |
-| **💥 Collapse & Fusion**      | Play runs a 2.25s collapse with a 180ms exposure valley and a jet; skipping runs a 1.6s fusion where the incoming body spirals in and emits a wave across the viewport. |
+| **🔮 Glass Over a Night Sea** | Every record is a glass sculpture ray-marched as a distance field — no meshes, no models — refracting the moon and reflected in the water. The original gravitational-lens renderer is kept at `/?classic`. |
+| **🖱️ Cursor With Mass**       | The pointer presses on the sea under it and carries a small light in the record's ink. Picking a record or a track is a ray cast from the same camera into the same bodies the shader draws. |
+| **🔭 Scales, Not Screens**    | Collection → album → track is one camera moving between three rigs, interpolated continuously — never a route change or a mounted/unmounted view.                      |
+| **🪐 Orbit**                  | Inside an album or a track, drag to orbit the record and use the wheel or a pinch to zoom. Left alone for 6.5s, the camera eases back to its framing.                  |
+| **💥 Collapse & Fusion**      | Play runs a 2.25s collapse inside the same world: the light hushes instead of cutting to black, then the core flashes, a ring crosses the sea and a jet fires. Skipping runs a 1.6s fusion where a seed of the incoming track spirals into the core. |
 | **🎛️ Instruments Layer**      | Controls live in a separate DOM layer that is mono, never deformed and always clickable. After 2.6s of stillness the secondary parts fade to 32%, sound only softens to 80%, and transport, time, the collection counter and the focused record stay fully legible. Controls (transport and sound) are set larger and heavier than the information beside them, so they read as actions at a glance. No action depends on a keyboard shortcut. |
-| **🔊 Real Audio Analysis**    | `HTMLAudioElement` → `AnalyserNode` → three bands feeding the field, under a ceiling set by each record's dynamics (5–20%) so the typography accents the music instead of dancing to it. |
+| **🔊 Real Audio Analysis**    | `HTMLAudioElement` → `AnalyserNode` → three bands that strike the crown where the music is playing and travel around it as waves. Each band's lift is capped (7%, 5% and 3% of the body's radius) and the drive is scaled by the record's own dynamics, so a compressed record moves less than a dynamic one. |
 | **🧬 Per-Album Physics**      | Each album's loudness, dynamics, brightness, length and pulse are measured offline and become the constants and the shape of its world — playback only perturbs them. |
 | **🔍 Why This Shape?**        | A view beside the track list reads each record's shape back to its music as questions about what you see, isolates that part of the world, and lets you set one descriptor to the catalogue median to watch the shape respond. |
 | **🌐 Two Languages**         | The whole experience — instruments, measurement, announcements and the "Why this shape?" questions — exists in English and Brazilian Portuguese, picked from the browser and switchable in place without touching playback. |
@@ -64,11 +65,11 @@
 
 <table>
   <tr>
-    <td align="center" width="50%"><strong>Album — sectorized ring</strong></td>
+    <td align="center" width="50%"><strong>Album — one glass plate per track</strong></td>
     <td align="center" width="50%"><strong>Track in progress</strong></td>
   </tr>
   <tr>
-    <td valign="top"><img src="docs/album.png" alt="Album — sectorized ring" /></td>
+    <td valign="top"><img src="docs/album.png" alt="Album — one glass plate per track" /></td>
     <td valign="top"><img src="docs/faixa.png" alt="Track in progress" /></td>
   </tr>
 </table>
@@ -93,10 +94,10 @@
 | ----------------- | ------------------------------------------------------------------------- |
 | **Framework**     | Next.js 16 (App Router), React 19                                         |
 | **Language**      | TypeScript 5                                                              |
-| **Rendering**     | three.js 0.185 (`RawShaderMaterial`, full-screen triangle), custom GLSL    |
-| **Composition**   | Canvas 2D — two offscreen planes uploaded as `CanvasTexture` every frame   |
+| **Rendering**     | three.js 0.185 (`RawShaderMaterial`, full-screen triangle), custom GLSL ES 3.0 — a ray-marched distance field, half-float targets, bloom, light shafts, filmic tone map |
+| **World text**    | Canvas 2D for the artist's name, placed in the scene as a texture; DOM for the title, sector labels and captions, projected through the same camera |
 | **Audio**         | Web Audio API (`AnalyserNode`, FFT 1024) over `HTMLAudioElement`           |
-| **Styling**       | Tailwind CSS v4 (instruments layer only — the world is canvas)             |
+| **Styling**       | Tailwind CSS v4 (instruments and overlay — the world is WebGL)             |
 | **Typography**    | Archivo, Bodoni Moda, JetBrains Mono — self-hosted via `next/font`         |
 | **Media**         | `public/music`, or a CDN base via `NEXT_PUBLIC_MEDIA_BASE_URL` (Vercel Blob in production) |
 | **Offline Tools** | Python 3 + NumPy + Pillow (curation, audio analysis), `afconvert`          |
@@ -109,48 +110,51 @@
 
 Horizonte is a spatial music experience built on one idea: **music has mass, and mass bends space.**
 
-The whole composition — monumental typography, album art, dust, void — is drawn into two offscreen 2D canvases and deformed by a gravitational-lens fragment shader. There is no 3D scene and no UI floating above a background: the same field bends the artist's name and the album art at once. The front plane, which carries the whole lockup (artist, title and metadata), is sampled with a compressed share of the displacement (about 80% far from the body, falling to about 60% near it), and that parallax is what makes the lockup pass *in front of* the body while everything else passes behind it.
+Every record is a glass sculpture standing over a night sea. Nothing in it is modelled: the body is a distance field assembled from what was measured in the record's audio — a crown with one plate per track, a dark core, satellites on their orbits — and ray-marched in a fragment shader that refracts the moon through the plates and reflects the whole body in the water. In the collection, the artist's name stands in the same scene, behind the focused record. The original renderer, where one gravitational-lens shader bends two 2D canvas planes, is kept at `/?classic` and runs off the same engine and the same signatures.
 
-Navigation is a change of physical scale rather than a change of screen. Collection, album and track are the same world at different anchors, radii, type sizes and mass values, interpolated continuously — nothing mounts or unmounts. A separate **instruments layer** (mono, 10.5px, never deformed) guarantees every fundamental action stays clickable and legible, including at the peak of the collapse.
+Navigation is a change of physical scale rather than a change of screen. Collection, album and track are the same world seen by one camera that moves between three rigs, interpolated continuously — nothing mounts or unmounts. A separate **instruments layer** (mono, 10.5px, drawn in the DOM) guarantees every fundamental action stays clickable and legible, including during the collapse.
 
 **Additional features:**
 
-- **The field engine:** The flagship piece. See the [dedicated section](#-the-field-engine) below — a single draw call per frame, two texture uploads, and a state machine that treats collapse and fusion as physical events rather than transitions.
+- **The field engine:** The flagship piece. See the [dedicated section](#-the-field-engine) below — a state machine that treats collapse and fusion as physical events rather than transitions, and hands each frame to a renderer it knows nothing about.
 - **Sensory signatures:** Each album's audio is analysed once, offline, into loudness / dynamics / brightness / duration descriptors that become that album's field constants — see the [dedicated section](#-the-sensory-signature).
 - **Decoupled audio pipeline:** `audio source → playback → analysis → visual state → Horizonte`. The scene never touches an `<audio>` element or an `AnalyserNode`; it reads a plain `VisualAudioState` (energy, three bands, accent, spectral flux, spectrum, progress). `AudioSource` is a discriminated union and `Playback` is an interface, so another provider can be added without touching the shader, the composition or the state machine.
 - **Verified curation:** Fourteen albums from real artists — twelve **CC BY 4.0** and two **CC BY-SA 4.0**, whose share-alike obligation is documented per album — each verified at the source before download. The pipeline aborts if the declared licence doesn't match, if the download disappears, or if durations don't line up with the catalogue metadata. Six candidates were rejected on inspection — two declared contradictory licences on the same page, two were CC BY-**NC-ND** (no transcoding, no commercial use), one was a paid pack under a proprietary licence, one had no CC licence at all. Provenance, attribution, cover licensing and the exact modifications applied to each work are documented in [`CURADORIA.md`](CURADORIA.md).
-- **Cover unification:** Real covers arrive with wildly different exposure and palette. Each one is desaturated ~8%, overprinted with the album ink, given a shared grain, and exposure-equalised so a dark ambient sleeve still reads in the `lighter`-composited ring. The two inks are extracted from the artwork and forced into `oklch(L .50–.62, C .13–.18)` — a narrow band that keeps the collection coherent.
+- **Inks from the artwork:** Real covers arrive with wildly different exposure and palette. Two inks are extracted from each one and forced into `oklch(L .50–.62, C .13–.18)` — a narrow band that keeps the collection coherent — and they colour the glass and its light. The classic renderer also composites the cover itself into the ring: desaturated ~8%, overprinted with the album ink, given a shared grain, and exposure-equalised so a dark ambient sleeve still reads.
 - **Bring your own record:** The same analysis that runs offline for the curated catalogue also runs **client-side**, in a Web Worker, over files the listener drops in. `analyze-audio.py` was ported to TypeScript and verified against it: fed identical PCM, the two produce **byte-identical envelopes on all fourteen albums**. End to end from the real `.m4a` files, the derived field constants land within **0.55% of each constant's range**. Files never leave the device — no upload, no backend, no external API. The full architecture, the parity measurements and the limitations are in [`docs/ingestao-local.md`](docs/ingestao-local.md).
 - **Written twice, interpreted once:** What a shape says about its music is decided by one language-free module, and two writers — English and Brazilian Portuguese — turn that reading into questions with their own plurals, genders, ordinals and decimal marks. The rest of the interface reads from two typed dictionaries that share every key. The language follows the browser on a first visit, a boot script applies it before the first paint, and switching never interrupts playback. Details in [`docs/idiomas.md`](docs/idiomas.md).
 - **Media served by path:** Audio and covers live under deterministic pathnames that mirror the catalogue (`/music/<album>/<track>.m4a`), from `public/music` or, in production, from Vercel Blob, served with HTTP Range (for seeking), permissive CORS (so the analyser isn't silenced and covers don't taint the canvas) and a one-year immutable cache. URL resolution is centralised in a single module; no absolute URL is hardcoded in a component.
-- **Reduced motion:** With `prefers-reduced-motion`, curvature drops to 25%, radial blur and cursor parallax are disabled, and the collapse and fusion are reduced to 300ms fades — **the state changes remain**, so nothing becomes unreachable.
+- **Reduced motion:** With `prefers-reduced-motion`, the crown stays at rest, the ripples on the sea, the resting breath, the satellites' drift and the pointer's wake are switched off, the camera cuts between records instead of travelling, and the collapse and fusion are reduced to 300ms fades — **the state changes remain**, so nothing becomes unreachable. The light still follows the music.
 - **Responsive compositions:** Desktop, tablet (rails collapse into a single column, ring labels reduced to the selected track) and mobile (one body per screen, drag becomes pagination, 48px touch targets).
 
 <br/>
 
 ## 🌀 The field engine
 
-Everything the user sees is produced by **one draw call and two texture uploads per frame**:
+`FieldEngine` is the brain — the state machine, the transport, the audio and the snapshot the instruments read — and it does not draw. Each frame it hands a plain `WorldView` (state, audio, the record's morphology, the strain that listening has left on it, the pointer) to a presenter:
 
 ```
-step(dt) → drawBack() → drawFront() → render() → updateInstruments()
-              │              │            │
-      back plane        front plane    fragment shader
-   (halo, ring, dust,   (title, sub,   (three masses + wave →
-    typography, art      art fragment)  UV displacement, chromatic
-    band, scrims)                       dispersion, radial blur,
-                                        core, rim, jet, grain)
+step(dt) → world.frame(dt, view) → updateInstruments()
+                  │
+     scene ──────► bloom ──────► light shafts ──────► final
+  (ray-marched    (five levels   (half resolution)   (filmic tone map,
+   glass, sea,     down and up)                       vignette, grain)
+   moon, name)
 ```
 
-**Three masses bend the UVs.** The focused body, a secondary body (the neighbour in the collection, or the incoming album during a fusion) and the cursor each contribute a radial pull plus a tangential component. Sampling is chromatically dispersed (R/G/B at slightly different offsets) and radially blurred along the displacement.
+**There is no mesh.** Each record is a signed distance field built from its measured morphology: a crown of glass plates, one per track, whose outline, layers and breaks are baked into data textures; a dark core; and satellites on orbit lines. The shader marches that field, refracts the scene through the plates and reflects the body in the sea. Three bodies are alive at a time — the focused record and its two neighbours.
 
-**The front plane, compressed.** Both planes are sampled with the same offset field, but the front one through a saturating curve (about 80% of it far from the body, about 60% near it). Artist, title and metadata all live there, so the lockup bends as one piece and its lines never collide. That difference in parallax is the entire depth illusion — no z-buffer, no camera.
+**One camera, three rigs.** Collection, album and track are three camera rigs blended continuously, and across the collection the camera travels along the row of records on a spring. Inside an album or a track the listener can orbit and zoom; left alone, the camera eases back.
 
-**The collapse is a sequence, not a transition.** Pressing play runs 2.25s of scripted physics: mass ramps from 0.055 to 0.36 while exposure falls to a **180ms valley at 3%**, then the field relaxes as a jet fires along a fixed diagonal and the art band rises from the bottom edge.
+**The music strikes the crown where it plays.** A damped ring of 128 nodes in three bands is driven at the playhead, so a bass hit lifts the plates of the passage being heard and the wave travels around the record from there. In quiet passages the record's resting breath shows through.
 
-**The fusion is the signature interaction.** Skipping to another track spirals the incoming body in from radius 1.5 over 0.9s while both artworks coexist as crossed arcs — then emits a wave that crosses the viewport, deforming the typography as it passes, and the audio switches on exactly that beat.
+**The collapse is a sequence, not a transition.** Pressing play runs 2.25s inside the same world: the light hushes by about a sixth instead of cutting to black, the satellites wind up, and at 1.3s the core flashes, a ring crosses the sea and a jet fires.
 
-**Performance is budgeted.** DPR is capped at 1.3, the composition canvas at 1760px, ring buffers are baked once per album (and re-baked only when the selection changes), and the progress arc is only recomposited when it would actually move a pixel. If sustained frame rate drops below 52fps *while the tab is visible*, the composition canvas steps down to 1440px.
+**The fusion is the signature interaction.** Skipping to another track sends a seed of the incoming one spiralling into the core over 0.9s — then the core flashes, and the audio switches on exactly that beat.
+
+**Performance is budgeted.** DPR is capped at 2 and the scene renders at an internal scale between 30% and 100%, retuned every 700ms from GPU timer queries (down above 11ms a frame, up below 6.5ms; frame time stands in where the extension is missing). Below 55% the march drops from 96 steps to 64.
+
+**The classic renderer is still there.** `/?classic` runs the original one off the same engine: two offscreen 2D canvases — typography, album art, dust — bent by a single gravitational-lens fragment shader, one draw call and two texture uploads per frame.
 
 <br/>
 
@@ -163,18 +167,18 @@ So the audio is analysed **once, offline** ([`scripts/analyze-audio.py`](scripts
 | Measured        | Becomes                                                          |
 | --------------- | ---------------------------------------------------------------- |
 | **Loudness**    | Type weight (505–780) and the size of the dark core — heavy records sit heavier |
-| **Dynamics**    | How far live audio may perturb the field, and how carved the outline is |
-| **Brightness**  | How flat the body lies and how hard its rim light is             |
+| **Dynamics**    | How hard live audio may drive the record, and how carved the outline is |
+| **Brightness**  | How flat the body lies and how clear its glass is                |
 | **Duration**    | Satellites around the body, and camera inertia across the collection |
-| **Pulse**       | Layers in the ring and the swirl of the field                    |
+| **Pulse**       | Layers in the ring and how fast the satellites circle            |
 | **Track spans** | Real proportional widths of each sector in the ring              |
 | **Pulse spread between tracks** | Breaks between the sectors                       |
 
-Records also differ in how they move. While one plays, its **motion signature**, measured per track by [`scripts/analyze-motion.py`](scripts/analyze-motion.py) (attack sharpness, sustain, microdynamics and low-end weight), sets how fast the reaction rises and falls, how far into the record's ceiling a typical event reaches, and whether it bends the lens or the light. At rest, and for records brought by a listener, the response is neutral.
+Records also differ in how they move. While one plays, its **motion signature**, measured per track by [`scripts/analyze-motion.py`](scripts/analyze-motion.py) (attack sharpness, sustain, microdynamics and low-end weight), sets how fast the reaction rises and falls, how far into the record's ceiling a typical event reaches, and whether it moves the mass or the light. At rest, and for records brought by a listener, the response is neutral.
 
 Two determinism guarantees hold the design together: every descriptor is normalised against **fixed absolute anchors** rather than against the other albums, so adding a record never changes anyone else's signature; and the fallback ink for achromatic covers is derived from **that album's own spectral balance**, never from its position in the list.
 
-The result is the split the whole project rests on: **identity is measured and constant, reaction is live and bounded.** Playback perturbs the constants by at most each record's own ceiling, 5% to 20% — bass nudges mass, dynamics tension the field's spin, treble interferes with light through chromatic dispersion. Never an equaliser, never bars, never a sphere pulsing on the beat.
+The result is the split the whole project rests on: **identity is measured and constant, reaction is live and bounded.** Playback only disturbs the shape: bass lifts the crown where the music is playing, mids and treble ride thinner bands, and each band's lift has a fixed ceiling (7%, 5% and 3% of the body's radius). Each record's own ceiling, measured from its dynamics (5% to 20%), scales how hard the music may push. Light, exposure and glow follow the music outside that ceiling. Never an equaliser, never bars, never a sphere pulsing on the beat.
 
 The full mapping, with the calibrated ranges and the limits that keep records apart, is in [`docs/mapa-sensorial.md`](docs/mapa-sensorial.md).
 
@@ -184,7 +188,7 @@ The signature has **two producers and one contract**: `analyze-audio.py` measure
 
 ## 🛠️ Engineering challenges
 
-The hardest part was keeping the audio **physical rather than decorative**. It's trivial to make something pulse on the beat and it always looks cheap; the discipline was capping every audio-driven value at a ceiling the record itself sets and pushing the real differentiation offline into measured constants.
+The hardest part was keeping the audio **physical rather than decorative**. It's trivial to make something pulse on the beat and it always looks cheap; the discipline was capping how far the music may move the shape, scaling that push by a ceiling the record itself sets, and pushing the real differentiation offline into measured constants.
 
 Two failures were worth the trouble of catching. Migrating media to a CDN silently breaks `getImageData` — a cross-origin cover taints the canvas, and the cover exposure equalisation (which is what makes dark sleeves visible in the ring) throws `SecurityError` instead of degrading. I proved the behaviour against a local CORS-enabled origin before the migration rather than after. The second: a single negative frame delta was enough to drive the exposure lerp to `-Infinity` and then `NaN`, permanently blacking out the world — one clamp on `dt`, found only by driving the loop manually.
 
