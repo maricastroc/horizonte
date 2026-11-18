@@ -266,8 +266,19 @@
     text-transform: uppercase;
     white-space: nowrap;
     color: var(--color-ink-soft);
-    text-shadow: 0 0 10px rgba(7, 7, 10, 0.95);
+    text-shadow:
+      0 0 2px rgba(7, 7, 10, 0.9),
+      0 0 10px rgba(7, 7, 10, 0.95);
     transition: color 0.25s;
+  }
+
+  .part-mark span {
+    padding: 3px 8px 3px 7px;
+    margin-left: -7px;
+    border-radius: 999px;
+    background: rgba(7, 7, 10, 0.46);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
   }
 
   .part-mark i {
@@ -294,6 +305,31 @@
 
   .part-mark[data-hidden="1"] i {
     border-style: dashed;
+  }
+
+  .world-read {
+    text-shadow:
+      0 0 2px rgba(7, 7, 10, 0.8),
+      0 0 14px rgba(7, 7, 10, 0.95),
+      0 0 30px rgba(7, 7, 10, 0.8);
+  }
+
+  .inquiry-scrim {
+    width: min(54rem, 64vw);
+    height: 80vh;
+    background: radial-gradient(
+      ellipse 100% 100% at 0% 100%,
+      rgba(7, 7, 10, 0.84) 0%,
+      rgba(7, 7, 10, 0.66) 34%,
+      rgba(7, 7, 10, 0.34) 60%,
+      rgba(7, 7, 10, 0) 84%
+    );
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  .inquiry-scrim[data-on="1"] {
+    opacity: 1;
   }
 
   .sim-tag {
@@ -335,6 +371,10 @@
   @media (prefers-reduced-motion: reduce) {
     .sim-tag {
       animation: none;
+    }
+
+    .inquiry-scrim {
+      transition: none;
     }
 
     .evidence-here {

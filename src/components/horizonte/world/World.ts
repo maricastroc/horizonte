@@ -77,6 +77,7 @@ const SPACING = 4.9;
 const NEAR = 7.5;
 const SMALL = 0.5;
 const BANK_CEILING = 0.5;
+const INQUIRY = { left: 34, column: [480, 0.36], right: 296, size: 0.72, gutter: 8, lift: 0.2 } as const;
 const PART: Partial<Record<AnatomyPart, number>> = { satellites: 1, gaps: 2, strata: 3, contour: 4, posture: 5, core: 6 };
 const POSE: Partial<Record<AnatomyPart, [number, number, number]>> = {
   satellites: [0.5, 0.22, -0.28],
@@ -1106,23 +1107,40 @@ export class World implements WorldPresenter {
       (1 + 0.06 * Math.min(Math.abs(this.navVel), 1.5) * (1 - 0.4 * k1)) *
       (1 - 0.035 * hush) *
       Math.exp(-o.zoom - this.pose.zoom);
+    const focal = Math.min(1, this.cssW / this.cssH / 0.85) / Math.tan((rig.fov * Math.PI) / 360);
+    const roomy = !portrait && this.cssW >= 768 && this.cssH >= 520 ? this.poseK : 0;
+    const reads = INQUIRY.left + Math.min(INQUIRY.column[0], INQUIRY.column[1] * this.cssW);
+    const free = Math.max(0, this.cssW - INQUIRY.right - reads);
+    const room = Math.min(INQUIRY.size, (free - 2 * INQUIRY.gutter) / this.cssH);
+    const aside = ((2 * reads + free) / this.cssW - 1) * (this.cssW / this.cssH);
+    const posed = (seat.radius * seat.hi * focal) / (rig.dist * Math.exp(-this.pose.zoom));
+    const fit = lerp(1, Math.max(1, posed / Math.max(room, 0.3)), roomy);
     const heart = new THREE.Vector3(navNow * SPACING, seat.y, 0);
-    if (inside) rig.target.lerp(heart, clamp(o.active * 0.85 + this.poseK * 0.7, 0, 1) * k1);
+    if (inside) rig.target.lerp(heart, clamp(o.active * 0.85 + lerp(this.poseK * 0.7, 1, roomy), 0, 1) * k1);
     this.camPos.set(
-      rig.target.x + dist * Math.sin(az) * Math.cos(el),
-      Math.max(0.12, rig.target.y + dist * Math.sin(el)),
-      rig.target.z + dist * Math.cos(az) * Math.cos(el),
+      rig.target.x + dist * fit * Math.sin(az) * Math.cos(el),
+      Math.max(0.12, rig.target.y + dist * fit * Math.sin(el)),
+      rig.target.z + dist * fit * Math.cos(az) * Math.cos(el),
     );
     const lookUp = rig.rise * (1 - o.active) * (1 - this.poseK);
     this.camF.copy(rig.target).addScaledVector(UP, lookUp).sub(this.camPos).normalize();
     this.camR.crossVectors(this.camF, UP).normalize();
     this.camU.crossVectors(this.camR, this.camF);
+    if (roomy > 0.001) {
+      this.camF
+        .multiplyScalar(focal)
+        .addScaledVector(this.camR, -aside * roomy)
+        .addScaledVector(this.camU, -INQUIRY.lift * roomy)
+        .normalize();
+      this.camR.crossVectors(this.camF, UP).normalize();
+      this.camU.crossVectors(this.camR, this.camF);
+    }
     (u.uCamRot.value as THREE.Matrix3).set(
       this.camR.x, this.camU.x, this.camF.x,
       this.camR.y, this.camU.y, this.camF.y,
       this.camR.z, this.camU.z, this.camF.z,
     );
-    this.focal = Math.min(1, this.cssW / this.cssH / 0.85) / Math.tan((rig.fov * Math.PI) / 360);
+    this.focal = focal;
     u.uFocal.value = this.focal;
 
     const sweep = live && s.dur ? (clamp(s.pos / s.dur, 0, 1) - 0.5) * 0.9 : 0;
