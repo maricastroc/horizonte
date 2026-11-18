@@ -17,6 +17,7 @@ import { motionQualitiesOf, type Routing } from "../motion";
 import { MORPH, RELIEF, RING, SEQ } from "../tokens";
 import type { FieldState } from "../types";
 import { CROWN_CEILING, CROWN_NODES, Crown } from "./crown";
+import { ORBIT, crownRestOf, orbitLeanOf, orbitsOf, postureOf } from "./orbits";
 
 export interface WorldFocus {
   morph: AlbumMorphology;
@@ -75,6 +76,7 @@ const GPU_DISJOINT = 0x8fbb;
 const SPACING = 4.9;
 const NEAR = 7.5;
 const SMALL = 0.5;
+const BANK_CEILING = 0.5;
 const PART: Partial<Record<AnatomyPart, number>> = { satellites: 1, gaps: 2, strata: 3, contour: 4, posture: 5, core: 6 };
 const POSE: Partial<Record<AnatomyPart, [number, number, number]>> = {
   satellites: [0.5, 0.22, -0.28],
@@ -144,6 +146,7 @@ interface Slot {
   lip: number;
   spin: number;
   d: number;
+  lean: number;
 }
 
 interface Rig {
@@ -214,6 +217,7 @@ export class World implements WorldPresenter {
     lip: 1,
     spin: RING.anchor / TAU,
     d: 0,
+    lean: ORBIT.lean[0],
   }));
   private time = 0;
   private scaleNow: FieldState["scale"] = "collection";
@@ -338,6 +342,7 @@ export class World implements WorldPresenter {
       uBInkA: { value: v3() },
       uBInkB: { value: v3() },
       uBSat: { value: v4(NB * 4) },
+      uBOrbit: { value: [0, 1, 2].map(() => new THREE.Vector2(Math.sin(ORBIT.lean[0]), Math.cos(ORBIT.lean[0]))) },
       uBMat: { value: v4() },
       uScore: { value: new THREE.Vector4() },
       uWave: { value: new THREE.Vector4(0, 3, 0, 0) },
@@ -490,7 +495,7 @@ export class World implements WorldPresenter {
     s.lo = band.lo;
     s.hi = band.hi;
     s.radius = 1.3 * m.circuit;
-    s.tilt = Math.acos(clamp(m.flatten, 0.2, 0.98));
+    s.tilt = postureOf(m);
     s.y = s.radius * band.hi * m.flatten + 0.34;
   }
 
@@ -982,7 +987,8 @@ export class World implements WorldPresenter {
       (u.uBHaze.value as number[])[i] = 0.4 * far * (1 - 0.5 * slot.hov);
       const flex = isFocus ? 1 + gain * 0.2 * this.swell + 0.06 * breathMass : 1;
       const amp = (0.1 + 0.42 * m.relief) * flex;
-      const bank = (0.3 + 0.6 * m.strata) * (isFocus ? 1 + 0.5 * this.shimmer * lightK * calm : 1);
+      const lean = BANK_CEILING * Math.tanh((0.3 + 0.6 * m.strata) / BANK_CEILING);
+      const bank = lean * (isFocus ? 1 + 0.5 * this.shimmer * lightK * calm : 1);
       const thick = 0.044;
       const loose = isFocus ? CROWN_CEILING[0] + 0.03 : 0;
       band[i].set(slot.lo, slot.hi + (isFocus ? spread + 0.06 : 0), thick, thick + amp * 1.05 + bank * (slot.hi - slot.lo) * 0.5 + 0.02 + loose);
@@ -1006,6 +1012,9 @@ export class World implements WorldPresenter {
       inkA[i].set(srgb(alb.inkA[0]), srgb(alb.inkA[1]), srgb(alb.inkA[2]));
       inkB[i].set(srgb(alb.inkB[0]), srgb(alb.inkB[1]), srgb(alb.inkB[2]));
       const drift = view.reduced ? 0 : this.whirl * k.swirl;
+      slot.lean = orbitLeanOf(m);
+      (u.uBOrbit.value as THREE.Vector2[])[i].set(Math.sin(slot.lean), Math.cos(slot.lean));
+      const orbit = orbitsOf(m, Math.max(crownRestOf(m), slot.hi) + (isFocus ? Math.max(0, spread) : 0), slot.lean);
       m.satellites.forEach((sat, j) => {
         if (j > 3) return;
         if (sat.weight <= 0.02) {
@@ -1013,7 +1022,7 @@ export class World implements WorldPresenter {
           return;
         }
         const ang = sat.angle + (j % 2 === 0 ? 1 : -0.6) * drift / (1 + j * 0.5);
-        sats[i * 4 + j].set(Math.cos(ang) * sat.dist, Math.sin(ang) * sat.dist, satRadiusOf(m, sat), sat.dist);
+        sats[i * 4 + j].set(Math.cos(ang) * orbit[j], Math.sin(ang) * orbit[j], satRadiusOf(m, sat), orbit[j]);
       });
     }
 
@@ -1177,12 +1186,12 @@ export class World implements WorldPresenter {
     return { x: (px * 0.5 + 0.5) * this.cssW, y: (0.5 - py * 0.5) * this.cssH, z };
   }
 
-  private local(slot: number, x: number, z: number): THREE.Vector3 {
+  private local(slot: number, x: number, z: number, y = 0): THREE.Vector3 {
     const s = this.slots[slot];
     const p = (this.u.uBPos.value as THREE.Vector3[])[slot];
     const sa = Math.sin(s.tilt);
     const ca = Math.cos(s.tilt);
-    return new THREE.Vector3(p.x + x * s.radius, p.y - z * ca * s.radius, p.z + z * sa * s.radius);
+    return new THREE.Vector3(p.x + x * s.radius, p.y + (y * sa - z * ca) * s.radius, p.z + (y * ca + z * sa) * s.radius);
   }
 
   hit(nx: number, ny: number): Hit {
@@ -1249,6 +1258,7 @@ export class World implements WorldPresenter {
     const mid = (s.lo + s.hi) * 0.5;
     let x = 0;
     let z = 0;
+    let y = 0;
     if (part === "core") {
       x = m.eccX;
       z = m.eccY;
@@ -1256,6 +1266,8 @@ export class World implements WorldPresenter {
       const v = (this.u.uBSat.value as THREE.Vector4[])[slot * 4];
       x = v.z > 0.001 ? v.x : 1.1;
       z = v.z > 0.001 ? v.y : -0.75;
+      y = z * Math.sin(s.lean);
+      z *= Math.cos(s.lean);
     } else {
       let a = -Math.PI / 2;
       let r = s.hi;
@@ -1270,7 +1282,7 @@ export class World implements WorldPresenter {
       x = Math.cos(a) * r;
       z = Math.sin(a) * r;
     }
-    const world = this.local(slot, x, z);
+    const world = this.local(slot, x, z, y);
     const at = this.project(world);
     if (at.z <= 0.01) return null;
     const heart = this.project(this.local(slot, m.eccX, m.eccY));

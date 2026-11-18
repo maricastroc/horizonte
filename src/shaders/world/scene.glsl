@@ -18,6 +18,7 @@ uniform vec4 uBRot[NB];
 uniform vec4 uBBand[NB];
 uniform vec4 uBCore[NB];
 uniform vec4 uBGlass[NB];
+uniform vec2 uBOrbit[NB];
 uniform vec3 uBInkA[NB];
 uniform vec3 uBInkB[NB];
 uniform vec4 uBSat[NB * 4];
@@ -77,6 +78,7 @@ float gRad;
 vec4 gBand;
 vec4 gCore;
 vec4 gGlass;
+vec2 gOrbit;
 vec3 gInkA;
 vec3 gInkB;
 float gRow;
@@ -97,6 +99,7 @@ void useBody(int b){
   gBand = uBBand[b];
   gCore = uBCore[b];
   gGlass = uBGlass[b];
+  gOrbit = uBOrbit[b];
   gInkA = uBInkA[b];
   gInkB = uBInkB[b];
   gRow = float(b);
@@ -362,6 +365,10 @@ bool boundsOf(vec3 ro, vec3 rd, out float t0, out float t1){
   return t1 > t0;
 }
 
+vec3 orbitAt(vec2 p){
+  return vec3(p.x, p.y * gOrbit.x, p.y * gOrbit.y);
+}
+
 float sphereAt(vec3 ro, vec3 rd, vec3 c, float r){
   vec3 oc = ro - c;
   float b = dot(oc, rd);
@@ -456,7 +463,7 @@ Hit traceLocal(vec3 ro, vec3 rd, float steps, float core){
   for (int i = 0; i < 4; i++){
     vec4 s = uBSat[gBody * 4 + i];
     if (s.z < 0.001) continue;
-    vec3 sc = vec3(s.x, 0.0, s.y);
+    vec3 sc = orbitAt(s.xy);
     float ts = sphereAt(ro, rd, sc, s.z);
     if (ts > 0.0 && ts < h.t){
       h.t = ts;
@@ -529,11 +536,16 @@ vec3 shadeOrb(vec3 n, vec3 rd, float kind){
   return c;
 }
 
-vec3 innerLight(float r, float turn){
-  if (float(gBody) != uFocus) return vec3(0.0);
+float playLine(float r, float turn){
+  if (float(gBody) != uFocus) return 0.0;
   float dturn = abs(fract(turn - uPlay.x + 0.5) - 0.5);
-  float line = exp(-pow(dturn * TAU * r / 0.045, 2.0));
-  vec3 c = mix(gInkA, vec3(1.0), 0.6) * line * (0.9 + 4.0 * uAccent.w) * uPlay.w;
+  float e = max(uAccent.w, 0.0);
+  return exp(-pow(dturn * TAU * r / 0.045, 2.0)) * (0.75 + 1.7 * e / (1.0 + 0.9 * e)) * uPlay.w;
+}
+
+vec3 innerLight(float turn, float line){
+  if (float(gBody) != uFocus) return vec3(0.0);
+  vec3 c = mix(gInkA * 1.5, vec3(1.0), 0.4) * line * 0.22;
   float act = step(uPlay.y, turn) * step(turn, uPlay.z) * uPlay.w;
   float hov = step(uHover.x, turn) * step(turn, uHover.y) * uHover.z;
   c += gInkA * (0.14 * act + 0.26 * hov) + vec3(0.05) * hov;
@@ -603,7 +615,7 @@ vec3 shadeSphere(Hit h, vec3 dl, vec3 rd, float steps){
   float rad = gCore.z;
   if (!isCore){
     vec4 s = h.id > 3.5 ? uSeed.xyzz : uBSat[gBody * 4 + int(h.id)];
-    centre = vec3(s.x, 0.0, s.y);
+    centre = h.id > 3.5 ? vec3(s.x, 0.0, s.y) : orbitAt(s.xy);
     rad = s.z;
   }
   vec3 n = h.n;
@@ -652,7 +664,10 @@ vec3 shadeSphere(Hit h, vec3 dl, vec3 rd, float steps){
     if (dot(dg, dg) < 1e-4) dg = reflect(di, ne);
     col += farField(toWorld(centre + pe * rad), toWorldDir(dg)) * trans * (1.0 - f) * (gInkA * 1.2 + 0.25);
   }
-  col += gInkA * 0.02 * lightOn(wn) * (1.0 - m.x * 0.5);
+  float lit = lightOn(wn);
+  col += gInkA * 0.02 * lit * (1.0 - m.x * 0.5);
+  float edge = smoothstep(-0.2, 0.8, dot(wn, uKey)) + 0.4 * smoothstep(0.0, 0.9, dot(wn, uMoon));
+  col += mix(gInkA * 1.6, uKeyCol, 0.3) * pow(1.0 - ndv, 3.0) * edge * (isCore ? 0.26 : 0.13);
   if (!isCore){
     vec3 toCore = normalize(vec3(gCore.x, 0.0, gCore.y) - centre);
     col += gInkA * max(dot(n, toCore), 0.0) * 0.24 * glow;
@@ -792,7 +807,8 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
     col = col * mix(1.0, 0.32 + 0.9 * w, uPart.y) + (gInkA * 1.4 + 0.3) * w * lit * uPart.y * 0.8
         + body * 0.1 * uPart.y;
   }
-  col += innerLight(r, turn) * (0.4 + 0.6 * tr);
+  float line = playLine(r, turn);
+  col = col * (1.0 + 1.1 * line) + innerLight(turn, line) * (0.4 + 0.6 * tr);
   return col;
 }
 
@@ -810,7 +826,8 @@ vec3 shadeLite(Hit h, vec3 dl, vec3 rd){
   col += skyBase(through) * exp(-sigmaOf(body) * 0.1) * (1.0 - f);
   col += body * (0.12 + 0.3 * lightOn(n) + 0.2 * moonThrough(rd)) * gGlass.w;
   float turn = fract(atan(h.p.z, h.p.x) / TAU - gGlass.z);
-  col += innerLight(r, turn) * 0.6;
+  float line = playLine(r, turn);
+  col = col * (1.0 + 1.1 * line) + innerLight(turn, line) * 0.6;
   return col;
 }
 
@@ -821,7 +838,8 @@ vec3 reflected(vec3 p, vec3 r){
   Hit h = traceAll(p, r, uSteps * 0.4, 1.0, dl);
   float tt;
   float ta = textHit(p, r, tt) * uTextAt.z;
-  vec3 c = h.kind > 0.5 ? shadeLite(h, dl, r) * uReflK * (1.0 - gHaze) : skyBase(r);
+  vec3 c = skyBase(r);
+  if (h.kind > 0.5) c = mix(c, shadeLite(h, dl, r) * uReflK * (1.0 - gHaze), exp(-max(toWorld(h.p).y, 0.0) * (0.16 + 14.0 * uSea.x)));
   if (ta > 0.0 && tt < h.t) c = mix(c, textColor(p, r, tt), ta);
   return c;
 }
@@ -831,7 +849,10 @@ vec3 waterShade(vec3 p, vec3 rd, float dist){
   float f = 0.02 + 0.98 * pow(1.0 - max(dot(n, -rd), 0.0), 5.0);
   vec3 r = reflect(rd, n);
   r.y = abs(r.y) + 0.001;
-  return mix(waterBase(p), reflected(p, normalize(r)), f);
+  gKeep = mix(0.7, 0.3, smoothstep(4.0, 30.0, dist));
+  vec3 mirror = reflected(p, normalize(r));
+  gKeep = 1.0;
+  return mix(waterBase(p), mirror, f);
 }
 
 vec3 orbits(vec3 ro, vec3 rd, float limit){
@@ -842,38 +863,43 @@ vec3 orbits(vec3 ro, vec3 rd, float limit){
     useBody(b);
     vec3 rl = toLocal(ro);
     vec3 dl = toLocalDir(rd);
-    if (abs(dl.y) < 0.02) continue;
-    float tp = -rl.y / dl.y;
-    if (tp <= 0.0 || tp * gRad > limit) continue;
-    vec3 q = rl + dl * tp;
-    if ((ro + rd * tp * gRad).y < 0.0) continue;
-    float r = length(q.xz);
-    float w = 0.002 + tp * 0.0011;
-    float line = 0.0;
-    for (int i = 0; i < 4; i++){
-      vec4 s = uBSat[b * 4 + i];
-      if (s.z < 0.001) continue;
-      float x = (r - s.w) / w;
-      float near = 1.0 - smoothstep(0.0, 1.5, distance(q.xz, s.xy));
-      line += exp(-x * x) * (0.1 + 0.9 * near * near);
-    }
     float mine = float(b) == uFocus ? 1.0 : 0.0;
     float sat = mine * uPart.y * (abs(uPart.x - 1.0) < 0.5 ? 1.0 : 0.0);
-    c += (gInkA * 1.2 + vec3(1.0, 0.82, 0.55) * 0.35) * line * (0.2 + 0.3 * sat) * (1.0 - 1.6 * gHaze) * alive * min(abs(dl.y) * 6.0, 1.0);
-    if (mine > 0.5 && uPart.y > 0.01){
-      vec3 ghost = vec3(0.95, 0.9, 0.8) * 0.6 * uPart.y;
-      if (abs(uPart.x - 5.0) < 0.5 && abs(rd.z) > 0.01){
-        float th = (gPos.z - ro.z) / rd.z;
-        if (th > 0.0 && th < limit){
-          vec3 ph = ro + rd * th - gPos;
-          float xh = (length(ph.xy) / gRad - gBand.y + 0.05) / (0.006 + th * 0.0016);
-          c += ghost * exp(-xh * xh) * step(0.5, fract(atan(ph.y, ph.x) / TAU * 36.0)) * step(-gPos.y, ph.y);
-        }
+    vec3 on = vec3(0.0, gOrbit.y, -gOrbit.x);
+    float dn = dot(dl, on);
+    float tp = abs(dn) > 0.02 ? -dot(rl, on) / dn : -1.0;
+    if (tp > 0.0 && tp * gRad <= limit && (ro + rd * tp * gRad).y >= 0.0){
+      vec3 q = rl + dl * tp;
+      vec2 at = vec2(q.x, q.y * gOrbit.x + q.z * gOrbit.y);
+      float r = length(at);
+      float w = 0.002 + tp * 0.0011;
+      float line = 0.0;
+      for (int i = 0; i < 4; i++){
+        vec4 s = uBSat[b * 4 + i];
+        if (s.z < 0.001) continue;
+        float x = (r - s.w) / w;
+        float near = 1.0 - smoothstep(0.0, 1.5, distance(at, s.xy));
+        line += exp(-x * x) * (0.1 + 0.9 * near * near);
       }
-      if (uRef > gCore.z * 1.04){
-        float xr = (r - uRef) / (w * 1.6);
-        c += ghost * exp(-xr * xr) * step(0.5, fract(atan(q.z, q.x) / TAU * 40.0));
+      c += (gInkA * 1.2 + vec3(1.0, 0.82, 0.55) * 0.35) * line * (0.2 + 0.3 * sat) * (1.0 - 1.6 * gHaze) * alive * min(abs(dn) * 6.0, 1.0);
+    }
+    if (mine < 0.5 || uPart.y < 0.01 || abs(dl.y) < 0.02) continue;
+    float tr = -rl.y / dl.y;
+    if (tr <= 0.0 || tr * gRad > limit) continue;
+    vec3 q = rl + dl * tr;
+    if ((ro + rd * tr * gRad).y < 0.0) continue;
+    vec3 ghost = vec3(0.95, 0.9, 0.8) * 0.6 * uPart.y;
+    if (abs(uPart.x - 5.0) < 0.5 && abs(rd.z) > 0.01){
+      float th = (gPos.z - ro.z) / rd.z;
+      if (th > 0.0 && th < limit){
+        vec3 ph = ro + rd * th - gPos;
+        float xh = (length(ph.xy) / gRad - gBand.y + 0.05) / (0.006 + th * 0.0016);
+        c += ghost * exp(-xh * xh) * step(0.5, fract(atan(ph.y, ph.x) / TAU * 36.0)) * step(-gPos.y, ph.y);
       }
+    }
+    if (uRef > gCore.z * 1.04){
+      float xr = (length(q.xz) - uRef) / ((0.002 + tr * 0.0011) * 1.6);
+      c += ghost * exp(-xr * xr) * step(0.5, fract(atan(q.z, q.x) / TAU * 40.0));
     }
   }
   return c;

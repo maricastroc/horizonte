@@ -115,21 +115,31 @@
   .trk-gauge {
     position: relative;
     display: block;
-    overflow: hidden;
     width: var(--span);
-    height: calc(1px + var(--level) * 1.4px);
-    border-radius: 1px;
+    height: 1px;
     background: currentColor;
-    opacity: 0.26;
+    opacity: 0.3;
     transition:
       opacity 0.3s,
-      height 0.4s,
       background 0.3s;
+  }
+
+  .trk-gauge::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 0;
+    width: 1px;
+    height: calc(3px + var(--level) * 2.5px);
+    background: inherit;
+    transform: translateY(-50%);
   }
 
   .trk-fill {
     position: absolute;
     inset: 0;
+    display: none;
+    border-radius: 1px;
     background: var(--ink);
     transform: scaleX(var(--p, 0));
     transform-origin: left;
@@ -171,9 +181,21 @@
   }
 
   .trk[data-state="playing"] .trk-gauge {
-    height: calc(2px + var(--level) * 1.4px);
+    height: 2px;
+    border-radius: 1px;
     background: color-mix(in srgb, var(--ink) 28%, transparent);
     opacity: 1;
+  }
+
+  .trk[data-state="playing"] .trk-fill {
+    display: block;
+  }
+
+  .trk[data-state="playing"] .trk-gauge::after {
+    right: auto;
+    left: calc(var(--p, 0) * 100%);
+    height: 7px;
+    background: var(--ink);
   }
 
   .trk[data-state="playing"] .trk-dur {
@@ -363,7 +385,7 @@
     background: linear-gradient(
       to right,
       var(--range-ink, var(--color-ink-text)) var(--fill),
-      rgba(232, 228, 220, 0.16) var(--fill)
+      var(--range-rest, rgba(232, 228, 220, 0.16)) var(--fill)
     );
   }
 
@@ -379,7 +401,7 @@
 
   .rail-range::-moz-range-track {
     height: 1px;
-    background: rgba(232, 228, 220, 0.16);
+    background: var(--range-rest, rgba(232, 228, 220, 0.16));
   }
 
   .rail-range::-moz-range-progress {
@@ -406,6 +428,91 @@
 
   .rail-range:focus-visible::-moz-range-thumb {
     height: 13px;
+  }
+
+  .rail-knob::-webkit-slider-thumb {
+    width: 7px;
+    height: 7px;
+    margin-top: -3px;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+
+  .rail-knob::-moz-range-thumb {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+
+  .rail-knob:hover::-webkit-slider-thumb,
+  .rail-knob:active::-webkit-slider-thumb {
+    transform: scale(1.3);
+  }
+
+  .rail-knob:hover::-moz-range-thumb,
+  .rail-knob:active::-moz-range-thumb {
+    transform: scale(1.3);
+  }
+
+  .rail-knob:focus-visible::-webkit-slider-thumb {
+    height: 7px;
+    margin-top: -3px;
+    box-shadow: 0 0 0 3px rgba(232, 228, 220, 0.24);
+  }
+
+  .rail-knob:focus-visible::-moz-range-thumb {
+    height: 7px;
+    box-shadow: 0 0 0 3px rgba(232, 228, 220, 0.24);
+  }
+
+  .on-world {
+    --range-rest: rgba(232, 228, 220, 0.26);
+    text-shadow:
+      0 0 2px rgba(7, 7, 10, 0.7),
+      0 0 12px rgba(7, 7, 10, 0.9);
+  }
+
+  .on-world .rail-range {
+    filter: drop-shadow(0 0 2px rgba(7, 7, 10, 0.75));
+  }
+
+  .intake-plus {
+    position: relative;
+    display: block;
+    width: 7px;
+    height: 7px;
+  }
+
+  .intake-plus::before,
+  .intake-plus::after {
+    content: "";
+    position: absolute;
+    background: currentColor;
+  }
+
+  .intake-plus::before {
+    top: 3px;
+    right: 0;
+    left: 0;
+    height: 1px;
+  }
+
+  .intake-plus::after {
+    top: 0;
+    bottom: 0;
+    left: 3px;
+    width: 1px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rail-knob::-webkit-slider-thumb {
+      transition: none;
+    }
+
+    .rail-knob::-moz-range-thumb {
+      transition: none;
+    }
   }
 
   @supports not selector(::-webkit-scrollbar) {
