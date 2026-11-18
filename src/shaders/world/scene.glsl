@@ -529,11 +529,16 @@ vec3 shadeOrb(vec3 n, vec3 rd, float kind){
   return c;
 }
 
-vec3 innerLight(float r, float turn){
-  if (float(gBody) != uFocus) return vec3(0.0);
+float playLine(float r, float turn){
+  if (float(gBody) != uFocus) return 0.0;
   float dturn = abs(fract(turn - uPlay.x + 0.5) - 0.5);
-  float line = exp(-pow(dturn * TAU * r / 0.045, 2.0));
-  vec3 c = mix(gInkA, vec3(1.0), 0.6) * line * (0.9 + 4.0 * uAccent.w) * uPlay.w;
+  float e = max(uAccent.w, 0.0);
+  return exp(-pow(dturn * TAU * r / 0.045, 2.0)) * (0.75 + 1.7 * e / (1.0 + 0.9 * e)) * uPlay.w;
+}
+
+vec3 innerLight(float turn, float line){
+  if (float(gBody) != uFocus) return vec3(0.0);
+  vec3 c = mix(gInkA * 1.5, vec3(1.0), 0.4) * line * 0.22;
   float act = step(uPlay.y, turn) * step(turn, uPlay.z) * uPlay.w;
   float hov = step(uHover.x, turn) * step(turn, uHover.y) * uHover.z;
   c += gInkA * (0.14 * act + 0.26 * hov) + vec3(0.05) * hov;
@@ -652,7 +657,10 @@ vec3 shadeSphere(Hit h, vec3 dl, vec3 rd, float steps){
     if (dot(dg, dg) < 1e-4) dg = reflect(di, ne);
     col += farField(toWorld(centre + pe * rad), toWorldDir(dg)) * trans * (1.0 - f) * (gInkA * 1.2 + 0.25);
   }
-  col += gInkA * 0.02 * lightOn(wn) * (1.0 - m.x * 0.5);
+  float lit = lightOn(wn);
+  col += gInkA * 0.02 * lit * (1.0 - m.x * 0.5);
+  float edge = smoothstep(-0.2, 0.8, dot(wn, uKey)) + 0.4 * smoothstep(0.0, 0.9, dot(wn, uMoon));
+  col += mix(gInkA * 1.6, uKeyCol, 0.3) * pow(1.0 - ndv, 3.0) * edge * (isCore ? 0.26 : 0.13);
   if (!isCore){
     vec3 toCore = normalize(vec3(gCore.x, 0.0, gCore.y) - centre);
     col += gInkA * max(dot(n, toCore), 0.0) * 0.24 * glow;
@@ -792,7 +800,8 @@ vec3 shadeGlass(Hit h, vec3 dl, vec3 rd, float steps){
     col = col * mix(1.0, 0.32 + 0.9 * w, uPart.y) + (gInkA * 1.4 + 0.3) * w * lit * uPart.y * 0.8
         + body * 0.1 * uPart.y;
   }
-  col += innerLight(r, turn) * (0.4 + 0.6 * tr);
+  float line = playLine(r, turn);
+  col = col * (1.0 + 1.1 * line) + innerLight(turn, line) * (0.4 + 0.6 * tr);
   return col;
 }
 
@@ -810,7 +819,8 @@ vec3 shadeLite(Hit h, vec3 dl, vec3 rd){
   col += skyBase(through) * exp(-sigmaOf(body) * 0.1) * (1.0 - f);
   col += body * (0.12 + 0.3 * lightOn(n) + 0.2 * moonThrough(rd)) * gGlass.w;
   float turn = fract(atan(h.p.z, h.p.x) / TAU - gGlass.z);
-  col += innerLight(r, turn) * 0.6;
+  float line = playLine(r, turn);
+  col = col * (1.0 + 1.1 * line) + innerLight(turn, line) * 0.6;
   return col;
 }
 
@@ -821,7 +831,8 @@ vec3 reflected(vec3 p, vec3 r){
   Hit h = traceAll(p, r, uSteps * 0.4, 1.0, dl);
   float tt;
   float ta = textHit(p, r, tt) * uTextAt.z;
-  vec3 c = h.kind > 0.5 ? shadeLite(h, dl, r) * uReflK * (1.0 - gHaze) : skyBase(r);
+  vec3 c = skyBase(r);
+  if (h.kind > 0.5) c = mix(c, shadeLite(h, dl, r) * uReflK * (1.0 - gHaze), exp(-max(toWorld(h.p).y, 0.0) * (0.16 + 14.0 * uSea.x)));
   if (ta > 0.0 && tt < h.t) c = mix(c, textColor(p, r, tt), ta);
   return c;
 }
@@ -831,7 +842,10 @@ vec3 waterShade(vec3 p, vec3 rd, float dist){
   float f = 0.02 + 0.98 * pow(1.0 - max(dot(n, -rd), 0.0), 5.0);
   vec3 r = reflect(rd, n);
   r.y = abs(r.y) + 0.001;
-  return mix(waterBase(p), reflected(p, normalize(r)), f);
+  gKeep = mix(0.7, 0.3, smoothstep(4.0, 30.0, dist));
+  vec3 mirror = reflected(p, normalize(r));
+  gKeep = 1.0;
+  return mix(waterBase(p), mirror, f);
 }
 
 vec3 orbits(vec3 ro, vec3 rd, float limit){
