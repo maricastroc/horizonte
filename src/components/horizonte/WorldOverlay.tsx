@@ -332,7 +332,7 @@ export default function WorldOverlay({
           data-instruments
           aria-live="polite"
           key={`${snap.alb}:${open.part}`}
-          className="world-rise pointer-events-auto absolute bottom-[15vh] left-[2.4vw] flex w-[min(34rem,40vw)] flex-col gap-4 [text-shadow:0_0_22px_rgba(7,7,10,0.92)]"
+          className="world-rise pointer-events-auto absolute bottom-[max(15vh,6.75rem)] left-8.5 flex w-[min(34rem,40vw)] flex-col gap-4 [text-shadow:0_0_22px_rgba(7,7,10,0.92)]"
         >
           <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink-soft">
             {altered ? (
@@ -383,8 +383,10 @@ export default function WorldOverlay({
         <section
           aria-hidden="true"
           hidden={compact && inside}
-          className={`absolute flex flex-col gap-2 [text-shadow:0_0_22px_rgba(7,7,10,0.9)] ${
-            compact ? "inset-x-5 bottom-[24vh] items-center text-center" : "bottom-[14.5vh] left-[2.4vw] max-w-[46vw]"
+          className={`absolute flex flex-col [text-shadow:0_0_22px_rgba(7,7,10,0.9)] ${
+            compact
+              ? "inset-x-5 bottom-[24vh] items-center gap-2 text-center"
+              : "bottom-[max(calc(14.5vh+7px),6.75rem)] left-8.5 max-w-[46vw] gap-2.5"
           }`}
         >
           {compact && (

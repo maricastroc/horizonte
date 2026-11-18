@@ -109,6 +109,14 @@ describe("intake for bringing a record", () => {
     expect(albumLine().className).toContain("grid-cols-[1fr_42px_7px]");
   });
 
+  it("it is marked as an addition, not with the square the records carry", () => {
+    mount();
+    const mark = intake().querySelector("[aria-hidden]")!;
+    expect(mark.className).toContain("intake-plus");
+    expect(mark.className).not.toContain("border");
+    expect(albumLine().querySelector("[aria-hidden]")!.className).not.toContain("intake-plus");
+  });
+
   it("it reads lighter than the records in the list, and no lighter than the focused record", () => {
     mount();
     expect(intake().className).toContain("text-ink-text-2");
@@ -132,14 +140,15 @@ describe("intake for bringing a record", () => {
     expect(intake().className).toContain("min-h-[52px]");
   });
 
-  it("the marker is an empty place that fills on pointing", () => {
+  it("the marker is a plus that lights on pointing", () => {
     mount();
     const mark = intake().querySelector("span[aria-hidden]")!;
     const tokens = mark.className.split(/\s+/);
-    expect(tokens).toContain("border-ink-faint");
-    expect(tokens).not.toContain("bg-paper");
-    expect(tokens).toContain("group-hover:bg-paper");
-    expect(tokens).toContain("group-focus-visible:bg-paper");
+    expect(tokens).toContain("intake-plus");
+    expect(tokens).toContain("text-ink-mute");
+    expect(tokens).not.toContain("text-paper");
+    expect(tokens).toContain("group-hover:text-paper");
+    expect(tokens).toContain("group-focus-visible:text-paper");
   });
 
   it("pointing tells the field, and leaving gives it back", () => {
@@ -175,7 +184,7 @@ describe("intake for bringing a record", () => {
     expect(intake().textContent).toBe("Drop to measure");
     expect(intake().className).toContain("text-ink-text");
     expect(intake().querySelector("span[aria-hidden]")!.className.split(/\s+/)).toContain(
-      "bg-paper",
+      "text-paper",
     );
   });
 
@@ -411,6 +420,15 @@ describe("volume", () => {
     expect((screen.getByRole("slider", { name: "Volume" }) as HTMLInputElement).value).toBe("0");
     fireEvent.click(screen.getByRole("button", { name: "Mute" }));
     expect((screen.getByRole("slider", { name: "Volume" }) as HTMLInputElement).value).toBe("60");
+  });
+
+  it("shows a round handle at its level, where the timeline keeps a tick", () => {
+    mount();
+    const vol = screen.getByRole("slider", { name: "Volume" }) as HTMLInputElement;
+    expect(vol.className).toContain("rail-knob");
+    expect(screen.getByRole("slider", { name: "Position in track" }).className).not.toContain("rail-knob");
+    fireEvent.change(vol, { target: { value: "40" } });
+    expect(vol.style.getPropertyValue("--fill")).toBe("calc(3.5px + (100% - 7px) * 0.4)");
   });
 });
 
@@ -937,5 +955,32 @@ describe("the playing state's colour never costs legibility", () => {
       const ratio = (lum(brighten(album.inkA, PLAYING_LIFT)) + 0.05) / (bg + 0.05);
       expect(ratio).toBeGreaterThan(7);
     }
+  });
+});
+
+describe("over the glass world", () => {
+  const mountWorld = (initial: Partial<Snapshot> = {}) => {
+    const fake = fakeEngine(initial);
+    render(<Instruments engine={fake.engine} world />);
+    return fake;
+  };
+
+  it("only the playing row carries live progress, and it lives on the row's gauge", () => {
+    const fake = mountWorld({ scale: "track", alb: 2, playAlb: 2, trk: 1 });
+    act(() => fake.frame({ progress: 0.25, position: 30, duration: 120 }));
+    const rows = [...document.querySelectorAll<HTMLElement>(".trk")];
+    const gauges = rows.map((row) => row.querySelector<HTMLElement>(".trk-gauge")!);
+    expect(rows[1].dataset.state).toBe("playing");
+    expect(gauges[1].style.getPropertyValue("--p")).toBe("0.2500");
+    expect(gauges.filter((gauge) => gauge.style.getPropertyValue("--p") !== "")).toHaveLength(1);
+  });
+
+  it("the controls at the foot carry their own contrast, and only over the world", () => {
+    mountWorld();
+    const foot = screen.getByRole("slider", { name: "Position in track" }).parentElement!;
+    expect(foot.className).toContain("on-world");
+    cleanup();
+    mount();
+    expect(screen.getByRole("slider", { name: "Position in track" }).parentElement!.className).not.toContain("on-world");
   });
 });

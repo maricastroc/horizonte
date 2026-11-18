@@ -387,14 +387,13 @@ export default function Instruments({
           dragging ? "text-ink-text" : "text-ink-text-2",
         ].join(" ")}
       >
-        <span className="truncate">{dragging ? t.intake.dragging : t.intake.idle}</span>
+        <span className="truncate text-[12px] tracking-[.1em]">{dragging ? t.intake.dragging : t.intake.idle}</span>
         <span
           aria-hidden
           className={[
-            "block h-[7px] w-[7px] justify-self-end border transition-colors duration-200",
-            "group-hover:border-paper group-hover:bg-paper",
-            "group-focus-visible:border-paper group-focus-visible:bg-paper",
-            dragging ? "border-paper bg-paper" : "border-ink-faint",
+            "intake-plus justify-self-end transition-colors duration-200",
+            "group-hover:text-paper group-focus-visible:text-paper",
+            dragging ? "text-paper" : "text-ink-mute",
           ].join(" ")}
         />
       </button>
@@ -446,8 +445,8 @@ export default function Instruments({
               <span className="truncate trk-title" title={t.title}>
                 {t.title}
               </span>
-              <span aria-hidden className="trk-gauge">
-                <span className="trk-fill" ref={isPlay ? trackFill : undefined} />
+              <span aria-hidden className="trk-gauge" ref={isPlay ? trackFill : undefined}>
+                <span className="trk-fill" />
               </span>
             </span>
             <span className="trk-dur">{timecode(t.dur)}</span>
@@ -856,7 +855,11 @@ export default function Instruments({
         </nav>
       </div>
 
-      <div className="pointer-events-auto absolute bottom-11 left-8.5 flex w-150 flex-col gap-2.75 tablet:max-w-[calc(100%-26rem)]">
+      <div
+        className={`pointer-events-auto absolute bottom-11 left-8.5 flex w-150 flex-col gap-2.75 tablet:max-w-[calc(100%-26rem)] ${
+          world ? "on-world" : ""
+        }`}
+      >
         {seek(false)}
         {fault}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
@@ -881,9 +884,9 @@ export default function Instruments({
               aria-valuetext={`${Math.round(shownVolume * 100)}%`}
               style={{
                 ["--range-ink" as string]: COLOR.inkText,
-                ["--fill" as string]: `${shownVolume * 100}%`,
+                ["--fill" as string]: `calc(3.5px + (100% - 7px) * ${shownVolume})`,
               }}
-              className="rail-range h-2.25 w-18"
+              className="rail-range rail-knob h-2.25 w-18"
             />
           </div>
           <span ref={tcRef} className="ml-auto flex-none whitespace-nowrap tabular-nums text-ink-soft">
@@ -892,7 +895,11 @@ export default function Instruments({
         </div>
       </div>
 
-      <div className="pointer-events-auto absolute bottom-11 right-8.5 flex items-center gap-3.5">
+      <div
+        className={`pointer-events-auto absolute bottom-11 right-8.5 flex items-center gap-3.5 ${
+          world ? "on-world" : ""
+        }`}
+      >
         <button
           type="button"
           onClick={() => engine?.back()}
