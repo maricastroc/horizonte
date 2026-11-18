@@ -75,6 +75,7 @@ const GPU_DISJOINT = 0x8fbb;
 const SPACING = 4.9;
 const NEAR = 7.5;
 const SMALL = 0.5;
+const BANK_CEILING = 0.5;
 const PART: Partial<Record<AnatomyPart, number>> = { satellites: 1, gaps: 2, strata: 3, contour: 4, posture: 5, core: 6 };
 const POSE: Partial<Record<AnatomyPart, [number, number, number]>> = {
   satellites: [0.5, 0.22, -0.28],
@@ -982,7 +983,8 @@ export class World implements WorldPresenter {
       (u.uBHaze.value as number[])[i] = 0.4 * far * (1 - 0.5 * slot.hov);
       const flex = isFocus ? 1 + gain * 0.2 * this.swell + 0.06 * breathMass : 1;
       const amp = (0.1 + 0.42 * m.relief) * flex;
-      const bank = (0.3 + 0.6 * m.strata) * (isFocus ? 1 + 0.5 * this.shimmer * lightK * calm : 1);
+      const lean = BANK_CEILING * Math.tanh((0.3 + 0.6 * m.strata) / BANK_CEILING);
+      const bank = lean * (isFocus ? 1 + 0.5 * this.shimmer * lightK * calm : 1);
       const thick = 0.044;
       const loose = isFocus ? CROWN_CEILING[0] + 0.03 : 0;
       band[i].set(slot.lo, slot.hi + (isFocus ? spread + 0.06 : 0), thick, thick + amp * 1.05 + bank * (slot.hi - slot.lo) * 0.5 + 0.02 + loose);
