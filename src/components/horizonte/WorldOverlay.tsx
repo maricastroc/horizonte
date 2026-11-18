@@ -50,7 +50,7 @@ function Evidence({ alb, question, altered }: { alb: number; question: Question;
     <aside
       data-instruments
       aria-label={t.world.evidence}
-      className="world-rise pointer-events-auto absolute right-8.5 top-[176px] flex w-[262px] flex-col gap-3 [text-shadow:0_0_18px_rgba(7,7,10,0.95)]"
+      className="world-rise world-read pointer-events-auto absolute right-8.5 top-[176px] flex w-[262px] flex-col gap-3"
       key={`${alb}:${question.part}`}
     >
       <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink-soft">{w.measure[axis]}</span>
@@ -167,8 +167,8 @@ export default function WorldOverlay({
 
       const spots = PARTS.map((part) => {
         const at = asking ? world.partAnchor(part) : null;
-        const edge = window.innerWidth - 330;
-        return { part, at, x: at ? Math.min(at.x + at.ox * 46, edge) : 0, y: at ? Math.max(96, at.y + at.oy * 46) : 0 };
+        const edge = window.innerWidth - 420;
+        return { part, at, x: at ? Math.min(at.x + at.ox * 46, edge) : 0, y: at ? Math.min(window.innerHeight - 104, Math.max(96, at.y + at.oy * 46)) : 0 };
       });
       const live = spots.filter((p) => p.at).sort((a, b) => a.y - b.y);
       for (let i = 1; i < live.length; i++) {
@@ -246,6 +246,8 @@ export default function WorldOverlay({
           className="absolute inset-y-0 right-0 w-[min(30vw,380px)] backdrop-blur-md backdrop-brightness-[0.55] backdrop-saturate-[0.85] [mask-image:linear-gradient(to_left,black_55%,transparent)]"
         />
       )}
+
+      {!compact && <div aria-hidden="true" data-on={asking ? "1" : "0"} className="inquiry-scrim absolute bottom-0 left-0" />}
 
       <svg aria-hidden="true" className="absolute inset-0 h-full w-full">
         <line ref={leadRef} stroke="currentColor" strokeWidth="1" strokeDasharray="2 5" style={{ opacity: 0 }} />
@@ -332,7 +334,7 @@ export default function WorldOverlay({
           data-instruments
           aria-live="polite"
           key={`${snap.alb}:${open.part}`}
-          className="world-rise pointer-events-auto absolute bottom-[max(15vh,6.75rem)] left-8.5 flex w-[min(34rem,40vw)] flex-col gap-4 [text-shadow:0_0_22px_rgba(7,7,10,0.92)]"
+          className="world-rise world-read pointer-events-auto absolute bottom-[max(15vh,6.75rem)] left-8.5 flex w-[min(30rem,36vw)] flex-col gap-4"
         >
           <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink-soft">
             {altered ? (
@@ -346,7 +348,7 @@ export default function WorldOverlay({
           <h2 className="font-bodoni text-[clamp(24px,2.7vw,40px)] italic leading-[1.08] text-ink-text">
             {trying && phrasing.what ? phrasing.what : phrasing.ask}
           </h2>
-          <p className="font-archivo text-[14px] leading-[1.55] text-ink-text-2">
+          <p className="max-w-[40ch] font-archivo text-[14px] leading-[1.55] text-ink-text-2">
             {altered ? phrasing.result : phrasing.answer}
           </p>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-[10.5px] uppercase tracking-[0.14em]">
